@@ -6,12 +6,13 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import { createServerSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import type { User } from "@supabase/auth-helpers-nextjs";
 import { initTRPC, TRPCError } from "@trpc/server";
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import { auth } from "@yopem/auth";
-import type { Session } from "@yopem/auth";
 import { db } from "@yopem/db";
 
 /**
@@ -24,7 +25,7 @@ import { db } from "@yopem/db";
  *
  */
 interface CreateContextOptions {
-  session: Session | null;
+  user: User | null;
 }
 
 /**
@@ -38,7 +39,7 @@ interface CreateContextOptions {
  */
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
-    session: opts.session,
+    user: opts.user,
     db,
   };
 };
@@ -48,20 +49,25 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  * process every request that goes through your tRPC endpoint
  * @link https://trpc.io/docs/context
  */
-export const createTRPCContext = async (opts: {
-  req?: Request;
-  auth?: Session;
-}) => {
-  const session = opts.auth ?? (await auth());
-  const source = opts.req?.headers.get("x-trpc-source") ?? "unknown";
+export const createTRPCContext = async (opts: CreateNextContextOptions) => {
+  const supabase = createServerSupabaseClient(opts);
 
-  console.log(">>> tRPC Request from", source, "by", session?.user);
+  // React Native will pass their token through headers,
+  // browsers will have the session cookie set
+  const token = opts.req.headers.authorization;
+
+  console.log("server-token", token);
+
+  const user = token
+    ? await supabase.auth.getUser(token)
+    : await supabase.auth.getUser();
+
+  console.log("server-user", user);
 
   return createInnerTRPCContext({
-    session,
+    user: user.data.user,
   });
 };
-
 /**
  * 2. INITIALIZATION
  *
@@ -109,13 +115,13 @@ export const publicProcedure = t.procedure;
  * procedure
  */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.session?.user) {
+  if (!ctx.user?.id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
-      // infers the `session` as non-nullable
-      session: { ...ctx.session, user: ctx.session.user },
+      // infers the `user` as non-nullable
+      user: ctx.user,
     },
   });
 });
