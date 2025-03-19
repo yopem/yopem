@@ -57,7 +57,7 @@
     "@yopem/tailwind-config": "^0.1.0",
     "@yopem/tsconfig": "^0.1.0",
     "eslint": "^8.48.0",
-    "prettier": "^3.0.2",
+    "prettier": "^3.5.3",
     "tailwindcss": "3.3.2",
     "typescript": "^5.2.2"
   },
