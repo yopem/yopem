@@ -41,7 +41,7 @@
     "@yopem/prettier-config": "^0.1.0",
     "@yopem/tailwind-config": "^0.1.0",
     "@yopem/tsconfig": "^0.1.0",
-    "dotenv-cli": "^7.3.0",
+    "dotenv-cli": "^7.4.4",
     "eslint": "^8.48.0",
     "prettier": "^3.0.2",
     "tailwindcss": "3.3.2",
