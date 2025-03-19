@@ -27,7 +27,7 @@
     "@yopem/api": "^0.1.0",
     "@yopem/auth": "^0.1.0",
     "@yopem/db": "^0.1.0",
-    "next": "^13.4.19",
+    "next": "^13.5.8",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "superjson": "1.13.1",
