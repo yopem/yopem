@@ -33,6 +33,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Migration
+migrations/
+
 # Misc
 .DS_Store
 *.pem

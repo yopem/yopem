@@ -1,11 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":semanticCommitTypeAll(chore)"],
+  "extends": [
+    "config:base",
+    ":semanticCommitTypeAll(chore)",
+    "schedule:earlyMondays"
+  ],
   "labels": ["dependencies"],
   "automergeType": "pr",
   "dependencyDashboard": false,
   "rebaseWhen": "conflicted",
-  "schedule": ["0 0 * * MON"],
   "timezone": "Asia/Jakarta",
   "lockFileMaintenance": {
     "enabled": true,
