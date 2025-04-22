@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "build": "bun --bun run next build",
+    "build": "bun --bun run next build --turbopack",
     "check": "bun --bun run lint && tsc --noEmit",
     "db:check": "drizzle-kit check",
     "db:drop": "drizzle-kit drop",
