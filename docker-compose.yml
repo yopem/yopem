@@ -1,7 +1,7 @@
 services:
-  app:
+  yopem-main:
     build:
-      context: .
+      context: ./yopem-main
       dockerfile: Dockerfile
     ports:
       - "3069:3000"
