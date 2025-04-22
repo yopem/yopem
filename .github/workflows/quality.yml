@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -19,37 +19,24 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
-      - name: Build packages
-        run: pnpm build
+      - name: Run lint
+        run: bun run lint
 
-  # tests:
-  #   name: Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Install
-  #       uses: ./.github/composite-actions/install
-  #
-  #     - name: Run tests
-  #       run: pnpm test
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
 
-  # eslint:
-  #   name: ESLint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Install
-  #       uses: ./.github/composite-actions/install
-  #
-  #     - name: Run ESLint
-  #       run: pnpm lint
+      - name: Install
+        uses: ./.github/composite-actions/install
 
-  types:
-    name: TypeScript
+      - name: Run lint
+        run: bun run format:check
+
+  typecheck:
+    name: Type Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -59,17 +46,4 @@ jobs:
         uses: ./.github/composite-actions/install
 
       - name: Run typecheck
-        run: pnpm typecheck
-
-  # prettier:
-  #   name: Prettier
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Install
-  #       uses: ./.github/composite-actions/install
-  #
-  #     - name: Run prettier
-  #       run: pnpm format:check
+        run: bun run typecheck
