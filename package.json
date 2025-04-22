@@ -5,8 +5,8 @@
   "version": "0.0.1",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "build": "bun --bun run next build --turbopack",
-    "check": "bun --bun run lint && tsc --noEmit",
+    "build": "next build",
+    "check": "lint && tsc --noEmit",
     "db:check": "drizzle-kit check",
     "db:drop": "drizzle-kit drop",
     "db:generate": "drizzle-kit generate",
@@ -14,13 +14,13 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:up": "drizzle-kit up",
-    "dev": "bun --bun run next dev --turbopack",
+    "dev": "next dev",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
-    "preview": "bun --bun run next build && next start",
-    "start": "bun --bun run next start",
+    "preview": "next build && next start",
+    "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -64,8 +64,5 @@
     "typescript-eslint": "^8.27.0"
   },
   "prettier": "@yopem/prettier-config/react",
-  "packageManager": "bun@1.2.10",
-  "patchedDependencies": {
-    "drizzle-orm@0.41.0": "patches/drizzle-orm@0.41.0.patch"
-  }
+  "packageManager": "bun@1.2.10"
 }
