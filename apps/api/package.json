@@ -1,0 +1,65 @@
+{
+  "name": "@yopem/api",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "description": "",
+  "keywords": [
+    "yopem",
+    "api"
+  ],
+  "author": "Karyana Yandi <karyana@yandi.me>",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yopem/yopem",
+    "directory": "apps/web"
+  },
+  "bugs": {
+    "url": "https://github.com/yopem/yopem/issues"
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "compile": "pnpm run build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "pnpm with-env drizzle-kit migrate",
+    "db:push": "pnpm with-env drizzle-kit push",
+    "db:studio": "pnpm with-env drizzle-kit studio",
+    "dev": "pnpm with-env tsx watch src/index.ts",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "start": "pnpm with-env node dist/src/index.js",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.0",
+    "@hono/trpc-server": "^0.3.4",
+    "@trpc/client": "catalog:trpc",
+    "@trpc/server": "catalog:trpc",
+    "better-auth": "catalog:",
+    "dotenv-cli": "catalog:",
+    "drizzle-orm": "^0.38.4",
+    "hono": "^4.7.6",
+    "pg": "^8.14.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@hono/eslint-config": "^2.0.0",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.11.11",
+    "@yopem/eslint-config": "catalog:tooling",
+    "@yopem/prettier-config": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
+    "drizzle-kit": "^0.30.5",
+    "eslint": "catalog:tooling",
+    "prettier": "catalog:tooling",
+    "tsc-alias": "^1.8.11",
+    "tsx": "^4.19.2",
+    "typescript": "catalog:tooling"
+  },
+  "prettier": "@yopem/prettier-config/base"
+}

@@ -1,0 +1,50 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": ["dist/**"]
+		},
+		"check": {
+			"dependsOn": ["^check"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"format:check": {
+			"dependsOn": ["^format:check"]
+		},
+		"format:write": {
+			"dependsOn": ["^format:write"]
+		},
+		"typecheck": {
+			"dependsOn": ["^typecheck"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:push": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:studio": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:migrate": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:generate": {
+			"cache": false,
+			"persistent": true
+		},
+    "start": {
+      "cache": false,
+      "persistent": true
+    }
+	}
+}
