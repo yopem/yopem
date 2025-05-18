@@ -1,0 +1,85 @@
+{
+  "name": "@yopem/utils",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "keywords": [
+    "yopem",
+    "utils"
+  ],
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "exports": {
+    "./date": {
+      "source": "./src/date.ts",
+      "import": {
+        "types": "./src/date.ts",
+        "default": "./src/date.ts"
+      },
+      "require": {
+        "types": "./src/date.ts",
+        "default": "./src/date.ts"
+      }
+    },
+    "./id": {
+      "source": "./src/id.ts",
+      "import": {
+        "types": "./src/id.ts",
+        "default": "./src/id.ts"
+      },
+      "require": {
+        "types": "./src/id.ts",
+        "default": "./src/id.ts"
+      }
+    },
+    "./slug": {
+      "source": "./src/slug.ts",
+      "import": {
+        "types": "./src/slug.ts",
+        "default": "./src/slug.ts"
+      },
+      "require": {
+        "types": "./src/slug.ts",
+        "default": "./src/slug.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "author": "Karyana Yandi <karyana@yandi.me>",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yopem/yopem",
+    "directory": "packages/utils"
+  },
+  "bugs": {
+    "url": "https://github.com/yopem/yopem/issues"
+  },
+  "scripts": {
+    "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@yopem/eslint-config": "catalog:tooling",
+    "@yopem/prettier-config": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
+    "eslint": "catalog:tooling",
+    "prettier": "catalog:tooling",
+    "typescript": "catalog:tooling"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "nanoid": "^5.1.4",
+    "transliteration": "^2.3.5"
+  },
+  "prettier": "@yopem/prettier-config/base"
+}

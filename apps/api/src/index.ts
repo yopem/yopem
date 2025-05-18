@@ -16,7 +16,7 @@ app.use(logger())
 app.use(
   "/*",
   cors({
-    origin: process.env.CORS_ORIGIN || "",
+    origin: process.env["CORS_ORIGIN"] ?? "",
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -45,6 +45,11 @@ serve(
     port: 3000,
   },
   (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`)
+    console.log(`Server is running on http://localhost:${String(info.port)}`)
   },
 )
+
+export * from "./db/schema"
+export * from "./lib/context"
+export * from "./lib/trpc"
+export * from "./routers"

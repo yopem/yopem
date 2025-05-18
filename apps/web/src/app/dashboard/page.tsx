@@ -17,7 +17,7 @@ export default function Dashboard() {
     if (!session && !isPending) {
       router.push("/login")
     }
-  }, [session, isPending])
+  }, [session, isPending, router])
 
   if (isPending) {
     return <div>Loading...</div>

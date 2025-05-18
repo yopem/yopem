@@ -17,7 +17,7 @@ catalogs:
     tailwindcss: ^4.1.6
     tw-animate-css: ^1.2.9
   tooling:
-    '@yopem/eslint-config': ^0.1.14
+    '@yopem/eslint-config': ^0.1.15
     '@yopem/prettier-config': ^0.1.4
     '@yopem/typescript-config': ^0.1.0
     eslint: ^9.26.0

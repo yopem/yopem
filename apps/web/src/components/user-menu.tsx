@@ -25,10 +25,10 @@ export default function UserMenu() {
     <div>
       <Button variant="outline">{session.user.name}</Button>
       <Button
-        variant="destructive"
+        variant="danger"
         className="w-full"
         onClick={() => {
-          authClient.signOut({
+          void authClient.signOut({
             fetchOptions: {
               onSuccess: () => {
                 router.push("/")

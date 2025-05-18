@@ -10,8 +10,9 @@ export default [
   ...honoConfig,
   {
     rules: {
-      "no-restricted-imports": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
+      "n/no-extraneous-import": "off",
+      "no-restricted-imports": "off",
     },
   },
 ]

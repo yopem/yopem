@@ -4,6 +4,25 @@
   "version": "0.0.1",
   "type": "module",
   "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": {
+        "types": "./src/index.ts",
+        "default": "./src/index.ts"
+      },
+      "require": {
+        "types": "./src/index.ts",
+        "default": "./src/index.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "description": "",
   "keywords": [
     "yopem",
@@ -32,7 +51,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "start": "pnpm with-env node dist/src/index.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc-alias",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
@@ -40,6 +59,8 @@
     "@hono/trpc-server": "^0.3.4",
     "@trpc/client": "catalog:trpc",
     "@trpc/server": "catalog:trpc",
+    "@yopem/constant": "workspace:*",
+    "@yopem/utils": "workspace:*",
     "better-auth": "catalog:",
     "dotenv-cli": "catalog:",
     "drizzle-orm": "^0.38.4",

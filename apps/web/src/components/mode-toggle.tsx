@@ -4,7 +4,7 @@ import * as React from "react"
 import { Icon } from "@yopem-ui/react-icons"
 import { useTheme } from "next-themes"
 
-import { Button } from "./button"
+import { Button } from "@/components/ui/button"
 
 export const ModeToggle: React.FunctionComponent = () => {
   const { theme, setTheme } = useTheme()
