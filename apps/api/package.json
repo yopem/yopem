@@ -60,6 +60,7 @@
     "@trpc/client": "catalog:trpc",
     "@trpc/server": "catalog:trpc",
     "@yopem/constant": "workspace:*",
+    "@yopem/try-catch": "catalog:",
     "@yopem/utils": "workspace:*",
     "better-auth": "catalog:",
     "dotenv-cli": "catalog:",
