@@ -1,5 +1,5 @@
-import { db } from ".."
-import { messageTable, type InsertMessage } from "../schema"
+import { db } from "@/db"
+import { messageTable, type InsertMessage } from "@/db/schema"
 
 export const insertMessage = async ({
   content,

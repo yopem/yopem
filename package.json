@@ -10,7 +10,8 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build": "turbo build",
-    "build:web": "turbo -F web build",
+    "build:api": "turbo -F @yopem/api build",
+    "build:web": "turbo -F @yopem/web build",
     "check-types": "turbo check-types",
     "clean": "pnpm -r --parallel exec git clean -xdf dist .cache .turbo .next *.log",
     "clean:all": "pnpm clean && pnpm clean:deps",

@@ -1,9 +1,9 @@
 import { tryCatch } from "@yopem/try-catch"
 
-import { insertMessageSchema } from "../db/schema"
-import { insertMessage } from "../db/service/message"
-import { handleError } from "../lib/error"
-import { createTRPCRouter, protectedProcedure } from "../lib/trpc"
+import { insertMessageSchema } from "@/db/schema"
+import { insertMessage } from "@/db/service/message"
+import { handleError } from "@/lib/error"
+import { createTRPCRouter, protectedProcedure } from "@/lib/trpc"
 
 export const messageRouter = createTRPCRouter({
   create: protectedProcedure

@@ -1,7 +1,7 @@
 {
   "extends": "@yopem/typescript-config/base",
   "include": ["src"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -10,6 +10,9 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "outDir": "./dist",
     "types": ["node"],
     "jsx": "react-jsx",

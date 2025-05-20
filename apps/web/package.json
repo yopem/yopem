@@ -21,6 +21,8 @@
   "scripts": {
     "build": "pnpm with-env next build",
     "dev": "pnpm with-env next dev --turbopack --port=3001",
+    "predev": "cd ../../ && pnpm build:api",
+    "prebuild": "cd ../../ && pnpm build:api",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "lint": "eslint",
