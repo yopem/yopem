@@ -17,8 +17,8 @@ export const messageTable = pgTable("messages", {
   messageId: text("message_id").notNull(),
   role: messageRoleEnum("role").notNull(),
   metadata: json("metadata"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 })
 
 export const insertMessageSchema = createInsertSchema(messageTable)

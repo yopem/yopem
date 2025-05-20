@@ -9,8 +9,8 @@ export const chatTable = pgTable("chats", {
     .$defaultFn(() => createId()),
   title: text("title").notNull(),
   focusMode: text("focus_mode").notNull(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 })
 
 export const insertChatSchema = createInsertSchema(chatTable)

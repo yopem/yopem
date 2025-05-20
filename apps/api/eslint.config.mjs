@@ -11,6 +11,7 @@ export default [
   {
     rules: {
       "@typescript-eslint/no-non-null-assertion": "off",
+      "import-x/consistent-type-specifier-style": "off",
       "n/no-extraneous-import": "off",
       "no-restricted-imports": "off",
     },
