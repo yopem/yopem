@@ -41,8 +41,8 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "compile": "pnpm run build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "pnpm with-env drizzle-kit migrate",
+    "db:generate": "pnpm with-env drizzle-kit generate",
+    "db:migrate": "pnpm with-env pnpm with-env drizzle-kit migrate",
     "db:push": "pnpm with-env drizzle-kit push",
     "db:studio": "pnpm with-env drizzle-kit studio",
     "dev": "pnpm with-env tsx watch src/index.ts",
@@ -64,6 +64,7 @@
     "better-auth": "catalog:",
     "dotenv-cli": "catalog:",
     "drizzle-orm": "^0.38.4",
+    "drizzle-zod": "^0.7.1",
     "hono": "^4.7.6",
     "pg": "^8.14.1",
     "zod": "catalog:"

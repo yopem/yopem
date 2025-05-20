@@ -1,7 +1,7 @@
 import { createId } from "@yopem/utils/id"
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
-export const user = pgTable("user", {
+export const userTable = pgTable("user", {
   id: text()
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -13,7 +13,7 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at").notNull(),
 })
 
-export const session = pgTable("session", {
+export const sessionTable = pgTable("session", {
   id: text()
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -25,7 +25,7 @@ export const session = pgTable("session", {
   userAgent: text("user_agent"),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 })
 
 export const account = pgTable("account", {
@@ -36,7 +36,7 @@ export const account = pgTable("account", {
   providerId: text("provider_id").notNull(),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -48,7 +48,7 @@ export const account = pgTable("account", {
   updatedAt: timestamp("updated_at").notNull(),
 })
 
-export const verification = pgTable("verification", {
+export const verificationTable = pgTable("verification", {
   id: text()
     .primaryKey()
     .$defaultFn(() => createId()),
