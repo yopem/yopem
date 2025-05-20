@@ -30,12 +30,12 @@
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
-    "@yopem/eslint-config": "catalog:tooling",
-    "@yopem/prettier-config": "catalog:tooling",
+    "@yopem/eslint-config": "catalog:config",
+    "@yopem/prettier-config": "catalog:config",
     "lefthook": "1.11.12",
-    "prettier": "catalog:tooling",
+    "prettier": "catalog:config",
     "turbo": "2.5.3",
-    "typescript": "catalog:tooling"
+    "typescript": "catalog:config"
   },
   "workspaces": [
     "apps/*",

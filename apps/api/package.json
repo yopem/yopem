@@ -74,15 +74,15 @@
     "@hono/eslint-config": "^2.0.0",
     "@types/node": "catalog:",
     "@types/pg": "^8.11.11",
-    "@yopem/eslint-config": "catalog:tooling",
-    "@yopem/prettier-config": "catalog:tooling",
-    "@yopem/typescript-config": "catalog:tooling",
+    "@yopem/eslint-config": "catalog:config",
+    "@yopem/prettier-config": "catalog:config",
+    "@yopem/typescript-config": "catalog:config",
     "drizzle-kit": "^0.30.5",
-    "eslint": "catalog:tooling",
-    "prettier": "catalog:tooling",
+    "eslint": "catalog:config",
+    "prettier": "catalog:config",
     "tsc-alias": "^1.8.11",
     "tsx": "^4.19.2",
-    "typescript": "catalog:tooling"
+    "typescript": "catalog:config"
   },
   "prettier": "@yopem/prettier-config/base"
 }

@@ -57,9 +57,9 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
-    "prettier": "catalog:tooling",
+    "prettier": "catalog:config",
     "tailwindcss": "catalog:tailwindcss",
-    "typescript": "catalog:tooling"
+    "typescript": "catalog:config"
   },
   "prettier": "@yopem/prettier-config/react"
 }
