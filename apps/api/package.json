@@ -44,12 +44,12 @@
     "db:migrate": "pnpm with-env pnpm with-env drizzle-kit migrate",
     "db:push": "pnpm with-env drizzle-kit push",
     "db:studio": "pnpm with-env drizzle-kit studio",
-    "dev": "pnpm with-env tsx watch src/index.ts",
+    "dev": "pnpm with-env tsup src/index.ts --watch --onSuccess 'node dist/index.cjs'",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "start": "pnpm with-env node dist/src/index.js",
+    "start": "pnpm with-env node dist/index.cjs",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -67,7 +67,6 @@
     "drizzle-zod": "^0.7.1",
     "hono": "^4.7.6",
     "pg": "^8.14.1",
-    "tsup": "^8.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -80,7 +79,7 @@
     "drizzle-kit": "^0.30.5",
     "eslint": "catalog:config",
     "prettier": "catalog:config",
-    "tsx": "^4.19.2",
+    "tsup": "^8.5.0",
     "typescript": "catalog:config"
   },
   "prettier": "@yopem/prettier-config/base",
