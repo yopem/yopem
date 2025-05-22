@@ -54,6 +54,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.3.2",
     "@tailwindcss/postcss": "catalog:tailwindcss",
     "@tanstack/react-query-devtools": "^5.69.0",
     "@types/node": "catalog:",

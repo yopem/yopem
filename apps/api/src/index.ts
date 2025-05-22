@@ -2,6 +2,7 @@ import "dotenv/config"
 
 import { serve } from "@hono/node-server"
 import { trpcServer } from "@hono/trpc-server"
+import { siteUrl } from "@yopem/constant"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
@@ -16,8 +17,8 @@ app.use(logger())
 app.use(
   "/*",
   cors({
-    origin: process.env["CORS_ORIGIN"] ?? "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    origin: siteUrl ?? "",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
@@ -36,7 +37,7 @@ app.use(
 )
 
 app.get("/", (c) => {
-  return c.text("OK")
+  return c.text("Hello, World!")
 })
 
 serve(
