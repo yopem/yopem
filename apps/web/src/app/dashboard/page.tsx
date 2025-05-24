@@ -3,21 +3,21 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-// import { useQuery } from "@tanstack/react-query"
+import { useSession } from "@/lib/auth-client"
 
-import { authClient } from "@/lib/auth-client"
+// import { useQuery } from "@tanstack/react-query"
 
 // import { trpc } from "@/utils/trpc"
 
 export default function Dashboard() {
   const router = useRouter()
-  const { data: session, isPending } = authClient.useSession()
+  const { data: session, isPending } = useSession()
 
   // const privateData = useQuery(trpc.privateData.queryOptions())
 
   useEffect(() => {
     if (!session && !isPending) {
-      router.push("/login")
+      router.push("/sign-in")
     }
   }, [session, isPending, router])
 

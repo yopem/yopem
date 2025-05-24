@@ -28,7 +28,7 @@ export const sessionTable = pgTable("session", {
     .references(() => userTable.id, { onDelete: "cascade" }),
 })
 
-export const account = pgTable("account", {
+export const accountTable = pgTable("account", {
   id: text()
     .primaryKey()
     .$defaultFn(() => createId()),
