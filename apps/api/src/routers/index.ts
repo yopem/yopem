@@ -1,4 +1,8 @@
-import { createTRPCRouter, publicProcedure } from "@/lib/trpc"
+import {
+  createCallerFactory,
+  createTRPCRouter,
+  publicProcedure,
+} from "@/lib/trpc"
 import { chatRouter } from "./chat"
 import { messageRouter } from "./message"
 import { userRouter } from "./user"
@@ -13,3 +17,4 @@ export const appRouter = createTRPCRouter({
 })
 
 export type AppRouter = typeof appRouter
+export const createCaller = createCallerFactory(appRouter)

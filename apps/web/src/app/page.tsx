@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import { trpc } from "@/utils/trpc"
+import { trpc } from "@/lib/trpc"
 
 export default function Home() {
   const healthCheck = useQuery(trpc.healthCheck.queryOptions())

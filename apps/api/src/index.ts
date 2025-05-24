@@ -8,7 +8,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
-import { createContext } from "./lib/context"
+import { createTRPCContext } from "./lib/context"
 import { appRouter } from "./routers/index"
 
 const app = new Hono()
@@ -31,7 +31,7 @@ app.use(
   trpcServer({
     router: appRouter,
     createContext: (_opts, context) => {
-      return createContext({ context })
+      return createTRPCContext({ context })
     },
   }),
 )

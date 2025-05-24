@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useSession } from "@yopem/auth/client"
 
-import { trpc } from "@/utils/trpc"
+import { trpc } from "@/lib/trpc"
 
 export default function Dashboard() {
   const { data: session, isPending } = useSession()

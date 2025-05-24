@@ -36,3 +36,4 @@ export const publicProcedure = t.procedure
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed)
 
 export const createTRPCRouter = t.router
+export const createCallerFactory = t.createCallerFactory
