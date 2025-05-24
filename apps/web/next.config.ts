@@ -56,6 +56,9 @@ const config = {
       },
     ]
   },
+  experimental: {
+    prefetchHandlers: true,
+  },
 }
 
 for (const plugin of plugins) {

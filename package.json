@@ -11,6 +11,7 @@
   "scripts": {
     "build": "turbo build",
     "build:api": "turbo -F @yopem/api build",
+    "build:db": "turbo -F @yopem/db build",
     "build:web": "turbo -F @yopem/web build",
     "check-types": "turbo check-types",
     "clean": "pnpm -r --parallel exec git clean -xdf dist .cache .turbo .next *.log",

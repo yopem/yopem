@@ -1,9 +1,9 @@
 "use client"
 
 import { redirect } from "next/navigation"
+import { useSession } from "@yopem/auth/client"
 
 import SignIn from "@/components/sign-in"
-import { useSession } from "@/lib/auth-client"
 
 export default function SignInPage() {
   // const session = await getSession({

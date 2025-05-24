@@ -1,5 +1,7 @@
 pre-commit:
   commands:
+    generate-types-from-db:
+      run: pnpm build:db
     generate-types-from-api:
       run: pnpm build:api
     quality:

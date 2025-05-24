@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { signIn } from "@yopem/auth/client"
 import { siteUrl } from "@yopem/constant"
 
 import { Button } from "@/components/ui/button"
-import { signIn } from "@/lib/auth-client"
 
 const SignIn: React.FC = () => {
   return (

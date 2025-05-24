@@ -1,7 +1,6 @@
+import { insertMessage, insertMessageSchema } from "@yopem/db"
 import { tryCatch } from "@yopem/try-catch"
 
-import { insertMessageSchema } from "@/db/schema"
-import { insertMessage } from "@/db/service/message"
 import { handleError } from "@/lib/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc"
 

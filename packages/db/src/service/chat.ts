@@ -1,5 +1,5 @@
-import { db } from "@/db"
-import { chatTable, type InsertChat } from "@/db/schema"
+import { db } from "@/connection"
+import { chatTable, type InsertChat } from "@/schema"
 
 export const insertChat = async ({ title, focusMode }: InsertChat) => {
   return await db

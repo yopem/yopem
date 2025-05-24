@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 
-import "../index.css"
+import "@/styles/globals.css"
 
 import { siteDescription, siteTitle } from "@yopem/constant"
 

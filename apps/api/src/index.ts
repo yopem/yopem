@@ -2,12 +2,12 @@ import "dotenv/config"
 
 import { serve } from "@hono/node-server"
 import { trpcServer } from "@hono/trpc-server"
+import { auth } from "@yopem/auth"
 import { siteUrl } from "@yopem/constant"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
-import { auth } from "./lib/auth"
 import { createContext } from "./lib/context"
 import { appRouter } from "./routers/index"
 
@@ -50,7 +50,6 @@ serve(
   },
 )
 
-export * from "./db/schema"
 export * from "./lib/context"
 export * from "./lib/trpc"
 export * from "./routers"

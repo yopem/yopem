@@ -2,8 +2,8 @@ import { databaseUrl } from "@yopem/constant"
 import { defineConfig } from "drizzle-kit"
 
 export default defineConfig({
-  schema: "./src/db/schema",
-  out: "./src/db/migrations",
+  schema: "./src/schema",
+  out: "./src/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: databaseUrl!,

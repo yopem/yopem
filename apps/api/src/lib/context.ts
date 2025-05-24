@@ -1,6 +1,5 @@
+import { auth } from "@yopem/auth"
 import type { Context as HonoContext } from "hono"
-
-import { auth } from "./auth"
 
 export interface CreateContextOptions {
   context: HonoContext

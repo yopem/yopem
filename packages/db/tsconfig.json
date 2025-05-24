@@ -14,11 +14,6 @@
       "@/*": ["./src/*"]
     },
     "outDir": "./dist",
-    "types": ["node"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  },
-  "tsc-alias": {
-    "resolveFullPaths": true
+    "types": ["node"]
   }
 }

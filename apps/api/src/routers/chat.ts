@@ -1,7 +1,6 @@
+import { insertChat, insertChatSchema } from "@yopem/db"
 import { tryCatch } from "@yopem/try-catch"
 
-import { insertChatSchema } from "@/db/schema"
-import { insertChat } from "@/db/service/chat"
 import { handleError } from "@/lib/error"
 import { createTRPCRouter, protectedProcedure } from "@/lib/trpc"
 

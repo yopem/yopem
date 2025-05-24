@@ -1,10 +1,9 @@
 import { googleClientId, googleClientSecret, siteUrl } from "@yopem/constant"
+import { db } from "@yopem/db"
+import * as schema from "@yopem/db"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { oneTap } from "better-auth/plugins"
-
-import { db } from "@/db"
-import * as schema from "@/db/schema"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {

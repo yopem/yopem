@@ -1,25 +1,19 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { redirect } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+import { useSession } from "@yopem/auth/client"
 
-import { useSession } from "@/lib/auth-client"
-
-// import { useQuery } from "@tanstack/react-query"
-
-// import { trpc } from "@/utils/trpc"
+import { trpc } from "@/utils/trpc"
 
 export default function Dashboard() {
-  const router = useRouter()
   const { data: session, isPending } = useSession()
 
-  // const privateData = useQuery(trpc.privateData.queryOptions())
+  const userData = useQuery(trpc.user.current.queryOptions())
 
-  useEffect(() => {
-    if (!session && !isPending) {
-      router.push("/sign-in")
-    }
-  }, [session, isPending, router])
+  if (!session) {
+    redirect("/sign-in")
+  }
 
   if (isPending) {
     return <div>Loading...</div>
@@ -28,8 +22,8 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
-      {/* <p>privateData: {privateData.data?.message}</p> */}
+      <p>Welcome {session.user.name}</p>
+      <p>User Data: {userData.data?.email}</p>
     </div>
   )
 }

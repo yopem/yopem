@@ -1,13 +1,18 @@
 {
-  "name": "@yopem/api",
-  "private": true,
+  "name": "@yopem/db",
   "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "keywords": [
+    "yopem",
+    "db"
+  ],
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
   "files": [
-    "dist"
+    "src"
   ],
   "exports": {
     ".": {
@@ -23,57 +28,47 @@
     },
     "./package.json": "./package.json"
   },
-  "description": "",
-  "keywords": [
-    "yopem",
-    "api"
-  ],
+  "sideEffects": false,
   "author": "Karyana Yandi <karyana@yandi.me>",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/yopem/yopem",
-    "directory": "apps/web"
+    "directory": "packages/db"
   },
   "bugs": {
     "url": "https://github.com/yopem/yopem/issues"
   },
   "scripts": {
     "build": "pnpm with-env tsup src/index.ts --dts",
-    "dev": "pnpm with-env tsx src/index.ts",
+    "db:generate": "pnpm with-env drizzle-kit generate",
+    "db:migrate": "pnpm with-env pnpm with-env drizzle-kit migrate",
+    "db:push": "pnpm with-env drizzle-kit push",
+    "db:studio": "pnpm with-env drizzle-kit studio",
+    "dev": "pnpm with-env tsup src/index.ts --dts --watch",
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
     "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "start": "pnpm with-env node dist/index.cjs",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@hono/node-server": "^1.14.0",
-    "@hono/trpc-server": "^0.3.4",
-    "@trpc/client": "catalog:trpc",
-    "@trpc/server": "catalog:trpc",
-    "@yopem/auth": "workspace:*",
     "@yopem/constant": "workspace:*",
-    "@yopem/db": "workspace:*",
-    "@yopem/try-catch": "catalog:",
     "@yopem/utils": "workspace:*",
     "dotenv-cli": "catalog:",
-    "hono": "^4.7.6",
+    "drizzle-orm": "^0.38.4",
+    "drizzle-zod": "^0.7.1",
+    "tsup": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@hono/eslint-config": "^2.0.0",
-    "@types/node": "catalog:",
     "@yopem/eslint-config": "catalog:config",
     "@yopem/prettier-config": "catalog:config",
     "@yopem/typescript-config": "catalog:config",
-    "drizzle-kit": "^0.30.5",
+    "drizzle-kit": "^0.30.6",
     "eslint": "catalog:config",
     "prettier": "catalog:config",
-    "tsup": "catalog:",
-    "tsx": "^4.19.4",
     "typescript": "catalog:config"
   },
   "prettier": "@yopem/prettier-config/base",

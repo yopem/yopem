@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "@/lib/trpc"
 import { chatRouter } from "./chat"
 import { messageRouter } from "./message"
+import { userRouter } from "./user"
 
 export const appRouter = createTRPCRouter({
   healthCheck: publicProcedure.query(() => {
@@ -8,6 +9,7 @@ export const appRouter = createTRPCRouter({
   }),
   chat: chatRouter,
   message: messageRouter,
+  user: userRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -1,0 +1,76 @@
+{
+  "name": "@yopem/auth",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "keywords": [
+    "yopem",
+    "auth"
+  ],
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": {
+        "types": "./src/index.ts",
+        "default": "./src/index.ts"
+      },
+      "require": {
+        "types": "./src/index.ts",
+        "default": "./src/index.ts"
+      }
+    },
+    "./client": {
+      "source": "./src/client.ts",
+      "import": {
+        "types": "./src/client.ts",
+        "default": "./src/client.ts"
+      },
+      "require": {
+        "types": "./src/client.ts",
+        "default": "./src/client.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "author": "Karyana Yandi <karyana@yandi.me>",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yopem/yopem",
+    "directory": "packages/auth"
+  },
+  "bugs": {
+    "url": "https://github.com/yopem/yopem/issues"
+  },
+  "scripts": {
+    "format:check": "prettier --check \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "format:write": "prettier --write \"**/*.{ts,tsx,mts,js,jsx,mjs,json,md}\"",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@yopem/constant": "workspace:*",
+    "@yopem/db": "workspace:*",
+    "better-auth": "^1.2.7",
+    "dotenv-cli": "catalog:"
+  },
+  "devDependencies": {
+    "@yopem/eslint-config": "catalog:config",
+    "@yopem/prettier-config": "catalog:config",
+    "@yopem/typescript-config": "catalog:config",
+    "eslint": "catalog:config",
+    "prettier": "catalog:config",
+    "typescript": "catalog:config"
+  },
+  "prettier": "@yopem/prettier-config/base"
+}
