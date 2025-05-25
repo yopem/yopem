@@ -50,6 +50,7 @@ export const insertFileSchema = createInsertSchema(fileTable)
 export const updateFileSchema = createUpdateSchema(fileTable)
 
 export type SelectFile = typeof fileTable.$inferSelect
+export type InsertFile = typeof fileTable.$inferInsert
 
 export type FileCategory = z.infer<typeof fileCategory>
 export type FileType = z.infer<typeof fileType>

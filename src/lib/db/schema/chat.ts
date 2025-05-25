@@ -23,3 +23,4 @@ export const insertChatSchema = createInsertSchema(chatTable)
 export const updateChatSchema = createUpdateSchema(chatTable)
 
 export type SelectChat = typeof chatTable.$inferSelect
+export type InsertChat = typeof chatTable.$inferInsert

@@ -26,5 +26,6 @@ export const insertMessageSchema = createInsertSchema(messageTable)
 export const updateMessageSchema = createUpdateSchema(messageTable)
 
 export type SelectMessage = typeof messageTable.$inferSelect
+export type InsertMessage = typeof messageTable.$inferInsert
 
 export type MessageRole = z.infer<typeof messageRole>
