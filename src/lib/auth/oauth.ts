@@ -4,7 +4,7 @@ import {
   googleClientId,
   googleClientSecret,
   googleRedirectUrl,
-} from "@/lib/utils/env"
+} from "@/lib/utils/env/server"
 
 export const googleOAuth = new Google(
   googleClientId || "",

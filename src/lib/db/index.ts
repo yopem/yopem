@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 
-import { databaseUrl } from "@/lib/utils/env"
+import { databaseUrl } from "@/lib/utils/env/server"
 import { chatTable } from "./schema/chat"
 import { fileTable } from "./schema/file"
 import { messageTable } from "./schema/message"

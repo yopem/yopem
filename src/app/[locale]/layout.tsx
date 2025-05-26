@@ -4,7 +4,7 @@ import { type Metadata } from "next"
 import localFont from "next/font/local"
 
 import { TRPCReactProvider } from "@/lib/trpc/client"
-import { siteDescription, siteTitle } from "@/lib/utils/env"
+import { siteDescription, siteTitle } from "@/lib/utils/env/client"
 
 export const metadata: Metadata = {
   title: siteTitle,

@@ -2,71 +2,78 @@
 
 import { useState } from "react"
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query"
-import { httpBatchStreamLink, loggerLink } from "@trpc/client"
-import { createTRPCReact } from "@trpc/react-query"
-import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server"
+import { createTRPCClient, httpBatchStreamLink, loggerLink } from "@trpc/client"
+import { createTRPCContext } from "@trpc/tanstack-react-query"
 import SuperJSON from "superjson"
 
-import { type AppRouter } from "@/lib/api/root"
+import type { AppRouter } from "@/lib/api/root"
+import { appEnv } from "@/lib/utils/env/client"
 import { createQueryClient } from "./query-client"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined
 
 const getQueryClient = () => {
   if (typeof window === "undefined") {
+    // Server: always make a new query client
     return createQueryClient()
+  } else {
+    // Browser: use singleton pattern to keep the same query client
+    return (clientQueryClientSingleton ??= createQueryClient())
   }
-  clientQueryClientSingleton ??= createQueryClient()
-
-  return clientQueryClientSingleton
 }
 
-export const api = createTRPCReact<AppRouter>()
-
-export type RouterInputs = inferRouterInputs<AppRouter>
-
-export type RouterOutputs = inferRouterOutputs<AppRouter>
+export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>()
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
 
   const [trpcClient] = useState(() =>
-    api.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         loggerLink({
           enabled: (op) =>
-            // eslint-disable-next-line no-restricted-properties
-            process.env["APP_ENV"] === "development" ||
+            appEnv === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",
+          // @ts-expect-error FIX: later
           headers() {
-            const h = new Headers()
-            h.set("x-trpc-source", "nextjs-react")
-
-            const headers: Record<string, string> = {}
-            h.forEach((value, key) => {
-              headers[key] = value
-            })
+            const headers = new Headers()
+            headers.set("x-trpc-source", "nextjs-react")
             return headers
           },
         }),
+        // httpBatchStreamLink({
+        //   transformer: SuperJSON,
+        //   url: getBaseUrl() + "/api/trpc",
+        //   headers() {
+        //     const h = new Headers()
+        //     h.set("x-trpc-source", "nextjs-react")
+        //
+        //     const headers: Record<string, string> = {}
+        //     h.forEach((value, key) => {
+        //       headers[key] = value
+        //     })
+        //     return headers
+        //   },
+        // }),
       ],
     }),
   )
 
   return (
     <QueryClientProvider client={queryClient}>
-      <api.Provider client={trpcClient} queryClient={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         {props.children}
-      </api.Provider>
+      </TRPCProvider>
     </QueryClientProvider>
   )
 }
 
-function getBaseUrl() {
+const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin
-  return "http://localhost:3000"
+  // eslint-disable-next-line no-restricted-properties
+  return `http://localhost:${process.env["PORT"] ?? 3000}`
 }
