@@ -3,8 +3,8 @@ import "@/styles/globals.css"
 import { type Metadata } from "next"
 import localFont from "next/font/local"
 
+import { TRPCReactProvider } from "@/lib/trpc/client"
 import { siteDescription, siteTitle } from "@/lib/utils/env"
-import { TRPCReactProvider } from "@/trpc/react"
 
 export const metadata: Metadata = {
   title: siteTitle,

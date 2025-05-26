@@ -4,13 +4,15 @@ import { databaseUrl } from "@/lib/utils/env"
 import { chatTable } from "./schema/chat"
 import { fileTable } from "./schema/file"
 import { messageTable } from "./schema/message"
-import { userTable } from "./schema/user"
+import { accountTable, sessionTable, userTable } from "./schema/user"
 
 export const db = drizzle(databaseUrl, {
   schema: {
+    accountTable,
     chatTable,
     fileTable,
     messageTable,
+    sessionTable,
     userTable,
   },
 })

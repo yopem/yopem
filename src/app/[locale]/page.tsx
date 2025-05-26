@@ -1,4 +1,4 @@
-import { HydrateClient } from "@/trpc/server"
+import { HydrateClient } from "@/lib/trpc/server"
 
 export default function Home() {
   return (

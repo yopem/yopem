@@ -3,7 +3,8 @@ import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 import { z } from "zod"
 
-import { createId } from "@/lib/utils/id"
+import { createCustomId } from "@/lib/utils/custom-id"
+import { chatTable } from "./chat"
 import { userTable } from "./user"
 
 export const FILE_CATEGORY = ["all", "chat"] as const
@@ -25,7 +26,7 @@ export const fileTypeEnum = pgEnum("file_type", FILE_TYPE)
 export const fileTable = pgTable("files", {
   id: text()
     .primaryKey()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => createCustomId()),
   name: text("name").notNull().unique(),
   url: text("url").notNull(),
   fileType: text("file_type").notNull(),
@@ -35,6 +36,9 @@ export const fileTable = pgTable("files", {
   authorId: text("author_id")
     .notNull()
     .references(() => userTable.id),
+  chatId: text("chat_id")
+    .notNull()
+    .references(() => chatTable.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 })
@@ -43,6 +47,10 @@ export const fileRelations = relations(fileTable, ({ one }) => ({
   author: one(userTable, {
     fields: [fileTable.authorId],
     references: [userTable.id],
+  }),
+  chat: one(chatTable, {
+    fields: [fileTable.chatId],
+    references: [chatTable.id],
   }),
 }))
 

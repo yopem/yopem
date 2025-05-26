@@ -2,7 +2,7 @@ import { json, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 import { z } from "zod"
 
-import { createId } from "@/lib/utils/id"
+import { createCustomId } from "@/lib/utils/custom-id"
 
 const MESSAGE_ROLE = ["assistant", "user"] as const
 
@@ -12,7 +12,7 @@ export const messageRoleEnum = pgEnum("message_role", MESSAGE_ROLE)
 export const messageTable = pgTable("messages", {
   id: text()
     .primaryKey()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => createCustomId()),
   content: text("content").notNull(),
   chatId: text("chat_id").notNull(),
   messageId: text("message_id").notNull(),

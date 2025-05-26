@@ -1,0 +1,2 @@
+ALTER TABLE "files" ADD COLUMN "chat_id" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "files" ADD CONSTRAINT "files_chat_id_chats_id_fk" FOREIGN KEY ("chat_id") REFERENCES "public"."chats"("id") ON DELETE no action ON UPDATE no action;

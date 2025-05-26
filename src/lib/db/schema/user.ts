@@ -2,7 +2,7 @@ import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 import { z } from "zod"
 
-import { createId } from "@/lib/utils/id"
+import { createCustomId } from "@/lib/utils/custom-id"
 
 export const USER_ROLE = ["user", "member", "admin"] as const
 
@@ -13,7 +13,7 @@ export const userRoleEnum = pgEnum("user_role", USER_ROLE)
 export const userTable = pgTable("users", {
   id: text()
     .primaryKey()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => createCustomId()),
   email: text("email"),
   name: text("name"),
   username: text("username").notNull().unique(),
@@ -41,7 +41,7 @@ export const accountTable = pgTable("accounts", {
 export const sessionTable = pgTable("sessions", {
   id: text()
     .primaryKey()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => createCustomId()),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
@@ -56,5 +56,6 @@ export const updateUserSchema = createUpdateSchema(userTable)
 
 export type SelectUser = typeof userTable.$inferSelect
 export type SelectSession = typeof sessionTable.$inferSelect
+export type InsertUser = typeof userTable.$inferInsert
 
 export type UserRole = z.infer<typeof userRole>

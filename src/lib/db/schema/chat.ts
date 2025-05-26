@@ -2,13 +2,13 @@ import { relations } from "drizzle-orm"
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
-import { createId } from "@/lib/utils/id"
+import { createCustomId } from "@/lib/utils/custom-id"
 import { fileTable } from "./file"
 
 export const chatTable = pgTable("chats", {
   id: text()
     .primaryKey()
-    .$defaultFn(() => createId()),
+    .$defaultFn(() => createCustomId()),
   title: text("title").notNull(),
   focusMode: text("focusMode").notNull(),
   createdAt: timestamp("created_at").defaultNow(),

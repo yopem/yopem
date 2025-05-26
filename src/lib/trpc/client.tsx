@@ -11,6 +11,7 @@ import { type AppRouter } from "@/lib/api/root"
 import { createQueryClient } from "./query-client"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined
+
 const getQueryClient = () => {
   if (typeof window === "undefined") {
     return createQueryClient()
