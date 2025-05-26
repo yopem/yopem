@@ -14,7 +14,7 @@ import {
   type SelectSession,
   type SelectUser,
 } from "@/lib/db/schema/user"
-import { appEnv } from "@/lib/utils/env/server"
+import { appEnv } from "@/lib/env/server"
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20)

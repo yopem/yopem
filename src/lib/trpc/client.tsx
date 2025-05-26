@@ -7,7 +7,7 @@ import { createTRPCContext } from "@trpc/tanstack-react-query"
 import SuperJSON from "superjson"
 
 import type { AppRouter } from "@/lib/api/root"
-import { appEnv } from "@/lib/utils/env/client"
+import { appEnv } from "@/lib/env/client"
 import { createQueryClient } from "./query-client"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined

@@ -1,4 +1,4 @@
-import { env } from "@/lib/utils/env"
+import { env } from "@/lib/env"
 
 export const appEnv = env.APP_ENV
 export const apiUrl = env.NEXT_PUBLIC_API_URL

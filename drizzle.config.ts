@@ -1,6 +1,6 @@
 import { defineConfig, type Config } from "drizzle-kit"
 
-import { databaseUrl } from "@/lib/utils/env/server"
+import { databaseUrl } from "@/lib/env/server"
 
 export default defineConfig({
   dialect: "postgresql",

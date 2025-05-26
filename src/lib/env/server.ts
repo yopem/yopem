@@ -1,6 +1,6 @@
 import "server-only"
 
-import { env } from "@/lib/utils/env"
+import { env } from "@/lib/env"
 
 export const appEnv = env.APP_ENV
 export const databaseUrl = env.DATABASE_URL

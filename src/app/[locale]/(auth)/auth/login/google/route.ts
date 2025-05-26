@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import { generateCodeVerifier, generateState } from "arctic"
 
 import { googleOAuth } from "@/lib/auth/oauth"
-import { appEnv } from "@/lib/utils/env/server"
+import { appEnv } from "@/lib/env/server"
 import { globalGETRateLimit } from "@/lib/utils/rate-limit"
 
 export async function GET(): Promise<Response> {

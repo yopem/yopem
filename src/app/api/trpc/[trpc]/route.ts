@@ -3,7 +3,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
 
 import { appRouter } from "@/lib/api/root"
 import { createTRPCContext } from "@/lib/api/trpc"
-import { appEnv } from "@/lib/utils/env/server"
+import { appEnv } from "@/lib/env/server"
 
 const createContext = async (req: NextRequest) => {
   return createTRPCContext({
