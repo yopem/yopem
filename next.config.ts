@@ -44,7 +44,10 @@ const config = {
   productionBrowserSourceMaps: false,
   experimental: {
     cssChunking: true,
+    reactCompiler: true,
     serverSourceMaps: true,
+    useLightningcss: true,
+    viewTransition: true,
   },
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
