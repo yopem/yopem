@@ -3,8 +3,8 @@ import "@/styles/globals.css"
 import { type Metadata } from "next"
 import localFont from "next/font/local"
 
+import Providers from "@/components/providers"
 import { siteDescription, siteTitle } from "@/lib/env/client"
-import { TRPCReactProvider } from "@/lib/trpc/client"
 
 export const metadata: Metadata = {
   title: siteTitle,
@@ -30,9 +30,9 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${adwaita.variable}`}>
+    <html lang="en" className={`${adwaita.variable}`} suppressHydrationWarning>
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
