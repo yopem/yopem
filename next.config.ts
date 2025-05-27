@@ -46,7 +46,6 @@ const config = {
     cssChunking: true,
     reactCompiler: true,
     serverSourceMaps: true,
-    useLightningcss: true,
     viewTransition: true,
   },
   onDemandEntries: {
