@@ -47,6 +47,10 @@ const config = {
     reactCompiler: true,
     serverSourceMaps: true,
     viewTransition: true,
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
