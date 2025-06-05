@@ -2,7 +2,7 @@ import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { getScopedI18n } from "@/lib/locales/server"
 
-export default async function Page() {
+export default async function LoginPage() {
   const ts = await getScopedI18n("user")
 
   return (

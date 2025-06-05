@@ -6,7 +6,7 @@ import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
-const ThemeSwitcher: React.FunctionComponent = () => {
+const ThemeSwitcher = () => {
   const { theme, setTheme } = useTheme()
 
   const [mounted, setMounted] = React.useState(false)

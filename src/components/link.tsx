@@ -5,7 +5,9 @@ import NextLink, { type LinkProps as NextLinkProps } from "next/link"
 import { useRouter } from "next/navigation"
 import { ForesightManager, type ForesightRect } from "js.foresight"
 
-interface LinkProps extends Omit<NextLinkProps, "prefetch"> {
+interface LinkProps
+  extends React.ComponentProps<typeof NextLink>,
+    Omit<NextLinkProps, "prefetch"> {
   children: React.ReactNode
   className?: string
   hitSlop?: number | ForesightRect
@@ -13,7 +15,7 @@ interface LinkProps extends Omit<NextLinkProps, "prefetch"> {
   name?: string
 }
 
-const Link: React.FC<LinkProps> = (props) => {
+const Link = (props: LinkProps) => {
   const {
     children,
     className,

@@ -7,7 +7,7 @@ interface ThemeProviderProps {
   children: React.ReactNode
 }
 
-const ThemeProvider: React.FunctionComponent<ThemeProviderProps> = (props) => {
+const ThemeProvider = (props: ThemeProviderProps) => {
   const { children } = props
 
   return (

@@ -6,7 +6,7 @@ import { Icon } from "@yopem-ui/react-icons"
 import { useI18n } from "@/lib/locales/client"
 import { handleLogOut } from "./action"
 
-const LogoutButton: React.FC = () => {
+const LogoutButton = () => {
   const t = useI18n()
 
   return (
