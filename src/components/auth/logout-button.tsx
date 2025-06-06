@@ -7,12 +7,21 @@ import { useI18n } from "@/lib/locales/client"
 import { handleLogOut } from "./action"
 
 const LogoutButton = () => {
+  const [isPending, startTransition] = React.useTransition()
+
   const t = useI18n()
 
+  const handleSubmit = () => {
+    startTransition(async () => {
+      await handleLogOut()
+    })
+  }
+
   return (
-    <form action={void handleLogOut}>
+    <form action={handleSubmit}>
       <button
-        aria-label={t("logout")}
+        aria-label="Keluar"
+        disabled={isPending}
         className="inline-flex cursor-pointer flex-row"
       >
         <Icon name="LogOut" className="mr-2" />
