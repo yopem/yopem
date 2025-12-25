@@ -7,7 +7,6 @@ export async function createRPCContext(opts: {
   headers: Headers
   request?: Request
 }) {
-  // Create a function to get cookies that works with the request context
   const getCookiesFromRequest = () => {
     if (opts.request) {
       const cookieHeader = opts.request.headers.get("cookie") ?? ""
@@ -27,11 +26,9 @@ export async function createRPCContext(opts: {
     return null
   }
 
-  // Get session either from request cookies or current Next.js cookies
   let session = null
 
   if (opts.request) {
-    // For server-to-server calls, parse cookies from the request
     const requestCookies = getCookiesFromRequest()
     const accessToken = requestCookies?.get("access_token")
     const refreshToken = requestCookies?.get("refresh_token")
@@ -49,7 +46,6 @@ export async function createRPCContext(opts: {
       }
     }
   } else {
-    // For direct calls, use the existing auth function
     session = await auth()
   }
 
@@ -77,8 +73,6 @@ const timingMiddleware = o.middleware(async ({ next, path }) => {
 export const publicProcedure = o.use(timingMiddleware)
 
 export const protectedProcedure = publicProcedure.use(({ context, next }) => {
-  // console.info("Protected procedure context session:", context.session)
-
   if (!context.session || typeof context.session != "object") {
     throw new ORPCError("UNAUTHORIZED")
   }
