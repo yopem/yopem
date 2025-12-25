@@ -12,7 +12,14 @@ export async function GET(req: NextRequest) {
     `${url.origin}/api/auth/callback`,
   )
 
-  if (exchanged.err) return NextResponse.json(exchanged.err, { status: 400 })
+  if (exchanged.err)
+    return NextResponse.json(
+      {
+        error: exchanged.err,
+        message: `Gagal cuy! ${JSON.stringify(exchanged.err)}`,
+      },
+      { status: 400 },
+    )
 
   await setTokens(exchanged.tokens.access, exchanged.tokens.refresh)
 
