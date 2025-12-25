@@ -39,10 +39,15 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         httpBatchStreamLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",
-          // @ts-expect-error FIX: later
           headers() {
-            const headers = new Headers()
-            headers.set("x-trpc-source", "nextjs-react")
+            const headers: Record<string, string> = {
+              "x-trpc-source": "nextjs-react",
+            }
+
+            if (typeof window !== "undefined") {
+              headers["cookie"] = document.cookie
+            }
+
             return headers
           },
         }),
