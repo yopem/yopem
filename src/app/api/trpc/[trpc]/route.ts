@@ -3,12 +3,22 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
 
 import { appRouter } from "@/lib/api/root"
 import { createTRPCContext } from "@/lib/api/trpc"
+import { auth } from "@/lib/auth/session"
 import { appEnv } from "@/lib/env/server"
 
-const createContext = async (req: NextRequest) => {
-  return createTRPCContext({
-    headers: req.headers,
+const setCorsHeaders = (res: Response) => {
+  res.headers.set("Access-Control-Allow-Origin", "*")
+  res.headers.set("Access-Control-Request-Method", "*")
+  res.headers.set("Access-Control-Allow-Methods", "OPTIONS, GET, POST")
+  res.headers.set("Access-Control-Allow-Headers", "*")
+}
+
+export const OPTIONS = () => {
+  const response = new Response(null, {
+    status: 204,
   })
+  setCorsHeaders(response)
+  return response
 }
 
 const handler = (req: NextRequest) =>
@@ -16,7 +26,11 @@ const handler = (req: NextRequest) =>
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () => createContext(req),
+    createContext: () =>
+      createTRPCContext({
+        auth: async () => await auth(),
+        headers: req.headers,
+      }),
     onError:
       appEnv === "development"
         ? ({ path, error }) => {

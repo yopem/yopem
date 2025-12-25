@@ -1,11 +1,14 @@
 import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
-import { ZodError } from "zod"
+import z, { ZodError } from "zod"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async (opts: {
+  headers: Headers
+  auth: Awaited<typeof auth>
+}) => {
   const session = await auth()
 
   return {
@@ -23,7 +26,9 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       data: {
         ...shape.data,
         zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+          error.cause instanceof ZodError
+            ? z.flattenError(error.cause as ZodError<Record<string, unknown>>)
+            : null,
       },
     }
   },
