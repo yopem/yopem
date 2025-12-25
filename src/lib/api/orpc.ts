@@ -30,6 +30,8 @@ const timingMiddleware = o.middleware(async ({ next, path }) => {
 export const publicProcedure = o.use(timingMiddleware)
 
 export const protectedProcedure = publicProcedure.use(({ context, next }) => {
+  // console.info("Protected procedure context session:", context.session)
+
   if (!context.session || typeof context.session != "object") {
     throw new ORPCError("UNAUTHORIZED")
   }

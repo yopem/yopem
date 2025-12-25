@@ -12,6 +12,12 @@ const getBaseUrl = () => {
 
 const link = new RPCLink({
   url: getBaseUrl() + "/api/orpc",
+  fetch: (input, init) => {
+    return fetch(input, {
+      ...init,
+      credentials: "include",
+    })
+  },
   interceptors: [
     onError((error) => {
       console.error(error)

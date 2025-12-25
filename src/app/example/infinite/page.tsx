@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+
 import ExampleInfinite from "@/components/example/example-infinite"
 import { orpcQuery } from "@/lib/orpc/query"
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration"
@@ -15,7 +17,9 @@ export default function ExampleInfinitePage() {
 
   return (
     <HydrateClient client={queryClient}>
-      <ExampleInfinite />
+      <Suspense fallback={<p>Loading...</p>}>
+        <ExampleInfinite />
+      </Suspense>
     </HydrateClient>
   )
 }
