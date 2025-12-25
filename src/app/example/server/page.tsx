@@ -15,3 +15,5 @@ export default async function ExampleServerPage() {
     </div>
   )
 }
+
+export const dynamic = "force-dynamic"
