@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 
+import User from "@/components/user"
 import Welcome from "@/components/welcome"
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
       <Suspense fallback={<p>Loading...</p>}>
         <Welcome />
       </Suspense>
+      <User />
     </div>
   )
 }
