@@ -1,10 +1,10 @@
 import ThemeProvider from "@/components/theme/theme-provider"
-import { TRPCReactProvider } from "@/lib/trpc/client"
+import { QueryProvider } from "@/lib/query/provider"
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider>
-      <TRPCReactProvider>{children}</TRPCReactProvider>
+      <QueryProvider>{children}</QueryProvider>
     </ThemeProvider>
   )
 }

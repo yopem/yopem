@@ -1,20 +1,22 @@
-import { TRPCError } from "@trpc/server"
+import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
 import z from "zod"
 
-import { createTRPCRouter, protectedProcedure } from "@/lib/api/trpc"
+import { protectedProcedure } from "@/lib/api/orpc"
 import { insertPostSchema, postTable, updatePostSchema } from "@/lib/db/schema"
 
-export const postRouter = createTRPCRouter({
+export const postRouter = {
   create: protectedProcedure
     .input(insertPostSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
-        const [post] = await ctx.db.insert(postTable).values(input).returning()
+        const [post] = await context.db
+          .insert(postTable)
+          .values(input)
+          .returning()
         return post
       } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: error instanceof Error ? error.message : "An error occurred",
         })
       }
@@ -22,15 +24,14 @@ export const postRouter = createTRPCRouter({
 
   update: protectedProcedure
     .input(updatePostSchema)
-    .mutation(async ({ ctx, input }) => {
+    .handler(async ({ context, input }) => {
       try {
         if (!input.id) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new ORPCError("BAD_REQUEST", {
             message: "Post ID is required for update",
           })
         }
-        const [post] = await ctx.db
+        const [post] = await context.db
           .update(postTable)
           .set({
             ...input,
@@ -40,51 +41,48 @@ export const postRouter = createTRPCRouter({
           .returning()
         return post
       } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: error instanceof Error ? error.message : "An error occurred",
         })
       }
     }),
 
-  all: protectedProcedure.query(async ({ ctx }) => {
+  all: protectedProcedure.handler(async ({ context }) => {
     try {
-      const posts = await ctx.db.query.postTable.findMany({
-        where: (post, { eq }) => eq(post.userId, ctx.session.id),
+      const posts = await context.db.query.postTable.findMany({
+        where: (post, { eq }) => eq(post.userId, context.session.id),
         orderBy: (post, { desc }) => desc(post.createdAt),
       })
       if (posts.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "No posts found for the user",
         })
       }
       return posts
     } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: error instanceof Error ? error.message : "An error occurred",
       })
     }
   }),
 
-  byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    try {
-      const post = await ctx.db.query.postTable.findFirst({
-        where: (post, { eq }) => eq(post.id, input),
-      })
-      if (!post) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Post with ID ${input} not found`,
+  byId: protectedProcedure
+    .input(z.string())
+    .handler(async ({ context, input }) => {
+      try {
+        const post = await context.db.query.postTable.findFirst({
+          where: (post, { eq }) => eq(post.id, input),
+        })
+        if (!post) {
+          throw new ORPCError("NOT_FOUND", {
+            message: `Post with ID ${input} not found`,
+          })
+        }
+        return post
+      } catch (error) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: error instanceof Error ? error.message : "An error occurred",
         })
       }
-      return post
-    } catch (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "An error occurred",
-      })
-    }
-  }),
-})
+    }),
+}
