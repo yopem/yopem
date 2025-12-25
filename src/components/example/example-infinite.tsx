@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 
-import { orpcQuery } from "@/lib/orpc/query"
+import { queryApi } from "@/lib/orpc/query"
 
 const ExampleInfite = () => {
   const {
@@ -12,8 +12,8 @@ const ExampleInfite = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSuspenseInfiniteQuery(
-    orpcQuery.example.infinite.infiniteOptions({
+  } = useInfiniteQuery(
+    queryApi.example.infinite.infiniteOptions({
       input: (page: number) => ({ cursor: page }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -49,14 +49,14 @@ const ExampleInfite = () => {
     return <p>Something went wrong</p>
   }
 
-  const allItems = examples.pages.flatMap((page) => page.items)
+  const allItems = examples?.pages.flatMap((page) => page.items)
 
   return (
     <div>
       <div className="flex flex-col items-center justify-center gap-4">
         <div className="mx-auto max-w-sm rounded-md border p-4">
           <div className="space-y-2">
-            {allItems.map((example) => (
+            {allItems?.map((example) => (
               <div key={example.id} className="border-b p-2 last:border-b-0">
                 {example.title}
               </div>
@@ -71,7 +71,7 @@ const ExampleInfite = () => {
 
           <div ref={loadMoreRef} className="h-4" />
 
-          {!hasNextPage && allItems.length > 0 && (
+          {!hasNextPage && allItems !== undefined && allItems.length > 0 && (
             <div className="flex justify-center py-4">
               <div className="text-sm text-gray-500">No more items to load</div>
             </div>

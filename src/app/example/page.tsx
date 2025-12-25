@@ -9,6 +9,9 @@ export default function ExamplePage() {
       <Link href="/example/infinite" className="mt-4 text-2xl underline">
         Infinite
       </Link>
+      <Link href="/example/server" className="mt-4 text-2xl underline">
+        Server
+      </Link>
       <Link href="/example/mutation" className="mt-4 text-2xl underline">
         Mutation
       </Link>

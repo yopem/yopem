@@ -1,12 +1,12 @@
 "use client"
 
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
-import { orpcQuery } from "@/lib/orpc/query"
+import { queryApi } from "@/lib/orpc/query"
 
 const Example = () => {
-  const { data: examples, isError } = useSuspenseQuery(
-    orpcQuery.example.all.queryOptions({
+  const { data: examples, isError } = useQuery(
+    queryApi.example.all.queryOptions({
       input: {
         page: 1,
         limit: 10,
@@ -22,7 +22,7 @@ const Example = () => {
     <div>
       <div className="flex flex-col items-center justify-center gap-4">
         <div className="mx-auto max-w-sm rounded-md border p-4">
-          {examples.items.map((example) => (
+          {examples?.items.map((example) => (
             <div key={example.id}>{example.title}</div>
           ))}
         </div>

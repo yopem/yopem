@@ -1,5 +1,5 @@
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 
-import { orpcClient } from "./client"
+import { clientApi } from "./client"
 
-export const orpcQuery = createTanstackQueryUtils(orpcClient)
+export const queryApi = createTanstackQueryUtils(clientApi)

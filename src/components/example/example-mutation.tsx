@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import type { SelectPost } from "@/lib/db/schema/post"
-import { orpcClient } from "@/lib/orpc/client"
+import { clientApi } from "@/lib/orpc/client"
 
 const ExampleMutation = () => {
   const [title, setTitle] = useState("")
@@ -19,7 +19,7 @@ const ExampleMutation = () => {
 
   const createPostMutation = useMutation({
     mutationFn: async (data: { title: string; description?: string }) => {
-      return await orpcClient.example.create({
+      return await clientApi.example.create({
         title: data.title,
         description: data.description,
         userId: "current-user",
@@ -44,7 +44,7 @@ const ExampleMutation = () => {
       title?: string
       description?: string
     }) => {
-      return await orpcClient.example.update({
+      return await clientApi.example.update({
         id: data.id,
         title: data.title,
         description: data.description,
