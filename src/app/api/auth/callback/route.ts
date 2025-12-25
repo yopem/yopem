@@ -29,5 +29,5 @@ export async function GET(req: NextRequest) {
 
   await setTokens(exchanged.tokens.access, exchanged.tokens.refresh)
 
-  return NextResponse.redirect(`${url.origin}/`)
+  return NextResponse.redirect(`${origin}/`)
 }
