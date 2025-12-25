@@ -3,7 +3,6 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
 
 import { appRouter } from "@/lib/api/root"
 import { createTRPCContext } from "@/lib/api/trpc"
-import { auth } from "@/lib/auth/session"
 import { appEnv } from "@/lib/env/server"
 
 const setCorsHeaders = (res: Response) => {
@@ -28,7 +27,6 @@ const handler = (req: NextRequest) =>
     router: appRouter,
     createContext: () =>
       createTRPCContext({
-        auth: async () => await auth(),
         headers: req.headers,
       }),
     onError:

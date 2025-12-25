@@ -5,10 +5,7 @@ import z, { ZodError } from "zod"
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 
-export const createTRPCContext = async (opts: {
-  headers: Headers
-  auth: Awaited<typeof auth>
-}) => {
+export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth()
 
   return {
@@ -60,13 +57,16 @@ export const publicProcedure = t.procedure.use(timingMiddleware)
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
-    if (!ctx.session || typeof ctx.session !== "object") {
-      throw new TRPCError({ code: "UNAUTHORIZED" })
+    if (ctx.session === false || typeof ctx.session !== "object") {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Not authenticated",
+      })
     }
 
     return next({
       ctx: {
-        session: { ...ctx.session },
+        session: ctx.session,
       },
     })
   })

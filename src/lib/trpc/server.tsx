@@ -8,7 +8,6 @@ import {
 
 import { appRouter, type AppRouter } from "@/lib/api/root"
 import { createTRPCContext } from "@/lib/api/trpc"
-import { auth } from "@/lib/auth/session"
 import { createQueryClient } from "./query-client"
 
 /**
@@ -21,7 +20,6 @@ const createContext = cache(async () => {
 
   return createTRPCContext({
     headers: heads,
-    auth: async () => await auth(),
   })
 })
 
