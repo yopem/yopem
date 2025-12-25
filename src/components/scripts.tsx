@@ -1,11 +1,16 @@
+import { GoogleAnalytics } from "@next/third-parties/google"
+
+import { gaMeasurementId, umamiTrackingId } from "@/lib/env/client"
+
 const Scripts = () => {
   return (
     <>
       <script
         defer
-        data-domain="yopem.com"
-        src="https://analytics.yopem.com/js/script.js"
+        src="https://analytics.yopem.com/script.js"
+        data-website-id={umamiTrackingId}
       ></script>
+      <GoogleAnalytics gaId={gaMeasurementId} />
     </>
   )
 }

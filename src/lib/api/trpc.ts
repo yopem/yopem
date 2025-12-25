@@ -1,13 +1,16 @@
-import { initTRPC } from "@trpc/server"
+import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
 import { ZodError } from "zod"
 
+import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 
-// eslint-disable-next-line @typescript-eslint/require-await
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const session = await auth()
+
   return {
     db,
+    session,
     ...opts,
   }
 }
@@ -30,4 +33,35 @@ export const createCallerFactory = t.createCallerFactory
 
 export const createTRPCRouter = t.router
 
-export const publicProcedure = t.procedure
+const timingMiddleware = t.middleware(async ({ next, path }) => {
+  const start = Date.now()
+
+  if (t._config.isDev) {
+    // artificial delay in dev 100-500ms
+    const waitMs = Math.floor(Math.random() * 400) + 100
+    await new Promise((resolve) => setTimeout(resolve, waitMs))
+  }
+
+  const result = await next()
+
+  const end = Date.now()
+  console.info(`[TRPC] ${path} took ${end - start}ms to execute`)
+
+  return result
+})
+
+export const publicProcedure = t.procedure.use(timingMiddleware)
+
+export const protectedProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(({ ctx, next }) => {
+    if (!ctx.session || typeof ctx.session !== "object") {
+      throw new TRPCError({ code: "UNAUTHORIZED" })
+    }
+
+    return next({
+      ctx: {
+        session: { ...ctx.session },
+      },
+    })
+  })

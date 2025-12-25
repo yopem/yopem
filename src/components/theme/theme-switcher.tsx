@@ -1,7 +1,7 @@
 "use client"
 
-import * as React from "react"
-import { Icon } from "@yopem-ui/react-icons"
+import { useEffect, useState } from "react"
+import { MoonIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 const ThemeSwitcher = () => {
   const { theme, setTheme } = useTheme()
 
-  const [mounted, setMounted] = React.useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true)
   }, [])
 
@@ -31,9 +31,9 @@ const ThemeSwitcher = () => {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
       {theme === "dark" ? (
-        <Icon name="Sun" className="transition-all" />
+        <SunIcon className="transition-all" />
       ) : (
-        <Icon name="Moon" className="transition-all" />
+        <MoonIcon className="transition-all" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

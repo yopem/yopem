@@ -1,31 +1,16 @@
-"use client"
+import { LogOutIcon as LogoutIcon } from "lucide-react"
 
-import * as React from "react"
-import { Icon } from "@yopem-ui/react-icons"
-
-import { useI18n } from "@/lib/locales/client"
-import { handleLogOut } from "./action"
+import { logout } from "@/lib/auth/logout"
 
 const LogoutButton = () => {
-  const [isPending, startTransition] = React.useTransition()
-
-  const t = useI18n()
-
-  const handleSubmit = () => {
-    startTransition(async () => {
-      await handleLogOut()
-    })
-  }
-
   return (
-    <form action={handleSubmit}>
+    <form action={logout}>
       <button
         aria-label="Keluar"
-        disabled={isPending}
         className="inline-flex cursor-pointer flex-row"
       >
-        <Icon name="LogOut" className="mr-2" />
-        {t("logout")}
+        <LogoutIcon name="LogOut" className="mr-2" />
+        Logout
       </button>
     </form>
   )

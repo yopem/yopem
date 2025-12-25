@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-properties */
 
 import { createEnv } from "@t3-oss/env-nextjs"
-import { z } from "zod"
+import z from "zod"
 
 import "dotenv/config"
 
@@ -20,10 +20,9 @@ export const env = createEnv({
   },
   server: {
     DATABASE_URL: z.string().min(1),
+    REDIS_URL: z.string().min(1),
 
-    GOOGLE_CLIENT_ID: z.string().min(1),
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_REDIRECT_URL: z.string().min(1),
+    AUTH_ISSUER: z.string().min(1),
 
     CF_ACCOUNT_ID: z.string().min(1),
     R2_ACCESS_KEY: z.string().min(1),
@@ -36,6 +35,7 @@ export const env = createEnv({
     NEXT_PUBLIC_API_URL: z.string().min(1),
 
     NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().min(1),
+    NEXT_PUBLIC_UMAMI_TRACKING_ID: z.string().min(1).optional(),
 
     NEXT_PUBLIC_LOGO_URL: z.string().min(1),
     NEXT_PUBLIC_LOGO_OG_URL: z.string().min(1),
@@ -60,6 +60,7 @@ export const env = createEnv({
     APP_ENV: process.env["APP_ENV"] ?? "development",
     NEXT_PUBLIC_API_URL: `${getProtocol()}${process.env["NEXT_PUBLIC_SITE_DOMAIN"]}/api`,
 
+    NEXT_PUBLIC_UMAMI_TRACKING_ID: process.env["NEXT_PUBLIC_UMAMI_TRACKING_ID"],
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env["NEXT_PUBLIC_GA_MEASUREMENT_ID"],
 
     NEXT_PUBLIC_LOGO_URL: process.env["NEXT_PUBLIC_LOGO_URL"],

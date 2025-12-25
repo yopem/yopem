@@ -1,8 +1,16 @@
-import { createCallerFactory, createTRPCRouter } from "@/lib/api/trpc"
-import { userRouter } from "./routers/user"
+import {
+  createCallerFactory,
+  createTRPCRouter,
+  publicProcedure,
+} from "@/lib/api/trpc"
+import { postRouter } from "./routers/post"
+import { sessionRouter } from "./routers/session"
 
 export const appRouter = createTRPCRouter({
-  user: userRouter,
+  health: publicProcedure.query(() => "ok"),
+
+  post: postRouter,
+  session: sessionRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -1,64 +1,34 @@
 "use client"
 
-import * as React from "react"
-import NextLink, { type LinkProps as NextLinkProps } from "next/link"
+import NextLink, { type LinkProps } from "next/link"
 import { useRouter } from "next/navigation"
-import { ForesightManager, type ForesightRect } from "js.foresight"
+import { type ForesightRegisterOptions } from "js.foresight"
 
-interface LinkProps
-  extends React.ComponentProps<typeof NextLink>,
-    Omit<NextLinkProps, "prefetch"> {
+import useForesight from "@/hooks/use-foresight"
+
+interface ForesightLinkProps
+  extends Omit<LinkProps, "prefetch">,
+    Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
-  hitSlop?: number | ForesightRect
-  unregisterOnCallback?: boolean
-  name?: string
 }
 
-const Link = (props: LinkProps) => {
-  const {
-    children,
-    className,
-    hitSlop = 0,
-    unregisterOnCallback = true,
-    name = "",
-    ...rest
-  } = props
-
-  const [isTouchDevice, setIsTouchDevice] = React.useState(false)
-  const LinkRef = React.useRef<HTMLAnchorElement>(null)
-
+const Link = ({ children, className, ...props }: ForesightLinkProps) => {
   const router = useRouter()
 
-  React.useEffect(() => {
-    if (!LinkRef.current) {
-      return
-    }
-
-    const { unregister, isTouchDevice } = ForesightManager.instance.register({
-      element: LinkRef.current,
+  const { elementRef } = useForesight<HTMLAnchorElement>({
+    callback: () => {
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      callback: () => router.prefetch(props.href.toString()),
-      hitSlop,
-      name,
-      unregisterOnCallback,
-    })
-
-    setIsTouchDevice(isTouchDevice)
-
-    return () => {
-      unregister()
-    }
-  }, [LinkRef, router, props.href, hitSlop, name, unregisterOnCallback])
+      router.prefetch(props.href.toString())
+    },
+    hitSlop: props.hitSlop,
+    name: props.name,
+    meta: props.meta,
+    reactivateAfter: props.reactivateAfter,
+  })
 
   return (
-    <NextLink
-      {...props}
-      prefetch={isTouchDevice}
-      ref={LinkRef}
-      className={className}
-      {...rest}
-    >
+    <NextLink {...props} ref={elementRef} className={className}>
       {children}
     </NextLink>
   )

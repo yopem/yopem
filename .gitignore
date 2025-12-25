@@ -36,4 +36,15 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+migrations/
+
+# typescript
 tsconfig.tsbuildinfo
+*.tsbuildinfo
+next-env.d.ts
+
+# ai
+.opencode/
+openspec/
+opencode.jsonc
+AGENTS.md

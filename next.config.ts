@@ -1,12 +1,4 @@
 import type { NextConfig } from "next"
-import withBundleAnalyzer from "@next/bundle-analyzer"
-
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env["ANALYZE"] === "true",
-  openAnalyzer: true,
-})
-
-const plugins = [bundleAnalyzer]
 
 const securityHeaders = [
   {
@@ -36,26 +28,15 @@ const securityHeaders = [
   { key: "Accept-Encoding", value: "gzip, compress, br" },
 ]
 
-const config = {
+const config: NextConfig = {
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
+  reactCompiler: true,
   reactStrictMode: true,
-  serverExternalPackages: ["@node-rs/argon2"],
-  eslint: { ignoreDuringBuilds: true },
+  cacheComponents: true,
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
-  experimental: {
-    cssChunking: true,
-    reactCompiler: true,
-    serverSourceMaps: true,
-    viewTransition: true,
-    staleTimes: {
-      dynamic: 30,
-      static: 180,
-    },
-  },
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
   compiler: {
     ...(process.env["APP_ENV"] === "production"
       ? {
@@ -69,11 +50,11 @@ const config = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "*",
+        hostname: "*.yopem.com",
       },
       {
         protocol: "https",
-        hostname: "*",
+        hostname: "*.yopem.com",
       },
     ],
   },
@@ -103,10 +84,4 @@ const config = {
   },
 }
 
-let finalConfig = { ...config } as NextConfig
-
-for (const plugin of plugins) {
-  finalConfig = plugin(finalConfig)
-}
-
-export default finalConfig
+export default config
