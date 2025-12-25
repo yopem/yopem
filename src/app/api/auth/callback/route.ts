@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         error: exchanged.err,
-        message: `Gagal cuy! ${JSON.stringify(exchanged.err)}`,
+        message: `Gagal cuy! ${JSON.stringify(exchanged)}`,
       },
       { status: 400 },
     )
