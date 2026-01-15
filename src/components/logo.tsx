@@ -9,6 +9,7 @@ const Logo = (props: ComponentProps<"svg">) => (
     viewBox="0 0 240.000000 240.000000"
     preserveAspectRatio="xMidYMid meet"
     shapeRendering="geometricPrecision"
+    suppressHydrationWarning
     {...props}
   >
     <g
