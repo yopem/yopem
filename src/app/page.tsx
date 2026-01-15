@@ -1,7 +1,21 @@
-export default function Home() {
+import CTA from "@/components/landing/cta"
+import Features from "@/components/landing/features"
+import Hero from "@/components/landing/hero"
+import Pricing from "@/components/landing/pricing"
+import Footer from "@/components/navigation/footer"
+import Header from "@/components/navigation/header"
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <h1 className="text-4xl">Coming soon ...</h1>
-    </div>
+    <>
+      <Header />
+      <main className="flex min-h-screen flex-col">
+        <Hero />
+        <Features />
+        <Pricing />
+        <CTA />
+      </main>
+      <Footer />
+    </>
   )
 }
