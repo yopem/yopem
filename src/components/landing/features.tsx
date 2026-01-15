@@ -1,10 +1,10 @@
 import {
-  CheckCircle as CheckCircleIcon,
-  CreditCard as CreditCardIcon,
-  LayoutDashboard as LayoutDashboardIcon,
-  Network as NetworkIcon,
-  Rocket as RocketIcon,
-  Zap as ZapIcon,
+  CheckCircleIcon,
+  CreditCardIcon,
+  LayoutDashboardIcon,
+  NetworkIcon,
+  RocketIcon,
+  ZapIcon,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
