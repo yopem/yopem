@@ -64,16 +64,12 @@ export default function Error({
             <RefreshCwIcon className="h-4 w-4" />
             Try again
           </Button>
-          <Button
-            render={(props) => (
-              <Link {...props} href="/">
-                <HomeIcon className="h-4 w-4" />
-                Go home
-              </Link>
-            )}
-            variant="outline"
-            size="lg"
-          />
+          <Link href="/">
+            <Button variant="outline" size="lg">
+              <HomeIcon className="h-4 w-4" />
+              Go home
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
