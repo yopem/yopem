@@ -1,4 +1,4 @@
-import { CheckCircle as CheckCircleIcon } from "lucide-react"
+import { CheckCircleIcon } from "lucide-react"
 
 const Pricing = () => {
   return (
