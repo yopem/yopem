@@ -16,7 +16,7 @@ interface ActivityFeedProps {
 
 const ActivityFeed = ({ items, maxHeight = "350px" }: ActivityFeedProps) => {
   return (
-    <Card className="border-border bg-card flex h-full flex-col rounded-xl border shadow-sm">
+    <Card className="border-border bg-card flex h-full flex-col rounded-xl border pt-0 pb-6 shadow-sm">
       <div className="border-border flex items-center justify-between border-b p-6">
         <p className="text-foreground text-base font-bold">Recent Activity</p>
         <button className="text-muted-foreground hover:text-foreground text-xs font-medium">
