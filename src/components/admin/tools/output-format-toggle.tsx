@@ -24,14 +24,18 @@ const OutputFormatToggle = ({ value, onChange }: OutputFormatToggleProps) => {
       <div className="flex gap-2">
         <Toggle
           pressed={value === "plain"}
-          onPressedChange={() => onChange("plain")}
+          onPressedChange={() => {
+            onChange("plain")
+          }}
           className="border-input bg-background data-[pressed]:bg-foreground data-[pressed]:text-background flex-1 rounded-md border"
         >
           Plain Text
         </Toggle>
         <Toggle
           pressed={value === "json"}
-          onPressedChange={() => onChange("json")}
+          onPressedChange={() => {
+            onChange("json")
+          }}
           className="border-input bg-background data-[pressed]:bg-foreground data-[pressed]:text-background flex-1 rounded-md border"
         >
           JSON Object

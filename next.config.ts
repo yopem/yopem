@@ -18,15 +18,15 @@ const config: NextConfig = {
         }
       : {}),
   },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "https://search.yopem.com",
-        permanent: false,
-      },
-    ]
-  },
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "/",
+  //       destination: "https://search.yopem.com",
+  //       permanent: false,
+  //     },
+  //   ]
+  // },
   images: {
     remotePatterns: [
       {

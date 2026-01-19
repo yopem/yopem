@@ -26,7 +26,7 @@
     "typecheck": "bun run --bun tsc --noEmit"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
+    "@base-ui/react": "^1.1.0",
     "@next/third-parties": "16.1.1",
     "@openauthjs/openauth": "^0.4.3",
     "@orpc/client": "^1.13.1",
@@ -34,7 +34,9 @@
     "@orpc/tanstack-query": "^1.13.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@t3-oss/env-nextjs": "^0.13.8",
+    "@tanstack/react-form": "^1.27.7",
     "@tanstack/react-query": "^5.90.5",
+    "@tanstack/zod-form-adapter": "^0.42.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

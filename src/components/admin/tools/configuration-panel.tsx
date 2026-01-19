@@ -86,7 +86,10 @@ const ConfigurationPanel = ({
               <input
                 type="number"
                 value={costPerRun}
-                onChange={(e) => onCostPerRunChange(Number(e.target.value))}
+                onChange={(e) => {
+                  const newValue = Number(e.target.value)
+                  onCostPerRunChange(newValue)
+                }}
                 className="border-input focus:border-foreground w-16 border-b bg-transparent p-0 text-right font-mono text-sm focus:outline-none"
               />
             </div>

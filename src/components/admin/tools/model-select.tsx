@@ -16,9 +16,14 @@ interface ModelSelectProps {
 
 const ModelSelect = ({ value, onChange, options }: ModelSelectProps) => {
   return (
-    <Select value={value} onValueChange={(v) => onChange(v ?? value)}>
+    <Select
+      value={value}
+      onValueChange={(v) => {
+        onChange(v ?? value)
+      }}
+    >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a model" />
+        <SelectValue />
       </SelectTrigger>
       <SelectPopup>
         {options.map((option) => (

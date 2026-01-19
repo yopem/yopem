@@ -15,12 +15,17 @@ interface InputSchemaField {
 interface InputSchemaSectionProps {
   fields: InputSchemaField[]
   onAddField?: () => void
+  onUpdateField?: (
+    id: string,
+    updates: Partial<Omit<InputSchemaField, "id">>,
+  ) => void
   onDeleteField?: (id: string) => void
 }
 
 const InputSchemaSection = ({
   fields,
   onAddField,
+  onUpdateField,
   onDeleteField,
 }: InputSchemaSectionProps) => {
   return (
@@ -43,10 +48,17 @@ const InputSchemaSection = ({
         </div>
         {fields.map((field) => (
           <InputSchemaRow
-            key={field.id}
+            key={`${field.id}-${field.variableName}-${field.description}`}
             variableName={field.variableName}
             type={field.type}
             description={field.description}
+            onVariableNameChange={(value) =>
+              onUpdateField?.(field.id, { variableName: value })
+            }
+            onTypeChange={(value) => onUpdateField?.(field.id, { type: value })}
+            onDescriptionChange={(value) =>
+              onUpdateField?.(field.id, { description: value })
+            }
             onDelete={() => onDeleteField?.(field.id)}
           />
         ))}

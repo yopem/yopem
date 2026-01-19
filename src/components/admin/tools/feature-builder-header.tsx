@@ -1,6 +1,10 @@
 "use client"
 
-import { Play as PlayIcon, Save as SaveIcon } from "lucide-react"
+import {
+  LoaderCircle as LoaderCircleIcon,
+  Play as PlayIcon,
+  Save as SaveIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -15,6 +19,7 @@ interface FeatureBuilderHeaderProps {
   status?: string
   onTestRun?: () => void
   onSave?: () => void
+  isSaving?: boolean
 }
 
 const FeatureBuilderHeader = ({
@@ -22,6 +27,7 @@ const FeatureBuilderHeader = ({
   status,
   onTestRun,
   onSave,
+  isSaving = false,
 }: FeatureBuilderHeaderProps) => {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-8">
@@ -54,9 +60,13 @@ const FeatureBuilderHeader = ({
           <PlayIcon className="size-4" />
           <span>Test Run</span>
         </Button>
-        <Button size="sm" onClick={onSave}>
-          <SaveIcon className="size-4" />
-          <span>Save Changes</span>
+        <Button size="sm" onClick={onSave} disabled={isSaving}>
+          {isSaving ? (
+            <LoaderCircleIcon className="size-4 animate-spin" />
+          ) : (
+            <SaveIcon className="size-4" />
+          )}
+          <span>{isSaving ? "Saving..." : "Save Changes"}</span>
         </Button>
       </div>
     </header>
