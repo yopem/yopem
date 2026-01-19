@@ -2,7 +2,11 @@
 
 import { type ReactNode } from "react"
 
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import AdminSidebar from "./admin-sidebar"
 
 interface NavItem {
@@ -41,7 +45,12 @@ const AdminLayout = ({
         navItems={navItems}
         user={user}
       />
-      <SidebarInset className="flex flex-col">{children}</SidebarInset>
+      <SidebarInset className="flex flex-col">
+        <header className="flex items-center gap-2 p-4">
+          <SidebarTrigger />
+        </header>
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   )
 }
