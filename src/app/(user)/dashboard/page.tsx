@@ -7,6 +7,7 @@ import {
   Play as PlayIcon,
 } from "lucide-react"
 
+import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { queryApi } from "@/lib/orpc/query"
@@ -68,18 +69,26 @@ interface RunsData {
 }
 
 function DashboardPage() {
-  const { data: stats } = useQuery(queryApi.user.getStats.queryOptions()) as {
+  const { data: stats } = useQuery({
+    ...queryApi.user.getStats.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as {
     data: StatsData | undefined
   }
-  const { data: credits } = useQuery(
-    queryApi.user.getCredits.queryOptions(),
-  ) as { data: CreditsData | undefined | null }
-  const { data: runsData } = useQuery(
-    queryApi.user.getRuns.queryOptions({ input: { limit: 5 } }),
-  ) as { data: RunsData | undefined }
+  const { data: credits } = useQuery({
+    ...queryApi.user.getCredits.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as { data: CreditsData | undefined | null }
+  const { data: runsData } = useQuery({
+    ...queryApi.user.getRuns.queryOptions({ input: { limit: 5 } }),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as { data: RunsData | undefined }
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
@@ -162,16 +171,20 @@ function DashboardPage() {
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button className="w-full">
-              <a href="/marketplace">Browse Marketplace</a>
-            </Button>
-            <Button variant="outline" className="w-full">
-              <a href="/dashboard/profile">Edit Profile</a>
-            </Button>
-            <Button variant="outline" className="w-full">
-              <a href="/dashboard/credits">Purchase Credits</a>
-            </Button>
+          <CardContent className="space-y-3">
+            <Link href="/marketplace">
+              <Button className="w-full">Browse Marketplace</Button>
+            </Link>
+            <Link href="/dashboard/profile">
+              <Button variant="outline" className="w-full">
+                Edit Profile
+              </Button>
+            </Link>
+            <Link href="/dashboard/credits">
+              <Button variant="outline" className="w-full">
+                Purchase Credits
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

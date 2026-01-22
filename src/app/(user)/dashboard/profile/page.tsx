@@ -16,6 +16,8 @@ export default function ProfilePage() {
 
   const { data: profile } = useQuery({
     ...queryApi.user.getProfile.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
   }) as {
     data:
       | {
@@ -58,7 +60,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Profile</h1>
         <p className="text-muted-foreground mt-2">

@@ -7,6 +7,7 @@ import {
   XCircle as XCircleIcon,
 } from "lucide-react"
 
+import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +24,8 @@ import { queryApi } from "@/lib/orpc/query"
 export default function RunsPage() {
   const { data: runsData, isLoading } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 50 } }),
+    retry: false,
+    refetchOnWindowFocus: false,
   }) as {
     data:
       | {
@@ -64,7 +67,7 @@ export default function RunsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">My Runs</h1>
         <p className="text-muted-foreground mt-2">
@@ -110,10 +113,10 @@ export default function RunsPage() {
                     <p className="text-muted-foreground">
                       No tool runs yet. Visit the marketplace to get started!
                     </p>
-                    <div className="mt-2">
-                      <a href="/marketplace">
+                    <div className="mt-4">
+                      <Link href="/marketplace">
                         <Button variant="outline">Browse Marketplace</Button>
-                      </a>
+                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>

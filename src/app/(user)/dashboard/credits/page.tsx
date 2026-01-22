@@ -35,6 +35,8 @@ export default function CreditsPage() {
 
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
   }) as {
     data:
       | {
@@ -52,6 +54,8 @@ export default function CreditsPage() {
 
   const { data: transactionsData } = useQuery({
     ...queryApi.user.getTransactions.queryOptions({ input: { limit: 20 } }),
+    retry: false,
+    refetchOnWindowFocus: false,
   }) as {
     data:
       | {
@@ -90,7 +94,7 @@ export default function CreditsPage() {
   const totalUsed = Number(creditsData?.totalUsed ?? 0)
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Credits</h1>
         <p className="text-muted-foreground mt-2">
@@ -153,32 +157,34 @@ export default function CreditsPage() {
         <CardHeader>
           <CardTitle>Purchase Credits</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {creditPackages.map((pkg) => (
-              <Button
+              <button
                 key={pkg.amount}
-                variant="outline"
-                className="h-auto flex-col py-4"
+                type="button"
                 onClick={() => purchaseMutation.mutate(pkg.amount)}
                 disabled={purchaseMutation.isPending}
+                className="bg-card hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-center gap-2 rounded-lg border p-6 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="text-2xl font-bold">{pkg.amount}</span>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-3xl font-bold">{pkg.amount}</span>
+                <span className="text-muted-foreground text-sm font-medium">
                   ${pkg.price}
                 </span>
-              </Button>
+              </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <div className="flex-1">
+              <label className="text-sm font-medium">Custom Amount</label>
               <Input
                 type="number"
-                placeholder="Custom amount"
+                placeholder="Enter amount"
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
                 min={1}
+                className="mt-1.5"
               />
             </div>
             <Button
