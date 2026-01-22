@@ -2,6 +2,8 @@
 
 import { transliterate as tr } from "transliteration"
 
+import { db } from "@/lib/db"
+
 export function slugify(text: string) {
   return tr(text)
     .toString() // Cast to string (optional)
@@ -43,4 +45,21 @@ export function slugifyFile(text: string) {
     .replace(/\_/g, "-") // Replace _ with -
     .replace(/\-\-+/g, "-") // Replace multiple - with single -
     .replace(/\-$/g, "") // Remove trailing -
+}
+
+export const generateUniqueToolSlug = async (text: string): Promise<string> => {
+  const slug = slugify(text)
+  let uniqueSlug = slug
+  let suffix = 1
+
+  while (
+    await db.query.tools.findFirst({
+      where: (tool, { eq }) => eq(tool.slug, uniqueSlug),
+    })
+  ) {
+    suffix++
+    uniqueSlug = `${slug}-${suffix}`
+  }
+
+  return uniqueSlug
 }
