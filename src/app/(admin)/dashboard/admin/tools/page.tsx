@@ -320,11 +320,13 @@ function ToolsPage() {
                   </TableCell>
                   <TableCell>
                     <Menu>
-                      <MenuTrigger>
-                        <Button variant="ghost" size="icon-sm">
-                          <MoreHorizontalIcon className="size-4" />
-                        </Button>
-                      </MenuTrigger>
+                      <MenuTrigger
+                        render={
+                          <Button variant="ghost" size="icon-sm">
+                            <MoreHorizontalIcon className="size-4" />
+                          </Button>
+                        }
+                      />
                       <MenuPopup>
                         <MenuGroup>
                           <MenuItem onSelect={() => handleEditClick(tool.id)}>
