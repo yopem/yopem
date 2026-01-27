@@ -21,8 +21,11 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.string().min(1),
     REDIS_URL: z.string().min(1),
+    REDIS_KEY_PREFIX: z.string().default("yopem:"),
 
     AUTH_ISSUER: z.string().min(1),
+
+    API_KEY_ENCRYPTION_SECRET: z.string().min(1),
 
     CF_ACCOUNT_ID: z.string().min(1),
     R2_ACCESS_KEY: z.string().min(1),

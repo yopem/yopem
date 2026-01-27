@@ -1,10 +1,16 @@
+"use client"
+
+import { useState } from "react"
 import {
   BarChartIcon,
   BotIcon,
   BrainIcon,
   DollarSignIcon,
+  EyeIcon,
+  EyeOffIcon,
   HelpCircleIcon,
   KeyIcon,
+  MoreVerticalIcon,
   PlusCircleIcon,
   TrendingDownIcon,
   TrendingUpIcon,
@@ -13,9 +19,56 @@ import {
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
 import AccessManagementTable from "@/components/admin/settings/access-management-table"
-import ApiProviderCard from "@/components/admin/settings/api-provider-card"
-import ApiStatsCard from "@/components/admin/settings/api-stats-card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
+import { toastManager } from "@/components/ui/toast"
+import {
+  useAddApiKey,
+  useApiKeys,
+  useApiKeyStats,
+  useDeleteApiKey,
+  useUpdateApiKey,
+} from "@/hooks/use-api-keys"
+import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
+
+// Provider configurations
+const providerIcons: Record<string, React.ReactNode> = {
+  openai: <BotIcon className="text-background" />,
+  anthropic: <BrainIcon className="text-background" />,
+  google: <KeyIcon className="text-background" />,
+  azure: <KeyIcon className="text-background" />,
+  other: <KeyIcon className="text-background" />,
+}
+
+const providerNames: Record<string, string> = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  google: "Google AI",
+  azure: "Azure OpenAI",
+  other: "Other",
+}
 
 export default function AdminSettingsPage() {
   const breadcrumbItems = [
@@ -42,6 +95,100 @@ export default function AdminSettingsPage() {
     },
   ]
 
+  // State management
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [editingProvider, setEditingProvider] = useState<ApiKeyConfig | null>(
+    null,
+  )
+  const [deletingProvider, setDeletingProvider] = useState<ApiKeyConfig | null>(
+    null,
+  )
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set())
+  const [formData, setFormData] = useState<AddApiKeyInput>({
+    provider: "openai",
+    name: "",
+    description: "",
+    apiKey: "",
+    status: "active",
+  })
+
+  // Data fetching
+  const { data: apiKeys, isLoading: keysLoading } = useApiKeys()
+  const { data: stats, isLoading: statsLoading } = useApiKeyStats()
+  const addMutation = useAddApiKey()
+  const updateMutation = useUpdateApiKey()
+  const deleteMutation = useDeleteApiKey()
+
+  // Event handlers
+  const handleAddProvider = async () => {
+    try {
+      await addMutation.mutateAsync(formData)
+      toastManager.add({
+        title: "Provider added successfully",
+        type: "success",
+      })
+      setShowAddDialog(false)
+      setFormData({
+        provider: "openai",
+        name: "",
+        description: "",
+        apiKey: "",
+        status: "active",
+      })
+    } catch (error) {
+      toastManager.add({ title: "Failed to add provider", type: "error" })
+      console.error(error)
+    }
+  }
+
+  const handleUpdateProvider = async () => {
+    if (!editingProvider) return
+    try {
+      await updateMutation.mutateAsync({
+        id: editingProvider.id,
+        name: editingProvider.name,
+        description: editingProvider.description,
+        status: editingProvider.status,
+        provider: editingProvider.provider,
+      })
+      toastManager.add({
+        title: "Provider updated successfully",
+        type: "success",
+      })
+      setEditingProvider(null)
+    } catch (error) {
+      toastManager.add({ title: "Failed to update provider", type: "error" })
+      console.error(error)
+    }
+  }
+
+  const handleDeleteProvider = async () => {
+    if (!deletingProvider) return
+    try {
+      await deleteMutation.mutateAsync({ id: deletingProvider.id })
+      toastManager.add({
+        title: "Provider deleted successfully",
+        type: "success",
+      })
+      setDeletingProvider(null)
+    } catch (error) {
+      toastManager.add({ title: "Failed to delete provider", type: "error" })
+      console.error(error)
+    }
+  }
+
+  const toggleKeyVisibility = (keyId: string) => {
+    setVisibleKeys((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(keyId)) {
+        newSet.delete(keyId)
+      } else {
+        newSet.add(keyId)
+      }
+      return newSet
+    })
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto">
@@ -63,58 +210,165 @@ export default function AdminSettingsPage() {
             }
           />
 
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <ApiStatsCard
-              title="Total Requests"
-              value="1.2M"
-              icon={<BarChartIcon />}
-              change={{
-                value: "+12.5% from last month",
-                trend: "up",
-                icon: <TrendingUpIcon />,
-              }}
-            />
-            <ApiStatsCard
-              title="Active Keys"
-              value="4"
-              icon={<KeyIcon />}
-              change={{
-                value: "2 expiring soon",
-                trend: "neutral",
-              }}
-            />
-            <ApiStatsCard
-              title="Monthly Cost"
-              value="$2,405"
-              icon={<DollarSignIcon />}
-              change={{
-                value: "-5% cost efficiency",
-                trend: "down",
-                icon: <TrendingDownIcon />,
-              }}
-            />
+            {statsLoading ? (
+              <>
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </>
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">
+                          Total Requests
+                        </p>
+                        <p className="text-foreground text-2xl font-bold">
+                          {(stats?.totalRequests ?? 0).toLocaleString()}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          <TrendingUpIcon className="mr-1 inline size-3" />
+                          +12.5% from last month
+                        </p>
+                      </div>
+                      <BarChartIcon className="text-muted-foreground size-10" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">
+                          Active Keys
+                        </p>
+                        <p className="text-foreground text-2xl font-bold">
+                          {stats?.activeKeys ?? 0}
+                        </p>
+                      </div>
+                      <KeyIcon className="text-muted-foreground size-10" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-muted-foreground text-sm">
+                          Monthly Cost
+                        </p>
+                        <p className="text-foreground text-2xl font-bold">
+                          ${(stats?.monthlyCost ?? 0).toLocaleString()}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          <TrendingDownIcon className="mr-1 inline size-3" />
+                          {stats?.costChange ?? 0}% cost efficiency
+                        </p>
+                      </div>
+                      <DollarSignIcon className="text-muted-foreground size-10" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
+          {/* API Provider Cards */}
           <div className="flex flex-col gap-8">
-            <ApiProviderCard
-              name="OpenAI"
-              description="Used for GPT-4 and Embeddings"
-              icon={<BotIcon className="text-background" />}
-              status="active"
-              apiKey="sk-proj-**********************"
-              lastUsed="Last used 2 minutes ago by System"
-            />
+            {keysLoading ? (
+              <>
+                <Skeleton className="h-48" />
+                <Skeleton className="h-48" />
+              </>
+            ) : (
+              apiKeys?.map((key) => (
+                <Card key={key.id}>
+                  <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-foreground flex h-10 w-10 items-center justify-center rounded-md [&>svg]:size-6">
+                        {providerIcons[key.provider]}
+                      </div>
+                      <div>
+                        <h3 className="text-foreground font-medium">
+                          {key.name}
+                        </h3>
+                        <p className="text-muted-foreground text-xs">
+                          {key.description ?? providerNames[key.provider]}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          key.status === "active" ? "default" : "secondary"
+                        }
+                        className="capitalize"
+                      >
+                        {key.status}
+                      </Badge>
+                      <Menu>
+                        <MenuTrigger
+                          render={
+                            <Button size="icon-xs" variant="ghost">
+                              <MoreVerticalIcon className="size-4" />
+                            </Button>
+                          }
+                        />
+                        <MenuPopup align="end">
+                          <MenuItem onClick={() => setEditingProvider(key)}>
+                            Edit
+                          </MenuItem>
+                          <MenuItem
+                            onClick={() => setDeletingProvider(key)}
+                            className="text-destructive"
+                          >
+                            Delete
+                          </MenuItem>
+                        </MenuPopup>
+                      </Menu>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-6 p-6">
+                    <div className="space-y-2">
+                      <Label>Secret Key</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type={visibleKeys.has(key.id) ? "text" : "password"}
+                          value={key.apiKey}
+                          readOnly
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => toggleKeyVisibility(key.id)}
+                        >
+                          {visibleKeys.has(key.id) ? (
+                            <EyeOffIcon className="size-4" />
+                          ) : (
+                            <EyeIcon className="size-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {key.lastUsed && (
+                        <p className="text-muted-foreground text-xs">
+                          Last used: {new Date(key.lastUsed).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
 
-            <ApiProviderCard
-              name="Anthropic"
-              description="Used for Claude 3.5 Sonnet"
-              icon={<BrainIcon className="text-background" />}
-              status="active"
-              apiKey="sk-ant-**********************"
-              lastUsed="Last used 4 hours ago by David Chen"
-            />
-
-            <button className="border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent/50 group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-4 transition-all">
+            <button
+              onClick={() => setShowAddDialog(true)}
+              className="border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent/50 group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-4 transition-all"
+            >
               <PlusCircleIcon className="size-5 transition-transform group-hover:scale-110" />
               <span className="text-sm font-medium">Add New Provider</span>
             </button>
@@ -134,14 +388,227 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="border-border bg-background/95 sticky bottom-0 flex justify-end gap-3 border-t p-4 backdrop-blur-sm">
-        <Button variant="ghost" size="sm">
-          Cancel
-        </Button>
-        <Button size="sm" className="shadow-sm">
-          Save Changes
-        </Button>
-      </div>
+      {/* Add Provider Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Provider</DialogTitle>
+            <DialogDescription>
+              Add a new AI provider API key to your account
+            </DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="provider">Provider</Label>
+                <Select
+                  value={formData.provider}
+                  onValueChange={(value) => {
+                    if (value)
+                      setFormData({
+                        ...formData,
+                        provider: value,
+                      })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI</SelectItem>
+                    <SelectItem value="anthropic">Anthropic</SelectItem>
+                    <SelectItem value="google">Google AI</SelectItem>
+                    <SelectItem value="azure">Azure OpenAI</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="e.g., Production OpenAI"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="e.g., Used for GPT-4 and Embeddings"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apiKey">API Key</Label>
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={formData.apiKey}
+                  onChange={(e) =>
+                    setFormData({ ...formData, apiKey: e.target.value })
+                  }
+                  placeholder="sk-proj-..."
+                />
+              </div>
+            </div>
+          </DialogPanel>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setShowAddDialog(false)}
+              disabled={addMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddProvider}
+              disabled={
+                addMutation.isPending || !formData.name || !formData.apiKey
+              }
+            >
+              {addMutation.isPending ? "Adding..." : "Add Provider"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Provider Dialog */}
+      <Dialog
+        open={!!editingProvider}
+        onOpenChange={(open) => !open && setEditingProvider(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Provider</DialogTitle>
+            <DialogDescription>
+              Update provider settings and configuration
+            </DialogDescription>
+          </DialogHeader>
+          {editingProvider && (
+            <DialogPanel>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingProvider.name}
+                    onChange={(e) =>
+                      setEditingProvider({
+                        ...editingProvider,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">
+                    Description (Optional)
+                  </Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingProvider.description ?? ""}
+                    onChange={(e) =>
+                      setEditingProvider({
+                        ...editingProvider,
+                        description: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select
+                    value={editingProvider.status}
+                    onValueChange={(value) => {
+                      if (value) {
+                        setEditingProvider({
+                          ...editingProvider,
+                          status: value,
+                        })
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogPanel>
+          )}
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setEditingProvider(null)}
+              disabled={updateMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateProvider}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deletingProvider}
+        onOpenChange={(open) => !open && setDeletingProvider(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Provider</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this provider? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            {deletingProvider && (
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-foreground font-medium">
+                  {deletingProvider.name}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {deletingProvider.description ??
+                    providerNames[deletingProvider.provider]}
+                </p>
+              </div>
+            )}
+          </DialogPanel>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setDeletingProvider(null)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProvider}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Provider"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { ORPCError, os } from "@orpc/server"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
+import { createRedisCache } from "../cache/client"
 
 export async function createRPCContext(opts: {
   headers: Headers
@@ -49,10 +50,13 @@ export async function createRPCContext(opts: {
     session = await auth()
   }
 
+  const redis = createRedisCache()
+
   return {
     headers: opts.headers,
     session,
     db,
+    redis,
   }
 }
 
@@ -82,4 +86,14 @@ export const protectedProcedure = publicProcedure.use(({ context, next }) => {
       session: context.session,
     },
   })
+})
+
+export const adminProcedure = protectedProcedure.use(({ context, next }) => {
+  if (context.session.role !== "admin") {
+    throw new ORPCError("FORBIDDEN", {
+      message: "This action requires admin privileges",
+    })
+  }
+
+  return next()
 })

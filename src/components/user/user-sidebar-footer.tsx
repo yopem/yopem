@@ -39,10 +39,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
 
   return (
     <Menu>
-      <MenuTrigger
-        className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
-        suppressHydrationWarning
-      >
+      <MenuTrigger className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2">
         <div className="flex items-center gap-3 p-2">
           <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold">
             {user.avatar ? (
