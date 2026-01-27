@@ -49,6 +49,7 @@ const InputVariableRow = ({
     <div className="group hover:bg-muted/50 grid grid-cols-12 items-center gap-4 border-b p-4 transition-colors">
       <div className="col-span-4">
         <Input
+          nativeInput={true}
           value={variableName}
           onChange={(e) => {
             const value = e.currentTarget.value
@@ -83,6 +84,7 @@ const InputVariableRow = ({
       </div>
       <div className="col-span-4">
         <Input
+          nativeInput={true}
           value={description}
           onChange={(e) => {
             const value = e.currentTarget.value

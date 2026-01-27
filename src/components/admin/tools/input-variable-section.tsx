@@ -48,7 +48,7 @@ const InputVariableSection = ({
         </div>
         {fields.map((field) => (
           <InputVariableRow
-            key={`${field.id}-${field.variableName}-${field.description}`}
+            key={field.id}
             variableName={field.variableName}
             type={field.type}
             description={field.description}
