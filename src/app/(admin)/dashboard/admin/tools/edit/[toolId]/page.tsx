@@ -114,7 +114,7 @@ function EditToolPage() {
       <FeatureBuilderHeader
         breadcrumbItems={[
           { label: "Features", href: "/dashboard/admin/tools" },
-          { label: tool?.name || "Edit Tool" },
+          { label: tool?.name ?? "Edit Tool" },
         ]}
         status="Draft"
         onTestRun={handleTestRun}
