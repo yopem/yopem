@@ -4,9 +4,10 @@ const config: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: true,
   },
+  // cacheComponents: true,
+  serverExternalPackages: ["pg", "ioredis"],
   reactCompiler: true,
   reactStrictMode: true,
-  // cacheComponents: true,
   typescript: { ignoreBuildErrors: true },
   productionBrowserSourceMaps: false,
   compiler: {
