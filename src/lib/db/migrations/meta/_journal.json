@@ -22,6 +22,20 @@
       "when": 1769121524541,
       "tag": "0002_robust_next_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769500922605,
+      "tag": "0003_known_wong",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769500969237,
+      "tag": "0004_round_harpoon",
+      "breakpoints": true
     }
   ]
 }

@@ -18,7 +18,7 @@ export type InputFieldType =
   | "boolean"
   | "textarea"
 
-interface InputSchemaRowProps {
+interface InputVariableRowProps {
   variableName: string
   type: InputFieldType
   description: string
@@ -36,7 +36,7 @@ const typeLabels: Record<InputFieldType, string> = {
   textarea: "Long Text",
 }
 
-const InputSchemaRow = ({
+const InputVariableRow = ({
   variableName,
   type,
   description,
@@ -44,7 +44,7 @@ const InputSchemaRow = ({
   onTypeChange,
   onDescriptionChange,
   onDelete,
-}: InputSchemaRowProps) => {
+}: InputVariableRowProps) => {
   return (
     <div className="group hover:bg-muted/50 grid grid-cols-12 items-center gap-4 border-b p-4 transition-colors">
       <div className="col-span-4">
@@ -104,4 +104,4 @@ const InputSchemaRow = ({
   )
 }
 
-export default InputSchemaRow
+export default InputVariableRow

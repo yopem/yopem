@@ -12,7 +12,7 @@ export const toolVersionsTable = pgTable("tool_versions", {
   config: jsonb("config"),
   systemRole: text("system_role"),
   userInstructionTemplate: text("user_instruction_template"),
-  inputSchema: jsonb("input_schema"),
+  inputVariable: jsonb("input_variable"),
   outputFormat: text("output_format"),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: text("created_by"),

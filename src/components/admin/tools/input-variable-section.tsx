@@ -3,36 +3,36 @@
 import { Plus as PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import InputSchemaRow, { type InputFieldType } from "./input-schema-row"
+import InputVariableRow, { type InputFieldType } from "./input-variable-row"
 
-interface InputSchemaField {
+interface InputVariableField {
   id: string
   variableName: string
   type: InputFieldType
   description: string
 }
 
-interface InputSchemaSectionProps {
-  fields: InputSchemaField[]
+interface InputVariableSectionProps {
+  fields: InputVariableField[]
   onAddField?: () => void
   onUpdateField?: (
     id: string,
-    updates: Partial<Omit<InputSchemaField, "id">>,
+    updates: Partial<Omit<InputVariableField, "id">>,
   ) => void
   onDeleteField?: (id: string) => void
 }
 
-const InputSchemaSection = ({
+const InputVariableSection = ({
   fields,
   onAddField,
   onUpdateField,
   onDeleteField,
-}: InputSchemaSectionProps) => {
+}: InputVariableSectionProps) => {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">Input Schema</h3>
+          <h3 className="text-lg font-semibold">Input Variable</h3>
         </div>
         <Button variant="outline" size="xs" onClick={onAddField}>
           <PlusIcon className="size-3.5" />
@@ -47,7 +47,7 @@ const InputSchemaSection = ({
           <div className="col-span-1 text-right">Actions</div>
         </div>
         {fields.map((field) => (
-          <InputSchemaRow
+          <InputVariableRow
             key={`${field.id}-${field.variableName}-${field.description}`}
             variableName={field.variableName}
             type={field.type}
@@ -67,4 +67,4 @@ const InputSchemaSection = ({
   )
 }
 
-export default InputSchemaSection
+export default InputVariableSection

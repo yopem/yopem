@@ -91,9 +91,9 @@ function EditToolPage() {
   })
 
   const handleTestRun = () => {
-    if (!tool?.inputSchema || !Array.isArray(tool.inputSchema)) return
+    if (!tool?.inputVariable || !Array.isArray(tool.inputVariable)) return
     const initialInputs: Record<string, string> = {}
-    tool.inputSchema.forEach((field: { variableName: string }) => {
+    tool.inputVariable.forEach((field: { variableName: string }) => {
       initialInputs[field.variableName] = ""
     })
     setTestInputs(initialInputs)
@@ -162,12 +162,12 @@ function EditToolPage() {
 
             <div className="flex flex-col gap-4 p-6">
               <>
-                {tool?.inputSchema &&
-                  Array.isArray(tool.inputSchema) &&
-                  tool.inputSchema.length > 0 && (
+                {tool?.inputVariable &&
+                  Array.isArray(tool.inputVariable) &&
+                  tool.inputVariable.length > 0 && (
                     <div className="flex flex-col gap-4">
                       {(
-                        tool.inputSchema as {
+                        tool.inputVariable as {
                           variableName: string
                           description: string
                           type: string

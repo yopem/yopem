@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
 import { insertToolSchema, type SelectTool } from "@/lib/db/schema"
 import ConfigurationPanel from "./configuration-panel"
-import type { InputFieldType } from "./input-schema-row"
-import InputSchemaSection from "./input-schema-section"
+import type { InputFieldType } from "./input-variable-row"
+import InputVariableSection from "./input-variable-section"
 import PromptLogicSection from "./prompt-logic-section"
 
 const modelOptions = [
@@ -28,7 +28,7 @@ const toolFormSchema = insertToolSchema
     description: true,
     systemRole: true,
     userInstructionTemplate: true,
-    inputSchema: true,
+    inputVariable: true,
     outputFormat: true,
     costPerRun: true,
     config: true,
@@ -42,7 +42,7 @@ const toolFormSchema = insertToolSchema
       .string()
       .min(1, "User instruction template is required")
       .trim(),
-    inputSchema: z
+    inputVariable: z
       .array(
         z.object({
           variableName: z.string().min(1),
@@ -95,7 +95,7 @@ const ToolForm = ({
         description: value.description,
         systemRole: value.systemRole,
         userInstructionTemplate: value.userInstructionTemplate,
-        inputSchema: value.inputFields.map((field) => ({
+        inputVariable: value.inputFields.map((field) => ({
           variableName: field.variableName,
           type: field.type,
           description: field.description,
@@ -137,11 +137,14 @@ const ToolForm = ({
         initialData.userInstructionTemplate ?? "",
       )
 
-      if (initialData.inputSchema && Array.isArray(initialData.inputSchema)) {
+      if (
+        initialData.inputVariable &&
+        Array.isArray(initialData.inputVariable)
+      ) {
         form.setFieldValue(
           "inputFields",
           (
-            initialData.inputSchema as {
+            initialData.inputVariable as {
               variableName: string
               type: "text" | "select"
               description: string
@@ -293,7 +296,7 @@ const ToolForm = ({
 
         <Separator />
 
-        <InputSchemaSection
+        <InputVariableSection
           fields={form.getFieldValue("inputFields")}
           onAddField={handleAddField}
           onUpdateField={handleUpdateField}

@@ -1,0 +1,1 @@
+ALTER TABLE "tools" RENAME COLUMN "input_schema" TO "input_variable";
