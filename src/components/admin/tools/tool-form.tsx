@@ -260,9 +260,16 @@ const ToolForm = ({
 
   useEffect(() => {
     if (onFormReady) {
-      onFormReady(() => {
-        void form.handleSubmit()
-      })
+      const handleSubmit = () => {
+        const formData = form.state.values
+        const hasRequiredFields =
+          formData.name && formData.description && formData.systemRole
+
+        if (hasRequiredFields) {
+          void form.handleSubmit()
+        }
+      }
+      onFormReady(handleSubmit)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
