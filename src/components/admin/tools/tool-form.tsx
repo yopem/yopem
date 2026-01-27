@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
@@ -71,6 +71,9 @@ const ToolForm = ({
   showSlug = true,
   onFormReady,
 }: ToolFormProps) => {
+  const systemRoleRef = useRef<HTMLTextAreaElement>(null)
+  const userInstructionRef = useRef<HTMLTextAreaElement>(null)
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -181,11 +184,33 @@ const ToolForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, mode])
 
-  const handleInsertVariable = (variable: string) => {
-    form.setFieldValue(
-      "userInstructionTemplate",
-      `${form.getFieldValue("userInstructionTemplate")}\n{{${variable}}}`,
-    )
+  const handleInsertVariable = (
+    variable: string,
+    target: "systemRole" | "userInstruction",
+  ) => {
+    const fieldName =
+      target === "systemRole" ? "systemRole" : "userInstructionTemplate"
+    const currentValue = form.getFieldValue(fieldName)
+    const ref = target === "systemRole" ? systemRoleRef : userInstructionRef
+
+    const textarea = ref.current
+    if (textarea && textarea === document.activeElement) {
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const newValue =
+        currentValue.substring(0, start) +
+        `{{${variable}}}` +
+        currentValue.substring(end)
+      form.setFieldValue(fieldName, newValue)
+
+      setTimeout(() => {
+        const newPosition = start + variable.length + 4
+        textarea.selectionStart = textarea.selectionEnd = newPosition
+        textarea.focus()
+      }, 0)
+    } else {
+      form.setFieldValue(fieldName, `${currentValue}\n{{${variable}}}`)
+    }
   }
 
   const handleAddField = () => {
@@ -239,7 +264,8 @@ const ToolForm = ({
         void form.handleSubmit()
       })
     }
-  }, [onFormReady, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -296,61 +322,101 @@ const ToolForm = ({
 
         <Separator />
 
-        <InputVariableSection
-          fields={form.getFieldValue("inputFields")}
-          onAddField={handleAddField}
-          onUpdateField={handleUpdateField}
-          onDeleteField={handleDeleteField}
-        />
+        <form.Subscribe
+          selector={(state) => ({
+            inputFields: state.values.inputFields,
+          })}
+        >
+          {({ inputFields }) => (
+            <InputVariableSection
+              fields={inputFields}
+              onAddField={handleAddField}
+              onUpdateField={handleUpdateField}
+              onDeleteField={handleDeleteField}
+            />
+          )}
+        </form.Subscribe>
 
         <Separator />
 
-        <PromptLogicSection
-          systemRole={form.getFieldValue("systemRole")}
-          userInstructionTemplate={form.getFieldValue(
-            "userInstructionTemplate",
+        <form.Subscribe
+          selector={(state) => ({
+            systemRole: state.values.systemRole,
+            userInstructionTemplate: state.values.userInstructionTemplate,
+            inputFields: state.values.inputFields,
+          })}
+        >
+          {({ systemRole, userInstructionTemplate, inputFields }) => (
+            <PromptLogicSection
+              systemRole={systemRole}
+              userInstructionTemplate={userInstructionTemplate}
+              variableNames={inputFields
+                .filter((f) => f.variableName && f.variableName.trim() !== "")
+                .map((f) => f.variableName)}
+              onSystemRoleChange={(value) =>
+                form.setFieldValue("systemRole", value)
+              }
+              onUserInstructionChange={(value) =>
+                form.setFieldValue("userInstructionTemplate", value)
+              }
+              onInsertVariable={(variable) =>
+                handleInsertVariable(variable, "userInstruction")
+              }
+              onInsertSystemRoleVariable={(variable) =>
+                handleInsertVariable(variable, "systemRole")
+              }
+              onRestoreVersion={() => {
+                console.info("Restore version clicked")
+              }}
+              systemRoleRef={systemRoleRef}
+              userInstructionRef={userInstructionRef}
+            />
           )}
-          variableNames={form
-            .getFieldValue("inputFields")
-            .filter((f) => f.variableName && f.variableName.trim() !== "")
-            .map((f) => f.variableName)}
-          onSystemRoleChange={(value) =>
-            form.setFieldValue("systemRole", value)
-          }
-          onUserInstructionChange={(value) =>
-            form.setFieldValue("userInstructionTemplate", value)
-          }
-          onInsertVariable={handleInsertVariable}
-          onRestoreVersion={() => {
-            console.info("Restore version clicked")
-          }}
-        />
+        </form.Subscribe>
       </div>
 
-      <aside className="bg-muted/30 w-80 border-l p-6">
-        <ConfigurationPanel
-          modelEngine={form.getFieldValue("modelEngine")}
-          temperature={form.getFieldValue("temperature")}
-          maxTokens={form.getFieldValue("maxTokens")}
-          outputFormat={form.getFieldValue("outputFormat")}
-          costPerRun={form.getFieldValue("costPerRun")}
-          markup={0.2}
-          onModelEngineChange={(value) =>
-            form.setFieldValue("modelEngine", value)
-          }
-          onTemperatureChange={(value) =>
-            form.setFieldValue("temperature", value)
-          }
-          onMaxTokensChange={(value) => form.setFieldValue("maxTokens", value)}
-          onOutputFormatChange={(value) =>
-            form.setFieldValue("outputFormat", value)
-          }
-          onCostPerRunChange={(value) =>
-            form.setFieldValue("costPerRun", value)
-          }
-          modelOptions={modelOptions}
-        />
-      </aside>
+      <form.Subscribe
+        selector={(state) => ({
+          modelEngine: state.values.modelEngine,
+          temperature: state.values.temperature,
+          maxTokens: state.values.maxTokens,
+          outputFormat: state.values.outputFormat,
+          costPerRun: state.values.costPerRun,
+        })}
+      >
+        {({
+          modelEngine,
+          temperature,
+          maxTokens,
+          outputFormat,
+          costPerRun,
+        }) => (
+          <ConfigurationPanel
+            modelEngine={modelEngine}
+            temperature={temperature}
+            maxTokens={maxTokens}
+            outputFormat={outputFormat}
+            costPerRun={costPerRun}
+            markup={0.2}
+            onModelEngineChange={(value) =>
+              form.setFieldValue("modelEngine", value)
+            }
+            onTemperatureChange={(value) =>
+              form.setFieldValue("temperature", value)
+            }
+            onMaxTokensChange={(value) =>
+              form.setFieldValue("maxTokens", value)
+            }
+            onOutputFormatChange={(value) =>
+              form.setFieldValue("outputFormat", value)
+            }
+            onCostPerRunChange={(value) =>
+              form.setFieldValue("costPerRun", value)
+            }
+            modelOptions={modelOptions}
+          />
+        )}
+      </form.Subscribe>
     </div>
   )
 }
