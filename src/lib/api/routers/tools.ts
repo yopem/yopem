@@ -198,6 +198,67 @@ export const toolsRouter = {
       }
     }),
 
+  executePreview: protectedProcedure
+    .input(
+      z.object({
+        systemRole: z.string(),
+        userInstructionTemplate: z.string(),
+        inputVariable: z.array(
+          z.object({
+            variableName: z.string(),
+            type: z.enum(["text", "select"]),
+            description: z.string(),
+          }),
+        ),
+        config: z.object({
+          modelEngine: z.string(),
+          temperature: z.number(),
+          maxTokens: z.number(),
+        }),
+        outputFormat: z.enum(["plain", "json"]),
+        inputs: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .handler(({ input }) => {
+      const requiredInputs = input.inputVariable.map((v) => v.variableName)
+      const providedInputs = Object.keys(input.inputs)
+
+      const missingInputs = requiredInputs.filter(
+        (req) => !providedInputs.includes(req),
+      )
+      if (missingInputs.length > 0) {
+        throw new Error(`Missing required inputs: ${missingInputs.join(", ")}`)
+      }
+
+      if (!input.systemRole || input.systemRole.trim() === "") {
+        throw new Error("System role is required")
+      }
+      if (
+        !input.userInstructionTemplate ||
+        input.userInstructionTemplate.trim() === ""
+      ) {
+        throw new Error("User instruction template is required")
+      }
+
+      // TODO: Replace with actual AI execution logic
+      // For now, return a preview response
+      const output = `Preview execution completed.
+      Configuration:
+      - Model: ${input.config.modelEngine}
+      - Temperature: ${input.config.temperature}
+      - Max Tokens: ${input.config.maxTokens}
+      - Output Format: ${input.outputFormat}
+
+      Inputs: ${JSON.stringify(input.inputs, null, 2)}
+
+      Note: This is a preview execution. Actual AI integration will be implemented.`
+
+      return {
+        output,
+        cost: 0,
+      }
+    }),
+
   create: protectedProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
@@ -220,7 +281,6 @@ export const toolsRouter = {
       }
       const { id, ...data } = input
 
-      // If name is being updated, regenerate slug
       let slug: string | undefined
       if (data.name) {
         const [existingTool] = await context.db

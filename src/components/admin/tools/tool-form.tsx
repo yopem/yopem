@@ -62,6 +62,7 @@ interface ToolFormProps {
   isSaving?: boolean
   showSlug?: boolean
   onFormReady?: (handleSubmit: () => void) => void
+  onFormValuesReady?: (getFormValues: () => ToolFormData) => void
 }
 
 const ToolForm = ({
@@ -70,6 +71,7 @@ const ToolForm = ({
   onSubmit,
   showSlug = true,
   onFormReady,
+  onFormValuesReady,
 }: ToolFormProps) => {
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
@@ -272,7 +274,36 @@ const ToolForm = ({
       onFormReady(handleSubmit)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [onFormReady])
+
+  useEffect(() => {
+    if (onFormValuesReady) {
+      const getFormValues = () => {
+        const formData = form.state.values
+        return {
+          name: formData.name,
+          description: formData.description,
+          systemRole: formData.systemRole,
+          userInstructionTemplate: formData.userInstructionTemplate,
+          inputVariable: formData.inputFields.map((field) => ({
+            variableName: field.variableName,
+            type: field.type,
+            description: field.description,
+          })),
+          outputFormat: formData.outputFormat,
+          costPerRun: String(formData.costPerRun),
+          config: {
+            modelEngine: formData.modelEngine,
+            temperature: formData.temperature,
+            maxTokens: formData.maxTokens,
+          },
+          status: "draft" as const,
+        }
+      }
+      onFormValuesReady(getFormValues)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onFormValuesReady])
 
   return (
     <div className="flex flex-1 overflow-hidden">

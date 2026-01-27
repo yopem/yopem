@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 
 import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
 import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
+import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
@@ -15,6 +16,18 @@ function AddToolPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("builder")
   const [handleFormSubmit, setHandleFormSubmit] = useState<() => void>()
+  const [getFormValues, setGetFormValues] = useState<
+    (() => ToolFormData) | null
+  >(null)
+  const [testSheetOpen, setTestSheetOpen] = useState(false)
+  const [testResult, setTestResult] = useState<string | null>(null)
+  const [currentInputVariables, setCurrentInputVariables] = useState<
+    {
+      variableName: string
+      description: string
+      type: string
+    }[]
+  >([])
 
   const createToolMutation = useMutation({
     mutationFn: async (data: ToolFormData) => {
@@ -38,13 +51,96 @@ function AddToolPage() {
     },
   })
 
+  const executePreviewMutation = useMutation({
+    mutationFn: async ({
+      formData,
+      inputs,
+    }: {
+      formData: ToolFormData
+      inputs: Record<string, string>
+    }) => {
+      return await queryApi.tools.executePreview.call({
+        systemRole: formData.systemRole,
+        userInstructionTemplate: formData.userInstructionTemplate,
+        inputVariable: formData.inputVariable,
+        config: formData.config as {
+          modelEngine: string
+          temperature: number
+          maxTokens: number
+        },
+        outputFormat: formData.outputFormat ?? "plain",
+        inputs,
+      })
+    },
+    onSuccess: (data) => {
+      setTestResult(data.output)
+      toastManager.add({
+        title: "Test completed",
+        description:
+          "Preview execution completed successfully (no credits used)",
+        type: "success",
+      })
+    },
+    onError: (err: Error) => {
+      toastManager.add({
+        title: "Test execution failed",
+        description: err.message,
+        type: "error",
+      })
+    },
+  })
+
   const handleTestRun = () => {
-    console.info("Test Run clicked")
+    const formData = getFormValues?.()
+    if (!formData) {
+      toastManager.add({
+        title: "Cannot test",
+        description: "Please fill out the form first",
+        type: "error",
+      })
+      return
+    }
+
+    if (
+      !formData.systemRole ||
+      !formData.userInstructionTemplate ||
+      formData.inputVariable.length === 0
+    ) {
+      toastManager.add({
+        title: "Cannot test",
+        description:
+          "Please complete the form: system role, user instruction template, and at least one input variable are required",
+        type: "error",
+      })
+      return
+    }
+
+    setCurrentInputVariables(
+      formData.inputVariable.map((v) => ({
+        variableName: v.variableName,
+        description: v.description,
+        type: v.type,
+      })),
+    )
+
+    setTestResult(null)
+    setTestSheetOpen(true)
+  }
+
+  const handleExecuteTest = (inputs: Record<string, string>) => {
+    const formData = getFormValues?.()
+    if (!formData) return
+
+    executePreviewMutation.mutate({ formData, inputs })
   }
 
   const handleSave = () => {
     handleFormSubmit?.()
   }
+
+  const handleFormValuesReady = useCallback((fn: () => ToolFormData) => {
+    setGetFormValues(() => fn)
+  }, [])
 
   return (
     <>
@@ -65,12 +161,22 @@ function AddToolPage() {
           isSaving={createToolMutation.isPending}
           showSlug={false}
           onFormReady={setHandleFormSubmit}
+          onFormValuesReady={handleFormValuesReady}
         />
       )}
       <div className="p-8">
         <FeatureBuilderTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <Separator className="mt-8" />
       </div>
+
+      <ToolTestSheet
+        open={testSheetOpen}
+        onOpenChange={setTestSheetOpen}
+        inputVariables={currentInputVariables}
+        onExecute={handleExecuteTest}
+        isExecuting={executePreviewMutation.isPending}
+        result={testResult}
+      />
     </>
   )
 }

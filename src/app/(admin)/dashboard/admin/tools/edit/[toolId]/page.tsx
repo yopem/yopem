@@ -3,23 +3,12 @@
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { LoaderCircleIcon } from "lucide-react"
 
 import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
 import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
-import { Button } from "@/components/ui/button"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetDescription,
-  SheetHeader,
-  SheetPanel,
-  SheetPopup,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
 
@@ -28,7 +17,6 @@ function EditToolPage() {
   const toolId = params["toolId"] as string
   const [activeTab, setActiveTab] = useState("builder")
   const [testSheetOpen, setTestSheetOpen] = useState(false)
-  const [testInputs, setTestInputs] = useState<Record<string, string>>({})
   const [testResult, setTestResult] = useState<string | null>(null)
   const [handleFormSubmit, setHandleFormSubmit] = useState<() => void>()
 
@@ -92,17 +80,12 @@ function EditToolPage() {
 
   const handleTestRun = () => {
     if (!tool?.inputVariable || !Array.isArray(tool.inputVariable)) return
-    const initialInputs: Record<string, string> = {}
-    tool.inputVariable.forEach((field: { variableName: string }) => {
-      initialInputs[field.variableName] = ""
-    })
-    setTestInputs(initialInputs)
     setTestResult(null)
     setTestSheetOpen(true)
   }
 
-  const handleExecuteTest = () => {
-    executeToolMutation.mutate(testInputs)
+  const handleExecuteTest = (inputs: Record<string, string>) => {
+    executeToolMutation.mutate(inputs)
   }
 
   const handleSave = () => {
@@ -150,73 +133,22 @@ function EditToolPage() {
         </>
       )}
 
-      <Sheet open={testSheetOpen} onOpenChange={setTestSheetOpen}>
-        <SheetPopup side="right">
-          <SheetPanel>
-            <SheetHeader>
-              <SheetTitle>Test Tool Execution</SheetTitle>
-              <SheetDescription>
-                Test your tool with sample inputs before deploying.
-              </SheetDescription>
-            </SheetHeader>
-
-            <div className="flex flex-col gap-4 p-6">
-              <>
-                {tool?.inputVariable &&
-                  Array.isArray(tool.inputVariable) &&
-                  tool.inputVariable.length > 0 && (
-                    <div className="flex flex-col gap-4">
-                      {(
-                        tool.inputVariable as {
-                          variableName: string
-                          description: string
-                          type: string
-                        }[]
-                      ).map((field) => (
-                        <Field key={field.variableName}>
-                          <FieldLabel>{field.variableName}</FieldLabel>
-                          <Input
-                            value={testInputs[field.variableName] || ""}
-                            onChange={(e) =>
-                              setTestInputs((prev) => ({
-                                ...prev,
-                                [field.variableName]: e.target.value,
-                              }))
-                            }
-                            placeholder={field.description}
-                          />
-                        </Field>
-                      ))}
-                    </div>
-                  )}
-              </>
-
-              <Button
-                onClick={handleExecuteTest}
-                disabled={executeToolMutation.isPending}
-              >
-                {executeToolMutation.isPending ? (
-                  <>
-                    <LoaderCircleIcon className="size-4 animate-spin" />
-                    <span>Executing...</span>
-                  </>
-                ) : (
-                  "Execute Test"
-                )}
-              </Button>
-
-              {testResult && (
-                <div className="bg-muted mt-4 rounded-lg border p-4">
-                  <h4 className="mb-2 font-semibold">Result:</h4>
-                  <pre className="text-sm whitespace-pre-wrap">
-                    {testResult}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </SheetPanel>
-        </SheetPopup>
-      </Sheet>
+      <ToolTestSheet
+        open={testSheetOpen}
+        onOpenChange={setTestSheetOpen}
+        inputVariables={
+          (tool?.inputVariable as
+            | {
+                variableName: string
+                description: string
+                type: string
+              }[]
+            | undefined) ?? []
+        }
+        onExecute={handleExecuteTest}
+        isExecuting={executeToolMutation.isPending}
+        result={testResult}
+      />
     </>
   )
 }
