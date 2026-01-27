@@ -7,7 +7,8 @@ import { type ForesightRegisterOptions } from "js.foresight"
 import useForesight from "@/hooks/use-foresight"
 
 interface ForesightLinkProps
-  extends Omit<LinkProps, "prefetch">,
+  extends
+    Omit<LinkProps, "prefetch">,
     Omit<ForesightRegisterOptions, "element" | "callback"> {
   children: React.ReactNode
   className?: string
