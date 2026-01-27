@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 as Trash2Icon } from "lucide-react"
+import { Trash2Icon } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import {

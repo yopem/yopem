@@ -27,7 +27,7 @@ const OutputFormatToggle = ({ value, onChange }: OutputFormatToggleProps) => {
           onPressedChange={() => {
             onChange("plain")
           }}
-          className="border-input bg-background data-[pressed]:bg-foreground data-[pressed]:text-background flex-1 rounded-md border"
+          className="border-input bg-background data-pressed:bg-foreground data-pressed:text-background flex-1 rounded-md border"
         >
           Plain Text
         </Toggle>
@@ -36,7 +36,7 @@ const OutputFormatToggle = ({ value, onChange }: OutputFormatToggleProps) => {
           onPressedChange={() => {
             onChange("json")
           }}
-          className="border-input bg-background data-[pressed]:bg-foreground data-[pressed]:text-background flex-1 rounded-md border"
+          className="border-input bg-background data-pressed:bg-foreground data-pressed:text-background flex-1 rounded-md border"
         >
           JSON Object
         </Toggle>

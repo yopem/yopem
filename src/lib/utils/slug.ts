@@ -52,11 +52,13 @@ export const generateUniqueToolSlug = async (text: string): Promise<string> => {
   let uniqueSlug = slug
   let suffix = 1
 
-  while (
-    await db.query.tools.findFirst({
+  while (true) {
+    const existingTool = await db.query.toolsTable.findFirst({
       where: (tool, { eq }) => eq(tool.slug, uniqueSlug),
     })
-  ) {
+
+    if (!existingTool) break
+
     suffix++
     uniqueSlug = `${slug}-${suffix}`
   }

@@ -37,6 +37,10 @@ const config: NextConfig = {
         protocol: "https",
         hostname: "*.yopem.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+      },
     ],
   },
 }

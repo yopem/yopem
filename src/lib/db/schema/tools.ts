@@ -7,6 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { z } from "zod"
 
 import { createCustomId } from "@/lib/utils/custom-id"
 
@@ -21,6 +22,7 @@ export const toolsTable = pgTable("tools", {
     .primaryKey()
     .$defaultFn(() => createCustomId()),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
   description: text("description"),
   status: text("status", { enum: toolStatusEnum }).default("draft").notNull(),
   config: jsonb("config"),
@@ -38,7 +40,9 @@ export const toolsTable = pgTable("tools", {
   updatedAt: timestamp("updated_at").defaultNow(),
 })
 
-export const insertToolSchema = createInsertSchema(toolsTable)
+export const insertToolSchema = createInsertSchema(toolsTable).extend({
+  slug: z.string().optional(), // Slug is generated server-side, so it's optional on insert
+})
 export const updateToolSchema = createUpdateSchema(toolsTable)
 
 export type SelectTool = typeof toolsTable.$inferSelect

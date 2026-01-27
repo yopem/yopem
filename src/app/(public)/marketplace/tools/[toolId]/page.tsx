@@ -3,11 +3,7 @@
 import React, { use, useState } from "react"
 import Link from "next/link"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import {
-  ArrowLeft as ArrowLeftIcon,
-  CreditCard as CreditCardIcon,
-  Play as PlayIcon,
-} from "lucide-react"
+import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

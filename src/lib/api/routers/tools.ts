@@ -13,6 +13,7 @@ import {
   userCreditsTable,
 } from "@/lib/db/schema"
 import { createCustomId } from "@/lib/utils/custom-id"
+import { generateUniqueToolSlug } from "@/lib/utils/slug"
 
 export const toolsRouter = {
   list: publicProcedure
@@ -201,9 +202,11 @@ export const toolsRouter = {
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
       const id = createCustomId()
+      const slug = await generateUniqueToolSlug(input.name)
       await context.db.insert(toolsTable).values({
         ...input,
         id,
+        slug,
         createdBy: context.session.id,
       })
       return { id }
@@ -216,9 +219,23 @@ export const toolsRouter = {
         throw new Error("Tool ID is required")
       }
       const { id, ...data } = input
+
+      // If name is being updated, regenerate slug
+      let slug: string | undefined
+      if (data.name) {
+        const [existingTool] = await context.db
+          .select()
+          .from(toolsTable)
+          .where(eq(toolsTable.id, id))
+
+        if (existingTool.name !== data.name) {
+          slug = await generateUniqueToolSlug(data.name)
+        }
+      }
+
       await context.db
         .update(toolsTable)
-        .set({ ...data, updatedAt: new Date() })
+        .set({ ...data, ...(slug ? { slug } : {}), updatedAt: new Date() })
         .where(eq(toolsTable.id, id))
       return { success: true }
     }),
@@ -244,17 +261,21 @@ export const toolsRouter = {
       }
 
       const newId = createCustomId()
+      const duplicateName = `${tool.name} (Copy)`
+      const slug = await generateUniqueToolSlug(duplicateName)
       const {
         id: _id,
         createdAt: _createdAt,
         updatedAt: _updatedAt,
+        slug: _slug,
         ...toolData
       } = tool
 
       await context.db.insert(toolsTable).values({
         ...toolData,
         id: newId,
-        name: `${tool.name} (Copy)`,
+        name: duplicateName,
+        slug,
         createdBy: context.session.id,
         status: "draft",
       })

@@ -14,7 +14,7 @@ const Pricing = () => {
           </p>
         </div>
         <div className="mx-auto max-w-4xl">
-          <div className="from-muted/50 to-muted rounded-2xl border bg-gradient-to-br p-1">
+          <div className="from-muted/50 to-muted rounded-2xl border bg-linear-to-br p-1">
             <div className="bg-card relative flex flex-col items-center gap-8 overflow-hidden rounded-xl p-8 md:flex-row md:gap-12 md:p-12">
               <div className="bg-muted/50 pointer-events-none absolute -top-16 -right-16 -mt-16 -mr-16 rounded-full p-32 blur-3xl" />
               <div className="z-10 flex-1 text-center md:text-left">

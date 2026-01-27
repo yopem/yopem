@@ -91,7 +91,7 @@ const Features = () => {
               </div>
             </div>
           </div>
-          <div className="group border-primary/20 from-primary/5 via-primary/10 to-primary/5 shadow-primary/5 relative flex flex-col justify-between overflow-hidden rounded-xl border bg-gradient-to-br p-8 shadow-lg">
+          <div className="group border-primary/20 from-primary/5 via-primary/10 to-primary/5 shadow-primary/5 relative flex flex-col justify-between overflow-hidden rounded-xl border bg-linear-to-br p-8 shadow-lg">
             <Badge
               variant="warning"
               className="absolute top-4 right-4 z-20 tracking-wide uppercase"

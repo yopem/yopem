@@ -15,6 +15,13 @@
       "when": 1768795318669,
       "tag": "0001_perpetual_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769121524541,
+      "tag": "0002_robust_next_avengers",
+      "breakpoints": true
     }
   ]
 }

@@ -2,11 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import {
-  ChevronUp as ChevronUpIcon,
-  LogOut as LogOutIcon,
-  User as UserIcon,
-} from "lucide-react"
+import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
 
 import {
   Menu,

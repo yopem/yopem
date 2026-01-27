@@ -5,11 +5,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
-  Copy as CopyIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-  Pencil as PencilIcon,
-  Plus as PlusIcon,
-  Trash2 as Trash2Icon,
+  CopyIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
 } from "lucide-react"
 
 import {
