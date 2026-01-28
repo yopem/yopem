@@ -84,7 +84,7 @@ function DashboardPage() {
   }) as { data: RunsData | undefined }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
+    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
@@ -168,19 +168,20 @@ function DashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/marketplace">
-              <Button className="w-full">Browse Marketplace</Button>
-            </Link>
-            <Link href="/dashboard/profile">
-              <Button variant="outline" className="w-full">
-                Edit Profile
-              </Button>
-            </Link>
-            <Link href="/dashboard/credits">
-              <Button variant="outline" className="w-full">
-                Purchase Credits
-              </Button>
-            </Link>
+            <Button
+              className="w-full"
+              render={<Link href="/marketplace">Browse Marketplace</Link>}
+            />
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/profile">Edit Profile</Link>}
+            />
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/credits">Purchase Credits</Link>}
+            />
           </CardContent>
         </Card>
       </div>
