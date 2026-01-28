@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
+import { executeAITool } from "@/lib/ai/executor"
 import { protectedProcedure, publicProcedure } from "@/lib/api/orpc"
 import {
+  adminSettingsTable,
   categoriesTable,
   creditTransactionsTable,
   insertToolSchema,
@@ -12,8 +15,12 @@ import {
   updateToolSchema,
   userCreditsTable,
 } from "@/lib/db/schema"
+import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
+import { decryptApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
 import { generateUniqueToolSlug } from "@/lib/utils/slug"
+
+const API_KEYS_SETTING_KEY = "api_keys"
 
 export const toolsRouter = {
   list: publicProcedure
@@ -80,7 +87,6 @@ export const toolsRouter = {
         .from(toolsTable)
         .where(eq(toolsTable.id, input.id))
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!tool) {
         throw new Error("Tool not found")
       }
@@ -128,8 +134,7 @@ export const toolsRouter = {
         .from(toolsTable)
         .where(eq(toolsTable.id, input.toolId))
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!tool) {
+      if (tool === undefined) {
         throw new Error("Tool not found")
       }
 
@@ -137,12 +142,43 @@ export const toolsRouter = {
         throw new Error("Tool is not available")
       }
 
+      if (tool.apiKeyId === null) {
+        throw new Error(
+          "Tool is not configured with an API key. Please update the tool configuration.",
+        )
+      }
+
+      const [adminSettings] = await context.db
+        .select()
+        .from(adminSettingsTable)
+        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+
+      if (!adminSettings?.settingValue) {
+        throw new Error(
+          "No API keys configured. Please add an API key in settings.",
+        )
+      }
+
+      const apiKeys = adminSettings.settingValue as ApiKeyConfig[]
+      const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
+
+      if (!selectedKey) {
+        throw new Error(
+          "The API key configured for this tool no longer exists. Please update the tool configuration.",
+        )
+      }
+
+      if (selectedKey.status !== "active") {
+        throw new Error(
+          "The API key configured for this tool is inactive. Please activate it in settings or select a different key.",
+        )
+      }
+
       let [userCredits] = await context.db
         .select()
         .from(userCreditsTable)
         .where(eq(userCreditsTable.userId, context.session.id))
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!userCredits) {
         const newCredits = {
           id: createCustomId(),
@@ -161,11 +197,53 @@ export const toolsRouter = {
       }
 
       const runId = createCustomId()
+
+      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+
+      const toolConfig = tool.config as {
+        modelEngine: string
+        temperature: number
+        maxTokens: number
+      } | null
+
+      if (toolConfig === null) {
+        throw new Error("Tool configuration is missing")
+      }
+
+      let output: string
+      try {
+        const result = await executeAITool({
+          systemRole: tool.systemRole ?? "",
+          userInstructionTemplate: tool.userInstructionTemplate ?? "",
+          inputs: input.inputs,
+          config: toolConfig,
+          outputFormat: tool.outputFormat ?? "plain",
+          apiKey: decryptedKey,
+          provider: selectedKey.provider,
+        })
+        output = result.output
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error"
+        await context.db.insert(toolRunsTable).values({
+          id: runId,
+          toolId: input.toolId,
+          userId: context.session.id,
+          inputs: input.inputs,
+          outputs: { error: errorMessage },
+          status: "failed" as const,
+          cost: String(cost),
+          completedAt: new Date(),
+        })
+        throw new Error(`AI execution failed: ${errorMessage}`)
+      }
+
       const newRun = {
         id: runId,
         toolId: input.toolId,
         userId: context.session.id,
         inputs: input.inputs,
+        outputs: { result: output },
         status: "completed" as const,
         cost: String(cost),
         completedAt: new Date(),
@@ -193,7 +271,7 @@ export const toolsRouter = {
 
       return {
         runId,
-        output: "Tool executed successfully. AI integration pending.",
+        output,
         cost,
       }
     }),
@@ -217,9 +295,10 @@ export const toolsRouter = {
         }),
         outputFormat: z.enum(["plain", "json"]),
         inputs: z.record(z.string(), z.unknown()),
+        apiKeyId: z.string().optional(),
       }),
     )
-    .handler(({ input }) => {
+    .handler(async ({ context, input }) => {
       const requiredInputs = input.inputVariable.map((v) => v.variableName)
       const providedInputs = Object.keys(input.inputs)
 
@@ -240,22 +319,54 @@ export const toolsRouter = {
         throw new Error("User instruction template is required")
       }
 
-      // TODO: Replace with actual AI execution logic
-      // For now, return a preview response
-      const output = `Preview execution completed.
-      Configuration:
-      - Model: ${input.config.modelEngine}
-      - Temperature: ${input.config.temperature}
-      - Max Tokens: ${input.config.maxTokens}
-      - Output Format: ${input.outputFormat}
+      if (!input.apiKeyId) {
+        throw new Error("API key is required for preview execution")
+      }
 
-      Inputs: ${JSON.stringify(input.inputs, null, 2)}
+      const [adminSettings] = await context.db
+        .select()
+        .from(adminSettingsTable)
+        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
 
-      Note: This is a preview execution. Actual AI integration will be implemented.`
+      if (!adminSettings?.settingValue) {
+        throw new Error(
+          "No API keys configured. Please add an API key in settings.",
+        )
+      }
 
-      return {
-        output,
-        cost: 0,
+      const apiKeys = adminSettings.settingValue as ApiKeyConfig[]
+      const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
+
+      if (!selectedKey) {
+        throw new Error("Selected API key not found")
+      }
+
+      if (selectedKey.status !== "active") {
+        throw new Error("Selected API key is inactive")
+      }
+
+      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+
+      try {
+        const result = await executeAITool({
+          systemRole: input.systemRole,
+          userInstructionTemplate: input.userInstructionTemplate,
+          inputs: input.inputs,
+          config: input.config,
+          outputFormat: input.outputFormat,
+          apiKey: decryptedKey,
+          provider: selectedKey.provider,
+        })
+
+        return {
+          output: result.output,
+          cost: 0,
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(`AI execution failed: ${error.message}`)
+        }
+        throw new Error("AI execution failed with an unknown error")
       }
     }),
 
@@ -315,7 +426,6 @@ export const toolsRouter = {
         .from(toolsTable)
         .where(eq(toolsTable.id, input.id))
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!tool) {
         throw new Error("Tool not found")
       }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
@@ -9,18 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
+import { useAvailableModels } from "@/hooks/use-available-models"
 import { insertToolSchema, type SelectTool } from "@/lib/db/schema"
+import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
+import {
+  getProviderMismatchMessage,
+  validateModelProviderMatch,
+} from "@/lib/utils/model-provider-validation"
 import ConfigurationPanel from "./configuration-panel"
 import type { InputFieldType } from "./input-variable-row"
 import InputVariableSection from "./input-variable-section"
 import PromptLogicSection from "./prompt-logic-section"
-
-const modelOptions = [
-  "GPT-4 Turbo",
-  "GPT-3.5 Turbo",
-  "Claude 3 Opus",
-  "Mistral Large",
-]
 
 const toolFormSchema = insertToolSchema
   .pick({
@@ -33,6 +32,7 @@ const toolFormSchema = insertToolSchema
     costPerRun: true,
     config: true,
     status: true,
+    apiKeyId: true,
   })
   .extend({
     name: z.string().min(1, "Tool name is required").trim(),
@@ -51,6 +51,7 @@ const toolFormSchema = insertToolSchema
         }),
       )
       .min(1, "At least one input field is required"),
+    apiKeyId: z.string().min(1, "API key is required"),
   })
 
 export type ToolFormData = z.infer<typeof toolFormSchema>
@@ -63,6 +64,7 @@ interface ToolFormProps {
   showSlug?: boolean
   onFormReady?: (handleSubmit: () => void) => void
   onFormValuesReady?: (getFormValues: () => ToolFormData) => void
+  apiKeys?: ApiKeyConfig[]
 }
 
 const ToolForm = ({
@@ -72,9 +74,18 @@ const ToolForm = ({
   showSlug = true,
   onFormReady,
   onFormValuesReady,
+  apiKeys = [],
 }: ToolFormProps) => {
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
+  const { data: availableModelsData } = useAvailableModels()
+
+  const availableModels = useMemo(() => {
+    if (!availableModelsData || availableModelsData.length === 0) {
+      return []
+    }
+    return availableModelsData.map((model) => model.id)
+  }, [availableModelsData])
 
   const form = useForm({
     defaultValues: {
@@ -88,11 +99,13 @@ const ToolForm = ({
       }[],
       systemRole: "",
       userInstructionTemplate: "",
-      modelEngine: modelOptions[0],
+      modelEngine: "",
       temperature: 0.7,
       maxTokens: 2048,
       outputFormat: "plain" as "plain" | "json",
       costPerRun: mode === "create" ? 0 : 0.05,
+      apiKeyId: "",
+      apiKeyError: "",
     },
     onSubmit: ({ value }) => {
       const formData = {
@@ -113,6 +126,7 @@ const ToolForm = ({
           maxTokens: value.maxTokens,
         },
         status: "draft" as const,
+        apiKeyId: value.apiKeyId,
       }
 
       const result = toolFormSchema.safeParse(formData)
@@ -131,7 +145,12 @@ const ToolForm = ({
     },
   })
 
-  // Load initial data for edit mode
+  useEffect(() => {
+    if (availableModels.length > 0 && !form.getFieldValue("modelEngine")) {
+      form.setFieldValue("modelEngine", availableModels[0])
+    }
+  }, [availableModels, form])
+
   useEffect(() => {
     if (mode === "edit" && initialData) {
       form.setFieldValue("name", initialData.name)
@@ -182,9 +201,38 @@ const ToolForm = ({
       if (initialData.costPerRun) {
         form.setFieldValue("costPerRun", Number(initialData.costPerRun))
       }
+
+      if (initialData.apiKeyId) {
+        form.setFieldValue("apiKeyId", initialData.apiKeyId)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, mode])
+
+  useEffect(() => {
+    const apiKeyId = form.getFieldValue("apiKeyId")
+    const modelEngine = form.getFieldValue("modelEngine")
+
+    if (apiKeyId && modelEngine) {
+      const selectedKey = apiKeys.find((key) => key.id === apiKeyId)
+      if (selectedKey) {
+        const isValid = validateModelProviderMatch(
+          modelEngine,
+          selectedKey.provider,
+        )
+        if (!isValid) {
+          const errorMessage = getProviderMismatchMessage(
+            modelEngine,
+            selectedKey.provider,
+          )
+          form.setFieldValue("apiKeyError", errorMessage)
+        } else {
+          form.setFieldValue("apiKeyError", "")
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.state.values.apiKeyId, form.state.values.modelEngine, apiKeys])
 
   const handleInsertVariable = (
     variable: string,
@@ -243,7 +291,6 @@ const ToolForm = ({
         ? {
             ...field,
             ...updates,
-            // Ensure type is compatible with the form's expected type
             type:
               updates.type && ["text", "select"].includes(updates.type)
                 ? (updates.type as "text" | "select")
@@ -298,6 +345,7 @@ const ToolForm = ({
             maxTokens: formData.maxTokens,
           },
           status: "draft" as const,
+          apiKeyId: formData.apiKeyId,
         }
       }
       onFormValuesReady(getFormValues)
@@ -420,6 +468,8 @@ const ToolForm = ({
           maxTokens: state.values.maxTokens,
           outputFormat: state.values.outputFormat,
           costPerRun: state.values.costPerRun,
+          apiKeyId: state.values.apiKeyId,
+          apiKeyError: state.values.apiKeyError,
         })}
       >
         {({
@@ -428,6 +478,8 @@ const ToolForm = ({
           maxTokens,
           outputFormat,
           costPerRun,
+          apiKeyId,
+          apiKeyError,
         }) => (
           <ConfigurationPanel
             modelEngine={modelEngine}
@@ -436,6 +488,9 @@ const ToolForm = ({
             outputFormat={outputFormat}
             costPerRun={costPerRun}
             markup={0.2}
+            apiKeyId={apiKeyId}
+            availableApiKeys={apiKeys}
+            apiKeyError={apiKeyError}
             onModelEngineChange={(value) =>
               form.setFieldValue("modelEngine", value)
             }
@@ -451,7 +506,11 @@ const ToolForm = ({
             onCostPerRunChange={(value) =>
               form.setFieldValue("costPerRun", value)
             }
-            modelOptions={modelOptions}
+            onApiKeyIdChange={(value) => {
+              form.setFieldValue("apiKeyId", value)
+              form.setFieldValue("apiKeyError", "")
+            }}
+            modelOptions={availableModels}
           />
         )}
       </form.Subscribe>

@@ -36,6 +36,20 @@
       "when": 1769500969237,
       "tag": "0004_round_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769554943228,
+      "tag": "0005_dashing_sunset_bain",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769556703839,
+      "tag": "0006_lame_ben_grimm",
+      "breakpoints": true
     }
   ]
 }

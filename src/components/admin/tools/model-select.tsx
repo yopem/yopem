@@ -1,12 +1,13 @@
 "use client"
 
 import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Combobox,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxPopup,
+} from "@/components/ui/combobox"
 
 interface ModelSelectProps {
   value: string
@@ -15,24 +16,31 @@ interface ModelSelectProps {
 }
 
 const ModelSelect = ({ value, onChange, options }: ModelSelectProps) => {
+  const items = options.map((option) => ({ value: option, label: option }))
+  const selectedItem = items.find((item) => item.value === value) ?? null
+
   return (
-    <Select
-      value={value}
-      onValueChange={(v) => {
-        onChange(v ?? value)
+    <Combobox
+      value={selectedItem}
+      items={items}
+      onValueChange={(newValue) => {
+        if (newValue && typeof newValue === "object" && "value" in newValue) {
+          onChange(newValue.value)
+        }
       }}
     >
-      <SelectTrigger className="w-full">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectPopup>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {option}
-          </SelectItem>
-        ))}
-      </SelectPopup>
-    </Select>
+      <ComboboxInput placeholder="Search models..." />
+      <ComboboxPopup>
+        <ComboboxEmpty>No models found</ComboboxEmpty>
+        <ComboboxList>
+          {(item: { value: string; label: string }) => (
+            <ComboboxItem key={item.value} value={item}>
+              {item.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxPopup>
+    </Combobox>
   )
 }
 

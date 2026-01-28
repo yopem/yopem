@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import crypto from "crypto"
 
 import { env } from "@/lib/env"
@@ -27,6 +28,7 @@ export function decryptApiKey(ciphertext: string): string {
     const key = getEncryptionKey()
     const parts = ciphertext.split(":")
     if (parts.length !== 3) {
+      console.error("Invalid encrypted data format. Parts:", parts.length)
       throw new Error("Invalid encrypted data format")
     }
     const [ivBase64, encryptedBase64, authTagBase64] = parts
@@ -40,6 +42,7 @@ export function decryptApiKey(ciphertext: string): string {
     return decrypted
   } catch (error) {
     console.error("Error decrypting API key:", error)
+    console.error("Ciphertext format:", ciphertext?.substring(0, 50))
     throw new Error("Failed to decrypt API key")
   }
 }

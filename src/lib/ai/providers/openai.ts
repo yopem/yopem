@@ -1,0 +1,73 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { createOpenAI } from "@ai-sdk/openai"
+import { generateText } from "ai"
+
+import {
+  AIProviderError,
+  InvalidKeyError,
+  RateLimitError,
+  type AIProvider,
+  type ExecutionRequest,
+  type ExecutionResponse,
+  type ProviderConfig,
+} from "./base"
+
+export class OpenAIProvider implements AIProvider {
+  private provider: ReturnType<typeof createOpenAI>
+  private model: string
+
+  constructor(config: ProviderConfig) {
+    this.provider = createOpenAI({
+      apiKey: config.apiKey,
+    })
+    this.model = config.model
+  }
+
+  async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
+    try {
+      const result = await generateText({
+        model: this.provider(this.model),
+        system: request.systemRole,
+        prompt: request.userInstruction,
+        temperature: request.temperature,
+      })
+
+      return {
+        output: result.text,
+        usage: result.usage
+          ? {
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: result.usage.totalTokens ?? 0,
+            }
+          : undefined,
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase()
+        if (
+          errorMessage.includes("401") ||
+          errorMessage.includes("unauthorized")
+        ) {
+          throw new InvalidKeyError("openai", error)
+        }
+        if (
+          errorMessage.includes("429") ||
+          errorMessage.includes("rate limit")
+        ) {
+          throw new RateLimitError("openai", error)
+        }
+        throw new AIProviderError(
+          error.message ?? "OpenAI API error",
+          "openai",
+          error,
+        )
+      }
+      throw new AIProviderError(
+        "Unexpected error during OpenAI execution",
+        "openai",
+        error,
+      )
+    }
+  }
+}

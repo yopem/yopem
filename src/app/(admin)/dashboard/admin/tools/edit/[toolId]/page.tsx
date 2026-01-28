@@ -10,11 +10,13 @@ import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
 import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
+import { useApiKeys } from "@/hooks/use-api-keys"
 import { queryApi } from "@/lib/orpc/query"
 
 function EditToolPage() {
   const params = useParams()
   const toolId = params["toolId"] as string
+  const { data: apiKeys } = useApiKeys()
   const [activeTab, setActiveTab] = useState("builder")
   const [testSheetOpen, setTestSheetOpen] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
@@ -121,6 +123,7 @@ function EditToolPage() {
               isSaving={updateToolMutation.isPending}
               showSlug={true}
               onFormReady={setHandleFormSubmit}
+              apiKeys={apiKeys ?? []}
             />
           )}
           <div className="p-8">

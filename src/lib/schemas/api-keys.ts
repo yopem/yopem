@@ -5,6 +5,8 @@ export const apiKeyProviderSchema = z.enum([
   "anthropic",
   "google",
   "azure",
+  "openrouter",
+  "mistral",
   "other",
 ])
 

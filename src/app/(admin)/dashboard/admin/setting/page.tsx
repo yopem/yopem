@@ -210,7 +210,6 @@ export default function AdminSettingsPage() {
             }
           />
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {statsLoading ? (
               <>
@@ -277,7 +276,6 @@ export default function AdminSettingsPage() {
             )}
           </div>
 
-          {/* API Provider Cards */}
           <div className="flex flex-col gap-8">
             {keysLoading ? (
               <>
@@ -388,7 +386,6 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* Add Provider Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
@@ -479,7 +476,6 @@ export default function AdminSettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Provider Dialog */}
       <Dialog
         open={!!editingProvider}
         onOpenChange={(open) => !open && setEditingProvider(null)}
@@ -565,7 +561,6 @@ export default function AdminSettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={!!deletingProvider}
         onOpenChange={(open) => !open && setDeletingProvider(null)}

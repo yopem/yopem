@@ -10,10 +10,12 @@ import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
 import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
+import { useApiKeys } from "@/hooks/use-api-keys"
 import { queryApi } from "@/lib/orpc/query"
 
 function AddToolPage() {
   const router = useRouter()
+  const { data: apiKeys } = useApiKeys()
   const [activeTab, setActiveTab] = useState("builder")
   const [handleFormSubmit, setHandleFormSubmit] = useState<() => void>()
   const [getFormValues, setGetFormValues] = useState<
@@ -70,6 +72,7 @@ function AddToolPage() {
         },
         outputFormat: formData.outputFormat ?? "plain",
         inputs,
+        apiKeyId: formData.apiKeyId,
       })
     },
     onSuccess: (data) => {
@@ -162,6 +165,7 @@ function AddToolPage() {
           showSlug={false}
           onFormReady={setHandleFormSubmit}
           onFormValuesReady={handleFormValuesReady}
+          apiKeys={apiKeys ?? []}
         />
       )}
       <div className="p-8">

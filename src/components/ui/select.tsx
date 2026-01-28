@@ -29,6 +29,7 @@ function SelectTrigger({
         className,
       )}
       data-slot="select-trigger"
+      nativeButton
       {...props}
     >
       {children}

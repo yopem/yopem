@@ -1,5 +1,7 @@
 "use client"
 
+import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
+import ApiKeySelector from "./api-key-selector"
 import ModelSelect from "./model-select"
 import OutputFormatToggle from "./output-format-toggle"
 import RangeSlider from "./range-slider"
@@ -12,11 +14,15 @@ interface ConfigurationPanelProps {
   costPerRun: number
   markup: number
   modelOptions: string[]
+  apiKeyId?: string
+  availableApiKeys?: ApiKeyConfig[]
+  apiKeyError?: string
   onModelEngineChange: (value: string) => void
   onTemperatureChange: (value: number) => void
   onMaxTokensChange: (value: number) => void
   onOutputFormatChange: (value: "plain" | "json") => void
   onCostPerRunChange: (value: number) => void
+  onApiKeyIdChange?: (value: string) => void
 }
 
 const ConfigurationPanel = ({
@@ -27,11 +33,15 @@ const ConfigurationPanel = ({
   costPerRun,
   markup,
   modelOptions,
+  apiKeyId,
+  availableApiKeys = [],
+  apiKeyError,
   onModelEngineChange,
   onTemperatureChange,
   onMaxTokensChange,
   onOutputFormatChange,
   onCostPerRunChange,
+  onApiKeyIdChange,
 }: ConfigurationPanelProps) => {
   const markupPercentage = Math.round(markup * 100)
 
@@ -41,6 +51,14 @@ const ConfigurationPanel = ({
         Configuration
       </h3>
       <div className="flex flex-col gap-5">
+        {onApiKeyIdChange && (
+          <ApiKeySelector
+            value={apiKeyId}
+            onChange={onApiKeyIdChange}
+            availableKeys={availableApiKeys}
+            error={apiKeyError}
+          />
+        )}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Model Engine</label>
           <ModelSelect
