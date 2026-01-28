@@ -12,6 +12,7 @@ async function getInitialTools() {
       id: toolsTable.id,
       name: toolsTable.name,
       description: toolsTable.description,
+      status: toolsTable.status,
       costPerRun: toolsTable.costPerRun,
       categoryId: toolsTable.categoryId,
       createdAt: toolsTable.createdAt,

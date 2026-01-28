@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useParams } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
-import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
+import ToolForm, {
+  type ToolFormData,
+  type ToolFormRef,
+} from "@/components/admin/tools/tool-form"
 import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
@@ -17,10 +20,10 @@ function EditToolPage() {
   const params = useParams()
   const toolId = params["toolId"] as string
   const { data: apiKeys } = useApiKeys()
+  const formRef = useRef<ToolFormRef>(null)
   const [activeTab, setActiveTab] = useState("builder")
   const [testSheetOpen, setTestSheetOpen] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
-  const [handleFormSubmit, setHandleFormSubmit] = useState<() => void>()
 
   const {
     data: tool,
@@ -91,7 +94,7 @@ function EditToolPage() {
   }
 
   const handleSave = () => {
-    handleFormSubmit?.()
+    formRef.current?.submit()
   }
 
   return (
@@ -117,12 +120,12 @@ function EditToolPage() {
         <>
           {activeTab === "builder" && tool && (
             <ToolForm
+              ref={formRef}
               mode="edit"
               initialData={tool}
               onSubmit={(data) => updateToolMutation.mutate(data)}
               isSaving={updateToolMutation.isPending}
               showSlug={true}
-              onFormReady={setHandleFormSubmit}
               apiKeys={apiKeys ?? []}
             />
           )}

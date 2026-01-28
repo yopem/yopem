@@ -6,17 +6,20 @@ import ModelSelect from "./model-select"
 import OutputFormatToggle from "./output-format-toggle"
 import RangeSlider from "./range-slider"
 
-interface ConfigurationPanelProps {
+export interface ConfigValues {
   modelEngine: string
   temperature: number
   maxTokens: number
   outputFormat: "plain" | "json"
   costPerRun: number
   markup: number
-  modelOptions: string[]
   apiKeyId?: string
-  availableApiKeys?: ApiKeyConfig[]
   apiKeyError?: string
+  modelOptions: string[]
+  availableApiKeys: ApiKeyConfig[]
+}
+
+export interface ConfigHandlers {
   onModelEngineChange: (value: string) => void
   onTemperatureChange: (value: number) => void
   onMaxTokensChange: (value: number) => void
@@ -25,24 +28,34 @@ interface ConfigurationPanelProps {
   onApiKeyIdChange?: (value: string) => void
 }
 
-const ConfigurationPanel = ({
-  modelEngine,
-  temperature,
-  maxTokens,
-  outputFormat,
-  costPerRun,
-  markup,
-  modelOptions,
-  apiKeyId,
-  availableApiKeys = [],
-  apiKeyError,
-  onModelEngineChange,
-  onTemperatureChange,
-  onMaxTokensChange,
-  onOutputFormatChange,
-  onCostPerRunChange,
-  onApiKeyIdChange,
-}: ConfigurationPanelProps) => {
+interface ConfigurationPanelProps {
+  config: ConfigValues
+  handlers: ConfigHandlers
+}
+
+const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
+  const {
+    modelEngine,
+    temperature,
+    maxTokens,
+    outputFormat,
+    costPerRun,
+    markup,
+    modelOptions,
+    apiKeyId,
+    availableApiKeys,
+    apiKeyError,
+  } = config
+
+  const {
+    onModelEngineChange,
+    onTemperatureChange,
+    onMaxTokensChange,
+    onOutputFormatChange,
+    onCostPerRunChange,
+    onApiKeyIdChange,
+  } = handlers
+
   const markupPercentage = Math.round(markup * 100)
 
   return (

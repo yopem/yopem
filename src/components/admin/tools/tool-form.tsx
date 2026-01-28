@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react"
 import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
@@ -56,15 +56,19 @@ const toolFormSchema = insertToolSchema
 
 export type ToolFormData = z.infer<typeof toolFormSchema>
 
+export interface ToolFormRef {
+  submit: () => void
+  getValues: () => ToolFormData
+}
+
 interface ToolFormProps {
   mode: "create" | "edit"
   initialData?: SelectTool
   onSubmit: (data: ToolFormData) => void | Promise<void>
   isSaving?: boolean
   showSlug?: boolean
-  onFormReady?: (handleSubmit: () => void) => void
-  onFormValuesReady?: (getFormValues: () => ToolFormData) => void
   apiKeys?: ApiKeyConfig[]
+  ref?: React.Ref<ToolFormRef>
 }
 
 const ToolForm = ({
@@ -72,9 +76,8 @@ const ToolForm = ({
   initialData,
   onSubmit,
   showSlug = true,
-  onFormReady,
-  onFormValuesReady,
   apiKeys = [],
+  ref,
 }: ToolFormProps) => {
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
@@ -144,6 +147,35 @@ const ToolForm = ({
       void onSubmit(formData)
     },
   })
+
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      void form.handleSubmit()
+    },
+    getValues: () => {
+      const formData = form.state.values
+      return {
+        name: formData.name,
+        description: formData.description,
+        systemRole: formData.systemRole,
+        userInstructionTemplate: formData.userInstructionTemplate,
+        inputVariable: formData.inputFields.map((field) => ({
+          variableName: field.variableName,
+          type: field.type,
+          description: field.description,
+        })),
+        outputFormat: formData.outputFormat,
+        costPerRun: String(formData.costPerRun),
+        config: {
+          modelEngine: formData.modelEngine,
+          temperature: formData.temperature,
+          maxTokens: formData.maxTokens,
+        },
+        status: "draft" as const,
+        apiKeyId: formData.apiKeyId,
+      }
+    },
+  }))
 
   useEffect(() => {
     if (availableModels.length > 0 && !form.getFieldValue("modelEngine")) {
@@ -307,52 +339,6 @@ const ToolForm = ({
     form.setFieldValue("inputFields", filteredFields)
   }
 
-  useEffect(() => {
-    if (onFormReady) {
-      const handleSubmit = () => {
-        const formData = form.state.values
-        const hasRequiredFields =
-          formData.name && formData.description && formData.systemRole
-
-        if (hasRequiredFields) {
-          void form.handleSubmit()
-        }
-      }
-      onFormReady(handleSubmit)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onFormReady])
-
-  useEffect(() => {
-    if (onFormValuesReady) {
-      const getFormValues = () => {
-        const formData = form.state.values
-        return {
-          name: formData.name,
-          description: formData.description,
-          systemRole: formData.systemRole,
-          userInstructionTemplate: formData.userInstructionTemplate,
-          inputVariable: formData.inputFields.map((field) => ({
-            variableName: field.variableName,
-            type: field.type,
-            description: field.description,
-          })),
-          outputFormat: formData.outputFormat,
-          costPerRun: String(formData.costPerRun),
-          config: {
-            modelEngine: formData.modelEngine,
-            temperature: formData.temperature,
-            maxTokens: formData.maxTokens,
-          },
-          status: "draft" as const,
-          apiKeyId: formData.apiKeyId,
-        }
-      }
-      onFormValuesReady(getFormValues)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onFormValuesReady])
-
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
@@ -482,35 +468,34 @@ const ToolForm = ({
           apiKeyError,
         }) => (
           <ConfigurationPanel
-            modelEngine={modelEngine}
-            temperature={temperature}
-            maxTokens={maxTokens}
-            outputFormat={outputFormat}
-            costPerRun={costPerRun}
-            markup={0.2}
-            apiKeyId={apiKeyId}
-            availableApiKeys={apiKeys}
-            apiKeyError={apiKeyError}
-            onModelEngineChange={(value) =>
-              form.setFieldValue("modelEngine", value)
-            }
-            onTemperatureChange={(value) =>
-              form.setFieldValue("temperature", value)
-            }
-            onMaxTokensChange={(value) =>
-              form.setFieldValue("maxTokens", value)
-            }
-            onOutputFormatChange={(value) =>
-              form.setFieldValue("outputFormat", value)
-            }
-            onCostPerRunChange={(value) =>
-              form.setFieldValue("costPerRun", value)
-            }
-            onApiKeyIdChange={(value) => {
-              form.setFieldValue("apiKeyId", value)
-              form.setFieldValue("apiKeyError", "")
+            config={{
+              modelEngine,
+              temperature,
+              maxTokens,
+              outputFormat,
+              costPerRun,
+              markup: 0.2,
+              apiKeyId,
+              apiKeyError,
+              modelOptions: availableModels,
+              availableApiKeys: apiKeys,
             }}
-            modelOptions={availableModels}
+            handlers={{
+              onModelEngineChange: (value) =>
+                form.setFieldValue("modelEngine", value),
+              onTemperatureChange: (value) =>
+                form.setFieldValue("temperature", value),
+              onMaxTokensChange: (value) =>
+                form.setFieldValue("maxTokens", value),
+              onOutputFormatChange: (value) =>
+                form.setFieldValue("outputFormat", value),
+              onCostPerRunChange: (value) =>
+                form.setFieldValue("costPerRun", value),
+              onApiKeyIdChange: (value) => {
+                form.setFieldValue("apiKeyId", value)
+                form.setFieldValue("apiKeyError", "")
+              },
+            }}
           />
         )}
       </form.Subscribe>

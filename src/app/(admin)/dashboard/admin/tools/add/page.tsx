@@ -1,12 +1,15 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 
 import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
-import ToolForm, { type ToolFormData } from "@/components/admin/tools/tool-form"
+import ToolForm, {
+  type ToolFormData,
+  type ToolFormRef,
+} from "@/components/admin/tools/tool-form"
 import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
@@ -16,11 +19,8 @@ import { queryApi } from "@/lib/orpc/query"
 function AddToolPage() {
   const router = useRouter()
   const { data: apiKeys } = useApiKeys()
+  const formRef = useRef<ToolFormRef>(null)
   const [activeTab, setActiveTab] = useState("builder")
-  const [handleFormSubmit, setHandleFormSubmit] = useState<() => void>()
-  const [getFormValues, setGetFormValues] = useState<
-    (() => ToolFormData) | null
-  >(null)
   const [testSheetOpen, setTestSheetOpen] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
   const [currentInputVariables, setCurrentInputVariables] = useState<
@@ -94,7 +94,7 @@ function AddToolPage() {
   })
 
   const handleTestRun = () => {
-    const formData = getFormValues?.()
+    const formData = formRef.current?.getValues()
     if (!formData) {
       toastManager.add({
         title: "Cannot test",
@@ -131,19 +131,15 @@ function AddToolPage() {
   }
 
   const handleExecuteTest = (inputs: Record<string, string>) => {
-    const formData = getFormValues?.()
+    const formData = formRef.current?.getValues()
     if (!formData) return
 
     executePreviewMutation.mutate({ formData, inputs })
   }
 
   const handleSave = () => {
-    handleFormSubmit?.()
+    formRef.current?.submit()
   }
-
-  const handleFormValuesReady = useCallback((fn: () => ToolFormData) => {
-    setGetFormValues(() => fn)
-  }, [])
 
   return (
     <>
@@ -159,12 +155,11 @@ function AddToolPage() {
       />
       {activeTab === "builder" && (
         <ToolForm
+          ref={formRef}
           mode="create"
           onSubmit={(data) => createToolMutation.mutate(data)}
           isSaving={createToolMutation.isPending}
           showSlug={false}
-          onFormReady={setHandleFormSubmit}
-          onFormValuesReady={handleFormValuesReady}
           apiKeys={apiKeys ?? []}
         />
       )}

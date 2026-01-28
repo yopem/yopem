@@ -22,7 +22,7 @@ export default function ToolDetailPage({
   params: Promise<{ toolId: string }>
 }) {
   const resolvedParams = use(params) as { toolId: string }
-  const [toolId, setToolId] = useState<string>(resolvedParams.toolId || "")
+  const toolId = resolvedParams.toolId || ""
   const [inputValue, setInputValue] = useState("")
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -87,26 +87,10 @@ export default function ToolDetailPage({
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Enter Tool ID</h1>
+        <h1 className="text-3xl font-bold">Tool Details</h1>
         <p className="text-muted-foreground mt-2">
-          For testing, enter a tool ID to view its details and execute it.
+          View details and execute this tool.
         </p>
-        <div className="mt-4 flex gap-2">
-          <Input
-            placeholder="Enter tool ID (e.g., tool_abc123)"
-            value={toolId}
-            onChange={(e) => setToolId(e.target.value)}
-            className="max-w-md"
-          />
-          <Button
-            onClick={() => {
-              setOutput(null)
-              setError(null)
-            }}
-          >
-            Load Tool
-          </Button>
-        </div>
       </div>
 
       {isLoading && (

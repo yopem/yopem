@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   ArrowRight as ArrowRightIcon,
   Search as SearchIcon,
@@ -22,6 +23,7 @@ interface Tool {
   id: string
   name: string
   description: string | null
+  status: "draft" | "active" | "archived"
   costPerRun: string | null
   categoryId: string | null
   createdAt: Date | null
@@ -94,44 +96,37 @@ function SearchBar({
 function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
-  const [cursor, setCursor] = useState<string | undefined>()
-  const [tools, setTools] = useState<Tool[]>(initialTools)
-  const [loading, setLoading] = useState(false)
 
-  const handleSearch = async (query: string) => {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["marketplace-tools", search],
+      queryFn: async ({ pageParam }) => {
+        const result = await clientApi.tools.list({
+          search,
+          cursor: pageParam,
+          limit: 20,
+        })
+        return result
+      },
+      initialPageParam: undefined as string | undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialData: {
+        pages: [{ tools: initialTools, nextCursor: undefined }],
+        pageParams: [undefined],
+      },
+    })
+
+  const tools = data.pages.flatMap((page) => page.tools)
+
+  const handleSearch = (query: string) => {
     setSearch(query)
-    setCursor(undefined)
-    setLoading(true)
-    try {
-      const result = await clientApi.tools.list({ search: query, limit: 20 })
-      setTools(result.tools)
-      setCursor(result.nextCursor)
-    } catch (error) {
-      console.error("Search failed:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadMore = async () => {
-    if (!cursor || loading) return
-    setLoading(true)
-    try {
-      const result = await clientApi.tools.list({ search, cursor, limit: 20 })
-      setTools((prev) => [...prev, ...result.tools])
-      setCursor(result.nextCursor)
-    } catch (error) {
-      console.error("Load more failed:", error)
-    } finally {
-      setLoading(false)
-    }
   }
 
   return (
     <div className="space-y-6">
       <SearchBar onSearch={handleSearch} defaultValue={search} />
 
-      {loading && tools.length === 0 ? (
+      {tools.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-muted h-40 animate-pulse rounded-lg" />
@@ -149,10 +144,14 @@ function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
             ))}
           </div>
 
-          {cursor && (
+          {hasNextPage && (
             <div className="flex justify-center">
-              <Button variant="outline" onClick={loadMore} disabled={loading}>
-                {loading ? "Loading..." : "Load More"}
+              <Button
+                variant="outline"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? "Loading..." : "Load More"}
               </Button>
             </div>
           )}

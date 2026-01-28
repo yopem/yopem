@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useReducer, useState } from "react"
 import {
   BarChartIcon,
   BotIcon,
@@ -53,7 +53,6 @@ import {
 } from "@/hooks/use-api-keys"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
 
-// Provider configurations
 const providerIcons: Record<string, React.ReactNode> = {
   openai: <BotIcon className="text-background" />,
   anthropic: <BrainIcon className="text-background" />,
@@ -68,6 +67,31 @@ const providerNames: Record<string, string> = {
   google: "Google AI",
   azure: "Azure OpenAI",
   other: "Other",
+}
+
+type ModalState =
+  | { type: "closed" }
+  | { type: "adding" }
+  | { type: "editing"; provider: ApiKeyConfig }
+  | { type: "deleting"; provider: ApiKeyConfig }
+
+type ModalAction =
+  | { type: "OPEN_ADD" }
+  | { type: "OPEN_EDIT"; provider: ApiKeyConfig }
+  | { type: "OPEN_DELETE"; provider: ApiKeyConfig }
+  | { type: "CLOSE" }
+
+function modalReducer(_state: ModalState, action: ModalAction): ModalState {
+  switch (action.type) {
+    case "OPEN_ADD":
+      return { type: "adding" }
+    case "OPEN_EDIT":
+      return { type: "editing", provider: action.provider }
+    case "OPEN_DELETE":
+      return { type: "deleting", provider: action.provider }
+    case "CLOSE":
+      return { type: "closed" }
+  }
 }
 
 export default function AdminSettingsPage() {
@@ -95,14 +119,7 @@ export default function AdminSettingsPage() {
     },
   ]
 
-  // State management
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [editingProvider, setEditingProvider] = useState<ApiKeyConfig | null>(
-    null,
-  )
-  const [deletingProvider, setDeletingProvider] = useState<ApiKeyConfig | null>(
-    null,
-  )
+  const [modalState, dispatch] = useReducer(modalReducer, { type: "closed" })
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set())
   const [formData, setFormData] = useState<AddApiKeyInput>({
     provider: "openai",
@@ -112,72 +129,76 @@ export default function AdminSettingsPage() {
     status: "active",
   })
 
-  // Data fetching
   const { data: apiKeys, isLoading: keysLoading } = useApiKeys()
   const { data: stats, isLoading: statsLoading } = useApiKeyStats()
   const addMutation = useAddApiKey()
   const updateMutation = useUpdateApiKey()
   const deleteMutation = useDeleteApiKey()
 
-  // Event handlers
-  const handleAddProvider = async () => {
-    try {
-      await addMutation.mutateAsync(formData)
-      toastManager.add({
-        title: "Provider added successfully",
-        type: "success",
-      })
-      setShowAddDialog(false)
-      setFormData({
-        provider: "openai",
-        name: "",
-        description: "",
-        apiKey: "",
-        status: "active",
-      })
-    } catch (error) {
-      toastManager.add({ title: "Failed to add provider", type: "error" })
-      console.error(error)
-    }
-  }
+  const handleAddProvider = useCallback(() => {
+    void (async () => {
+      try {
+        await addMutation.mutateAsync(formData)
+        toastManager.add({
+          title: "Provider added successfully",
+          type: "success",
+        })
+        dispatch({ type: "CLOSE" })
+        setFormData({
+          provider: "openai",
+          name: "",
+          description: "",
+          apiKey: "",
+          status: "active",
+        })
+      } catch (error) {
+        toastManager.add({ title: "Failed to add provider", type: "error" })
+        console.error(error)
+      }
+    })()
+  }, [addMutation, formData])
 
-  const handleUpdateProvider = async () => {
-    if (!editingProvider) return
-    try {
-      await updateMutation.mutateAsync({
-        id: editingProvider.id,
-        name: editingProvider.name,
-        description: editingProvider.description,
-        status: editingProvider.status,
-        provider: editingProvider.provider,
-      })
-      toastManager.add({
-        title: "Provider updated successfully",
-        type: "success",
-      })
-      setEditingProvider(null)
-    } catch (error) {
-      toastManager.add({ title: "Failed to update provider", type: "error" })
-      console.error(error)
-    }
-  }
+  const handleUpdateProvider = useCallback(() => {
+    if (modalState.type !== "editing") return
+    void (async () => {
+      try {
+        await updateMutation.mutateAsync({
+          id: modalState.provider.id,
+          name: modalState.provider.name,
+          description: modalState.provider.description,
+          status: modalState.provider.status,
+          provider: modalState.provider.provider,
+        })
+        toastManager.add({
+          title: "Provider updated successfully",
+          type: "success",
+        })
+        dispatch({ type: "CLOSE" })
+      } catch (error) {
+        toastManager.add({ title: "Failed to update provider", type: "error" })
+        console.error(error)
+      }
+    })()
+  }, [updateMutation, modalState])
 
-  const handleDeleteProvider = async () => {
-    if (!deletingProvider) return
-    try {
-      await deleteMutation.mutateAsync({ id: deletingProvider.id })
-      toastManager.add({
-        title: "Provider deleted successfully",
-        type: "success",
-      })
-      setDeletingProvider(null)
-    } catch (error) {
-      toastManager.add({ title: "Failed to delete provider", type: "error" })
-      console.error(error)
-    }
-  }
+  const handleDeleteProvider = useCallback(() => {
+    if (modalState.type !== "deleting") return
+    void (async () => {
+      try {
+        await deleteMutation.mutateAsync({ id: modalState.provider.id })
+        toastManager.add({
+          title: "Provider deleted successfully",
+          type: "success",
+        })
+        dispatch({ type: "CLOSE" })
+      } catch (error) {
+        toastManager.add({ title: "Failed to delete provider", type: "error" })
+        console.error(error)
+      }
+    })()
+  }, [deleteMutation, modalState])
 
-  const toggleKeyVisibility = (keyId: string) => {
+  const toggleKeyVisibility = useCallback((keyId: string) => {
     setVisibleKeys((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(keyId)) {
@@ -187,7 +208,7 @@ export default function AdminSettingsPage() {
       }
       return newSet
     })
-  }
+  }, [])
 
   return (
     <div className="flex h-full flex-col">
@@ -317,11 +338,17 @@ export default function AdminSettingsPage() {
                           }
                         />
                         <MenuPopup align="end">
-                          <MenuItem onClick={() => setEditingProvider(key)}>
+                          <MenuItem
+                            onClick={() =>
+                              dispatch({ type: "OPEN_EDIT", provider: key })
+                            }
+                          >
                             Edit
                           </MenuItem>
                           <MenuItem
-                            onClick={() => setDeletingProvider(key)}
+                            onClick={() =>
+                              dispatch({ type: "OPEN_DELETE", provider: key })
+                            }
                             className="text-destructive"
                           >
                             Delete
@@ -364,7 +391,7 @@ export default function AdminSettingsPage() {
             )}
 
             <button
-              onClick={() => setShowAddDialog(true)}
+              onClick={() => dispatch({ type: "OPEN_ADD" })}
               className="border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent/50 group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-4 transition-all"
             >
               <PlusCircleIcon className="size-5 transition-transform group-hover:scale-110" />
@@ -386,7 +413,10 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog
+        open={modalState.type === "adding"}
+        onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Provider</DialogTitle>
@@ -459,7 +489,7 @@ export default function AdminSettingsPage() {
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setShowAddDialog(false)}
+              onClick={() => dispatch({ type: "CLOSE" })}
               disabled={addMutation.isPending}
             >
               Cancel
@@ -477,8 +507,8 @@ export default function AdminSettingsPage() {
       </Dialog>
 
       <Dialog
-        open={!!editingProvider}
-        onOpenChange={(open) => !open && setEditingProvider(null)}
+        open={modalState.type === "editing"}
+        onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
       >
         <DialogContent>
           <DialogHeader>
@@ -487,18 +517,21 @@ export default function AdminSettingsPage() {
               Update provider settings and configuration
             </DialogDescription>
           </DialogHeader>
-          {editingProvider && (
+          {modalState.type === "editing" && (
             <DialogPanel>
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Name</Label>
                   <Input
                     id="edit-name"
-                    value={editingProvider.name}
+                    value={modalState.provider.name}
                     onChange={(e) =>
-                      setEditingProvider({
-                        ...editingProvider,
-                        name: e.target.value,
+                      dispatch({
+                        type: "OPEN_EDIT",
+                        provider: {
+                          ...modalState.provider,
+                          name: e.target.value,
+                        },
                       })
                     }
                   />
@@ -509,11 +542,14 @@ export default function AdminSettingsPage() {
                   </Label>
                   <Textarea
                     id="edit-description"
-                    value={editingProvider.description ?? ""}
+                    value={modalState.provider.description ?? ""}
                     onChange={(e) =>
-                      setEditingProvider({
-                        ...editingProvider,
-                        description: e.target.value,
+                      dispatch({
+                        type: "OPEN_EDIT",
+                        provider: {
+                          ...modalState.provider,
+                          description: e.target.value,
+                        },
                       })
                     }
                   />
@@ -521,12 +557,15 @@ export default function AdminSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-status">Status</Label>
                   <Select
-                    value={editingProvider.status}
+                    value={modalState.provider.status}
                     onValueChange={(value) => {
                       if (value) {
-                        setEditingProvider({
-                          ...editingProvider,
-                          status: value,
+                        dispatch({
+                          type: "OPEN_EDIT",
+                          provider: {
+                            ...modalState.provider,
+                            status: value,
+                          },
                         })
                       }
                     }}
@@ -546,7 +585,7 @@ export default function AdminSettingsPage() {
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setEditingProvider(null)}
+              onClick={() => dispatch({ type: "CLOSE" })}
               disabled={updateMutation.isPending}
             >
               Cancel
@@ -562,8 +601,8 @@ export default function AdminSettingsPage() {
       </Dialog>
 
       <Dialog
-        open={!!deletingProvider}
-        onOpenChange={(open) => !open && setDeletingProvider(null)}
+        open={modalState.type === "deleting"}
+        onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
       >
         <DialogContent>
           <DialogHeader>
@@ -574,14 +613,14 @@ export default function AdminSettingsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogPanel>
-            {deletingProvider && (
+            {modalState.type === "deleting" && (
               <div className="bg-muted rounded-lg p-4">
                 <p className="text-foreground font-medium">
-                  {deletingProvider.name}
+                  {modalState.provider.name}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {deletingProvider.description ??
-                    providerNames[deletingProvider.provider]}
+                  {modalState.provider.description ??
+                    providerNames[modalState.provider.provider]}
                 </p>
               </div>
             )}
@@ -589,7 +628,7 @@ export default function AdminSettingsPage() {
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setDeletingProvider(null)}
+              onClick={() => dispatch({ type: "CLOSE" })}
               disabled={deleteMutation.isPending}
             >
               Cancel

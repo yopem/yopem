@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Save as SaveIcon, User as UserIcon } from "lucide-react"
 
@@ -50,10 +50,14 @@ export default function ProfilePage() {
     },
   })
 
-  if (profile) {
-    if (!name) setName(profile.name ?? "")
-    if (!image) setImage(profile.image ?? "")
-  }
+  useEffect(() => {
+    if (profile && !name) {
+      setName(profile.name ?? "")
+    }
+    if (profile && !image) {
+      setImage(profile.image ?? "")
+    }
+  }, [profile, name, image])
 
   const handleSave = () => {
     updateMutation.mutate({ name, image: image || undefined })
