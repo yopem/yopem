@@ -1,11 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import {
-  CheckCircle2 as CheckCircleIcon,
-  Clock as ClockIcon,
-  XCircle as XCircleIcon,
-} from "lucide-react"
+import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
 
 import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +43,7 @@ export default function RunsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircleIcon className="h-4 w-4 text-green-500" />
+        return <CheckCircle2Icon className="h-4 w-4 text-green-500" />
       case "failed":
         return <XCircleIcon className="h-4 w-4 text-red-500" />
       default:
@@ -67,7 +63,7 @@ export default function RunsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
+    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">My Runs</h1>
         <p className="text-muted-foreground mt-2">

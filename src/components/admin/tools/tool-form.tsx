@@ -1,6 +1,12 @@
 "use client"
 
-import { useEffect, useImperativeHandle, useMemo, useRef } from "react"
+import {
+  useEffect,
+  useEffectEvent,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react"
 import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
@@ -177,13 +183,18 @@ const ToolForm = ({
     },
   }))
 
-  useEffect(() => {
+  const onModelsAvailable = useEffectEvent(() => {
     if (availableModels.length > 0 && !form.getFieldValue("modelEngine")) {
       form.setFieldValue("modelEngine", availableModels[0])
     }
-  }, [availableModels, form])
+  })
 
   useEffect(() => {
+    onModelsAvailable()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableModels])
+
+  const onInitialDataLoaded = useEffectEvent(() => {
     if (mode === "edit" && initialData) {
       form.setFieldValue("name", initialData.name)
       form.setFieldValue("description", initialData.description ?? "")
@@ -238,10 +249,14 @@ const ToolForm = ({
         form.setFieldValue("apiKeyId", initialData.apiKeyId)
       }
     }
+  })
+
+  useEffect(() => {
+    onInitialDataLoaded()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, mode])
 
-  useEffect(() => {
+  const onApiKeyOrModelChange = useEffectEvent(() => {
     const apiKeyId = form.getFieldValue("apiKeyId")
     const modelEngine = form.getFieldValue("modelEngine")
 
@@ -263,6 +278,10 @@ const ToolForm = ({
         }
       }
     }
+  })
+
+  useEffect(() => {
+    onApiKeyOrModelChange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.state.values.apiKeyId, form.state.values.modelEngine, apiKeys])
 

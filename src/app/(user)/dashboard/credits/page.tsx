@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
-  CreditCard as CreditCardIcon,
-  Plus as PlusIcon,
-  TrendingDown as TrendingDownIcon,
-  TrendingUp as TrendingUpIcon,
+  CreditCardIcon,
+  PlusIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"

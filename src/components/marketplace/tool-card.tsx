@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight as ArrowRightIcon } from "lucide-react"
+import { ArrowRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {

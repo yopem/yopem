@@ -1,4 +1,4 @@
-import { LogOutIcon as LogoutIcon } from "lucide-react"
+import { LogOutIcon } from "lucide-react"
 
 import { logout } from "@/lib/auth/logout"
 
@@ -9,7 +9,7 @@ const LogoutButton = () => {
         aria-label="Keluar"
         className="inline-flex cursor-pointer flex-row"
       >
-        <LogoutIcon name="LogOut" className="mr-2" />
+        <LogOutIcon name="LogOut" className="mr-2" />
         Logout
       </button>
     </form>

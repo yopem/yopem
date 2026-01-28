@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  LoaderCircle as LoaderCircleIcon,
-  Play as PlayIcon,
-  Save as SaveIcon,
-} from "lucide-react"
+import { LoaderCircleIcon, PlayIcon, SaveIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 

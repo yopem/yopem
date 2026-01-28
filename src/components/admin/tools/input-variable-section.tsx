@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus as PlusIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import InputVariableRow, { type InputFieldType } from "./input-variable-row"

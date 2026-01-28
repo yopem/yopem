@@ -3,10 +3,7 @@
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useInfiniteQuery } from "@tanstack/react-query"
-import {
-  ArrowRight as ArrowRightIcon,
-  Search as SearchIcon,
-} from "lucide-react"
+import { ArrowRightIcon, SearchIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {

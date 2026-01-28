@@ -1,7 +1,7 @@
 "use client"
 
 import { type RefObject } from "react"
-import { History as HistoryIcon } from "lucide-react"
+import { HistoryIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"

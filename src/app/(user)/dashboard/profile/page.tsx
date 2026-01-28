@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Save as SaveIcon, User as UserIcon } from "lucide-react"
+import { SaveIcon, UserIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,14 +50,19 @@ export default function ProfilePage() {
     },
   })
 
-  useEffect(() => {
+  const onProfileLoaded = useEffectEvent(() => {
     if (profile && !name) {
       setName(profile.name ?? "")
     }
     if (profile && !image) {
       setImage(profile.image ?? "")
     }
-  }, [profile, name, image])
+  })
+
+  useEffect(() => {
+    onProfileLoaded()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
 
   const handleSave = () => {
     updateMutation.mutate({ name, image: image || undefined })
