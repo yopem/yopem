@@ -1,10 +1,10 @@
 "use client"
 
 import React, { use, useState } from "react"
-import Link from "next/link"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
 
+import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"

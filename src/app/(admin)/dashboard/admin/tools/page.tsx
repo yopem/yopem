@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
@@ -12,6 +11,7 @@ import {
   Trash2Icon,
 } from "lucide-react"
 
+import Link from "@/components/link"
 import {
   AlertDialog,
   AlertDialogBackdrop,

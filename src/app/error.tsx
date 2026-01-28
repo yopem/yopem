@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 
+import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { appEnv } from "@/lib/env/client"
 
