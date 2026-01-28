@@ -2,9 +2,10 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
 import { toolsTable } from "@/lib/db/schema"
+import { env } from "@/lib/env"
 import { createCustomId } from "@/lib/utils/custom-id"
 
-const databaseUrl = process.env["DATABASE_URL"]
+const databaseUrl = env.DATABASE_URL
 if (!databaseUrl) {
   throw new Error("DATABASE_URL environment variable is not set")
 }
@@ -19,7 +20,7 @@ const createSlug = (name: string): string => {
 }
 
 async function clearExistingTools() {
-  console.log("🗑️  Clearing existing demo tools...")
+  console.info("🗑️  Clearing existing demo tools...")
 
   const demoToolSlugs = [
     "article-summarizer",
@@ -39,17 +40,16 @@ async function clearExistingTools() {
     for (const slug of demoToolSlugs) {
       await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
     }
-    console.log("✅ Cleared existing demo tools")
+    console.info("✅ Cleared existing demo tools")
   } catch (error) {
-    console.log("⚠️  No existing tools to clear or error occurred:", error)
+    console.warn("⚠️  No existing tools to clear or error occurred:", error)
   }
 }
 
 async function seedTools() {
-  console.log("🌱 Seeding tools...")
+  console.info("🌱 Seeding tools...")
 
   const tools = [
-
     {
       id: createCustomId(),
       name: "Article Summarizer",
@@ -81,7 +81,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -115,7 +114,6 @@ async function seedTools() {
       createdBy: null,
     },
 
-
     {
       id: createCustomId(),
       name: "Budget Calculator",
@@ -147,7 +145,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -185,7 +182,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -229,7 +225,6 @@ async function seedTools() {
       createdBy: null,
     },
 
-
     {
       id: createCustomId(),
       name: "Image Description Generator",
@@ -262,7 +257,6 @@ async function seedTools() {
       createdBy: null,
     },
 
-
     {
       id: createCustomId(),
       name: "Video Content Analyzer",
@@ -294,7 +288,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -332,7 +325,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -388,7 +380,6 @@ async function seedTools() {
       createdBy: null,
     },
 
-
     {
       id: createCustomId(),
       name: "Tutorial Video Generator",
@@ -435,7 +426,6 @@ async function seedTools() {
       apiKeyId: null,
       createdBy: null,
     },
-
 
     {
       id: createCustomId(),
@@ -511,13 +501,13 @@ async function seedTools() {
 
     for (const tool of tools) {
       await db.insert(toolsTable).values(tool)
-      console.log(`✅ Seeded: ${tool.name}`)
+      console.info(`✅ Seeded: ${tool.name}`)
     }
 
-    console.log(`\n🎉 Successfully seeded ${tools.length} tools!`)
-    console.log("\nTools created:")
+    console.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
+    console.info("\nTools created:")
     tools.forEach((tool, index) => {
-      console.log(
+      console.info(
         `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
       )
     })
@@ -529,7 +519,7 @@ async function seedTools() {
 
 seedTools()
   .then(() => {
-    console.log("\n✨ Seeding completed successfully!")
+    console.info("\n✨ Seeding completed successfully!")
     process.exit(0)
   })
   .catch((error) => {

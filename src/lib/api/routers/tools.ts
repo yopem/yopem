@@ -378,7 +378,6 @@ export const toolsRouter = {
           provider: selectedKey.provider,
         })
 
-        console.log("AI execution successful")
         return {
           output: result.output,
           cost: 0,

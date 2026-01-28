@@ -24,6 +24,14 @@ function EditToolPage() {
   const [activeTab, setActiveTab] = useState("builder")
   const [testSheetOpen, setTestSheetOpen] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
+  const [currentInputVariables, setCurrentInputVariables] = useState<
+    {
+      variableName: string
+      description: string
+      type: string
+      options?: { label: string; value: string }[]
+    }[]
+  >([])
 
   const {
     data: tool,
@@ -59,44 +67,34 @@ function EditToolPage() {
     },
   })
 
-  const executeToolMutation = useMutation({
-    mutationFn: async (inputs: Record<string, unknown>) => {
-      if (!tool) throw new Error("Tool data not loaded")
-      if (!tool.systemRole) throw new Error("System role is missing")
-      if (!tool.userInstructionTemplate)
-        throw new Error("User instruction template is missing")
-
+  const executePreviewMutation = useMutation({
+    mutationFn: async ({
+      formData,
+      inputs,
+    }: {
+      formData: ToolFormData
+      inputs: Record<string, string>
+    }) => {
       return await queryApi.tools.executePreview.call({
-        systemRole: tool.systemRole,
-        userInstructionTemplate: tool.userInstructionTemplate,
-        inputVariable: tool.inputVariable as {
-          variableName: string
-          type:
-            | "text"
-            | "long_text"
-            | "number"
-            | "boolean"
-            | "select"
-            | "image"
-            | "video"
-          description: string
-          options?: { label: string; value: string }[]
-        }[],
-        config: tool.config as {
+        systemRole: formData.systemRole,
+        userInstructionTemplate: formData.userInstructionTemplate,
+        inputVariable: formData.inputVariable,
+        config: formData.config as {
           modelEngine: string
           temperature: number
           maxTokens: number
         },
-        outputFormat: tool.outputFormat ?? "plain",
+        outputFormat: formData.outputFormat ?? "plain",
         inputs,
-        apiKeyId: tool.apiKeyId ?? undefined,
+        apiKeyId: formData.apiKeyId,
       })
     },
     onSuccess: (data) => {
       setTestResult(data.output)
       toastManager.add({
         title: "Test completed",
-        description: `Tool executed successfully. Cost: ${data.cost} credits`,
+        description:
+          "Preview execution completed successfully (no credits used)",
         type: "success",
       })
     },
@@ -110,13 +108,48 @@ function EditToolPage() {
   })
 
   const handleTestRun = () => {
-    if (!tool?.inputVariable || !Array.isArray(tool.inputVariable)) return
+    const formData = formRef.current?.getValues()
+    if (!formData) {
+      toastManager.add({
+        title: "Cannot test",
+        description: "Please fill out the form first",
+        type: "error",
+      })
+      return
+    }
+
+    if (
+      !formData.systemRole ||
+      !formData.userInstructionTemplate ||
+      formData.inputVariable.length === 0
+    ) {
+      toastManager.add({
+        title: "Cannot test",
+        description:
+          "Please complete the form: system role, user instruction template, and at least one input variable are required",
+        type: "error",
+      })
+      return
+    }
+
+    setCurrentInputVariables(
+      formData.inputVariable.map((v) => ({
+        variableName: v.variableName,
+        description: v.description,
+        type: v.type,
+        ...(v.options && { options: v.options }),
+      })),
+    )
+
     setTestResult(null)
     setTestSheetOpen(true)
   }
 
   const handleExecuteTest = (inputs: Record<string, string>) => {
-    executeToolMutation.mutate(inputs)
+    const formData = formRef.current?.getValues()
+    if (!formData) return
+
+    executePreviewMutation.mutate({ formData, inputs })
   }
 
   const handleSaveDraft = () => {
@@ -179,17 +212,9 @@ function EditToolPage() {
       <ToolTestSheet
         open={testSheetOpen}
         onOpenChange={setTestSheetOpen}
-        inputVariables={
-          (tool?.inputVariable as
-            | {
-                variableName: string
-                description: string
-                type: string
-              }[]
-            | undefined) ?? []
-        }
+        inputVariables={currentInputVariables}
         onExecute={handleExecuteTest}
-        isExecuting={executeToolMutation.isPending}
+        isExecuting={executePreviewMutation.isPending}
         result={testResult}
       />
     </>
