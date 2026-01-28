@@ -5,7 +5,7 @@ export interface ExecutionRequest {
   userInstruction: string
   temperature: number
   maxTokens: number
-  outputFormat: "plain" | "json"
+  outputFormat: "plain" | "json" | "image" | "video"
 }
 
 export interface ExecutionResponse {

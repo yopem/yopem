@@ -1,0 +1,1 @@
+ALTER TABLE "tools" ADD COLUMN "markup" numeric(5, 4) DEFAULT '0.2000';

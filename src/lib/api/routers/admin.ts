@@ -262,7 +262,7 @@ async function fetchOpenAIModels(apiKey: string) {
     })
     if (!response.ok) return []
     const data = await response.json()
-    return (
+    const filteredModels =
       data.data
         ?.filter(
           (m: { id: string }) =>
@@ -272,7 +272,20 @@ async function fetchOpenAIModels(apiKey: string) {
           id: m.id,
           name: m.id.toUpperCase().replace(/-/g, " "),
         })) ?? []
+
+    const sortedModels = filteredModels.sort(
+      (a: { id: string }, b: { id: string }) => {
+        if (a.id === "gpt-4o") return -1
+        if (b.id === "gpt-4o") return 1
+        if (a.id === "gpt-4o-mini") return -1
+        if (b.id === "gpt-4o-mini") return 1
+        if (a.id.startsWith("gpt-4") && !b.id.startsWith("gpt-4")) return 1
+        if (b.id.startsWith("gpt-4") && !a.id.startsWith("gpt-4")) return -1
+        return 0
+      },
     )
+
+    return sortedModels
   } catch {
     return []
   }

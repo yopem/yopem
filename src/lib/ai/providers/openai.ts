@@ -19,6 +19,7 @@ export class OpenAIProvider implements AIProvider {
   constructor(config: ProviderConfig) {
     this.provider = createOpenAI({
       apiKey: config.apiKey,
+      baseURL: "https://api.openai.com/v1",
     })
     this.model = config.model
   }

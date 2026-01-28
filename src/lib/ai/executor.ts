@@ -1,4 +1,5 @@
 import type { ApiKeyProvider } from "@/lib/schemas/api-keys"
+import { getR2Storage } from "@/lib/storage/r2"
 import { AnthropicProvider } from "./providers/anthropic"
 import { AzureProvider } from "./providers/azure"
 import type { AIProvider, ExecutionResponse } from "./providers/base"
@@ -16,7 +17,7 @@ interface ExecuteAIToolParams {
     temperature: number
     maxTokens: number
   }
-  outputFormat: "plain" | "json"
+  outputFormat: "plain" | "json" | "image" | "video"
   apiKey: string
   provider: ApiKeyProvider
 }
@@ -79,6 +80,60 @@ export async function executeAITool(
       maxTokens: params.config.maxTokens,
       outputFormat: params.outputFormat,
     })
+
+    if (params.outputFormat === "image" || params.outputFormat === "video") {
+      const output = response.output
+
+      const base64Regex = /^data:([^;]+);base64,(.+)$/
+      const base64Match = base64Regex.exec(output)
+      if (base64Match) {
+        const contentType = base64Match[1]
+        const base64Data = base64Match[2]
+        const buffer = Buffer.from(base64Data, "base64")
+
+        const r2 = getR2Storage()
+
+        let publicUrl: string
+        if (params.outputFormat === "image") {
+          publicUrl = await r2.uploadImage(buffer, contentType)
+        } else {
+          publicUrl = await r2.uploadVideo(buffer, contentType)
+        }
+
+        return {
+          output: publicUrl,
+          usage: response.usage,
+        }
+      }
+
+      if (output.startsWith("http://") || output.startsWith("https://")) {
+        return response
+      }
+
+      try {
+        const buffer = Buffer.from(output, "utf8")
+        const r2 = getR2Storage()
+
+        let publicUrl: string
+        const contentType =
+          params.outputFormat === "image" ? "image/png" : "video/mp4"
+
+        if (params.outputFormat === "image") {
+          publicUrl = await r2.uploadImage(buffer, contentType)
+        } else {
+          publicUrl = await r2.uploadVideo(buffer, contentType)
+        }
+
+        return {
+          output: publicUrl,
+          usage: response.usage,
+        }
+      } catch (uploadError) {
+        throw new Error(
+          `Failed to upload ${params.outputFormat}: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`,
+        )
+      }
+    }
 
     return response
   } catch (error) {

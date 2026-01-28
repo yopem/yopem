@@ -23,7 +23,7 @@ import {
   validateModelProviderMatch,
 } from "@/lib/utils/model-provider-validation"
 import ConfigurationPanel from "./configuration-panel"
-import type { InputFieldType } from "./input-variable-row"
+import type { InputFieldType, SelectOption } from "./input-variable-row"
 import InputVariableSection from "./input-variable-section"
 import PromptLogicSection from "./prompt-logic-section"
 
@@ -52,11 +52,39 @@ const toolFormSchema = insertToolSchema
       .array(
         z.object({
           variableName: z.string().min(1),
-          type: z.enum(["text", "select"]),
+          type: z.enum([
+            "text",
+            "long_text",
+            "number",
+            "boolean",
+            "select",
+            "image",
+            "video",
+          ]),
           description: z.string(),
+          options: z
+            .array(
+              z.object({
+                label: z.string(),
+                value: z.string(),
+              }),
+            )
+            .optional(),
+          isOptional: z.boolean().optional(),
         }),
       )
-      .min(1, "At least one input field is required"),
+      .min(1, "At least one input field is required")
+      .refine(
+        (fields) => {
+          return fields.every((field) => {
+            if (field.type === "select") {
+              return field.options && field.options.length > 0
+            }
+            return true
+          })
+        },
+        { message: "Select type fields must have at least one option" },
+      ),
     apiKeyId: z.string().min(1, "API key is required"),
   })
 
@@ -103,16 +131,19 @@ const ToolForm = ({
       inputFields: [] as {
         id: string
         variableName: string
-        type: "text" | "select"
+        type: InputFieldType
         description: string
+        options?: SelectOption[]
+        isOptional?: boolean
       }[],
       systemRole: "",
       userInstructionTemplate: "",
       modelEngine: "",
       temperature: 0.7,
       maxTokens: 2048,
-      outputFormat: "plain" as "plain" | "json",
+      outputFormat: "plain" as "plain" | "json" | "image" | "video",
       costPerRun: mode === "create" ? 0 : 0.05,
+      markup: 0.2,
       apiKeyId: "",
       apiKeyError: "",
     },
@@ -126,6 +157,10 @@ const ToolForm = ({
           variableName: field.variableName,
           type: field.type,
           description: field.description,
+          ...(field.options && { options: field.options }),
+          ...(field.isOptional !== undefined && {
+            isOptional: field.isOptional,
+          }),
         })),
         outputFormat: value.outputFormat,
         costPerRun: String(value.costPerRun),
@@ -169,6 +204,10 @@ const ToolForm = ({
           variableName: field.variableName,
           type: field.type,
           description: field.description,
+          ...(field.options && { options: field.options }),
+          ...(field.isOptional !== undefined && {
+            isOptional: field.isOptional,
+          }),
         })),
         outputFormat: formData.outputFormat,
         costPerRun: String(formData.costPerRun),
@@ -213,8 +252,9 @@ const ToolForm = ({
           (
             initialData.inputVariable as {
               variableName: string
-              type: "text" | "select"
+              type: InputFieldType
               description: string
+              options?: SelectOption[]
             }[]
           ).map((field, index) => ({
             id: String(index + 1),
@@ -243,6 +283,10 @@ const ToolForm = ({
 
       if (initialData.costPerRun) {
         form.setFieldValue("costPerRun", Number(initialData.costPerRun))
+      }
+
+      if (initialData.markup) {
+        form.setFieldValue("markup", Number(initialData.markup))
       }
 
       if (initialData.apiKeyId) {
@@ -334,20 +378,13 @@ const ToolForm = ({
       variableName: string
       type: InputFieldType
       description: string
+      options: SelectOption[]
+      isOptional: boolean
     }>,
   ) => {
     const currentFields = form.getFieldValue("inputFields")
     const updatedFields = currentFields.map((field) =>
-      field.id === id
-        ? {
-            ...field,
-            ...updates,
-            type:
-              updates.type && ["text", "select"].includes(updates.type)
-                ? (updates.type as "text" | "select")
-                : field.type,
-          }
-        : field,
+      field.id === id ? { ...field, ...updates } : field,
     )
     form.setFieldValue("inputFields", updatedFields)
   }
@@ -441,9 +478,12 @@ const ToolForm = ({
             <PromptLogicSection
               systemRole={systemRole}
               userInstructionTemplate={userInstructionTemplate}
-              variableNames={inputFields
+              variables={inputFields
                 .filter((f) => f.variableName && f.variableName.trim() !== "")
-                .map((f) => f.variableName)}
+                .map((f) => ({
+                  name: f.variableName,
+                  isOptional: f.isOptional ?? false,
+                }))}
               onSystemRoleChange={(value) =>
                 form.setFieldValue("systemRole", value)
               }
@@ -473,6 +513,7 @@ const ToolForm = ({
           maxTokens: state.values.maxTokens,
           outputFormat: state.values.outputFormat,
           costPerRun: state.values.costPerRun,
+          markup: state.values.markup,
           apiKeyId: state.values.apiKeyId,
           apiKeyError: state.values.apiKeyError,
         })}
@@ -483,6 +524,7 @@ const ToolForm = ({
           maxTokens,
           outputFormat,
           costPerRun,
+          markup,
           apiKeyId,
           apiKeyError,
         }) => (
@@ -493,7 +535,7 @@ const ToolForm = ({
               maxTokens,
               outputFormat,
               costPerRun,
-              markup: 0.2,
+              markup,
               apiKeyId,
               apiKeyError,
               modelOptions: availableModels,
@@ -510,6 +552,7 @@ const ToolForm = ({
                 form.setFieldValue("outputFormat", value),
               onCostPerRunChange: (value) =>
                 form.setFieldValue("costPerRun", value),
+              onMarkupChange: (value) => form.setFieldValue("markup", value),
               onApiKeyIdChange: (value) => {
                 form.setFieldValue("apiKeyId", value)
                 form.setFieldValue("apiKeyError", "")

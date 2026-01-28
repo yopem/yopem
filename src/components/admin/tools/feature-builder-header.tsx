@@ -1,6 +1,11 @@
 "use client"
 
-import { LoaderCircleIcon, PlayIcon, SaveIcon } from "lucide-react"
+import {
+  CheckCircleIcon,
+  FileTextIcon,
+  LoaderCircleIcon,
+  PlayIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -12,9 +17,10 @@ interface BreadcrumbItem {
 interface FeatureBuilderHeaderProps {
   breadcrumbItems: BreadcrumbItem[]
   title?: string
-  status?: string
+  status?: "draft" | "active" | "archived"
   onTestRun?: () => void
-  onSave?: () => void
+  onSaveDraft?: () => void
+  onPublish?: () => void
   isSaving?: boolean
 }
 
@@ -22,7 +28,8 @@ const FeatureBuilderHeader = ({
   breadcrumbItems,
   status,
   onTestRun,
-  onSave,
+  onSaveDraft,
+  onPublish,
   isSaving = false,
 }: FeatureBuilderHeaderProps) => {
   return (
@@ -46,8 +53,16 @@ const FeatureBuilderHeader = ({
           </div>
         ))}
         {status && (
-          <span className="bg-muted ml-2 rounded-full border px-2 py-0.5 text-xs font-semibold">
-            {status}
+          <span
+            className={`ml-2 rounded-full border px-2 py-0.5 text-xs font-semibold ${
+              status === "active"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : status === "draft"
+                  ? "bg-muted border-border text-muted-foreground"
+                  : "border-gray-200 bg-gray-50 text-gray-700"
+            }`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         )}
       </div>
@@ -56,13 +71,26 @@ const FeatureBuilderHeader = ({
           <PlayIcon className="size-4" />
           <span>Test Run</span>
         </Button>
-        <Button size="sm" onClick={onSave} disabled={isSaving}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onSaveDraft}
+          disabled={isSaving}
+        >
           {isSaving ? (
             <LoaderCircleIcon className="size-4 animate-spin" />
           ) : (
-            <SaveIcon className="size-4" />
+            <FileTextIcon className="size-4" />
           )}
-          <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+          <span>Save as Draft</span>
+        </Button>
+        <Button size="sm" onClick={onPublish} disabled={isSaving}>
+          {isSaving ? (
+            <LoaderCircleIcon className="size-4 animate-spin" />
+          ) : (
+            <CheckCircleIcon className="size-4" />
+          )}
+          <span>Publish</span>
         </Button>
       </div>
     </header>

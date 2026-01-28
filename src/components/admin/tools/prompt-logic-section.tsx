@@ -6,10 +6,16 @@ import { HistoryIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
+interface VariableInfo {
+  name: string
+  isOptional?: boolean
+}
+
 interface PromptLogicSectionProps {
   systemRole: string
   userInstructionTemplate: string
   variableNames?: string[]
+  variables?: VariableInfo[]
   onSystemRoleChange?: (value: string) => void
   onUserInstructionChange?: (value: string) => void
   onInsertVariable?: (variable: string) => void
@@ -23,6 +29,7 @@ const PromptLogicSection = ({
   systemRole,
   userInstructionTemplate,
   variableNames = [],
+  variables = [],
   onSystemRoleChange,
   onUserInstructionChange,
   onInsertVariable,
@@ -31,6 +38,11 @@ const PromptLogicSection = ({
   systemRoleRef,
   userInstructionRef,
 }: PromptLogicSectionProps) => {
+  // Use variables if provided, otherwise fallback to variableNames
+  const variableList =
+    variables.length > 0
+      ? variables
+      : variableNames.map((name) => ({ name, isOptional: false }))
   return (
     <section className="flex flex-col gap-4 pb-12">
       <div className="flex items-center justify-between">
@@ -56,19 +68,26 @@ const PromptLogicSection = ({
               unstyled
             />
           </div>
-          {variableNames.length > 0 && (
+          {variableList.length > 0 && (
             <div className="bg-muted/30 flex flex-wrap items-center gap-2 border-t px-4 py-2">
               <span className="text-muted-foreground text-xs">
                 Insert variable:
               </span>
-              {variableNames.map((variable) => (
+              {variableList.map((variable) => (
                 <button
-                  key={variable}
+                  key={variable.name}
                   type="button"
-                  onClick={() => onInsertSystemRoleVariable?.(variable)}
-                  className="bg-background hover:bg-muted rounded border px-2 py-1 font-mono text-xs transition-colors"
+                  onClick={() => onInsertSystemRoleVariable?.(variable.name)}
+                  className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
+                    variable.isOptional
+                      ? "bg-muted/50 hover:bg-muted text-muted-foreground border-dashed"
+                      : "bg-background hover:bg-muted"
+                  }`}
                 >
-                  + {variable}
+                  + {variable.name}
+                  {variable.isOptional && (
+                    <span className="ml-1 text-[10px] opacity-60">?</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -88,19 +107,26 @@ const PromptLogicSection = ({
               unstyled
             />
           </div>
-          {variableNames.length > 0 && (
+          {variableList.length > 0 && (
             <div className="bg-muted/30 flex flex-wrap items-center gap-2 border-t px-4 py-2">
               <span className="text-muted-foreground text-xs">
                 Insert variable:
               </span>
-              {variableNames.map((variable) => (
+              {variableList.map((variable) => (
                 <button
-                  key={variable}
+                  key={variable.name}
                   type="button"
-                  onClick={() => onInsertVariable?.(variable)}
-                  className="bg-background hover:bg-muted rounded border px-2 py-1 font-mono text-xs transition-colors"
+                  onClick={() => onInsertVariable?.(variable.name)}
+                  className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
+                    variable.isOptional
+                      ? "bg-muted/50 hover:bg-muted text-muted-foreground border-dashed"
+                      : "bg-background hover:bg-muted"
+                  }`}
                 >
-                  + {variable}
+                  + {variable.name}
+                  {variable.isOptional && (
+                    <span className="ml-1 text-[10px] opacity-60">?</span>
+                  )}
                 </button>
               ))}
             </div>

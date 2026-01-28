@@ -28,6 +28,7 @@ function AddToolPage() {
       variableName: string
       description: string
       type: string
+      options?: { label: string; value: string }[]
     }[]
   >([])
 
@@ -123,6 +124,7 @@ function AddToolPage() {
         variableName: v.variableName,
         description: v.description,
         type: v.type,
+        ...(v.options && { options: v.options }),
       })),
     )
 
@@ -137,8 +139,18 @@ function AddToolPage() {
     executePreviewMutation.mutate({ formData, inputs })
   }
 
-  const handleSave = () => {
-    formRef.current?.submit()
+  const handleSaveDraft = () => {
+    const formData = formRef.current?.getValues()
+    if (formData) {
+      createToolMutation.mutate({ ...formData, status: "draft" })
+    }
+  }
+
+  const handlePublish = () => {
+    const formData = formRef.current?.getValues()
+    if (formData) {
+      createToolMutation.mutate({ ...formData, status: "active" })
+    }
   }
 
   return (
@@ -148,21 +160,20 @@ function AddToolPage() {
           { label: "Features", href: "/dashboard/admin/tools" },
           { label: "New Tool" },
         ]}
-        status="Draft"
+        status="draft"
         onTestRun={handleTestRun}
-        onSave={handleSave}
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
         isSaving={createToolMutation.isPending}
       />
-      {activeTab === "builder" && (
-        <ToolForm
-          ref={formRef}
-          mode="create"
-          onSubmit={(data) => createToolMutation.mutate(data)}
-          isSaving={createToolMutation.isPending}
-          showSlug={false}
-          apiKeys={apiKeys ?? []}
-        />
-      )}
+      <ToolForm
+        ref={formRef}
+        mode="create"
+        onSubmit={(data) => createToolMutation.mutate(data)}
+        isSaving={createToolMutation.isPending}
+        showSlug={false}
+        apiKeys={apiKeys ?? []}
+      />
       <div className="p-8">
         <FeatureBuilderTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <Separator className="mt-8" />

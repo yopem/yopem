@@ -4,14 +4,24 @@ import { useEffect, useState } from "react"
 import { LoaderCircleIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectItem,
+  SelectPopup,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ToolInputVariable {
   variableName: string
   description: string
   type: string
+  options?: { label: string; value: string }[]
 }
 
 interface ToolTestSheetProps {
@@ -33,6 +43,9 @@ const ToolTestSheet = ({
 }: ToolTestSheetProps) => {
   const [testInputs, setTestInputs] = useState<Record<string, string>>({})
   const [isVisible, setIsVisible] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({})
 
   useEffect(() => {
     if (open) {
@@ -42,7 +55,220 @@ const ToolTestSheet = ({
     }
   }, [open])
 
+  const validateInputs = (): boolean => {
+    const errors: Record<string, string> = {}
+
+    for (const variable of inputVariables) {
+      const value = testInputs[variable.variableName]
+
+      switch (variable.type) {
+        case "number":
+          if (value && isNaN(Number(value))) {
+            errors[variable.variableName] = "Must be a valid number"
+          }
+          break
+        case "boolean":
+          // Boolean values are handled by checkbox, no validation needed
+          break
+        case "select":
+          if (
+            variable.options &&
+            value &&
+            !variable.options.some((opt) => opt.value === value)
+          ) {
+            errors[variable.variableName] = "Please select a valid option"
+          }
+          break
+        case "image":
+          if (value && !value.startsWith("data:image/")) {
+            errors[variable.variableName] = "Invalid image format"
+          }
+          break
+        case "video":
+          if (value && !value.startsWith("data:video/")) {
+            errors[variable.variableName] = "Invalid video format"
+          }
+          break
+        case "text":
+        case "long_text":
+          // Text fields are free-form
+          break
+      }
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const renderInputField = (field: ToolInputVariable) => {
+    const value = testInputs[field.variableName] || ""
+    const error = validationErrors[field.variableName]
+
+    const handleChange = (newValue: string) => {
+      setTestInputs((prev) => ({
+        ...prev,
+        [field.variableName]: newValue,
+      }))
+      // Clear validation error when user changes value
+      if (error) {
+        setValidationErrors((prev) => {
+          const next = { ...prev }
+          delete next[field.variableName]
+          return next
+        })
+      }
+    }
+
+    switch (field.type) {
+      case "text":
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={field.description}
+          />
+        )
+
+      case "long_text":
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={field.description}
+            rows={4}
+          />
+        )
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={field.description}
+          />
+        )
+
+      case "boolean":
+        return (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={value === "true"}
+              onCheckedChange={(checked) =>
+                handleChange(checked === true ? "true" : "false")
+              }
+            />
+            <span className="text-muted-foreground text-sm">
+              {field.description || "Enable this option"}
+            </span>
+          </div>
+        )
+
+      case "select":
+        if (!field.options || field.options.length === 0) {
+          return (
+            <div className="text-muted-foreground text-sm italic">
+              No options available for this select field
+            </div>
+          )
+        }
+        return (
+          <Select
+            value={value}
+            onValueChange={(newValue: string[] | string | null) => {
+              if (typeof newValue === "string") {
+                handleChange(newValue)
+              } else if (Array.isArray(newValue) && newValue.length > 0) {
+                handleChange(newValue[0] ?? "")
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={field.description || "Select an option"}
+              />
+            </SelectTrigger>
+            <SelectPopup>
+              {field.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectPopup>
+          </Select>
+        )
+
+      case "image":
+        return (
+          <div className="flex flex-col gap-2">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  // Convert file to base64
+                  const reader = new FileReader()
+                  reader.onload = (event) => {
+                    const result = event.target?.result as string
+                    handleChange(result)
+                  }
+                  reader.readAsDataURL(file)
+                }
+              }}
+              className="text-sm"
+            />
+            {value && (
+              <div className="text-muted-foreground text-xs">
+                Image selected ({value.substring(0, 30)}...)
+              </div>
+            )}
+          </div>
+        )
+
+      case "video":
+        return (
+          <div className="flex flex-col gap-2">
+            <Input
+              type="file"
+              accept="video/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  // Convert file to base64
+                  const reader = new FileReader()
+                  reader.onload = (event) => {
+                    const result = event.target?.result as string
+                    handleChange(result)
+                  }
+                  reader.readAsDataURL(file)
+                }
+              }}
+              className="text-sm"
+            />
+            {value && (
+              <div className="text-muted-foreground text-xs">
+                Video selected ({value.substring(0, 30)}...)
+              </div>
+            )}
+          </div>
+        )
+
+      default:
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder={field.description}
+          />
+        )
+    }
+  }
+
   const handleExecuteTest = () => {
+    if (!validateInputs()) {
+      return
+    }
     void onExecute(testInputs)
   }
 
@@ -93,16 +319,12 @@ const ToolTestSheet = ({
                 {inputVariables.map((field) => (
                   <Field key={field.variableName}>
                     <FieldLabel>{field.variableName}</FieldLabel>
-                    <Input
-                      value={testInputs[field.variableName] || ""}
-                      onChange={(e) =>
-                        setTestInputs((prev) => ({
-                          ...prev,
-                          [field.variableName]: e.target.value,
-                        }))
-                      }
-                      placeholder={field.description}
-                    />
+                    {renderInputField(field)}
+                    {validationErrors[field.variableName] && (
+                      <p className="text-destructive mt-1 text-xs">
+                        {validationErrors[field.variableName]}
+                      </p>
+                    )}
                   </Field>
                 ))}
               </div>

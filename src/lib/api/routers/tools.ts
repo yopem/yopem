@@ -284,27 +284,43 @@ export const toolsRouter = {
         inputVariable: z.array(
           z.object({
             variableName: z.string(),
-            type: z.enum(["text", "select"]),
+            type: z.enum([
+              "text",
+              "long_text",
+              "number",
+              "boolean",
+              "select",
+              "image",
+              "video",
+            ]),
             description: z.string(),
+            options: z
+              .array(
+                z.object({
+                  label: z.string(),
+                  value: z.string(),
+                }),
+              )
+              .optional(),
+            isOptional: z.boolean().optional(),
           }),
         ),
+        inputs: z.record(z.string(), z.string()),
         config: z.object({
           modelEngine: z.string(),
           temperature: z.number(),
           maxTokens: z.number(),
         }),
-        outputFormat: z.enum(["plain", "json"]),
-        inputs: z.record(z.string(), z.unknown()),
-        apiKeyId: z.string().optional(),
+        outputFormat: z.enum(["plain", "json", "image", "video"]),
+        apiKeyId: z.string(),
       }),
     )
     .handler(async ({ context, input }) => {
-      const requiredInputs = input.inputVariable.map((v) => v.variableName)
-      const providedInputs = Object.keys(input.inputs)
+      const requiredInputs = input.inputVariable.filter((v) => !v.isOptional)
+      const missingInputs = requiredInputs
+        .filter((v) => !input.inputs[v.variableName])
+        .map((v) => v.variableName)
 
-      const missingInputs = requiredInputs.filter(
-        (req) => !providedInputs.includes(req),
-      )
       if (missingInputs.length > 0) {
         throw new Error(`Missing required inputs: ${missingInputs.join(", ")}`)
       }
@@ -347,6 +363,10 @@ export const toolsRouter = {
 
       const decryptedKey = decryptApiKey(selectedKey.apiKey)
 
+      if (!decryptedKey.startsWith("sk-")) {
+        throw new Error("Invalid OpenAI API key format")
+      }
+
       try {
         const result = await executeAITool({
           systemRole: input.systemRole,
@@ -358,13 +378,14 @@ export const toolsRouter = {
           provider: selectedKey.provider,
         })
 
+        console.log("AI execution successful")
         return {
           output: result.output,
           cost: 0,
         }
       } catch (error) {
         if (error instanceof Error) {
-          throw new Error(`AI execution failed: ${error.message}`)
+          throw error
         }
         throw new Error("AI execution failed with an unknown error")
       }

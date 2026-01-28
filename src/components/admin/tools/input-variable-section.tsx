@@ -3,13 +3,18 @@
 import { PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import InputVariableRow, { type InputFieldType } from "./input-variable-row"
+import InputVariableRow, {
+  type InputFieldType,
+  type SelectOption,
+} from "./input-variable-row"
 
 interface InputVariableField {
   id: string
   variableName: string
   type: InputFieldType
   description: string
+  options?: SelectOption[]
+  isOptional?: boolean
 }
 
 interface InputVariableSectionProps {
@@ -41,9 +46,10 @@ const InputVariableSection = ({
       </div>
       <div className="overflow-hidden rounded-xl border">
         <div className="bg-muted/50 text-muted-foreground grid grid-cols-12 gap-4 border-b p-4 text-xs font-semibold tracking-wider uppercase">
-          <div className="col-span-4">Variable Name</div>
-          <div className="col-span-3">Type</div>
-          <div className="col-span-4">Description</div>
+          <div className="col-span-3">Variable Name</div>
+          <div className="col-span-2">Type</div>
+          <div className="col-span-3">Description</div>
+          <div className="col-span-3">Options</div>
           <div className="col-span-1 text-right">Actions</div>
         </div>
         {fields.map((field) => (
@@ -52,12 +58,20 @@ const InputVariableSection = ({
             variableName={field.variableName}
             type={field.type}
             description={field.description}
+            options={field.options}
+            isOptional={field.isOptional}
             onVariableNameChange={(value) =>
               onUpdateField?.(field.id, { variableName: value })
             }
             onTypeChange={(value) => onUpdateField?.(field.id, { type: value })}
             onDescriptionChange={(value) =>
               onUpdateField?.(field.id, { description: value })
+            }
+            onOptionsChange={(value) =>
+              onUpdateField?.(field.id, { options: value })
+            }
+            onOptionalChange={(value) =>
+              onUpdateField?.(field.id, { isOptional: value })
             }
             onDelete={() => onDeleteField?.(field.id)}
           />

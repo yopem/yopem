@@ -14,7 +14,7 @@ import { createCustomId } from "@/lib/utils/custom-id"
 export const toolStatusEnum = ["draft", "active", "archived"] as const
 export type ToolStatus = (typeof toolStatusEnum)[number]
 
-export const toolOutputFormatEnum = ["plain", "json"] as const
+export const toolOutputFormatEnum = ["plain", "json", "image", "video"] as const
 export type ToolOutputFormat = (typeof toolOutputFormatEnum)[number]
 
 export const toolsTable = pgTable("tools", {
@@ -33,6 +33,7 @@ export const toolsTable = pgTable("tools", {
     "plain",
   ),
   costPerRun: decimal("cost_per_run", { precision: 10, scale: 4 }).default("0"),
+  markup: decimal("markup", { precision: 5, scale: 4 }).default("0.2000"),
   isPublic: boolean("is_public").default(true),
   categoryId: text("category_id"),
   apiKeyId: text("api_key_id"),

@@ -71,8 +71,16 @@ function EditToolPage() {
         userInstructionTemplate: tool.userInstructionTemplate,
         inputVariable: tool.inputVariable as {
           variableName: string
-          type: "text" | "select"
+          type:
+            | "text"
+            | "long_text"
+            | "number"
+            | "boolean"
+            | "select"
+            | "image"
+            | "video"
           description: string
+          options?: { label: string; value: string }[]
         }[],
         config: tool.config as {
           modelEngine: string
@@ -111,8 +119,18 @@ function EditToolPage() {
     executeToolMutation.mutate(inputs)
   }
 
-  const handleSave = () => {
-    formRef.current?.submit()
+  const handleSaveDraft = () => {
+    const formData = formRef.current?.getValues()
+    if (formData) {
+      updateToolMutation.mutate({ ...formData, status: "draft" })
+    }
+  }
+
+  const handlePublish = () => {
+    const formData = formRef.current?.getValues()
+    if (formData) {
+      updateToolMutation.mutate({ ...formData, status: "active" })
+    }
   }
 
   return (
@@ -122,9 +140,10 @@ function EditToolPage() {
           { label: "Features", href: "/dashboard/admin/tools" },
           { label: tool?.name ?? "Edit Tool" },
         ]}
-        status="Draft"
+        status={tool?.status ?? "draft"}
         onTestRun={handleTestRun}
-        onSave={handleSave}
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
         isSaving={updateToolMutation.isPending}
       />
 
@@ -136,7 +155,7 @@ function EditToolPage() {
         </div>
       ) : (
         <>
-          {activeTab === "builder" && tool && (
+          {tool && (
             <ToolForm
               ref={formRef}
               mode="edit"
