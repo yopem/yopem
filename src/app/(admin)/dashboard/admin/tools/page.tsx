@@ -329,10 +329,16 @@ function ToolsPage() {
                       />
                       <MenuPopup>
                         <MenuGroup>
-                          <MenuItem onSelect={() => handleEditClick(tool.id)}>
-                            <PencilIcon className="size-4" />
-                            Edit
-                          </MenuItem>
+                          <MenuItem
+                            render={
+                              <Link
+                                href={`/dashboard/admin/tools/edit/${tool.id}`}
+                              >
+                                <PencilIcon className="size-4" />
+                                Edit
+                              </Link>
+                            }
+                          />
                           <MenuItem
                             onSelect={() =>
                               duplicateToolMutation.mutate(tool.id)
