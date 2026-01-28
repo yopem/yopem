@@ -61,9 +61,27 @@ function EditToolPage() {
 
   const executeToolMutation = useMutation({
     mutationFn: async (inputs: Record<string, unknown>) => {
-      return await queryApi.tools.execute.call({
-        toolId,
+      if (!tool) throw new Error("Tool data not loaded")
+      if (!tool.systemRole) throw new Error("System role is missing")
+      if (!tool.userInstructionTemplate)
+        throw new Error("User instruction template is missing")
+
+      return await queryApi.tools.executePreview.call({
+        systemRole: tool.systemRole,
+        userInstructionTemplate: tool.userInstructionTemplate,
+        inputVariable: tool.inputVariable as {
+          variableName: string
+          type: "text" | "select"
+          description: string
+        }[],
+        config: tool.config as {
+          modelEngine: string
+          temperature: number
+          maxTokens: number
+        },
+        outputFormat: tool.outputFormat ?? "plain",
         inputs,
+        apiKeyId: tool.apiKeyId ?? undefined,
       })
     },
     onSuccess: (data) => {

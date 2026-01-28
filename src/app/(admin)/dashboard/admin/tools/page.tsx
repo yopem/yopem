@@ -162,10 +162,6 @@ function ToolsPage() {
     }
   }
 
-  const handleEditClick = (toolId: string) => {
-    router.push(`/dashboard/admin/tools/edit/${toolId}`)
-  }
-
   const handleToggleAll = () => {
     if (selectedToolIds.length === tools.length) {
       setSelectedToolIds([])
