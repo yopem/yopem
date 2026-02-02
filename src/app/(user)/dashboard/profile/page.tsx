@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useEffectEvent, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { SaveIcon, UserIcon } from "lucide-react"
 
@@ -64,9 +64,23 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     updateMutation.mutate({ name, image: image || undefined })
-  }
+  }, [updateMutation, name, image])
+
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setName(e.target.value)
+    },
+    [],
+  )
+
+  const handleImageChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setImage(e.target.value)
+    },
+    [],
+  )
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
@@ -98,7 +112,7 @@ export default function ProfilePage() {
             <Input
               placeholder="Enter your name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
             />
           </div>
 
@@ -107,7 +121,7 @@ export default function ProfilePage() {
             <Input
               placeholder="https://example.com/avatar.jpg"
               value={image}
-              onChange={(e) => setImage(e.target.value)}
+              onChange={handleImageChange}
             />
           </div>
 

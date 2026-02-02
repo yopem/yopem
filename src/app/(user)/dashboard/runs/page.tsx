@@ -15,9 +15,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
 
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "completed":
+      return <CheckCircle2Icon className="h-4 w-4 text-green-500" />
+    case "failed":
+      return <XCircleIcon className="h-4 w-4 text-red-500" />
+    default:
+      return <ClockIcon className="h-4 w-4 text-yellow-500" />
+  }
+}
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "completed":
+      return <Badge className="bg-green-100 text-green-800">Completed</Badge>
+    case "failed":
+      return <Badge className="bg-red-100 text-red-800">Failed</Badge>
+    default:
+      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+  }
+}
+
 export default function RunsPage() {
+  const { formatDateTime } = useFormatDate()
+
   const { data: runsData, isLoading } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 50 } }),
     retry: false,
@@ -39,28 +64,6 @@ export default function RunsPage() {
   } & { isLoading: boolean }
 
   const runs = runsData?.runs ?? []
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle2Icon className="h-4 w-4 text-green-500" />
-      case "failed":
-        return <XCircleIcon className="h-4 w-4 text-red-500" />
-      default:
-        return <ClockIcon className="h-4 w-4 text-yellow-500" />
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-100 text-green-800">Completed</Badge>
-      case "failed":
-        return <Badge className="bg-red-100 text-red-800">Failed</Badge>
-      default:
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
-    }
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -129,9 +132,7 @@ export default function RunsPage() {
                       {run.toolName ?? "Unknown Tool"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {run.createdAt
-                        ? new Date(run.createdAt).toLocaleString()
-                        : "-"}
+                      {formatDateTime(run.createdAt) || "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       {Number(run.cost ?? 0) > 0 ? `${run.cost} credits` : "-"}

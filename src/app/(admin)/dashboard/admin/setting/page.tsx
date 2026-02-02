@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useReducer, useState } from "react"
+import React, { useCallback, useReducer, useState } from "react"
 import {
   BarChartIcon,
   BotIcon,
@@ -51,6 +51,7 @@ import {
   useDeleteApiKey,
   useUpdateApiKey,
 } from "@/hooks/use-api-keys"
+import useFormatDate from "@/hooks/use-format-date"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
 
 const providerIcons: Record<string, React.ReactNode> = {
@@ -68,6 +69,99 @@ const providerNames: Record<string, string> = {
   azure: "Azure OpenAI",
   other: "Other",
 }
+
+const ProviderCard = React.memo(
+  ({
+    apiKey,
+    isVisible,
+    onToggleVisibility,
+    onEdit,
+    onDelete,
+    formatDateTime,
+  }: {
+    apiKey: ApiKeyConfig
+    isVisible: boolean
+    onToggleVisibility: (keyId: string) => void
+    onEdit: (provider: ApiKeyConfig) => void
+    onDelete: (provider: ApiKeyConfig) => void
+    formatDateTime: (date: Date | string | null | undefined) => string
+  }) => {
+    return (
+      <Card>
+        <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-foreground flex h-10 w-10 items-center justify-center rounded-md [&>svg]:size-6">
+              {providerIcons[apiKey.provider]}
+            </div>
+            <div>
+              <h3 className="text-foreground font-medium">{apiKey.name}</h3>
+              <p className="text-muted-foreground text-xs">
+                {apiKey.description ?? providerNames[apiKey.provider]}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={apiKey.status === "active" ? "default" : "secondary"}
+              className="capitalize"
+            >
+              {apiKey.status}
+            </Badge>
+            <Menu>
+              <MenuTrigger
+                render={
+                  <Button size="icon-xs" variant="ghost">
+                    <MoreVerticalIcon className="size-4" />
+                  </Button>
+                }
+              />
+              <MenuPopup align="end">
+                <MenuItem onClick={() => onEdit(apiKey)}>Edit</MenuItem>
+                <MenuItem
+                  onClick={() => onDelete(apiKey)}
+                  className="text-destructive"
+                >
+                  Delete
+                </MenuItem>
+              </MenuPopup>
+            </Menu>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6 p-6">
+          <div className="space-y-2">
+            <Label>Secret Key</Label>
+            <div className="flex gap-2">
+              <Input
+                type={isVisible ? "text" : "password"}
+                value={apiKey.apiKey}
+                readOnly
+                className="font-mono text-sm"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => onToggleVisibility(apiKey.id)}
+              >
+                {isVisible ? (
+                  <EyeOffIcon className="size-4" />
+                ) : (
+                  <EyeIcon className="size-4" />
+                )}
+              </Button>
+            </div>
+            {apiKey.lastUsed && (
+              <p className="text-muted-foreground text-xs">
+                Last used: {formatDateTime(apiKey.lastUsed)}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  },
+)
+
+ProviderCard.displayName = "ProviderCard"
 
 type ModalState =
   | { type: "closed" }
@@ -95,6 +189,8 @@ function modalReducer(_state: ModalState, action: ModalAction): ModalState {
 }
 
 export default function AdminSettingsPage() {
+  const { formatDateTime } = useFormatDate()
+
   const breadcrumbItems = [
     { label: "Settings", href: "/dashboard/admin/setting" },
     { label: "API Configuration" },
@@ -210,6 +306,20 @@ export default function AdminSettingsPage() {
     })
   }, [])
 
+  const openEditModal = useCallback(
+    (provider: ApiKeyConfig) => {
+      dispatch({ type: "OPEN_EDIT", provider })
+    },
+    [dispatch],
+  )
+
+  const openDeleteModal = useCallback(
+    (provider: ApiKeyConfig) => {
+      dispatch({ type: "OPEN_DELETE", provider })
+    },
+    [dispatch],
+  )
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto">
@@ -305,88 +415,15 @@ export default function AdminSettingsPage() {
               </>
             ) : (
               apiKeys?.map((key) => (
-                <Card key={key.id}>
-                  <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-foreground flex h-10 w-10 items-center justify-center rounded-md [&>svg]:size-6">
-                        {providerIcons[key.provider]}
-                      </div>
-                      <div>
-                        <h3 className="text-foreground font-medium">
-                          {key.name}
-                        </h3>
-                        <p className="text-muted-foreground text-xs">
-                          {key.description ?? providerNames[key.provider]}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          key.status === "active" ? "default" : "secondary"
-                        }
-                        className="capitalize"
-                      >
-                        {key.status}
-                      </Badge>
-                      <Menu>
-                        <MenuTrigger
-                          render={
-                            <Button size="icon-xs" variant="ghost">
-                              <MoreVerticalIcon className="size-4" />
-                            </Button>
-                          }
-                        />
-                        <MenuPopup align="end">
-                          <MenuItem
-                            onClick={() =>
-                              dispatch({ type: "OPEN_EDIT", provider: key })
-                            }
-                          >
-                            Edit
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() =>
-                              dispatch({ type: "OPEN_DELETE", provider: key })
-                            }
-                            className="text-destructive"
-                          >
-                            Delete
-                          </MenuItem>
-                        </MenuPopup>
-                      </Menu>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-6 p-6">
-                    <div className="space-y-2">
-                      <Label>Secret Key</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type={visibleKeys.has(key.id) ? "text" : "password"}
-                          value={key.apiKey}
-                          readOnly
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => toggleKeyVisibility(key.id)}
-                        >
-                          {visibleKeys.has(key.id) ? (
-                            <EyeOffIcon className="size-4" />
-                          ) : (
-                            <EyeIcon className="size-4" />
-                          )}
-                        </Button>
-                      </div>
-                      {key.lastUsed && (
-                        <p className="text-muted-foreground text-xs">
-                          Last used: {new Date(key.lastUsed).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <ProviderCard
+                  key={key.id}
+                  apiKey={key}
+                  isVisible={visibleKeys.has(key.id)}
+                  onToggleVisibility={toggleKeyVisibility}
+                  onEdit={openEditModal}
+                  onDelete={openDeleteModal}
+                  formatDateTime={formatDateTime}
+                />
               ))
             )}
 

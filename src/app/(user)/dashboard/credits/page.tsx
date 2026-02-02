@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   CreditCardIcon,
@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { toastManager } from "@/components/ui/toast"
+import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
 
 const creditPackages = [
@@ -32,6 +33,7 @@ const creditPackages = [
 
 export default function CreditsPage() {
   const [customAmount, setCustomAmount] = useState("")
+  const { formatDateOnly } = useFormatDate()
 
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
@@ -89,9 +91,31 @@ export default function CreditsPage() {
     },
   })
 
-  const balance = Number(creditsData?.balance ?? 0)
-  const totalPurchased = Number(creditsData?.totalPurchased ?? 0)
-  const totalUsed = Number(creditsData?.totalUsed ?? 0)
+  const balance = useMemo(
+    () => Number(creditsData?.balance ?? 0),
+    [creditsData?.balance],
+  )
+  const totalPurchased = useMemo(
+    () => Number(creditsData?.totalPurchased ?? 0),
+    [creditsData?.totalPurchased],
+  )
+  const totalUsed = useMemo(
+    () => Number(creditsData?.totalUsed ?? 0),
+    [creditsData?.totalUsed],
+  )
+
+  const handlePurchasePackage = useCallback(
+    (amount: number) => {
+      purchaseMutation.mutate(amount)
+    },
+    [purchaseMutation],
+  )
+
+  const handleCustomPurchase = useCallback(() => {
+    purchaseMutation.mutate(Number(customAmount))
+  }, [purchaseMutation, customAmount])
+
+  const customAmountValue = useMemo(() => Number(customAmount), [customAmount])
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
@@ -163,7 +187,7 @@ export default function CreditsPage() {
               <button
                 key={pkg.amount}
                 type="button"
-                onClick={() => purchaseMutation.mutate(pkg.amount)}
+                onClick={() => handlePurchasePackage(pkg.amount)}
                 disabled={purchaseMutation.isPending}
                 className="bg-card hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-center gap-2 rounded-lg border p-6 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -188,11 +212,11 @@ export default function CreditsPage() {
               />
             </div>
             <Button
-              onClick={() => purchaseMutation.mutate(Number(customAmount))}
+              onClick={handleCustomPurchase}
               disabled={
                 purchaseMutation.isPending ||
                 !customAmount ||
-                Number(customAmount) < 1
+                customAmountValue < 1
               }
             >
               <PlusIcon className="mr-2 h-4 w-4" />
@@ -244,9 +268,7 @@ export default function CreditsPage() {
                 transactionsData.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell className="text-muted-foreground">
-                      {tx.createdAt
-                        ? new Date(tx.createdAt).toLocaleDateString()
-                        : "-"}
+                      {formatDateOnly(tx.createdAt) || "-"}
                     </TableCell>
                     <TableCell>{tx.description ?? "-"}</TableCell>
                     <TableCell>

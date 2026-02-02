@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
@@ -38,6 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { toastManager } from "@/components/ui/toast"
+import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
 
 function ToolsPage() {
@@ -48,6 +49,7 @@ function ToolsPage() {
     name: string
   } | null>(null)
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([])
+  const { formatDateOnly } = useFormatDate()
 
   const {
     data: toolsData,
@@ -76,6 +78,8 @@ function ToolsPage() {
       | undefined
     refetch: () => void
   } & { isLoading: boolean }
+
+  const tools = useMemo(() => toolsData?.tools ?? [], [toolsData])
 
   const deleteToolMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -151,38 +155,42 @@ function ToolsPage() {
     },
   })
 
-  const handleDeleteClick = (tool: { id: string; name: string }) => {
-    setSelectedTool(tool)
-    setDeleteDialogOpen(true)
-  }
+  const handleDeleteClick = useCallback(
+    (tool: { id: string; name: string }) => {
+      setSelectedTool(tool)
+      setDeleteDialogOpen(true)
+    },
+    [],
+  )
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (selectedTool) {
       deleteToolMutation.mutate(selectedTool.id)
     }
-  }
+  }, [selectedTool, deleteToolMutation])
 
-  const handleToggleAll = () => {
+  const handleToggleAll = useCallback(() => {
     if (selectedToolIds.length === tools.length) {
       setSelectedToolIds([])
     } else {
       setSelectedToolIds(tools.map((t) => t.id))
     }
-  }
+  }, [selectedToolIds.length, tools])
 
-  const handleToggleTool = (toolId: string) => {
+  const handleToggleTool = useCallback((toolId: string) => {
     setSelectedToolIds((prev) =>
       prev.includes(toolId)
         ? prev.filter((id) => id !== toolId)
         : [...prev, toolId],
     )
-  }
+  }, [])
 
-  const handleBulkUpdateStatus = (status: "draft" | "active" | "archived") => {
-    bulkUpdateStatusMutation.mutate({ ids: selectedToolIds, status })
-  }
-
-  const tools = toolsData?.tools ?? []
+  const handleBulkUpdateStatus = useCallback(
+    (status: "draft" | "active" | "archived") => {
+      bulkUpdateStatusMutation.mutate({ ids: selectedToolIds, status })
+    },
+    [bulkUpdateStatusMutation, selectedToolIds],
+  )
 
   return (
     <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
@@ -307,9 +315,7 @@ function ToolsPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {tool.createdAt
-                      ? new Date(tool.createdAt).toLocaleDateString()
-                      : "-"}
+                    {formatDateOnly(tool.createdAt) || "-"}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-right">
                     -

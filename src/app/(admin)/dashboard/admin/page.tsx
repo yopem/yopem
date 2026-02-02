@@ -19,55 +19,54 @@ import StatsCard from "@/components/admin/stats-card"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 
+const ACTIVITY_ITEMS = [
+  {
+    icon: <UserPlusIcon className="text-foreground h-4 w-4" />,
+    message: (
+      <>
+        New user <span className="font-bold">alex_dev</span> joined the
+        platform.
+      </>
+    ),
+    timestamp: "2 minutes ago",
+  },
+  {
+    icon: <AlertTriangleIcon className="text-foreground h-4 w-4" />,
+    message: (
+      <>
+        High latency detected on <span className="font-bold">GPT-4-Turbo</span>.
+      </>
+    ),
+    timestamp: "15 minutes ago",
+  },
+  {
+    icon: <KeyIcon className="text-foreground h-4 w-4" />,
+    message: (
+      <>
+        New API Key generated for{" "}
+        <span className="font-bold">internal_service</span>.
+      </>
+    ),
+    timestamp: "1 hour ago",
+  },
+  {
+    icon: <BadgeCheckIcon className="text-foreground h-4 w-4" />,
+    message: (
+      <>
+        Subscription upgraded by <span className="font-bold">Studio_B</span>.
+      </>
+    ),
+    timestamp: "3 hours ago",
+  },
+  {
+    icon: <LogOutIcon className="text-foreground h-4 w-4" />,
+    message: "Admin session timeout.",
+    timestamp: "5 hours ago",
+  },
+]
+
 export default function AdminDashboardPage() {
   const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
-
-  const activityItems = [
-    {
-      icon: <UserPlusIcon className="text-foreground h-4 w-4" />,
-      message: (
-        <>
-          New user <span className="font-bold">alex_dev</span> joined the
-          platform.
-        </>
-      ),
-      timestamp: "2 minutes ago",
-    },
-    {
-      icon: <AlertTriangleIcon className="text-foreground h-4 w-4" />,
-      message: (
-        <>
-          High latency detected on{" "}
-          <span className="font-bold">GPT-4-Turbo</span>.
-        </>
-      ),
-      timestamp: "15 minutes ago",
-    },
-    {
-      icon: <KeyIcon className="text-foreground h-4 w-4" />,
-      message: (
-        <>
-          New API Key generated for{" "}
-          <span className="font-bold">internal_service</span>.
-        </>
-      ),
-      timestamp: "1 hour ago",
-    },
-    {
-      icon: <BadgeCheckIcon className="text-foreground h-4 w-4" />,
-      message: (
-        <>
-          Subscription upgraded by <span className="font-bold">Studio_B</span>.
-        </>
-      ),
-      timestamp: "3 hours ago",
-    },
-    {
-      icon: <LogOutIcon className="text-foreground h-4 w-4" />,
-      message: "Admin session timeout.",
-      timestamp: "5 hours ago",
-    },
-  ]
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -124,7 +123,7 @@ export default function AdminDashboardPage() {
           />
         </div>
         <div className="lg:col-span-1">
-          <ActivityFeed items={activityItems} />
+          <ActivityFeed items={ACTIVITY_ITEMS} />
         </div>
       </div>
     </div>

@@ -1,39 +1,44 @@
 "use client"
 
+import React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { CreditCardIcon, DollarSignIcon, PlayIcon } from "lucide-react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-}: {
-  title: string
-  value: string | number
-  icon: typeof CreditCardIcon
-  description?: string
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="text-muted-foreground h-4 w-4" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="text-muted-foreground text-xs">{description}</p>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
+const StatCard = React.memo(
+  ({
+    title,
+    value,
+    icon: Icon,
+    description,
+  }: {
+    title: string
+    value: string | number
+    icon: typeof CreditCardIcon
+    description?: string
+  }) => {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <Icon className="text-muted-foreground h-4 w-4" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{value}</div>
+          {description && (
+            <p className="text-muted-foreground text-xs">{description}</p>
+          )}
+        </CardContent>
+      </Card>
+    )
+  },
+)
+StatCard.displayName = "StatCard"
 
 interface StatsData {
   balance: string
@@ -65,6 +70,8 @@ interface RunsData {
 }
 
 function DashboardPage() {
+  const { formatDateOnly } = useFormatDate()
+
   const { data: stats } = useQuery({
     ...queryApi.user.getStats.queryOptions(),
     retry: false,
@@ -131,9 +138,7 @@ function DashboardPage() {
                         {run.toolName ?? "Unknown Tool"}
                       </p>
                       <p className="text-muted-foreground text-sm">
-                        {run.createdAt
-                          ? new Date(run.createdAt).toLocaleDateString()
-                          : ""}
+                        {formatDateOnly(run.createdAt)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

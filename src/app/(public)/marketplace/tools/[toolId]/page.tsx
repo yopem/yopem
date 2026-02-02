@@ -1,6 +1,6 @@
 "use client"
 
-import React, { use, useState } from "react"
+import React, { use, useCallback, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
 
@@ -66,7 +66,14 @@ export default function ToolDetailPage({
     },
   })
 
-  const handleExecute = () => {
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value)
+    },
+    [],
+  )
+
+  const handleExecute = useCallback(() => {
     setError(null)
     setOutput(null)
     if (!inputValue.trim()) {
@@ -74,7 +81,7 @@ export default function ToolDetailPage({
       return
     }
     executeMutation.mutate({ input: inputValue })
-  }
+  }, [inputValue, executeMutation])
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
@@ -148,7 +155,7 @@ export default function ToolDetailPage({
                   id="input"
                   placeholder="Enter your input..."
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={handleInputChange}
                   className="mt-1"
                 />
               </div>

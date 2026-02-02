@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 
@@ -94,7 +94,7 @@ function AddToolPage() {
     },
   })
 
-  const handleTestRun = () => {
+  const handleTestRun = useCallback(() => {
     const formData = formRef.current?.getValues()
     if (!formData) {
       toastManager.add({
@@ -130,28 +130,31 @@ function AddToolPage() {
 
     setTestResult(null)
     setTestSheetOpen(true)
-  }
+  }, [])
 
-  const handleExecuteTest = (inputs: Record<string, string>) => {
-    const formData = formRef.current?.getValues()
-    if (!formData) return
+  const handleExecuteTest = useCallback(
+    (inputs: Record<string, string>) => {
+      const formData = formRef.current?.getValues()
+      if (!formData) return
 
-    executePreviewMutation.mutate({ formData, inputs })
-  }
+      executePreviewMutation.mutate({ formData, inputs })
+    },
+    [executePreviewMutation],
+  )
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = useCallback(() => {
     const formData = formRef.current?.getValues()
     if (formData) {
       createToolMutation.mutate({ ...formData, status: "draft" })
     }
-  }
+  }, [createToolMutation])
 
-  const handlePublish = () => {
+  const handlePublish = useCallback(() => {
     const formData = formRef.current?.getValues()
     if (formData) {
       createToolMutation.mutate({ ...formData, status: "active" })
     }
-  }
+  }, [createToolMutation])
 
   return (
     <>
