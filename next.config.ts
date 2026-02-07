@@ -8,7 +8,7 @@ const config: NextConfig = {
   serverExternalPackages: ["pg", "ioredis"],
   reactCompiler: true,
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   productionBrowserSourceMaps: false,
   compiler: {
     ...(process.env["APP_ENV"] === "production"
