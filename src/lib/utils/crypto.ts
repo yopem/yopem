@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import crypto from "crypto"
 
 import { env } from "@/lib/env"
@@ -42,7 +41,6 @@ export function decryptApiKey(ciphertext: string): string {
     return decrypted
   } catch (error) {
     console.error("Error decrypting API key:", error)
-    console.error("Ciphertext format:", ciphertext?.substring(0, 50))
     throw new Error("Failed to decrypt API key")
   }
 }

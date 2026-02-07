@@ -127,11 +127,28 @@ export function createRedisCache() {
     return redis
   }
 
+  async function close(): Promise<void> {
+    if (redis) {
+      try {
+        await redis.quit()
+        console.info("Redis connection closed successfully")
+        redis = null
+      } catch (error) {
+        console.error("Failed to close Redis connection:", error)
+        if (redis) {
+          redis.disconnect()
+          redis = null
+        }
+      }
+    }
+  }
+
   return {
     setCache,
     getCache,
     deleteCache,
     invalidatePattern,
     getRedisClient,
+    close,
   }
 }

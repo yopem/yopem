@@ -10,7 +10,7 @@ export function createQueryClient() {
           const [json, meta] = serializer.serialize(queryKey)
           return JSON.stringify({ json, meta })
         },
-        staleTime: 60 * 1000, // > 0 to prevent immediate refetching on mount
+        staleTime: 60 * 1000,
       },
       dehydrate: {
         shouldDehydrateQuery: (query) =>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { LoaderCircleIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -46,12 +46,25 @@ const ToolTestSheet = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({})
+  const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fileReaderRef = useRef<FileReader | null>(null)
 
   useEffect(() => {
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current)
+    }
+
     if (open) {
-      setTimeout(() => setIsVisible(true), 10)
+      animationTimerRef.current = setTimeout(() => setIsVisible(true), 10)
     } else {
       setIsVisible(false)
+    }
+
+    return () => {
+      if (animationTimerRef.current) {
+        clearTimeout(animationTimerRef.current)
+      }
     }
   }, [open])
 
@@ -207,11 +220,17 @@ const ToolTestSheet = ({
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) {
-                  // Convert file to base64
+                  if (fileReaderRef.current) {
+                    fileReaderRef.current.abort()
+                  }
                   const reader = new FileReader()
+                  fileReaderRef.current = reader
                   reader.onload = (event) => {
                     const result = event.target?.result as string
                     handleChange(result)
+                  }
+                  reader.onerror = () => {
+                    console.error("Failed to read image file")
                   }
                   reader.readAsDataURL(file)
                 }
@@ -235,11 +254,17 @@ const ToolTestSheet = ({
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) {
-                  // Convert file to base64
+                  if (fileReaderRef.current) {
+                    fileReaderRef.current.abort()
+                  }
                   const reader = new FileReader()
+                  fileReaderRef.current = reader
                   reader.onload = (event) => {
                     const result = event.target?.result as string
                     handleChange(result)
+                  }
+                  reader.onerror = () => {
+                    console.error("Failed to read video file")
                   }
                   reader.readAsDataURL(file)
                 }
@@ -274,8 +299,22 @@ const ToolTestSheet = ({
 
   const handleClose = () => {
     setIsVisible(false)
-    setTimeout(() => onOpenChange(false), 200)
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = setTimeout(() => onOpenChange(false), 200)
   }
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
+      if (fileReaderRef.current) {
+        fileReaderRef.current.abort()
+      }
+    }
+  }, [])
 
   if (!open) return null
 

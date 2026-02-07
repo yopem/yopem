@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-properties */
-
 import { createEnv } from "@t3-oss/env-nextjs"
 import z from "zod"
 
@@ -85,7 +84,7 @@ export const env = createEnv({
     NEXT_PUBLIC_WHATSAPP_CHANNEL_USERNAME:
       process.env["NEXT_PUBLIC_WHATSAPP_CHANNEL_USERNAME"],
     NEXT_PUBLIC_X_USERNAME: process.env["NEXT_PUBLIC_X_USERNAME"],
-    NEXT_PUBLIC_YOUTUBE_USERNAME: process.env["NEXT_PUBLIC_X_USERNAME"],
+    NEXT_PUBLIC_YOUTUBE_USERNAME: process.env["NEXT_PUBLIC_YOUTUBE_USERNAME"],
   },
   skipValidation:
     !!process.env["CI"] || process.env["npm_lifecycle_event"] === "lint",

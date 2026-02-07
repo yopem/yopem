@@ -19,8 +19,11 @@ const Link = ({ children, className, ...props }: ForesightLinkProps) => {
 
   const { elementRef } = useForesight<HTMLAnchorElement>({
     callback: () => {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      router.prefetch(props.href.toString())
+      const href =
+        typeof props.href === "string"
+          ? props.href
+          : (props.href.pathname ?? "/")
+      router.prefetch(href)
     },
     hitSlop: props.hitSlop,
     name: props.name,

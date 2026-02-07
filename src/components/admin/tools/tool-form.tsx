@@ -230,8 +230,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onModelsAvailable()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableModels])
+  }, [availableModels, onModelsAvailable])
 
   const onInitialDataLoaded = useEffectEvent(() => {
     if (mode === "edit" && initialData) {
@@ -297,8 +296,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onInitialDataLoaded()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData, mode])
+  }, [initialData, mode, onInitialDataLoaded])
 
   const onApiKeyOrModelChange = useEffectEvent(() => {
     const apiKeyId = form.getFieldValue("apiKeyId")
@@ -326,8 +324,12 @@ const ToolForm = ({
 
   useEffect(() => {
     onApiKeyOrModelChange()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.state.values.apiKeyId, form.state.values.modelEngine, apiKeys])
+  }, [
+    form.state.values.apiKeyId,
+    form.state.values.modelEngine,
+    apiKeys,
+    onApiKeyOrModelChange,
+  ])
 
   const handleInsertVariable = (
     variable: string,
@@ -497,7 +499,7 @@ const ToolForm = ({
                 handleInsertVariable(variable, "systemRole")
               }
               onRestoreVersion={() => {
-                console.info("Restore version clicked")
+                return
               }}
               systemRoleRef={systemRoleRef}
               userInstructionRef={userInstructionRef}

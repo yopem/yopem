@@ -47,3 +47,5 @@ next-env.d.ts
 openspec/
 opencode.jsonc
 AGENTS.md
+skills
+.gemini

@@ -9,6 +9,7 @@ import {
   updateApiKeyInputSchema,
   type ApiKeyConfig,
 } from "@/lib/schemas/api-keys"
+import { failure, success, type Result } from "@/lib/types/result"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
 
@@ -208,12 +209,24 @@ export const adminRouter = {
         } else {
           try {
             const decryptedKey = decryptApiKey(key.apiKey)
-            const models = await fetchModelsForProvider(
+            const result = await fetchModelsForProvider(
               key.provider,
               decryptedKey,
             )
-            modelsByProvider[key.provider] = models
-            await context.redis.setCache(cacheKey, models, MODEL_CACHE_TTL)
+            if (result.success) {
+              modelsByProvider[key.provider] = result.data
+              await context.redis.setCache(
+                cacheKey,
+                result.data,
+                MODEL_CACHE_TTL,
+              )
+            } else {
+              console.error(
+                `Failed to fetch models for ${key.provider}:`,
+                result.error,
+              )
+              modelsByProvider[key.provider] = []
+            }
           } catch (error) {
             console.error(`Failed to fetch models for ${key.provider}:`, error)
             modelsByProvider[key.provider] = []
@@ -236,7 +249,7 @@ export const adminRouter = {
 async function fetchModelsForProvider(
   provider: ApiKeyConfig["provider"],
   apiKey: string,
-): Promise<{ id: string; name: string }[]> {
+): Promise<Result<{ id: string; name: string }[]>> {
   switch (provider) {
     case "openai":
       return await fetchOpenAIModels(apiKey)
@@ -251,16 +264,24 @@ async function fetchModelsForProvider(
     case "openrouter":
       return await fetchOpenRouterModels(apiKey)
     default:
-      return []
+      return success([])
   }
 }
 
-async function fetchOpenAIModels(apiKey: string) {
+async function fetchOpenAIModels(
+  apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
   try {
     const response = await fetch("https://api.openai.com/v1/models", {
       headers: { Authorization: `Bearer ${apiKey}` },
     })
-    if (!response.ok) return []
+    if (!response.ok) {
+      return failure({
+        provider: "openai",
+        errorType: response.status === 401 ? "auth" : "network",
+        message: `API request failed with status ${response.status}`,
+      })
+    }
     const data = await response.json()
     const filteredModels =
       data.data
@@ -285,13 +306,20 @@ async function fetchOpenAIModels(apiKey: string) {
       },
     )
 
-    return sortedModels
-  } catch {
-    return []
+    return success(sortedModels)
+  } catch (error) {
+    return failure({
+      provider: "openai",
+      errorType: "network",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    })
   }
 }
 
-async function fetchAnthropicModels(apiKey: string) {
+async function fetchAnthropicModels(
+  apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
   try {
     const response = await fetch("https://api.anthropic.com/v1/models", {
       headers: {
@@ -299,27 +327,46 @@ async function fetchAnthropicModels(apiKey: string) {
         "anthropic-version": "2023-06-01",
       },
     })
-    if (!response.ok) return []
+    if (!response.ok) {
+      return failure({
+        provider: "anthropic",
+        errorType: response.status === 401 ? "auth" : "network",
+        message: `API request failed with status ${response.status}`,
+      })
+    }
     const data = await response.json()
-    return (
+    const models =
       data.data?.map((m: { id: string; display_name?: string }) => ({
         id: m.id,
         name: m.display_name ?? m.id,
       })) ?? []
-    )
-  } catch {
-    return []
+    return success(models)
+  } catch (error) {
+    return failure({
+      provider: "anthropic",
+      errorType: "network",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    })
   }
 }
 
-async function fetchGoogleModels(apiKey: string) {
+async function fetchGoogleModels(
+  apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
     )
-    if (!response.ok) return []
+    if (!response.ok) {
+      return failure({
+        provider: "google",
+        errorType: response.status === 401 ? "auth" : "network",
+        message: `API request failed with status ${response.status}`,
+      })
+    }
     const data = await response.json()
-    return (
+    const models =
       data.models
         ?.filter(
           (m: { name: string; supportedGenerationMethods?: string[] }) =>
@@ -333,48 +380,81 @@ async function fetchGoogleModels(apiKey: string) {
             name: m.displayName ?? id,
           }
         }) ?? []
-    )
-  } catch {
-    return []
+    return success(models)
+  } catch (error) {
+    return failure({
+      provider: "google",
+      errorType: "network",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    })
   }
 }
 
-async function fetchMistralModels(apiKey: string) {
+async function fetchMistralModels(
+  apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
   try {
     const response = await fetch("https://api.mistral.ai/v1/models", {
       headers: { Authorization: `Bearer ${apiKey}` },
     })
-    if (!response.ok) return []
+    if (!response.ok) {
+      return failure({
+        provider: "mistral",
+        errorType: response.status === 401 ? "auth" : "network",
+        message: `API request failed with status ${response.status}`,
+      })
+    }
     const data = await response.json()
-    return (
+    const models =
       data.data?.map((m: { id: string }) => ({
         id: m.id,
         name: m.id,
       })) ?? []
-    )
-  } catch {
-    return []
+    return success(models)
+  } catch (error) {
+    return failure({
+      provider: "mistral",
+      errorType: "network",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    })
   }
 }
 
-async function fetchAzureModels(_apiKey: string) {
-  return []
+async function fetchAzureModels(
+  _apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
+  return success([])
 }
 
-async function fetchOpenRouterModels(apiKey: string) {
+async function fetchOpenRouterModels(
+  apiKey: string,
+): Promise<Result<{ id: string; name: string }[]>> {
   try {
     const response = await fetch("https://openrouter.ai/api/v1/models", {
       headers: { Authorization: `Bearer ${apiKey}` },
     })
-    if (!response.ok) return []
+    if (!response.ok) {
+      return failure({
+        provider: "openrouter",
+        errorType: response.status === 401 ? "auth" : "network",
+        message: `API request failed with status ${response.status}`,
+      })
+    }
     const data = await response.json()
-    return (
+    const models =
       data.data?.map((m: { id: string; name?: string }) => ({
         id: m.id,
         name: m.name ?? m.id,
       })) ?? []
-    )
-  } catch {
-    return []
+    return success(models)
+  } catch (error) {
+    return failure({
+      provider: "openrouter",
+      errorType: "network",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    })
   }
 }
