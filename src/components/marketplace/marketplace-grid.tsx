@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRightIcon, SearchIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import React, { useMemo, useState } from "react"
+import { memo, useMemo, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -30,7 +30,7 @@ interface MarketplaceGridProps {
   initialTools?: Tool[]
 }
 
-const ToolCard = React.memo(({ id, name, description, costPerRun }: Tool) => {
+const ToolCard = memo(({ id, name, description, costPerRun }: Tool) => {
   return (
     <Card className="flex flex-col transition-all hover:shadow-md">
       <CardHeader>
@@ -54,9 +54,8 @@ const ToolCard = React.memo(({ id, name, description, costPerRun }: Tool) => {
     </Card>
   )
 })
-ToolCard.displayName = "ToolCard"
 
-const SearchBar = React.memo(
+const SearchBar = memo(
   ({
     onSearch,
     defaultValue = "",
@@ -66,7 +65,7 @@ const SearchBar = React.memo(
   }) => {
     const [query, setQuery] = useState(defaultValue)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: FormEvent) => {
       e.preventDefault()
       onSearch(query)
     }
@@ -92,7 +91,6 @@ const SearchBar = React.memo(
     )
   },
 )
-SearchBar.displayName = "SearchBar"
 
 function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
   const searchParams = useSearchParams()

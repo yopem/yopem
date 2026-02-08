@@ -14,7 +14,7 @@ import {
   TrendingDownIcon,
   TrendingUpIcon,
 } from "lucide-react"
-import React, { useCallback, useReducer, useState } from "react"
+import { memo, useCallback, useReducer, useState, type ReactNode } from "react"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
@@ -54,7 +54,7 @@ import {
 import useFormatDate from "@/hooks/use-format-date"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
 
-const providerIcons: Record<string, React.ReactNode> = {
+const providerIcons: Record<string, ReactNode> = {
   openai: <BotIcon className="text-background" />,
   anthropic: <BrainIcon className="text-background" />,
   google: <KeyIcon className="text-background" />,
@@ -70,7 +70,7 @@ const providerNames: Record<string, string> = {
   other: "Other",
 }
 
-const ProviderCard = React.memo(
+const ProviderCard = memo(
   ({
     apiKey,
     isVisible,

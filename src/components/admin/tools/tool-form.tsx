@@ -7,6 +7,7 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
+  type Ref,
 } from "react"
 import { z } from "zod"
 
@@ -96,14 +97,14 @@ export interface ToolFormRef {
   getValues: () => ToolFormData
 }
 
-interface ToolFormProps {
+export interface ToolFormProps {
   mode: "create" | "edit"
   initialData?: SelectTool
   onSubmit: (data: ToolFormData) => void | Promise<void>
   isSaving?: boolean
   showSlug?: boolean
   apiKeys?: ApiKeyConfig[]
-  ref?: React.Ref<ToolFormRef>
+  ref?: Ref<ToolFormRef>
 }
 
 const ToolForm = ({
@@ -569,4 +570,3 @@ const ToolForm = ({
 }
 
 export default ToolForm
-export { type ToolFormProps }

@@ -2,7 +2,13 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { SaveIcon, UserIcon } from "lucide-react"
-import { useCallback, useEffect, useEffectEvent, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useState,
+  type ChangeEvent,
+} from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,19 +73,13 @@ export default function ProfilePage() {
     updateMutation.mutate({ name, image: image || undefined })
   }, [updateMutation, name, image])
 
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setName(e.target.value)
-    },
-    [],
-  )
+  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value)
+  }, [])
 
-  const handleImageChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setImage(e.target.value)
-    },
-    [],
-  )
+  const handleImageChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setImage(e.target.value)
+  }, [])
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

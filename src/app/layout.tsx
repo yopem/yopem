@@ -2,6 +2,7 @@ import "@/styles/globals.css"
 
 import { type Metadata } from "next"
 import localFont from "next/font/local"
+import type { ReactNode } from "react"
 
 import Providers from "@/components/providers"
 import Scripts from "@/components/scripts"
@@ -59,7 +60,7 @@ const adwaitaMono = localFont({
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html
       lang="en"

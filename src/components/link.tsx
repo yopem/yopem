@@ -3,6 +3,7 @@
 import { type ForesightRegisterOptions } from "js.foresight"
 import NextLink, { type LinkProps } from "next/link"
 import { useRouter } from "next/navigation"
+import type { ReactNode } from "react"
 
 import useForesight from "@/hooks/use-foresight"
 
@@ -10,7 +11,7 @@ interface ForesightLinkProps
   extends
     Omit<LinkProps, "prefetch">,
     Omit<ForesightRegisterOptions, "element" | "callback"> {
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }
 

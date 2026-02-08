@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
-import React, { use, useCallback, useState } from "react"
+import { use, useCallback, useState, type ChangeEvent } from "react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
@@ -66,12 +66,9 @@ export default function ToolDetailPage({
     },
   })
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value)
-    },
-    [],
-  )
+  const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+  }, [])
 
   const handleExecute = useCallback(() => {
     setError(null)

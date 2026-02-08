@@ -1,7 +1,7 @@
 "use client"
 
 import { SearchIcon } from "lucide-react"
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +14,7 @@ interface SearchBarProps {
 function SearchBar({ onSearch, defaultValue = "" }: SearchBarProps) {
   const [query, setQuery] = useState(defaultValue)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     onSearch(query)
   }
