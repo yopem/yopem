@@ -99,8 +99,8 @@ export default function ToolDetailPage({
 
       {isLoading && (
         <div className="animate-pulse space-y-4">
-          <div className="bg-muted h-8 w-1/3 rounded" />
-          <div className="bg-muted h-32 rounded" />
+          <div className="bg-muted h-8 w-1/3 rounded-sm" />
+          <div className="bg-muted h-32 rounded-sm" />
         </div>
       )}
 

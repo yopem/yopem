@@ -245,16 +245,16 @@ export default function CreditsPage() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell>
-                      <div className="bg-muted h-4 w-32 animate-pulse rounded" />
+                      <div className="bg-muted h-4 w-32 animate-pulse rounded-sm" />
                     </TableCell>
                     <TableCell>
-                      <div className="bg-muted h-4 w-48 animate-pulse rounded" />
+                      <div className="bg-muted h-4 w-48 animate-pulse rounded-sm" />
                     </TableCell>
                     <TableCell>
                       <div className="bg-muted h-6 w-20 animate-pulse rounded-full" />
                     </TableCell>
                     <TableCell>
-                      <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded" />
+                      <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded-sm" />
                     </TableCell>
                   </TableRow>
                 ))

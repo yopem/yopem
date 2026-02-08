@@ -16,7 +16,7 @@ const OutputFormatToggle = ({ value, onChange }: OutputFormatToggleProps) => {
         Output Format
         <div className="relative">
           <InfoIcon className="text-muted-foreground size-3.5 cursor-help" />
-          <div className="bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 mb-2 w-48 -translate-x-1/2 rounded p-2 text-xs opacity-0 shadow-md transition-opacity group-hover:opacity-100">
+          <div className="bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 mb-2 w-48 -translate-x-1/2 rounded-sm p-2 text-xs opacity-0 shadow-md transition-opacity group-hover:opacity-100">
             Forces the model to output valid JSON
           </div>
         </div>

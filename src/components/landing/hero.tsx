@@ -26,7 +26,7 @@ const Hero = () => {
             View Demo
           </Button>
         </div>
-        <div className="group bg-card/50 relative mt-16 aspect-video w-full max-w-4xl overflow-hidden rounded-xl border shadow-2xl backdrop-blur">
+        <div className="group bg-card/50 relative mt-16 aspect-video w-full max-w-4xl overflow-hidden rounded-xl border shadow-2xl backdrop-blur-sm">
           <div className="from-muted/50 absolute inset-0 bg-linear-to-tr via-transparent to-transparent" />
           <div className="bg-card/40 flex h-10 items-center gap-2 border-b px-4">
             <div className="bg-muted size-3 rounded-full" />
@@ -35,23 +35,23 @@ const Hero = () => {
           </div>
           <div className="grid h-full grid-cols-12 gap-6 p-8">
             <div className="col-span-3 hidden space-y-3 border-r pr-4 sm:block">
-              <div className="bg-muted h-8 w-full animate-pulse rounded" />
-              <div className="bg-muted/50 h-8 w-3/4 animate-pulse rounded" />
-              <div className="bg-muted/50 h-8 w-5/6 animate-pulse rounded" />
+              <div className="bg-muted h-8 w-full animate-pulse rounded-sm" />
+              <div className="bg-muted/50 h-8 w-3/4 animate-pulse rounded-sm" />
+              <div className="bg-muted/50 h-8 w-5/6 animate-pulse rounded-sm" />
             </div>
             <div className="col-span-12 space-y-4 sm:col-span-9">
               <div className="mb-6 flex items-center justify-between">
-                <div className="bg-muted h-10 w-1/3 rounded" />
-                <div className="bg-primary/20 h-10 w-24 rounded" />
+                <div className="bg-muted h-10 w-1/3 rounded-sm" />
+                <div className="bg-primary/20 h-10 w-24 rounded-sm" />
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
+                <div className="bg-muted/30 flex h-32 items-center justify-center rounded-sm border border-dashed">
                   <BotIcon className="text-muted-foreground size-10" />
                 </div>
-                <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
+                <div className="bg-muted/30 flex h-32 items-center justify-center rounded-sm border border-dashed">
                   <ImageIcon className="text-muted-foreground size-10" />
                 </div>
-                <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
+                <div className="bg-muted/30 flex h-32 items-center justify-center rounded-sm border border-dashed">
                   <BarChart3Icon className="text-muted-foreground size-10" />
                 </div>
               </div>

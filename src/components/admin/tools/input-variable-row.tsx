@@ -157,7 +157,7 @@ const InputVariableRow = ({
         <div className="col-span-1 flex justify-end">
           <button
             onClick={onDelete}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1 transition-colors"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-sm p-1 transition-colors"
           >
             <Trash2Icon className="size-4" />
           </button>

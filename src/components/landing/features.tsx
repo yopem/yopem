@@ -75,13 +75,13 @@ const Features = () => {
             <div className="bg-muted/50 relative min-h-[200px] flex-1 overflow-hidden md:min-h-full">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative flex size-48 items-center justify-center rounded-full border">
-                  <div className="bg-card absolute -top-4 rounded border px-2 font-mono text-xs">
+                  <div className="bg-card absolute -top-4 rounded-sm border px-2 font-mono text-xs">
                     GPT-4
                   </div>
-                  <div className="bg-card absolute -bottom-4 rounded border px-2 font-mono text-xs">
+                  <div className="bg-card absolute -bottom-4 rounded-sm border px-2 font-mono text-xs">
                     Claude 3
                   </div>
-                  <div className="bg-card absolute -left-8 rounded border px-2 font-mono text-xs">
+                  <div className="bg-card absolute -left-8 rounded-sm border px-2 font-mono text-xs">
                     Mistral
                   </div>
                   <div className="bg-primary text-primary-foreground z-10 flex size-16 items-center justify-center rounded-full font-bold">

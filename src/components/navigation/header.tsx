@@ -8,10 +8,10 @@ const Header = async () => {
   const session = await auth()
 
   return (
-    <div className="bg-card/80 supports-backdrop-filter:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur">
+    <div className="bg-card/80 supports-backdrop-filter:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur-sm">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4">
         <div className="mr-8 flex items-center gap-2">
-          <div className="bg-card text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded">
+          <div className="bg-card text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded-sm">
             <Logo className="size-full p-0.5" />
           </div>
           <h2 className="text-foreground text-lg/tight font-bold tracking-tight">

@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="mb-8 flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="flex-1">
             <div className="mb-4 flex items-center gap-2">
-              <div className="bg-card flex size-6 items-center justify-center overflow-hidden rounded">
+              <div className="bg-card flex size-6 items-center justify-center overflow-hidden rounded-sm">
                 <Logo className="size-full p-0.5" />
               </div>
               <h3 className="text-foreground text-lg font-bold">Yopem</h3>
