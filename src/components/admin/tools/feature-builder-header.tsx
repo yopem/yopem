@@ -58,7 +58,7 @@ const FeatureBuilderHeader = ({
               status === "active"
                 ? "border-green-200 bg-green-50 text-green-700"
                 : status === "draft"
-                  ? "bg-muted border-border text-muted-foreground"
+                  ? "border-border bg-muted text-muted-foreground"
                   : "border-gray-200 bg-gray-50 text-gray-700"
             }`}
           >

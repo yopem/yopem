@@ -86,7 +86,7 @@ export default function ToolDetailPage({
         href="/marketplace"
         className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center text-sm"
       >
-        <ArrowLeftIcon className="mr-2 h-4 w-4" />
+        <ArrowLeftIcon className="mr-2 size-4" />
         Back to Marketplace
       </Link>
 
@@ -127,7 +127,7 @@ export default function ToolDetailPage({
               </p>
               <div className="mt-4 flex items-center gap-4 text-sm">
                 <span className="flex items-center">
-                  <CreditCardIcon className="mr-1 h-4 w-4" />
+                  <CreditCardIcon className="mr-1 size-4" />
                   {Number(tool.costPerRun ?? 0) > 0
                     ? `${tool.costPerRun} credits/run`
                     : "Free"}
@@ -162,7 +162,7 @@ export default function ToolDetailPage({
                 disabled={executeMutation.isPending}
                 className="w-full"
               >
-                <PlayIcon className="mr-2 h-4 w-4" />
+                <PlayIcon className="mr-2 size-4" />
                 {executeMutation.isPending
                   ? "Executing..."
                   : Number(tool.costPerRun ?? 0) > 0

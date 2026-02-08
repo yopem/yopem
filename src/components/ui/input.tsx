@@ -22,14 +22,14 @@ function Input({
   ...props
 }: InputProps) {
   const inputClassName = cn(
-    "placeholder:text-muted-foreground/72 h-8.5 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-8.5 outline-none sm:h-7.5 sm:leading-7.5",
+    `placeholder:text-muted-foreground/72 h-8.5 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-8.5 outline-none sm:h-7.5 sm:leading-7.5`,
     size === "sm" &&
-      "h-7.5 px-[calc(--spacing(2.5)-1px)] leading-7.5 sm:h-6.5 sm:leading-6.5",
-    size === "lg" && "h-9.5 leading-9.5 sm:h-8.5 sm:leading-8.5",
+      `h-7.5 px-[calc(--spacing(2.5)-1px)] leading-7.5 sm:h-6.5 sm:leading-6.5`,
+    size === "lg" && `h-9.5 leading-9.5 sm:h-8.5 sm:leading-8.5`,
     props.type === "search" &&
-      "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
+      `[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none`,
     props.type === "file" &&
-      "text-muted-foreground file:text-foreground file:me-3 file:bg-transparent file:text-sm file:font-medium",
+      `text-muted-foreground file:text-foreground file:me-3 file:bg-transparent file:text-sm file:font-medium`,
   )
 
   return (

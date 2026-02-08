@@ -33,12 +33,12 @@ const AdminSidebarFooter = ({ user }: AdminSidebarFooterProps) => {
         className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
         render={
           <button className="flex items-center gap-3 p-2">
-            <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold">
+            <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-full border text-xs font-bold">
               {user.avatar ? (
                 <Image
                   src={user.avatar}
                   alt={user.name}
-                  className="h-8 w-8 rounded-full object-cover"
+                  className="size-8 rounded-full object-cover"
                   width={32}
                   height={32}
                 />
@@ -57,18 +57,18 @@ const AdminSidebarFooter = ({ user }: AdminSidebarFooterProps) => {
               </p>
               <p className="text-muted-foreground text-xs">{user.email}</p>
             </div>
-            <ChevronUpIcon className="text-muted-foreground h-4 w-4" />
+            <ChevronUpIcon className="text-muted-foreground size-4" />
           </button>
         }
       />
       <MenuPopup side="top" align="end" sideOffset={8} className="min-w-56">
         <MenuItem>
-          <UserIcon className="mr-2 h-4 w-4" />
+          <UserIcon className="mr-2 size-4" />
           <span>Profile</span>
         </MenuItem>
         <MenuSeparator />
         <MenuItem onClick={handleLogout} variant="destructive">
-          <LogOutIcon className="mr-2 h-4 w-4" />
+          <LogOutIcon className="mr-2 size-4" />
           <span>Logout</span>
         </MenuItem>
       </MenuPopup>

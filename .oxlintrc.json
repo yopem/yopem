@@ -12,7 +12,11 @@
     "typescript",
     "unicorn"
   ],
-  "jsPlugins": ["eslint-plugin-oxfmt", "eslint-plugin-drizzle"],
+  "jsPlugins": [
+    "eslint-plugin-oxfmt",
+    "eslint-plugin-better-tailwindcss",
+    "eslint-plugin-drizzle"
+  ],
   "categories": {
     "correctness": "off"
   },
@@ -20,6 +24,12 @@
     "builtin": true
   },
   "rules": {
+    "better-tailwindcss/enforce-consistent-class-order": "off",
+    "better-tailwindcss/no-conflicting-classes": "error",
+    "better-tailwindcss/no-duplicate-classes": "warn",
+    "better-tailwindcss/no-unnecessary-whitespace": "warn",
+    "better-tailwindcss/enforce-consistent-line-wrapping": "off",
+    "better-tailwindcss/enforce-shorthand-classes": "error",
     "constructor-super": "off",
     "for-direction": "error",
     "getter-return": "off",
@@ -169,6 +179,11 @@
     "typescript/unbound-method": "off",
     "use-isnan": "error",
     "valid-typeof": "error"
+  },
+  "settings": {
+    "better-tailwindcss": {
+      "entryPoint": "./src/styles/globals.css"
+    }
   },
   "ignorePatterns": [
     "**/node_modules",

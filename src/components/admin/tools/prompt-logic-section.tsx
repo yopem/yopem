@@ -79,8 +79,8 @@ const PromptLogicSection = ({
                   onClick={() => onInsertSystemRoleVariable?.(variable.name)}
                   className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
                     variable.isOptional
-                      ? "bg-muted/50 hover:bg-muted text-muted-foreground border-dashed"
-                      : "bg-background hover:bg-muted"
+                      ? `bg-muted/50 text-muted-foreground hover:bg-muted border-dashed`
+                      : `bg-background hover:bg-muted`
                   }`}
                 >
                   + {variable.name}
@@ -118,8 +118,8 @@ const PromptLogicSection = ({
                   onClick={() => onInsertVariable?.(variable.name)}
                   className={`rounded border px-2 py-1 font-mono text-xs transition-colors ${
                     variable.isOptional
-                      ? "bg-muted/50 hover:bg-muted text-muted-foreground border-dashed"
-                      : "bg-background hover:bg-muted"
+                      ? `bg-muted/50 text-muted-foreground hover:bg-muted border-dashed`
+                      : `bg-background hover:bg-muted`
                   }`}
                 >
                   + {variable.name}

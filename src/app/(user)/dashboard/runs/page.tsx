@@ -21,11 +21,11 @@ import { queryApi } from "@/lib/orpc/query"
 const getStatusIcon = (status: string) => {
   switch (status) {
     case "completed":
-      return <CheckCircle2Icon className="h-4 w-4 text-green-500" />
+      return <CheckCircle2Icon className="size-4 text-green-500" />
     case "failed":
-      return <XCircleIcon className="h-4 w-4 text-red-500" />
+      return <XCircleIcon className="size-4 text-red-500" />
     default:
-      return <ClockIcon className="h-4 w-4 text-yellow-500" />
+      return <ClockIcon className="size-4 text-yellow-500" />
   }
 }
 

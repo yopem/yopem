@@ -53,7 +53,7 @@ const ApiKeySelector = ({
         }}
       >
         <SelectTrigger
-          className={error ? "border-red-500 focus:ring-red-500" : ""}
+          className={error ? `border-red-500 focus:ring-red-500` : ""}
         >
           <SelectValue placeholder="Select an API key">
             {value && filteredKeys.find((k) => k.id === value)

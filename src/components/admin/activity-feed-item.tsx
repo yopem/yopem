@@ -14,7 +14,7 @@ const ActivityFeedItem = ({
   return (
     <div className="group hover:bg-secondary/40 flex gap-4 rounded-lg p-4 transition-colors">
       <div className="mt-0.5">
-        <div className="border-sidebar-border bg-secondary group-hover:bg-secondary flex h-8 w-8 items-center justify-center rounded-full border transition-colors">
+        <div className="border-sidebar-border bg-secondary group-hover:bg-secondary flex size-8 items-center justify-center rounded-full border transition-colors">
           {icon}
         </div>
       </div>

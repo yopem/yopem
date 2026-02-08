@@ -93,7 +93,7 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserIcon className="h-5 w-5" />
+            <UserIcon className="size-5" />
             Personal Information
           </CardTitle>
         </CardHeader>
@@ -129,7 +129,7 @@ export default function ProfilePage() {
             disabled={updateMutation.isPending}
             className="mt-4"
           >
-            <SaveIcon className="mr-2 h-4 w-4" />
+            <SaveIcon className="mr-2 size-4" />
             {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </Button>
         </CardContent>

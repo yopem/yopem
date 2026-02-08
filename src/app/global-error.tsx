@@ -22,8 +22,8 @@ export default function GlobalError({
         <div className="flex min-h-screen items-center justify-center px-4">
           <div className="w-full max-w-md text-center">
             <div className="mb-8">
-              <div className="bg-destructive/10 text-destructive mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
-                <AlertTriangleIcon className="h-8 w-8" />
+              <div className="bg-destructive/10 text-destructive mx-auto mb-6 flex size-16 items-center justify-center rounded-full">
+                <AlertTriangleIcon className="size-8" />
               </div>
               <h1 className="mb-4 text-3xl font-bold tracking-tight">
                 Something went wrong
@@ -38,10 +38,9 @@ export default function GlobalError({
                 </p>
               )}
             </div>
-
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button onClick={() => reset()} size="lg">
-                <RefreshCwIcon className="h-4 w-4" />
+                <RefreshCwIcon className="size-4" />
                 Try again
               </Button>
               <Button

@@ -62,7 +62,7 @@ const AccessManagementTable = ({
                 <div className="text-foreground flex items-center gap-3">
                   {user.avatar && (
                     <div
-                      className="border-border h-8 w-8 rounded-full border bg-cover bg-center"
+                      className="border-border size-8 rounded-full border bg-cover bg-center"
                       style={{ backgroundImage: `url(${user.avatar})` }}
                     />
                   )}

@@ -8,8 +8,8 @@ interface UserSidebarHeaderProps {
 const UserSidebarHeader = ({ title, subtitle }: UserSidebarHeaderProps) => {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
-        <Logo className="h-5 w-5" />
+      <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
+        <Logo className="size-5" />
       </div>
       <div className="flex flex-col">
         <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">

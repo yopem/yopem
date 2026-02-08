@@ -90,7 +90,7 @@ const ProviderCard = memo(
       <Card>
         <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
           <div className="flex items-center gap-4">
-            <div className="bg-foreground flex h-10 w-10 items-center justify-center rounded-md [&>svg]:size-6">
+            <div className="bg-foreground flex size-10 items-center justify-center rounded-md [&>svg]:size-6">
               {providerIcons[apiKey.provider]}
             </div>
             <div>
@@ -429,7 +429,7 @@ export default function AdminSettingsPage() {
 
             <button
               onClick={() => dispatch({ type: "OPEN_ADD" })}
-              className="border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent/50 group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-4 transition-all"
+              className="group border-border text-muted-foreground hover:border-foreground/30 hover:bg-accent/50 hover:text-foreground flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-4 transition-all"
             >
               <PlusCircleIcon className="size-5 transition-transform group-hover:scale-110" />
               <span className="text-sm font-medium">Add New Provider</span>

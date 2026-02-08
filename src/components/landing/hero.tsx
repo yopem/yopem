@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 const Hero = () => {
   return (
     <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden pt-10 pb-20">
-      <div className="pointer-events-none absolute inset-0 h-full w-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-30" />
+      <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-30" />
       <div className="relative z-10 container mx-auto flex max-w-[960px] flex-col items-center px-4 text-center md:px-6">
         {/* <AnnouncementBadge /> */}
         <h1 className="text-foreground mb-6 pb-2 text-4xl leading-tight font-black tracking-[-0.033em] md:text-6xl lg:text-7xl">
@@ -22,7 +22,7 @@ const Hero = () => {
         <div className="flex w-full flex-wrap items-center justify-center gap-4">
           <GetStartedButton />
           <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-            <PlayCircleIcon className="mr-2 h-5 w-5" />
+            <PlayCircleIcon className="mr-2 size-5" />
             View Demo
           </Button>
         </div>
@@ -46,13 +46,13 @@ const Hero = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
-                  <BotIcon className="text-muted-foreground h-10 w-10" />
+                  <BotIcon className="text-muted-foreground size-10" />
                 </div>
                 <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
-                  <ImageIcon className="text-muted-foreground h-10 w-10" />
+                  <ImageIcon className="text-muted-foreground size-10" />
                 </div>
                 <div className="bg-muted/30 flex h-32 items-center justify-center rounded border border-dashed">
-                  <BarChart3Icon className="text-muted-foreground h-10 w-10" />
+                  <BarChart3Icon className="text-muted-foreground size-10" />
                 </div>
               </div>
             </div>

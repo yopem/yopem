@@ -26,17 +26,17 @@ const Features = () => {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <FeatureCard
-            icon={<CreditCardIcon className="h-6 w-6" />}
+            icon={<CreditCardIcon className="size-6" />}
             title="Pay As You Go"
             description="Buy credits once and use them anytime. No recurring charges, no subscriptions—just simple, flexible pricing that scales with your needs."
           />
           <FeatureCard
-            icon={<ZapIcon className="h-6 w-6" />}
+            icon={<ZapIcon className="size-6" />}
             title="Instant Access"
             description="No setup required. Start using AI tools immediately. Everything you need in one place."
           />
           <FeatureCard
-            icon={<LayoutDashboardIcon className="h-6 w-6" />}
+            icon={<LayoutDashboardIcon className="size-6" />}
             title="Unified Dashboard"
             description="Manage all your AI operations from one clean interface. Monitor usage, track costs, and access powerful tools without the hassle."
           />
@@ -59,22 +59,22 @@ const Features = () => {
               </p>
               <ul className="space-y-2">
                 <li className="text-foreground/80 flex items-center text-sm">
-                  <CheckCircleIcon className="text-primary mr-2 h-4 w-4" />
+                  <CheckCircleIcon className="text-primary mr-2 size-4" />
                   Access leading AI models
                 </li>
                 <li className="text-foreground/80 flex items-center text-sm">
-                  <CheckCircleIcon className="text-primary mr-2 h-4 w-4" />
+                  <CheckCircleIcon className="text-primary mr-2 size-4" />
                   Easy-to-use interface
                 </li>
                 <li className="text-foreground/80 flex items-center text-sm">
-                  <CheckCircleIcon className="text-primary mr-2 h-4 w-4" />
+                  <CheckCircleIcon className="text-primary mr-2 size-4" />
                   Transparent pricing
                 </li>
               </ul>
             </div>
             <div className="bg-muted/50 relative min-h-[200px] flex-1 overflow-hidden md:min-h-full">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative flex h-48 w-48 items-center justify-center rounded-full border">
+                <div className="relative flex size-48 items-center justify-center rounded-full border">
                   <div className="bg-card absolute -top-4 rounded border px-2 font-mono text-xs">
                     GPT-4
                   </div>
@@ -85,7 +85,7 @@ const Features = () => {
                     Mistral
                   </div>
                   <div className="bg-primary text-primary-foreground z-10 flex size-16 items-center justify-center rounded-full font-bold">
-                    <NetworkIcon className="h-6 w-6" />
+                    <NetworkIcon className="size-6" />
                   </div>
                   <div className="border-muted-foreground/20 absolute inset-0 animate-[spin_10s_linear_infinite] rounded-full border border-dashed" />
                 </div>
@@ -102,7 +102,7 @@ const Features = () => {
             <div className="bg-primary/20 pointer-events-none absolute -top-16 -right-16 size-64 rounded-full blur-3xl" />
             <div className="relative z-10">
               <div className="bg-primary/10 ring-primary/20 mb-6 flex size-12 items-center justify-center rounded-lg ring-1 backdrop-blur-sm">
-                <RocketIcon className="text-primary h-6 w-6" />
+                <RocketIcon className="text-primary size-6" />
               </div>
               <h3 className="text-foreground mb-2 text-2xl font-bold">
                 Developer API

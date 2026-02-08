@@ -253,7 +253,7 @@ function ToolsPage() {
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell>
-                    <div className="bg-muted h-4 w-4 animate-pulse rounded" />
+                    <div className="bg-muted size-4 animate-pulse rounded" />
                   </TableCell>
                   <TableCell>
                     <div className="bg-muted h-4 w-32 animate-pulse rounded" />
@@ -305,10 +305,10 @@ function ToolsPage() {
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         tool.status === "active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          ? `bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
                           : tool.status === "draft"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                            ? `bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
+                            : `bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
                       }`}
                     >
                       {tool.status}

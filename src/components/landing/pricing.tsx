@@ -33,7 +33,7 @@ const Pricing = () => {
               <div className="border-border/50 bg-muted/50 z-10 w-full rounded-xl border p-6 md:w-1/2">
                 <ul className="space-y-4">
                   <li className="flex items-start">
-                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 h-5 w-5" />
+                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 size-5" />
                     <div>
                       <span className="text-foreground block font-bold">
                         AI Tools Access
@@ -44,7 +44,7 @@ const Pricing = () => {
                     </div>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 h-5 w-5" />
+                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 size-5" />
                     <div>
                       <span className="text-foreground block font-bold">
                         Flexible Usage
@@ -66,7 +66,7 @@ const Pricing = () => {
                   {/*   </div> */}
                   {/* </li> */}
                   <li className="flex items-start">
-                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 h-5 w-5" />
+                    <CheckCircleIcon className="text-primary mt-0.5 mr-3 size-5" />
                     <div>
                       <span className="text-foreground block font-bold">
                         Priority Support

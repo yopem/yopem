@@ -21,7 +21,7 @@ const ChartPlaceholder = ({
           </h3>
         </div>
         <div className="border-border bg-secondary hover:bg-secondary/80 flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 transition-colors">
-          <span className="bg-foreground h-2 w-2 rounded-full"></span>
+          <span className="bg-foreground size-2 rounded-full"></span>
           <span className="text-foreground text-xs font-medium">
             Last 30 Days
           </span>
@@ -29,7 +29,7 @@ const ChartPlaceholder = ({
       </div>
       <div className="relative mt-4 w-full" style={{ height: `${height}px` }}>
         <svg
-          className="h-full w-full overflow-visible"
+          className="size-full overflow-visible"
           preserveAspectRatio="none"
           viewBox="0 0 800 200"
         >

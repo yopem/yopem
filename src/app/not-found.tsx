@@ -21,7 +21,7 @@ export default function NotFound() {
           <Button
             render={(props) => (
               <Link {...props} href="/">
-                <HomeIcon className="h-4 w-4" />
+                <HomeIcon className="size-4" />
                 Go home
               </Link>
             )}

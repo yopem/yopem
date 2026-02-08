@@ -37,7 +37,7 @@ function Slider({
       {children}
       <SliderPrimitive.Control
         className={cn(
-          "flex touch-none select-none data-disabled:pointer-events-none data-disabled:opacity-64 data-[orientation=horizontal]:w-full data-[orientation=horizontal]:min-w-44 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:flex-col",
+          `flex touch-none select-none data-disabled:pointer-events-none data-disabled:opacity-64 data-[orientation=horizontal]:w-full data-[orientation=horizontal]:min-w-44 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:flex-col`,
           className,
         )}
         data-slot="slider-control"
@@ -52,7 +52,7 @@ function Slider({
           />
           {Array.from({ length: _values.length }, (_, index) => (
             <SliderPrimitive.Thumb
-              className="border-input focus-visible:ring-ring/24 has-focus-visible:ring-ring/24 data-dragging:ring-ring/24 dark:border-background dark:data-dragging:ring-ring/48 dark:focus-visible:ring-ring/48 block size-5 shrink-0 rounded-full border bg-white shadow-xs/5 transition-[box-shadow,scale] outline-none select-none not-dark:bg-clip-padding before:absolute before:inset-0 before:rounded-full before:shadow-[0_1px_--theme(--color-black/6%)] focus-visible:ring-[3px] has-focus-visible:ring-[3px] data-dragging:scale-120 data-dragging:ring-[3px] sm:size-4 [:focus-visible,[data-dragging]]:shadow-none"
+              className="border-input focus-visible:ring-ring/24 has-focus-visible:ring-ring/24 data-dragging:ring-ring/24 dark:border-background dark:focus-visible:ring-ring/48 dark:data-dragging:ring-ring/48 block size-5 shrink-0 rounded-full border bg-white shadow-xs/5 transition-[box-shadow,scale] outline-none select-none not-dark:bg-clip-padding before:absolute before:inset-0 before:rounded-full before:shadow-[0_1px_--theme(--color-black/6%)] focus-visible:ring-[3px] has-focus-visible:ring-[3px] data-dragging:scale-120 data-dragging:ring-[3px] sm:size-4 [:focus-visible,[data-dragging]]:shadow-none"
               data-slot="slider-thumb"
               key={String(index)}
             />

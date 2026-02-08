@@ -35,7 +35,7 @@ const ApiProviderCard = ({
     <Card>
       <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
         <div className="flex items-center gap-4">
-          <div className="bg-foreground flex h-10 w-10 items-center justify-center rounded-md [&>svg]:size-6">
+          <div className="bg-foreground flex size-10 items-center justify-center rounded-md [&>svg]:size-6">
             {icon}
           </div>
           <div>

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button"
 
 const ACTIVITY_ITEMS = [
   {
-    icon: <UserPlusIcon className="text-foreground h-4 w-4" />,
+    icon: <UserPlusIcon className="text-foreground size-4" />,
     message: (
       <>
         New user <span className="font-bold">alex_dev</span> joined the
@@ -31,7 +31,7 @@ const ACTIVITY_ITEMS = [
     timestamp: "2 minutes ago",
   },
   {
-    icon: <AlertTriangleIcon className="text-foreground h-4 w-4" />,
+    icon: <AlertTriangleIcon className="text-foreground size-4" />,
     message: (
       <>
         High latency detected on <span className="font-bold">GPT-4-Turbo</span>.
@@ -40,7 +40,7 @@ const ACTIVITY_ITEMS = [
     timestamp: "15 minutes ago",
   },
   {
-    icon: <KeyIcon className="text-foreground h-4 w-4" />,
+    icon: <KeyIcon className="text-foreground size-4" />,
     message: (
       <>
         New API Key generated for{" "}
@@ -50,7 +50,7 @@ const ACTIVITY_ITEMS = [
     timestamp: "1 hour ago",
   },
   {
-    icon: <BadgeCheckIcon className="text-foreground h-4 w-4" />,
+    icon: <BadgeCheckIcon className="text-foreground size-4" />,
     message: (
       <>
         Subscription upgraded by <span className="font-bold">Studio_B</span>.
@@ -59,7 +59,7 @@ const ACTIVITY_ITEMS = [
     timestamp: "3 hours ago",
   },
   {
-    icon: <LogOutIcon className="text-foreground h-4 w-4" />,
+    icon: <LogOutIcon className="text-foreground size-4" />,
     message: "Admin session timeout.",
     timestamp: "5 hours ago",
   },

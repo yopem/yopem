@@ -118,7 +118,7 @@ export default function CreditsPage() {
   const customAmountValue = useMemo(() => Number(customAmount), [customAmount])
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
+    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Credits</h1>
         <p className="text-muted-foreground mt-2">
@@ -132,7 +132,7 @@ export default function CreditsPage() {
             <CardTitle className="text-sm font-medium">
               Available Balance
             </CardTitle>
-            <CreditCardIcon className="text-muted-foreground h-4 w-4" />
+            <CreditCardIcon className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -151,7 +151,7 @@ export default function CreditsPage() {
             <CardTitle className="text-sm font-medium">
               Total Purchased
             </CardTitle>
-            <TrendingUpIcon className="text-muted-foreground h-4 w-4" />
+            <TrendingUpIcon className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -164,7 +164,7 @@ export default function CreditsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Used</CardTitle>
-            <TrendingDownIcon className="text-muted-foreground h-4 w-4" />
+            <TrendingDownIcon className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -219,7 +219,7 @@ export default function CreditsPage() {
                 customAmountValue < 1
               }
             >
-              <PlusIcon className="mr-2 h-4 w-4" />
+              <PlusIcon className="mr-2 size-4" />
               Purchase
             </Button>
           </div>
