@@ -1,7 +1,7 @@
 "use client"
 
 import { HistoryIcon } from "lucide-react"
-import { type RefObject } from "react"
+import type { RefObject } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,7 +38,6 @@ const PromptLogicSection = ({
   systemRoleRef,
   userInstructionRef,
 }: PromptLogicSectionProps) => {
-  // Use variables if provided, otherwise fallback to variableNames
   const variableList =
     variables.length > 0
       ? variables
@@ -103,7 +102,7 @@ const PromptLogicSection = ({
               value={userInstructionTemplate}
               onChange={(e) => onUserInstructionChange?.(e.target.value)}
               placeholder="Write your prompt here..."
-              className="h-full min-h-[150px] font-mono text-sm"
+              className="h-full min-h-37.5 font-mono text-sm"
               unstyled
             />
           </div>
