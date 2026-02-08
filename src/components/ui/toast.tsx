@@ -80,7 +80,7 @@ function Toasts({ position = "bottom-right" }: { position: ToastPosition }) {
                 // Base positioning using data-position
                 `data-[position*=right]:right-0 data-[position*=right]:left-auto`,
                 "data-[position*=left]:right-auto data-[position*=left]:left-0",
-                "data-[position*=center]:right-0 data-[position*=center]:left-0",
+                "data-[position*=center]:inset-x-0",
                 `data-[position*=top]:top-0 data-[position*=top]:bottom-auto data-[position*=top]:origin-top`,
                 `data-[position*=bottom]:top-auto data-[position*=bottom]:bottom-0 data-[position*=bottom]:origin-bottom`,
                 // Gap fill for hover
