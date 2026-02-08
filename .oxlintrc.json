@@ -39,7 +39,8 @@
     "constructor-super": "off",
     "for-direction": "error",
     "getter-return": "off",
-    "import/consistent-type-specifier-style": ["off"],
+    "import/consistent-type-specifier-style": "off",
+    "import/no-relative-parent-imports": "error",
     "no-array-constructor": "error",
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
@@ -78,17 +79,6 @@
     "no-prototype-builtins": "off",
     "no-redeclare": "off",
     "no-regex-spaces": "error",
-    "no-restricted-imports": [
-      "error",
-      {
-        "patterns": [
-          {
-            "group": ["../"],
-            "message": "Relative imports are not allowed. Please use '@/' instead."
-          }
-        ]
-      }
-    ],
     "no-self-assign": "error",
     "no-setter-return": "off",
     "no-shadow-restricted-names": "error",

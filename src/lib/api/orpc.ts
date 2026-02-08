@@ -1,9 +1,8 @@
 import { ORPCError, os } from "@orpc/server"
 
 import { auth } from "@/lib/auth/session"
+import { createRedisCache } from "@/lib/cache/client"
 import { db } from "@/lib/db"
-
-import { createRedisCache } from "../cache/client"
 
 export async function createRPCContext(opts: {
   headers: Headers
