@@ -232,7 +232,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onModelsAvailable()
-  }, [availableModels, onModelsAvailable])
+  }, [availableModels])
 
   const onInitialDataLoaded = useEffectEvent(() => {
     if (mode === "edit" && initialData) {
@@ -298,7 +298,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onInitialDataLoaded()
-  }, [initialData, mode, onInitialDataLoaded])
+  }, [initialData, mode])
 
   const onApiKeyOrModelChange = useEffectEvent(() => {
     const apiKeyId = form.getFieldValue("apiKeyId")
@@ -326,12 +326,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onApiKeyOrModelChange()
-  }, [
-    form.state.values.apiKeyId,
-    form.state.values.modelEngine,
-    apiKeys,
-    onApiKeyOrModelChange,
-  ])
+  }, [form.state.values.apiKeyId, form.state.values.modelEngine, apiKeys])
 
   const handleInsertVariable = (
     variable: string,

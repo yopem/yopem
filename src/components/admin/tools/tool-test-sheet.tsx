@@ -122,7 +122,6 @@ const ToolTestSheet = ({
         ...prev,
         [field.variableName]: newValue,
       }))
-      // Clear validation error when user changes value
       if (error) {
         setValidationErrors((prev) => {
           const next = { ...prev }
