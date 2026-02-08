@@ -1,5 +1,6 @@
 "use client"
 
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectItem,
@@ -42,10 +43,10 @@ const ApiKeySelector = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">
+      <Label htmlFor="api-key-selector">
         API Provider Credentials
         <span className="text-red-500">*</span>
-      </label>
+      </Label>
       <Select
         value={value ?? ""}
         onValueChange={(newValue) => {
@@ -53,6 +54,7 @@ const ApiKeySelector = ({
         }}
       >
         <SelectTrigger
+          id="api-key-selector"
           className={error ? `border-red-500 focus:ring-red-500` : ""}
         >
           <SelectValue placeholder="Select an API key">

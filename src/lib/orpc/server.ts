@@ -15,7 +15,7 @@ const createServerFetchWithCookies = () => {
 
       if (cookieHeader) {
         fetchInit.headers = {
-          ...fetchInit.headers,
+          ...(fetchInit.headers as Record<string, string>),
           cookie: cookieHeader,
         }
       }

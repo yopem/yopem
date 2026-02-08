@@ -56,12 +56,14 @@
         "@types/pg": "^8.16.0",
         "@types/react": "19.2.13",
         "@types/react-dom": "19.2.3",
-        "@yopem/oxlint-config": "^0.0.2",
         "@yopem/typescript-config": "^0.2.1",
         "drizzle-kit": "^0.31.8",
+        "eslint-plugin-better-tailwindcss": "^4.1.1",
+        "eslint-plugin-oxfmt": "^0.0.12",
         "lefthook": "^2.1.0",
         "oxfmt": "^0.28.0",
         "oxlint": "^1.43.0",
+        "oxlint-tsgolint": "^0.11.5",
         "postcss": "^8.5.6",
         "tailwindcss": "^4.1.18",
         "typescript": "5.9.3",
@@ -632,8 +634,6 @@
     "@valibot/to-json-schema": ["@valibot/to-json-schema@1.5.0", "", { "peerDependencies": { "valibot": "^1.2.0" } }, "sha512-GE7DmSr1C2UCWPiV0upRH6mv0cCPsqYGs819fb6srCS1tWhyXrkGGe+zxUiwzn/L1BOfADH4sNjY/YHCuP8phQ=="],
 
     "@vercel/oidc": ["@vercel/oidc@3.1.0", "", {}, "sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w=="],
-
-    "@yopem/oxlint-config": ["@yopem/oxlint-config@0.0.2", "", { "dependencies": { "eslint-plugin-better-tailwindcss": "^4.1.1", "eslint-plugin-oxfmt": "^0.0.12", "oxlint": "^1.43.0", "oxlint-tsgolint": "^0.11.5" } }, "sha512-8Bz+BOw6arayL+GQpBEtMvOy7sQwaRKQsUgO3FA628S7I3jUXcgsUkT4MzQmiOQgRCZcal56GSzZostTkvEtiA=="],
 
     "@yopem/typescript-config": ["@yopem/typescript-config@0.2.1", "", {}, "sha512-/jg5qY4Skn9mjXKKbbQOerwGfQzg+ERtdE0Fi+J5iSAZSlFbK3phoO8QNeAT9wNh/82WdBHsYRC3NKMVvM3AzQ=="],
 

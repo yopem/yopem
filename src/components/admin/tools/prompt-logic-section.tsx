@@ -4,6 +4,7 @@ import { HistoryIcon } from "lucide-react"
 import type { RefObject } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 interface VariableInfo {
@@ -54,10 +55,14 @@ const PromptLogicSection = ({
       <div className="flex flex-col overflow-hidden rounded-xl border">
         <div className="bg-muted/50 border-b">
           <div className="p-4">
-            <label className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase">
+            <Label
+              htmlFor="system-role"
+              className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase"
+            >
               System Role
-            </label>
+            </Label>
             <Textarea
+              id="system-role"
               ref={systemRoleRef}
               value={systemRole}
               onChange={(e) => onSystemRoleChange?.(e.target.value)}
@@ -94,10 +99,14 @@ const PromptLogicSection = ({
         </div>
         <div className="bg-background flex flex-col">
           <div className="p-4">
-            <label className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase">
+            <Label
+              htmlFor="user-instruction"
+              className="text-muted-foreground mb-2 block text-xs font-bold tracking-wider uppercase"
+            >
               User Instruction Template
-            </label>
+            </Label>
             <Textarea
+              id="user-instruction"
               ref={userInstructionRef}
               value={userInstructionTemplate}
               onChange={(e) => onUserInstructionChange?.(e.target.value)}

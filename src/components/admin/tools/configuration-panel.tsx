@@ -1,5 +1,6 @@
 "use client"
 
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectItem,
@@ -82,8 +83,9 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
           />
         )}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Model Engine</label>
+          <Label htmlFor="model-engine">Model Engine</Label>
           <ModelSelect
+            id="model-engine"
             value={modelEngine}
             onChange={onModelEngineChange}
             options={modelOptions}
@@ -110,7 +112,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
       </div>
       <div className="bg-border h-px w-full" />
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Output Format</label>
+        <Label htmlFor="output-format">Output Format</Label>
         <Select
           value={outputFormat}
           onValueChange={(value) => {
@@ -124,7 +126,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
             }
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger id="output-format">
             <SelectValue />
           </SelectTrigger>
           <SelectPopup>
@@ -137,7 +139,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
       </div>
       <div className="bg-border h-px w-full" />
       <div className="flex flex-col gap-4">
-        <label className="text-sm font-medium">Usage Pricing</label>
+        <span className="text-sm font-medium">Usage Pricing</span>
         <div className="bg-muted/50 flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-xs font-medium">

@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/combobox"
 
 interface ModelSelectProps {
+  id?: string
   value: string
   onChange: (value: string) => void
   options: string[]
 }
 
-const ModelSelect = ({ value, onChange, options }: ModelSelectProps) => {
+const ModelSelect = ({ id, value, onChange, options }: ModelSelectProps) => {
   const items = options.map((option) => ({ value: option, label: option }))
   const selectedItem = items.find((item) => item.value === value) ?? null
 
@@ -29,7 +30,7 @@ const ModelSelect = ({ value, onChange, options }: ModelSelectProps) => {
         }
       }}
     >
-      <ComboboxInput placeholder="Search models..." />
+      <ComboboxInput id={id} placeholder="Search models..." />
       <ComboboxPopup>
         <ComboboxEmpty>No models found</ComboboxEmpty>
         <ComboboxList>

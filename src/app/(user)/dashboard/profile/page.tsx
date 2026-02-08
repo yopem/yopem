@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
 
@@ -99,16 +100,22 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Email</label>
-            <Input value={profile?.email ?? ""} disabled className="bg-muted" />
+            <Label htmlFor="profile-email">Email</Label>
+            <Input
+              id="profile-email"
+              value={profile?.email ?? ""}
+              disabled
+              className="bg-muted"
+            />
             <p className="text-muted-foreground text-xs">
               Email cannot be changed.
             </p>
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Name</label>
+            <Label htmlFor="profile-name">Name</Label>
             <Input
+              id="profile-name"
               placeholder="Enter your name"
               value={name}
               onChange={handleNameChange}
@@ -116,8 +123,9 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Profile Image URL</label>
+            <Label htmlFor="profile-image">Profile Image URL</Label>
             <Input
+              id="profile-image"
               placeholder="https://example.com/avatar.jpg"
               value={image}
               onChange={handleImageChange}

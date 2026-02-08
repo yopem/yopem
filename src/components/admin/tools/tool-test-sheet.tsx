@@ -293,7 +293,7 @@ const ToolTestSheet = ({
     if (!validateInputs()) {
       return
     }
-    void onExecute(testInputs)
+    onExecute(testInputs)
   }
 
   const handleClose = () => {
@@ -320,10 +320,16 @@ const ToolTestSheet = ({
   return (
     <>
       <div
+        tabIndex={0}
         className={`fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity duration-200 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}
         onClick={handleClose}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            handleClose()
+          }
+        }}
       />
 
       <div
