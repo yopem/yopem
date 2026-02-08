@@ -31,6 +31,8 @@
     "better-tailwindcss/no-conflicting-classes": "error",
     "better-tailwindcss/no-deprecated-classes": "error",
     "better-tailwindcss/no-duplicate-classes": "warn",
+    "better-tailwindcss/no-restricted-classes": "error",
+    "better-tailwindcss/no-unknown-classes": "off",
     "better-tailwindcss/no-unnecessary-whitespace": "warn",
     "constructor-super": "off",
     "for-direction": "error",
