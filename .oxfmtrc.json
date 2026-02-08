@@ -22,7 +22,7 @@
       ["index", "type-index"]
     ]
   },
-  "experimentalSortPackageJson": false,
+  "experimentalSortPackageJson": true,
   "ignorePatterns": [
     "node_modules",
     ".pnp",
@@ -47,6 +47,7 @@
     "migrations/",
     "tsconfig.tsbuildinfo",
     "*.tsbuildinfo",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    "**/migrations/**"
   ]
 }
