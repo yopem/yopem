@@ -23,7 +23,7 @@ export function useAddApiKey() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: AddApiKeyInput) => {
+    mutationFn: (input: AddApiKeyInput) => {
       return queryApi.admin.addApiKey.call(input)
     },
     onSuccess: () => {
@@ -41,7 +41,7 @@ export function useUpdateApiKey() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: UpdateApiKeyInput) => {
+    mutationFn: (input: UpdateApiKeyInput) => {
       return queryApi.admin.updateApiKey.call(input)
     },
     onSuccess: () => {
@@ -59,7 +59,7 @@ export function useDeleteApiKey() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: DeleteApiKeyInput) => {
+    mutationFn: (input: DeleteApiKeyInput) => {
       return queryApi.admin.deleteApiKey.call(input)
     },
     onSuccess: () => {

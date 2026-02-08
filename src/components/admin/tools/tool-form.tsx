@@ -1,5 +1,6 @@
 "use client"
 
+import { useForm } from "@tanstack/react-form"
 import {
   useEffect,
   useEffectEvent,
@@ -7,7 +8,6 @@ import {
   useMemo,
   useRef,
 } from "react"
-import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -22,6 +22,7 @@ import {
   getProviderMismatchMessage,
   validateModelProviderMatch,
 } from "@/lib/utils/model-provider-validation"
+
 import ConfigurationPanel from "./configuration-panel"
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 import InputVariableSection from "./input-variable-section"

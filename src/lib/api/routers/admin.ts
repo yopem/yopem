@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/require-await */
 import { eq } from "drizzle-orm"
 
 import { adminProcedure } from "@/lib/api/orpc"
@@ -173,7 +172,7 @@ export const adminRouter = {
       return { success: true }
     }),
 
-  getApiKeyStats: adminProcedure.handler(async () => {
+  getApiKeyStats: adminProcedure.handler(() => {
     return {
       totalRequests: 0,
       activeKeys: 0,
@@ -260,7 +259,7 @@ async function fetchModelsForProvider(
     case "mistral":
       return await fetchMistralModels(apiKey)
     case "azure":
-      return await fetchAzureModels(apiKey)
+      return fetchAzureModels(apiKey)
     case "openrouter":
       return await fetchOpenRouterModels(apiKey)
     default:
@@ -422,9 +421,9 @@ async function fetchMistralModels(
   }
 }
 
-async function fetchAzureModels(
+function fetchAzureModels(
   _apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
+): Result<{ id: string; name: string }[]> {
   return success([])
 }
 

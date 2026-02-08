@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRightIcon, SearchIcon } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import React, { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {

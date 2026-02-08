@@ -1,8 +1,8 @@
 "use client"
 
+import { type ForesightRegisterOptions } from "js.foresight"
 import NextLink, { type LinkProps } from "next/link"
 import { useRouter } from "next/navigation"
-import { type ForesightRegisterOptions } from "js.foresight"
 
 import useForesight from "@/hooks/use-foresight"
 

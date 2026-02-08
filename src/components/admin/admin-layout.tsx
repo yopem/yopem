@@ -7,6 +7,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+
 import AdminSidebar from "./admin-sidebar"
 
 interface NavItem {

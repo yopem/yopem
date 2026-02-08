@@ -1,6 +1,5 @@
 "use client"
 
-import React, { useCallback, useReducer, useState } from "react"
 import {
   BarChartIcon,
   BotIcon,
@@ -15,6 +14,7 @@ import {
   TrendingDownIcon,
   TrendingUpIcon,
 } from "lucide-react"
+import React, { useCallback, useReducer, useState } from "react"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"

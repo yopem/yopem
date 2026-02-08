@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
 

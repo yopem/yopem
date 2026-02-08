@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+
 import FeatureCard from "./feature-card"
 
 const Features = () => {

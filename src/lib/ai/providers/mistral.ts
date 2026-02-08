@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { createMistral } from "@ai-sdk/mistral"
 import { generateText } from "ai"
 

@@ -189,7 +189,6 @@ function AnchoredToasts() {
             ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS]
             : null
           const tooltipStyle =
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             (toast.data as { tooltipStyle?: boolean })?.tooltipStyle ?? false
           const positionerProps = toast.positionerProps
 

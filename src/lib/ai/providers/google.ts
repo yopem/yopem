@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { generateText } from "ai"
 

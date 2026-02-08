@@ -1,8 +1,8 @@
 "use client"
 
-import React, { use, useCallback, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
+import React, { use, useCallback, useState } from "react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
@@ -200,7 +200,6 @@ export default function ToolDetailPage({
 
       {creditsData && (
         <div className="text-muted-foreground text-center text-sm">
-          {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition */}
           Your balance: {creditsData.balance ?? 0} credits
         </div>
       )}

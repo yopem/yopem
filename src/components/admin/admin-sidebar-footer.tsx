@@ -1,7 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
+import Image from "next/image"
 
 import {
   Menu,

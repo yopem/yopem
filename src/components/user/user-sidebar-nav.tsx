@@ -1,7 +1,7 @@
 "use client"
 
-import { type ReactNode } from "react"
 import { usePathname } from "next/navigation"
+import { type ReactNode } from "react"
 
 import Link from "@/components/link"
 

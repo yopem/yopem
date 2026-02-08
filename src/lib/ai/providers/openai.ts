@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateText } from "ai"
 

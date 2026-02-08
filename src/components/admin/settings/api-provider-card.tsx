@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
 import { MoreVerticalIcon } from "lucide-react"
+import { useState, type ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+
 import KeyInputField from "./key-input-field"
 import ProjectRestrictionToggle from "./project-restriction-toggle"
 

@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
+import { useEffect } from "react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"

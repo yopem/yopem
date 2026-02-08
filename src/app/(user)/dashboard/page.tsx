@@ -1,8 +1,8 @@
 "use client"
 
-import React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { CreditCardIcon, DollarSignIcon, PlayIcon } from "lucide-react"
+import React from "react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"

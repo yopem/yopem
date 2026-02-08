@@ -10,7 +10,7 @@ const CTA = () => {
         <h2 className="mb-6 text-3xl font-bold tracking-tighter text-white sm:text-4xl md:text-5xl">
           Ready to unify your AI stack?
         </h2>
-        <p className="mx-auto mb-10 max-w-[600px] text-lg text-white">
+        <p className="mx-auto mb-10 max-w-150 text-lg text-white">
           Start building with unified access to all major AI tools.
         </p>
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">

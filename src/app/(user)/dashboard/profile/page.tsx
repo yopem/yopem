@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useEffectEvent, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { SaveIcon, UserIcon } from "lucide-react"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,7 +61,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     onProfileLoaded()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
   const handleSave = useCallback(() => {
@@ -83,7 +82,7 @@ export default function ProfilePage() {
   )
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
+    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Profile</h1>
         <p className="text-muted-foreground mt-2">

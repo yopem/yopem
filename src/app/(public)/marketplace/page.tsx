@@ -1,5 +1,5 @@
-import { Suspense } from "react"
 import { desc, eq } from "drizzle-orm"
+import { Suspense } from "react"
 
 import MarketplaceGrid from "@/components/marketplace/marketplace-grid"
 import { db } from "@/lib/db"

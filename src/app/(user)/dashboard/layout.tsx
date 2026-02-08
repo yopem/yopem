@@ -1,11 +1,11 @@
-import { type ReactNode } from "react"
-import { redirect } from "next/navigation"
 import {
   CreditCardIcon,
   LayoutDashboardIcon,
   PlayIcon,
   UserIcon,
 } from "lucide-react"
+import { redirect } from "next/navigation"
+import { type ReactNode } from "react"
 
 import UserLayout from "@/components/user/user-layout"
 import { auth } from "@/lib/auth/session"

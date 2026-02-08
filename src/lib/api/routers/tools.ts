@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
@@ -111,14 +110,14 @@ export const toolsRouter = {
   }),
 
   getCategories: publicProcedure.handler(async ({ context }) => {
-    return context.db
+    return await context.db
       .select()
       .from(categoriesTable)
       .orderBy(categoriesTable.sortOrder)
   }),
 
   getTags: publicProcedure.handler(async ({ context }) => {
-    return context.db.select().from(tagsTable).orderBy(tagsTable.name)
+    return await context.db.select().from(tagsTable).orderBy(tagsTable.name)
   }),
 
   execute: protectedProcedure
