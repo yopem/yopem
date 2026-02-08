@@ -81,7 +81,6 @@
     "@yopem/typescript-config": "^0.2.1",
     "drizzle-kit": "^0.31.8",
     "eslint-plugin-better-tailwindcss": "^4.1.1",
-    "eslint-plugin-drizzle": "^0.2.3",
     "eslint-plugin-oxfmt": "^0.0.12",
     "lefthook": "^2.1.0",
     "oxfmt": "^0.28.0",

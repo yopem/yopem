@@ -13,11 +13,7 @@
     "typescript",
     "unicorn"
   ],
-  "jsPlugins": [
-    "eslint-plugin-oxfmt",
-    "eslint-plugin-better-tailwindcss",
-    "eslint-plugin-drizzle"
-  ],
+  "jsPlugins": ["eslint-plugin-oxfmt", "eslint-plugin-better-tailwindcss"],
   "categories": {
     "correctness": "off"
   },
