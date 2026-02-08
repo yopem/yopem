@@ -19,7 +19,7 @@ const ActivityFeedItem = ({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-foreground text-sm leading-snug">{message}</p>
+        <p className="text-foreground text-sm/snug">{message}</p>
         <p className="text-muted-foreground text-xs">{timestamp}</p>
       </div>
     </div>

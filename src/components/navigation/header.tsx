@@ -14,7 +14,7 @@ const Header = async () => {
           <div className="bg-card text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded">
             <Logo className="size-full p-0.5" />
           </div>
-          <h2 className="text-foreground text-lg leading-tight font-bold tracking-tight">
+          <h2 className="text-foreground text-lg/tight font-bold tracking-tight">
             Yopem
           </h2>
         </div>

@@ -24,12 +24,13 @@
     "builtin": true
   },
   "rules": {
+    "better-tailwindcss/enforce-canonical-classes": "error",
     "better-tailwindcss/enforce-consistent-class-order": "off",
+    "better-tailwindcss/enforce-consistent-line-wrapping": "off",
+    "better-tailwindcss/enforce-shorthand-classes": "error",
     "better-tailwindcss/no-conflicting-classes": "error",
     "better-tailwindcss/no-duplicate-classes": "warn",
     "better-tailwindcss/no-unnecessary-whitespace": "warn",
-    "better-tailwindcss/enforce-consistent-line-wrapping": "off",
-    "better-tailwindcss/enforce-shorthand-classes": "error",
     "constructor-super": "off",
     "for-direction": "error",
     "getter-return": "off",

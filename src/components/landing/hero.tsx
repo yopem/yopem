@@ -11,10 +11,10 @@ const Hero = () => {
       <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-30" />
       <div className="relative z-10 container mx-auto flex max-w-[960px] flex-col items-center px-4 text-center md:px-6">
         {/* <AnnouncementBadge /> */}
-        <h1 className="text-foreground mb-6 pb-2 text-4xl leading-tight font-black tracking-[-0.033em] md:text-6xl lg:text-7xl">
+        <h1 className="text-foreground mb-6 pb-2 text-4xl/tight font-black tracking-[-0.033em] md:text-6xl lg:text-7xl">
           Your AI Tools Hub.
         </h1>
-        <p className="text-muted-foreground mb-10 max-w-[640px] text-lg leading-relaxed md:text-xl">
+        <p className="text-muted-foreground mb-10 max-w-[640px] text-lg/relaxed md:text-xl">
           Access powerful AI tools with simple credit-based pricing. <br />
           No subscriptions, no complexity, just use the tools you need to work
           smarter.
