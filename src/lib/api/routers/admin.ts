@@ -195,47 +195,47 @@ export const adminRouter = {
     const apiKeys = settings.settingValue as ApiKeyConfig[]
     const activeKeys = apiKeys.filter((key) => key.status === "active")
 
-    const modelsByProvider: Record<string, { id: string; name: string }[]> = {}
-
+    // Deduplicate by provider — pick the first active key per provider
+    const uniqueByProvider = new Map<string, ApiKeyConfig>()
     for (const key of activeKeys) {
-      if (!modelsByProvider[key.provider]) {
-        const cacheKey = `${MODEL_CACHE_PREFIX}${key.provider}:${key.id}`
+      if (!uniqueByProvider.has(key.provider)) {
+        uniqueByProvider.set(key.provider, key)
+      }
+    }
+
+    // Fetch all providers in parallel instead of sequentially
+    const entries = Array.from(uniqueByProvider.entries())
+    const results = await Promise.all(
+      entries.map(async ([provider, key]) => {
+        const cacheKey = `${MODEL_CACHE_PREFIX}${provider}:${key.id}`
         const cached =
           await context.redis.getCache<{ id: string; name: string }[]>(cacheKey)
 
         if (cached) {
-          modelsByProvider[key.provider] = cached
-        } else {
-          try {
-            const decryptedKey = decryptApiKey(key.apiKey)
-            const result = await fetchModelsForProvider(
-              key.provider,
-              decryptedKey,
-            )
-            if (result.success) {
-              modelsByProvider[key.provider] = result.data
-              await context.redis.setCache(
-                cacheKey,
-                result.data,
-                MODEL_CACHE_TTL,
-              )
-            } else {
-              console.error(
-                `Failed to fetch models for ${key.provider}:`,
-                result.error,
-              )
-              modelsByProvider[key.provider] = []
-            }
-          } catch (error) {
-            console.error(`Failed to fetch models for ${key.provider}:`, error)
-            modelsByProvider[key.provider] = []
-          }
+          return { provider, models: cached }
         }
-      }
-    }
+
+        try {
+          const decryptedKey = decryptApiKey(key.apiKey)
+          const result = await fetchModelsForProvider(
+            provider as ApiKeyConfig["provider"],
+            decryptedKey,
+          )
+          if (result.success) {
+            await context.redis.setCache(cacheKey, result.data, MODEL_CACHE_TTL)
+            return { provider, models: result.data }
+          }
+          console.error(`Failed to fetch models for ${provider}:`, result.error)
+          return { provider, models: [] as { id: string; name: string }[] }
+        } catch (error) {
+          console.error(`Failed to fetch models for ${provider}:`, error)
+          return { provider, models: [] as { id: string; name: string }[] }
+        }
+      }),
+    )
 
     const allModels: { id: string; name: string; provider: string }[] = []
-    for (const [provider, models] of Object.entries(modelsByProvider)) {
+    for (const { provider, models } of results) {
       for (const model of models) {
         allModels.push({ ...model, provider })
       }

@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRightIcon, SearchIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { memo, useMemo, useState, type FormEvent } from "react"
+import { memo, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -96,7 +96,7 @@ function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
       queryKey: ["marketplace-tools", search],
       queryFn: async ({ pageParam }) => {
@@ -115,7 +115,7 @@ function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
       },
     })
 
-  const tools = useMemo(() => data.pages.flatMap((page) => page.tools), [data])
+  const tools = data.pages.flatMap((page) => page.tools)
 
   const handleSearch = (query: string) => {
     setSearch(query)
@@ -125,7 +125,7 @@ function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
     <div className="space-y-6">
       <SearchBar onSearch={handleSearch} defaultValue={search} />
 
-      {tools.length === 0 ? (
+      {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-muted h-40 animate-pulse rounded-lg" />

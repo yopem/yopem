@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowLeftIcon, CreditCardIcon, PlayIcon } from "lucide-react"
-import { use, useCallback, useState, type ChangeEvent } from "react"
+import { use, useState, type ChangeEvent } from "react"
 
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
@@ -66,11 +66,11 @@ export default function ToolDetailPage({
     },
   })
 
-  const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
-  }, [])
+  }
 
-  const handleExecute = useCallback(() => {
+  const handleExecute = () => {
     setError(null)
     setOutput(null)
     if (!inputValue.trim()) {
@@ -78,7 +78,7 @@ export default function ToolDetailPage({
       return
     }
     executeMutation.mutate({ input: inputValue })
-  }, [inputValue, executeMutation])
+  }
 
   return (
     <div className="container mx-auto max-w-4xl py-8">

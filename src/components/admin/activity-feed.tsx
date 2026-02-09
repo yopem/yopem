@@ -25,9 +25,9 @@ const ActivityFeed = ({ items, maxHeight = "350px" }: ActivityFeedProps) => {
         </button>
       </div>
       <div className="flex flex-col overflow-y-auto p-2" style={{ maxHeight }}>
-        {items.map((item, index) => (
+        {items.map((item) => (
           <ActivityFeedItem
-            key={index}
+            key={item.timestamp}
             icon={item.icon}
             message={item.message}
             timestamp={item.timestamp}

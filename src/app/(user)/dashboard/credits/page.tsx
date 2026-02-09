@@ -7,7 +7,7 @@ import {
   TrendingDownIcon,
   TrendingUpIcon,
 } from "lucide-react"
-import { useCallback, useMemo, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -92,31 +92,19 @@ export default function CreditsPage() {
     },
   })
 
-  const balance = useMemo(
-    () => Number(creditsData?.balance ?? 0),
-    [creditsData?.balance],
-  )
-  const totalPurchased = useMemo(
-    () => Number(creditsData?.totalPurchased ?? 0),
-    [creditsData?.totalPurchased],
-  )
-  const totalUsed = useMemo(
-    () => Number(creditsData?.totalUsed ?? 0),
-    [creditsData?.totalUsed],
-  )
+  const balance = Number(creditsData?.balance ?? 0)
+  const totalPurchased = Number(creditsData?.totalPurchased ?? 0)
+  const totalUsed = Number(creditsData?.totalUsed ?? 0)
 
-  const handlePurchasePackage = useCallback(
-    (amount: number) => {
-      purchaseMutation.mutate(amount)
-    },
-    [purchaseMutation],
-  )
+  const handlePurchasePackage = (amount: number) => {
+    purchaseMutation.mutate(amount)
+  }
 
-  const handleCustomPurchase = useCallback(() => {
+  const handleCustomPurchase = () => {
     purchaseMutation.mutate(Number(customAmount))
-  }, [purchaseMutation, customAmount])
+  }
 
-  const customAmountValue = useMemo(() => Number(customAmount), [customAmount])
+  const customAmountValue = Number(customAmount)
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

@@ -26,11 +26,14 @@ interface PromptLogicSectionProps {
   userInstructionRef?: RefObject<HTMLTextAreaElement | null>
 }
 
+const EMPTY_VARIABLE_NAMES: string[] = []
+const EMPTY_VARIABLES: VariableInfo[] = []
+
 const PromptLogicSection = ({
   systemRole,
   userInstructionTemplate,
-  variableNames = [],
-  variables = [],
+  variableNames,
+  variables,
   onSystemRoleChange,
   onUserInstructionChange,
   onInsertVariable,
@@ -39,10 +42,12 @@ const PromptLogicSection = ({
   systemRoleRef,
   userInstructionRef,
 }: PromptLogicSectionProps) => {
+  const safeVariableNames = variableNames ?? EMPTY_VARIABLE_NAMES
+  const safeVariables = variables ?? EMPTY_VARIABLES
   const variableList =
-    variables.length > 0
-      ? variables
-      : variableNames.map((name) => ({ name, isOptional: false }))
+    safeVariables.length > 0
+      ? safeVariables
+      : safeVariableNames.map((name) => ({ name, isOptional: false }))
   return (
     <section className="flex flex-col gap-4 pb-12">
       <div className="flex items-center justify-between">

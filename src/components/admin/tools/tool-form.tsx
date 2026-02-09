@@ -107,14 +107,17 @@ export interface ToolFormProps {
   ref?: Ref<ToolFormRef>
 }
 
+const EMPTY_API_KEYS: ApiKeyConfig[] = []
+
 const ToolForm = ({
   mode,
   initialData,
   onSubmit,
   showSlug = true,
-  apiKeys = [],
+  apiKeys,
   ref,
 }: ToolFormProps) => {
+  const safeApiKeys = apiKeys ?? EMPTY_API_KEYS
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
   const { data: availableModelsData } = useAvailableModels()
@@ -305,7 +308,7 @@ const ToolForm = ({
     const modelEngine = form.getFieldValue("modelEngine")
 
     if (apiKeyId && modelEngine) {
-      const selectedKey = apiKeys.find((key) => key.id === apiKeyId)
+      const selectedKey = safeApiKeys.find((key) => key.id === apiKeyId)
       if (selectedKey) {
         const isValid = validateModelProviderMatch(
           modelEngine,
@@ -326,7 +329,7 @@ const ToolForm = ({
 
   useEffect(() => {
     onApiKeyOrModelChange()
-  }, [form.state.values.apiKeyId, form.state.values.modelEngine, apiKeys])
+  }, [form.state.values.apiKeyId, form.state.values.modelEngine, safeApiKeys])
 
   const handleInsertVariable = (
     variable: string,
@@ -538,7 +541,7 @@ const ToolForm = ({
               apiKeyId,
               apiKeyError,
               modelOptions: availableModels,
-              availableApiKeys: apiKeys,
+              availableApiKeys: safeApiKeys,
             }}
             handlers={{
               onModelEngineChange: (value) =>

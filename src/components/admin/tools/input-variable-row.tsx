@@ -52,11 +52,13 @@ const typeLabels: Record<InputFieldType, string> = {
   video: "Video",
 }
 
+const EMPTY_OPTIONS: SelectOption[] = []
+
 const InputVariableRow = ({
   variableName,
   type,
   description,
-  options = [],
+  options,
   isOptional = false,
   onVariableNameChange,
   onTypeChange,
@@ -65,6 +67,7 @@ const InputVariableRow = ({
   onOptionalChange,
   onDelete,
 }: InputVariableRowProps) => {
+  const safeOptions = options ?? EMPTY_OPTIONS
   const [newOptionLabel, setNewOptionLabel] = useState("")
   const [newOptionValue, setNewOptionValue] = useState("")
 
@@ -76,13 +79,13 @@ const InputVariableRow = ({
       value: newOptionValue.trim(),
     }
 
-    onOptionsChange?.([...options, newOption])
+    onOptionsChange?.([...safeOptions, newOption])
     setNewOptionLabel("")
     setNewOptionValue("")
   }
 
   const handleDeleteOption = (index: number) => {
-    const updatedOptions = options.filter((_, i) => i !== index)
+    const updatedOptions = safeOptions.filter((_, i) => i !== index)
     onOptionsChange?.(updatedOptions)
   }
 
@@ -91,7 +94,7 @@ const InputVariableRow = ({
     field: "label" | "value",
     value: string,
   ) => {
-    const updatedOptions = options.map((opt, i) =>
+    const updatedOptions = safeOptions.map((opt, i) =>
       i === index ? { ...opt, [field]: value } : opt,
     )
     onOptionsChange?.(updatedOptions)
@@ -172,9 +175,9 @@ const InputVariableRow = ({
           </div>
 
           {/* Existing Options */}
-          {options.length > 0 && (
+          {safeOptions.length > 0 && (
             <div className="space-y-2">
-              {options.map((option, index) => (
+              {safeOptions.map((option, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Input
                     nativeInput={true}
@@ -248,7 +251,7 @@ const InputVariableRow = ({
             </Button>
           </div>
 
-          {options.length === 0 && (
+          {safeOptions.length === 0 && (
             <p className="text-muted-foreground text-xs italic">
               No options added yet. Add at least one option for this select
               field.
