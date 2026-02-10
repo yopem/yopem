@@ -6,6 +6,7 @@ export const appEnv = env.APP_ENV
 export const databaseUrl = env.DATABASE_URL
 export const redisUrl = env.REDIS_URL
 export const redisKeyPrefix = env.REDIS_KEY_PREFIX
+export const apiKeyEncryptionSecret = env.API_KEY_ENCRYPTION_SECRET
 
 export const authIssuer = env.AUTH_ISSUER
 

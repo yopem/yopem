@@ -14,12 +14,11 @@ import {
   updateToolSchema,
   userCreditsTable,
 } from "@/lib/db/schema"
+import { apiKeyEncryptionSecret } from "@/lib/env/server"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 import { decryptApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
 import { generateUniqueToolSlug } from "@/lib/utils/slug"
-
-const API_KEYS_SETTING_KEY = "api_keys"
 
 export const toolsRouter = {
   list: publicProcedure
@@ -157,7 +156,7 @@ export const toolsRouter = {
       const [adminSettings] = await context.db
         .select()
         .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+        .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
 
       if (!adminSettings?.settingValue) {
         throw new Error(
@@ -348,7 +347,7 @@ export const toolsRouter = {
       const [adminSettings] = await context.db
         .select()
         .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+        .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
 
       if (!adminSettings?.settingValue) {
         throw new Error(
