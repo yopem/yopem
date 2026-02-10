@@ -19,7 +19,7 @@ interface FeatureBuilderHeaderProps {
   title?: string
   mode?: "create" | "edit"
   status?: "draft" | "active" | "archived"
-  onTestRun?: () => void
+  onPreviewRun?: () => void
   onSaveDraft?: () => void
   onPublish?: () => void
   isSaving?: boolean
@@ -29,7 +29,7 @@ const FeatureBuilderHeader = ({
   breadcrumbItems,
   mode = "create",
   status,
-  onTestRun,
+  onPreviewRun,
   onSaveDraft,
   onPublish,
   isSaving = false,
@@ -69,9 +69,9 @@ const FeatureBuilderHeader = ({
         )}
       </div>
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={onTestRun}>
+        <Button variant="outline" size="sm" onClick={onPreviewRun}>
           <PlayIcon className="size-4" />
-          <span>Test Run</span>
+          <span>Preview</span>
         </Button>
         <Button
           variant="outline"

@@ -110,6 +110,7 @@ export const toolsRouter = {
       const tools = await context.db
         .select({
           id: toolsTable.id,
+          slug: toolsTable.slug,
           name: toolsTable.name,
           description: toolsTable.description,
           status: toolsTable.status,
@@ -194,10 +195,52 @@ export const toolsRouter = {
       }
     }),
 
+  getBySlug: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    .handler(async ({ context, input }) => {
+      const tool = await context.db.query.toolsTable.findFirst({
+        where: eq(toolsTable.slug, input.slug),
+      })
+
+      if (!tool) {
+        throw new Error("Tool not found")
+      }
+
+      const toolCategories = await context.db
+        .select({
+          id: categoriesTable.id,
+          name: categoriesTable.name,
+          slug: categoriesTable.slug,
+        })
+        .from(toolCategoriesTable)
+        .innerJoin(
+          categoriesTable,
+          eq(toolCategoriesTable.categoryId, categoriesTable.id),
+        )
+        .where(eq(toolCategoriesTable.toolId, tool.id))
+
+      const toolTags = await context.db
+        .select({
+          id: tagsTable.id,
+          name: tagsTable.name,
+          slug: tagsTable.slug,
+        })
+        .from(toolTagsTable)
+        .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
+        .where(eq(toolTagsTable.toolId, tool.id))
+
+      return {
+        ...tool,
+        categories: toolCategories,
+        tags: toolTags,
+      }
+    }),
+
   getPopular: publicProcedure.handler(async ({ context }) => {
     const popular = await context.db
       .select({
         id: toolsTable.id,
+        slug: toolsTable.slug,
         name: toolsTable.name,
         description: toolsTable.description,
         costPerRun: toolsTable.costPerRun,

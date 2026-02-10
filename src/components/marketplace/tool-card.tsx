@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 
 interface ToolCardProps {
-  id: string
+  slug: string
   name: string
   description: string | null
   costPerRun: string | null
@@ -19,7 +19,7 @@ interface ToolCardProps {
 }
 
 const ToolCard = ({
-  id,
+  slug,
   name,
   description,
   costPerRun,
@@ -28,7 +28,7 @@ const ToolCard = ({
   const isFree = Number(costPerRun ?? 0) === 0
 
   return (
-    <Link href={`/marketplace/tools/${id}`} className="group block">
+    <Link href={`/marketplace/tools/${slug}`} className="group block">
       <Card className="border-border bg-card hover:border-foreground/20 hover:bg-accent/50 flex h-full cursor-pointer flex-col transition-colors duration-200">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">

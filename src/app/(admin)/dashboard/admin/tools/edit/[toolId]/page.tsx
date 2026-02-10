@@ -10,7 +10,7 @@ import ToolForm, {
   type ToolFormData,
   type ToolFormRef,
 } from "@/components/admin/tools/tool-form"
-import ToolTestSheet from "@/components/admin/tools/tool-test-sheet"
+import ToolPreviewSheet from "@/components/admin/tools/tool-preview-sheet"
 import { Separator } from "@/components/ui/separator"
 import { toastManager } from "@/components/ui/toast"
 import { useApiKeys } from "@/hooks/use-api-keys"
@@ -22,8 +22,8 @@ function EditToolPage() {
   const { data: apiKeys } = useApiKeys()
   const formRef = useRef<ToolFormRef>(null)
   const [activeTab, setActiveTab] = useState("builder")
-  const [testSheetOpen, setTestSheetOpen] = useState(false)
-  const [testResult, setTestResult] = useState<string | null>(null)
+  const [previewSheetOpen, setPreviewSheetOpen] = useState(false)
+  const [previewResult, setPreviewResult] = useState<string | null>(null)
   const [currentInputVariables, setCurrentInputVariables] = useState<
     {
       variableName: string
@@ -90,9 +90,9 @@ function EditToolPage() {
       })
     },
     onSuccess: (data) => {
-      setTestResult(data.output)
+      setPreviewResult(data.output)
       toastManager.add({
-        title: "Test completed",
+        title: "Preview completed",
         description:
           "Preview execution completed successfully (no credits used)",
         type: "success",
@@ -100,18 +100,18 @@ function EditToolPage() {
     },
     onError: (err: Error) => {
       toastManager.add({
-        title: "Test execution failed",
+        title: "Preview execution failed",
         description: err.message,
         type: "error",
       })
     },
   })
 
-  const handleTestRun = useCallback(() => {
+  const handlePreviewRun = useCallback(() => {
     const formData = formRef.current?.getValues()
     if (!formData) {
       toastManager.add({
-        title: "Cannot test",
+        title: "Cannot preview",
         description: "Please fill out the form first",
         type: "error",
       })
@@ -124,7 +124,7 @@ function EditToolPage() {
       formData.inputVariable.length === 0
     ) {
       toastManager.add({
-        title: "Cannot test",
+        title: "Cannot preview",
         description:
           "Please complete the form: system role, user instruction template, and at least one input variable are required",
         type: "error",
@@ -141,11 +141,11 @@ function EditToolPage() {
       })),
     )
 
-    setTestResult(null)
-    setTestSheetOpen(true)
+    setPreviewResult(null)
+    setPreviewSheetOpen(true)
   }, [])
 
-  const handleExecuteTest = useCallback(
+  const handleExecutePreview = useCallback(
     (inputs: Record<string, string>) => {
       const formData = formRef.current?.getValues()
       if (!formData) return
@@ -178,7 +178,7 @@ function EditToolPage() {
         ]}
         mode="edit"
         status={tool?.status ?? "draft"}
-        onTestRun={handleTestRun}
+        onPreviewRun={handlePreviewRun}
         onSaveDraft={handleSaveDraft}
         onPublish={handlePublish}
         isSaving={updateToolMutation.isPending}
@@ -213,13 +213,13 @@ function EditToolPage() {
         </>
       )}
 
-      <ToolTestSheet
-        open={testSheetOpen}
-        onOpenChange={setTestSheetOpen}
+      <ToolPreviewSheet
+        open={previewSheetOpen}
+        onOpenChange={setPreviewSheetOpen}
         inputVariables={currentInputVariables}
-        onExecute={handleExecuteTest}
+        onExecute={handleExecutePreview}
         isExecuting={executePreviewMutation.isPending}
-        result={testResult}
+        result={previewResult}
       />
     </>
   )

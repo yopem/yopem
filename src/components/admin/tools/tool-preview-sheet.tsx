@@ -24,7 +24,7 @@ interface ToolInputVariable {
   options?: { label: string; value: string }[]
 }
 
-interface ToolTestSheetProps {
+interface ToolPreviewSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   inputVariables: ToolInputVariable[]
@@ -33,15 +33,15 @@ interface ToolTestSheetProps {
   result: string | null
 }
 
-const ToolTestSheet = ({
+const ToolPreviewSheet = ({
   open,
   onOpenChange,
   inputVariables,
   onExecute,
   isExecuting,
   result,
-}: ToolTestSheetProps) => {
-  const [testInputs, setTestInputs] = useState<Record<string, string>>({})
+}: ToolPreviewSheetProps) => {
+  const [previewInputs, setPreviewInputs] = useState<Record<string, string>>({})
   const [isVisible, setIsVisible] = useState(false)
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -72,7 +72,7 @@ const ToolTestSheet = ({
     const errors: Record<string, string> = {}
 
     for (const variable of inputVariables) {
-      const value = testInputs[variable.variableName]
+      const value = previewInputs[variable.variableName]
 
       switch (variable.type) {
         case "number":
@@ -112,11 +112,11 @@ const ToolTestSheet = ({
   }
 
   const renderInputField = (field: ToolInputVariable) => {
-    const value = testInputs[field.variableName] || ""
+    const value = previewInputs[field.variableName] || ""
     const error = validationErrors[field.variableName]
 
     const handleChange = (newValue: string) => {
-      setTestInputs((prev) => ({
+      setPreviewInputs((prev) => ({
         ...prev,
         [field.variableName]: newValue,
       }))
@@ -287,11 +287,11 @@ const ToolTestSheet = ({
     }
   }
 
-  const handleExecuteTest = () => {
+  const handleExecutePreview = () => {
     if (!validateInputs()) {
       return
     }
-    onExecute(testInputs)
+    onExecute(previewInputs)
   }
 
   const handleClose = () => {
@@ -347,10 +347,10 @@ const ToolTestSheet = ({
 
         <div className="flex flex-col gap-2 border-b p-6">
           <h2 className="font-heading text-xl leading-none font-semibold">
-            Test Tool Execution
+            Tool Preview
           </h2>
           <p className="text-muted-foreground text-sm">
-            Test your tool with sample inputs before deploying.
+            Preview your tool with sample inputs before deploying.
           </p>
         </div>
 
@@ -372,14 +372,14 @@ const ToolTestSheet = ({
               </div>
             )}
 
-            <Button onClick={handleExecuteTest} disabled={isExecuting}>
+            <Button onClick={handleExecutePreview} disabled={isExecuting}>
               {isExecuting ? (
                 <>
                   <LoaderCircleIcon className="size-4 animate-spin" />
                   <span>Executing...</span>
                 </>
               ) : (
-                "Execute Test"
+                "Execute Preview"
               )}
             </Button>
 
@@ -396,5 +396,5 @@ const ToolTestSheet = ({
   )
 }
 
-export default ToolTestSheet
-export { type ToolTestSheetProps, type ToolInputVariable }
+export default ToolPreviewSheet
+export { type ToolPreviewSheetProps, type ToolInputVariable }

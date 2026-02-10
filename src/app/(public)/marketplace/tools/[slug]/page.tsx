@@ -14,12 +14,12 @@ import UserCredits from "./user-credits"
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ toolId: string }>
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const { toolId } = await params
+  const { slug } = await params
 
   try {
-    const tool = await serverApi.tools.getById({ id: toolId })
+    const tool = await serverApi.tools.getBySlug({ slug })
 
     if (!tool) {
       return {
@@ -30,6 +30,7 @@ export async function generateMetadata({
     const title = `${tool.name} | ${siteTitle}`
     const description =
       tool.description ?? "Discover this AI-powered tool in our marketplace"
+    const url = `/marketplace/tools/${slug}`
 
     return {
       title: tool.name,
@@ -37,12 +38,16 @@ export async function generateMetadata({
       openGraph: {
         title,
         description,
+        url,
         type: "website",
       },
       twitter: {
         title,
         description,
         card: "summary",
+      },
+      alternates: {
+        canonical: url,
       },
     }
   } catch {
@@ -52,8 +57,8 @@ export async function generateMetadata({
   }
 }
 
-async function ToolData({ toolId }: { toolId: string }) {
-  const tool = await serverApi.tools.getById({ id: toolId })
+async function ToolData({ slug }: { slug: string }) {
+  const tool = await serverApi.tools.getBySlug({ slug })
 
   if (!tool) {
     notFound()
@@ -91,7 +96,7 @@ async function ToolData({ toolId }: { toolId: string }) {
         </CardContent>
       </Card>
 
-      <ToolExecuteForm toolId={toolId} costPerRun={tool.costPerRun} />
+      <ToolExecuteForm toolId={tool.id} costPerRun={tool.costPerRun} />
 
       <Suspense fallback={null}>
         <UserCredits />
@@ -103,9 +108,9 @@ async function ToolData({ toolId }: { toolId: string }) {
 export default async function ToolDetailPage({
   params,
 }: {
-  params: Promise<{ toolId: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { toolId } = await params
+  const { slug } = await params
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
@@ -132,7 +137,7 @@ export default async function ToolDetailPage({
           </div>
         }
       >
-        <ToolData toolId={toolId} />
+        <ToolData slug={slug} />
       </Suspense>
     </div>
   )
