@@ -13,16 +13,7 @@ import {
 } from "react"
 import { z } from "zod"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Combobox,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxPopup,
-} from "@/components/ui/combobox"
 import { Dialog, DialogPopup } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -144,7 +135,6 @@ const ToolForm = ({
   const { data: availableModelsData } = useAvailableModels()
   const { data: categoriesData } = useCategories()
   const { data: tagsData } = useTags()
-  const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false)
   const [newTagDialogOpen, setNewTagDialogOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
@@ -217,10 +207,7 @@ const ToolForm = ({
     if (!categoriesData || categoriesData.length === 0) {
       return []
     }
-    return categoriesData.map((cat) => ({
-      value: cat.id,
-      label: cat.name,
-    }))
+    return categoriesData
   }, [categoriesData])
 
   const tags = useMemo(() => {
@@ -229,13 +216,6 @@ const ToolForm = ({
     }
     return tagsData
   }, [tagsData])
-
-  const filteredTags = useMemo(() => {
-    if (!tagSearchQuery) return tags
-    return tags.filter((tag) =>
-      tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
-    )
-  }, [tags, tagSearchQuery])
 
   const form = useForm({
     defaultValues: {
@@ -579,144 +559,6 @@ const ToolForm = ({
               </Field>
             )}
           </form.Field>
-
-          <form.Field name="categoryId">
-            {(field) => {
-              const allCategories = [
-                { value: "", label: "No category" },
-                ...categories,
-              ]
-              const selectedCategory =
-                allCategories.find((cat) => cat.value === field.state.value) ??
-                null
-
-              return (
-                <Field>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel>Category</FieldLabel>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={() => setNewCategoryDialogOpen(true)}
-                      className="h-auto p-0 text-xs"
-                    >
-                      + Add New Category
-                    </Button>
-                  </div>
-                  <Combobox
-                    value={selectedCategory}
-                    items={allCategories}
-                    onValueChange={(newValue) => {
-                      if (
-                        newValue &&
-                        typeof newValue === "object" &&
-                        "value" in newValue
-                      ) {
-                        field.handleChange(newValue.value)
-                      } else {
-                        field.handleChange("")
-                      }
-                    }}
-                  >
-                    <ComboboxInput placeholder="Select a category" />
-                    <ComboboxPopup>
-                      <ComboboxEmpty>No categories found</ComboboxEmpty>
-                      <ComboboxList>
-                        {(item: { value: string; label: string }) => (
-                          <ComboboxItem key={item.value} value={item}>
-                            {item.label}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxPopup>
-                  </Combobox>
-                </Field>
-              )
-            }}
-          </form.Field>
-
-          <form.Field name="tagIds">
-            {(field) => (
-              <Field>
-                <div className="flex items-center justify-between">
-                  <FieldLabel>Tags</FieldLabel>
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    onClick={() => setNewTagDialogOpen(true)}
-                    className="h-auto p-0 text-xs"
-                  >
-                    + Add New Tag
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Input
-                    value={tagSearchQuery}
-                    onChange={(e) => setTagSearchQuery(e.target.value)}
-                    placeholder="Search tags..."
-                  />
-                  {tagSearchQuery && filteredTags.length > 0 && (
-                    <div className="bg-muted max-h-40 overflow-y-auto rounded-md border p-2">
-                      <div className="flex flex-wrap gap-1">
-                        {filteredTags.map((tag) => {
-                          const isSelected = field.state.value.includes(tag.id)
-                          return (
-                            <button
-                              key={tag.id}
-                              type="button"
-                              onClick={() => {
-                                if (!isSelected) {
-                                  field.handleChange([
-                                    ...field.state.value,
-                                    tag.id,
-                                  ])
-                                  setTagSearchQuery("")
-                                }
-                              }}
-                              className={`rounded px-2 py-1 text-sm transition-colors ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground cursor-not-allowed opacity-50"
-                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                              }`}
-                              disabled={isSelected}
-                            >
-                              {tag.name}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {field.state.value.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {field.state.value.map((tagId) => {
-                        const tag = tags.find((t) => t.id === tagId)
-                        if (!tag) return null
-                        return (
-                          <Badge key={tagId} variant="secondary">
-                            {tag.name}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                field.handleChange(
-                                  field.state.value.filter((id) => id !== tagId),
-                                )
-                              }}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              ×
-                            </button>
-                          </Badge>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </Field>
-            )}
-          </form.Field>
         </div>
 
         <Separator />
@@ -787,6 +629,8 @@ const ToolForm = ({
           markup: state.values.markup,
           apiKeyId: state.values.apiKeyId,
           apiKeyError: state.values.apiKeyError,
+          categoryId: state.values.categoryId,
+          tagIds: state.values.tagIds,
         })}
       >
         {({
@@ -798,6 +642,8 @@ const ToolForm = ({
           markup,
           apiKeyId,
           apiKeyError,
+          categoryId,
+          tagIds,
         }) => (
           <ConfigurationPanel
             config={{
@@ -811,6 +657,10 @@ const ToolForm = ({
               apiKeyError,
               modelOptions: availableModels,
               availableApiKeys: safeApiKeys,
+              categoryId,
+              tagIds,
+              categories,
+              tags,
             }}
             handlers={{
               onModelEngineChange: (value) =>
@@ -828,6 +678,11 @@ const ToolForm = ({
                 form.setFieldValue("apiKeyId", value)
                 form.setFieldValue("apiKeyError", "")
               },
+              onCategoryChange: (value) =>
+                form.setFieldValue("categoryId", value),
+              onTagsChange: (value) => form.setFieldValue("tagIds", value),
+              onAddNewCategory: () => setNewCategoryDialogOpen(true),
+              onAddNewTag: () => setNewTagDialogOpen(true),
             }}
           />
         )}
