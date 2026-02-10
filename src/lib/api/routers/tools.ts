@@ -36,6 +36,7 @@ export const toolsRouter = {
           categoryId: z.string().optional(),
           status: z.enum(["draft", "active", "archived", "all"]).optional(),
           priceFilter: z.enum(["all", "free", "paid"]).optional(),
+          tagIds: z.array(z.string()).optional(),
         })
         .optional(),
     )
@@ -63,6 +64,21 @@ export const toolsRouter = {
         conditions.push(eq(toolsTable.costPerRun, "0"))
       } else if (input?.priceFilter === "paid") {
         conditions.push(sql`${toolsTable.costPerRun} > 0`)
+      }
+
+      if (input?.tagIds && input.tagIds.length > 0) {
+        const toolsWithTags = await context.db
+          .select({ toolId: toolTagsTable.toolId })
+          .from(toolTagsTable)
+          .where(inArray(toolTagsTable.tagId, input.tagIds))
+
+        const toolIdsWithTags = [...new Set(toolsWithTags.map((t) => t.toolId))]
+
+        if (toolIdsWithTags.length > 0) {
+          conditions.push(inArray(toolsTable.id, toolIdsWithTags))
+        } else {
+          conditions.push(sql`1 = 0`)
+        }
       }
 
       const tools = await context.db

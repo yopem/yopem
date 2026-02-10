@@ -12,6 +12,7 @@ export default function MarketplacePage() {
     undefined,
   )
   const [selectedPriceFilter, setSelectedPriceFilter] = useState<string>("all")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   const handleCategoryChange = (categoryId: string | undefined) => {
     setSelectedCategory(categoryId)
@@ -21,15 +22,9 @@ export default function MarketplacePage() {
     setSelectedPriceFilter(filter ?? "all")
   }
 
-  const { data: toolsData, isLoading: isLoadingTools } = useQuery({
-    ...queryApi.tools.list.queryOptions({
-      input: {
-        limit: 21,
-        categoryId: selectedCategory,
-        status: "active",
-      },
-    }),
-  })
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds)
+  }
 
   const { data: categories = [] } = useQuery({
     ...queryApi.tools.getCategories.queryOptions({}),
@@ -57,37 +52,22 @@ export default function MarketplacePage() {
               categories={categories}
               tags={tags}
               selectedCategory={selectedCategory}
+              selectedTags={selectedTags}
               selectedPriceFilter={selectedPriceFilter}
               onCategoryChange={handleCategoryChange}
+              onTagsChange={handleTagsChange}
               onPriceFilterChange={handlePriceFilterChange}
             />
           </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          {isLoadingTools ? (
-            <div className="space-y-6">
-              <div className="flex h-11 w-full items-center gap-2">
-                <div className="border-border bg-muted/50 h-11 flex-1 animate-pulse rounded-lg border" />
-                <div className="border-border bg-muted/50 h-11 w-24 animate-pulse rounded-lg border" />
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="border-border bg-muted/50 h-48 animate-pulse rounded-lg border"
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <MarketplaceGrid
-              initialTools={toolsData?.tools ?? []}
-              categoryId={selectedCategory}
-              priceFilter={selectedPriceFilter}
-              status="active"
-            />
-          )}
+          <MarketplaceGrid
+            categoryId={selectedCategory}
+            tagIds={selectedTags}
+            priceFilter={selectedPriceFilter}
+            status="active"
+          />
         </div>
       </div>
     </div>

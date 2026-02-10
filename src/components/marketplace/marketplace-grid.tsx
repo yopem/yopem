@@ -15,6 +15,7 @@ interface MarketplaceGridProps {
     ReturnType<typeof clientApi.tools.list>
   >["tools"]
   categoryId?: string
+  tagIds?: string[]
   priceFilter?: string
   status?: string
 }
@@ -22,6 +23,7 @@ interface MarketplaceGridProps {
 const MarketplaceGrid = ({
   initialTools = [],
   categoryId,
+  tagIds = [],
   priceFilter = "all",
   status = "active",
 }: MarketplaceGridProps) => {
@@ -30,13 +32,21 @@ const MarketplaceGrid = ({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
-      queryKey: ["marketplace-tools", search, categoryId, status, priceFilter],
+      queryKey: [
+        "marketplace-tools",
+        search,
+        categoryId,
+        status,
+        priceFilter,
+        tagIds.join(","),
+      ],
       queryFn: async ({ pageParam }) => {
         const result = await clientApi.tools.list({
           search,
           categoryId,
           status: status as "draft" | "active" | "archived" | "all",
           priceFilter: priceFilter as "all" | "free" | "paid",
+          tagIds: tagIds.length > 0 ? tagIds : undefined,
           cursor: pageParam,
           limit: 20,
         })

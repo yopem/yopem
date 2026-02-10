@@ -15,8 +15,10 @@ interface MarketplaceSidebarProps {
   categories: SelectCategory[]
   tags: SelectTag[]
   selectedCategory?: string
+  selectedTags?: string[]
   selectedPriceFilter?: string
   onCategoryChange: (categoryId: string | undefined) => void
+  onTagsChange: (tagIds: string[]) => void
   onPriceFilterChange: (filter: string | undefined) => void
 }
 
@@ -30,8 +32,10 @@ const MarketplaceSidebar = ({
   categories,
   tags,
   selectedCategory,
+  selectedTags = [],
   selectedPriceFilter = "all",
   onCategoryChange,
+  onTagsChange,
   onPriceFilterChange,
 }: MarketplaceSidebarProps) => {
   const [expandedSections, setExpandedSections] = useState({
@@ -47,8 +51,18 @@ const MarketplaceSidebar = ({
     }))
   }
 
+  const toggleTag = (tagId: string) => {
+    if (selectedTags.includes(tagId)) {
+      onTagsChange(selectedTags.filter((id) => id !== tagId))
+    } else {
+      onTagsChange([...selectedTags, tagId])
+    }
+  }
+
   const hasActiveFilters =
-    selectedCategory !== undefined || selectedPriceFilter !== "all"
+    selectedCategory !== undefined ||
+    selectedPriceFilter !== "all" ||
+    selectedTags.length > 0
 
   return (
     <aside className="w-full space-y-6" aria-label="Marketplace filters">
@@ -125,15 +139,15 @@ const MarketplaceSidebar = ({
           >
             <button
               onClick={() => onCategoryChange(undefined)}
-              aria-pressed={!selectedCategory}
+              aria-pressed={selectedCategory === undefined}
               className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
-                !selectedCategory
+                selectedCategory === undefined
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               }`}
             >
               <span>All Categories</span>
-              {!selectedCategory && (
+              {selectedCategory === undefined && (
                 <CheckIcon className="size-3.5" aria-hidden="true" />
               )}
             </button>
@@ -152,11 +166,6 @@ const MarketplaceSidebar = ({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {category.icon && (
-                      <span className="text-base" aria-hidden="true">
-                        {category.icon}
-                      </span>
-                    )}
                     <span>{category.name}</span>
                   </div>
                   {isSelected && (
@@ -186,18 +195,30 @@ const MarketplaceSidebar = ({
           </button>
 
           {expandedSections.tags && (
-            <div id="tags-section" className="flex flex-wrap gap-2">
-              {tags.slice(0, 10).map((tag) => (
-                <Button
-                  key={tag.id}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 cursor-pointer rounded-full px-3 text-xs transition-colors duration-200"
-                >
-                  <TagIcon className="mr-1.5 size-3" aria-hidden="true" />
-                  {tag.name}
-                </Button>
-              ))}
+            <div id="tags-section" className="space-y-1">
+              {tags.map((tag) => {
+                const isSelected = selectedTags.includes(tag.id)
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => toggleTag(tag.id)}
+                    aria-pressed={isSelected}
+                    className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
+                      isSelected
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TagIcon className="size-3" aria-hidden="true" />
+                      <span>{tag.name}</span>
+                    </div>
+                    {isSelected && (
+                      <CheckIcon className="size-3.5" aria-hidden="true" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
@@ -212,6 +233,7 @@ const MarketplaceSidebar = ({
             onClick={() => {
               onCategoryChange(undefined)
               onPriceFilterChange("all")
+              onTagsChange([])
             }}
             aria-label="Clear all active filters"
             className="w-full text-sm transition-colors duration-200"
