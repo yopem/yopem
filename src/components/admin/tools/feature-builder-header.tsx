@@ -17,6 +17,7 @@ interface BreadcrumbItem {
 interface FeatureBuilderHeaderProps {
   breadcrumbItems: BreadcrumbItem[]
   title?: string
+  mode?: "create" | "edit"
   status?: "draft" | "active" | "archived"
   onTestRun?: () => void
   onSaveDraft?: () => void
@@ -26,6 +27,7 @@ interface FeatureBuilderHeaderProps {
 
 const FeatureBuilderHeader = ({
   breadcrumbItems,
+  mode = "create",
   status,
   onTestRun,
   onSaveDraft,
@@ -90,7 +92,7 @@ const FeatureBuilderHeader = ({
           ) : (
             <CheckCircleIcon className="size-4" />
           )}
-          <span>Publish</span>
+          <span>{mode === "edit" ? "Update" : "Publish"}</span>
         </Button>
       </div>
     </header>

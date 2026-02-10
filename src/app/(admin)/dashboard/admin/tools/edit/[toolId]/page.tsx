@@ -176,6 +176,7 @@ function EditToolPage() {
           { label: "Features", href: "/dashboard/admin/tools" },
           { label: tool?.name ?? "Edit Tool" },
         ]}
+        mode="edit"
         status={tool?.status ?? "draft"}
         onTestRun={handleTestRun}
         onSaveDraft={handleSaveDraft}
