@@ -1,39 +1,62 @@
 import { ArrowLeftIcon, CreditCardIcon } from "lucide-react"
+import { type Metadata } from "next"
+import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
 import Link from "@/components/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { siteTitle } from "@/lib/env/client"
 import { serverApi } from "@/lib/orpc/server"
 
 import ToolExecuteForm from "./execute-form"
 import UserCredits from "./user-credits"
 
-async function ToolData({ toolId }: { toolId: string }) {
-  let tool
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ toolId: string }>
+}): Promise<Metadata> {
+  const { toolId } = await params
+
   try {
-    tool = await serverApi.tools.getById({ id: toolId })
-  } catch (error) {
-    console.error(`Error fetching tool with ID "${toolId}":`, error)
-    return (
-      <Card className="mb-8">
-        <CardContent className="text-muted-foreground py-12 text-center">
-          <p>Tool not found (ID: {toolId})</p>
-          <p className="mt-2 text-sm">
-            {error instanceof Error ? error.message : "Unknown error"}
-          </p>
-        </CardContent>
-      </Card>
-    )
+    const tool = await serverApi.tools.getById({ id: toolId })
+
+    if (!tool) {
+      return {
+        title: "Tool Not Found",
+      }
+    }
+
+    const title = `${tool.name} | ${siteTitle}`
+    const description =
+      tool.description ?? "Discover this AI-powered tool in our marketplace"
+
+    return {
+      title: tool.name,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+      },
+      twitter: {
+        title,
+        description,
+        card: "summary",
+      },
+    }
+  } catch {
+    return {
+      title: "Tool Not Found",
+    }
   }
+}
+
+async function ToolData({ toolId }: { toolId: string }) {
+  const tool = await serverApi.tools.getById({ id: toolId })
 
   if (!tool) {
-    return (
-      <Card className="mb-8">
-        <CardContent className="text-muted-foreground py-12 text-center">
-          Tool not found (ID: {toolId})
-        </CardContent>
-      </Card>
-    )
+    notFound()
   }
 
   return (

@@ -2,6 +2,7 @@
 
 import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
 import Image from "next/image"
+import { unstable_rethrow } from "next/navigation"
 import { useState } from "react"
 
 import {
@@ -32,6 +33,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
     try {
       await logout()
     } catch (error) {
+      unstable_rethrow(error)
       setIsLoggingOut(false)
       throw error
     }

@@ -6,11 +6,34 @@ import { Suspense, type ReactNode } from "react"
 
 import Providers from "@/components/providers"
 import Scripts from "@/components/scripts"
-import { siteDescription, siteTitle } from "@/lib/env/client"
+import {
+  logoOgHeight,
+  logoOgUrl,
+  logoOgWidth,
+  siteDescription,
+  siteDomain,
+  siteTitle,
+  siteUrl,
+  xUsername,
+} from "@/lib/env/client"
 
 export const metadata: Metadata = {
-  title: siteTitle,
+  title: {
+    default: siteTitle,
+    template: `%s | ${siteTitle}`,
+  },
   description: siteDescription,
+  metadataBase: new URL(siteUrl),
+  keywords: [
+    "AI tools",
+    "marketplace",
+    "automation",
+    "artificial intelligence",
+    "workflow",
+  ],
+  authors: [{ name: siteDomain }],
+  creator: siteDomain,
+  publisher: siteDomain,
   icons: [
     {
       rel: "icon",
@@ -18,6 +41,40 @@ export const metadata: Metadata = {
       url: "/favicon.svg",
     },
   ],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    title: siteTitle,
+    description: siteDescription,
+    siteName: siteTitle,
+    images: [
+      {
+        url: logoOgUrl,
+        width: Number(logoOgWidth),
+        height: Number(logoOgHeight),
+        alt: siteTitle,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    creator: xUsername ? `@${xUsername}` : undefined,
+    images: [logoOgUrl],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 }
 
 export function generateViewport() {
