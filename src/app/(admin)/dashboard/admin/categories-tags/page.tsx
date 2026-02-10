@@ -52,7 +52,7 @@ const CategoriesTagsContent = () => {
         description: `${categoryName} has been created successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({ queryKey: ["categories"] })
       setCategoryName("")
       setCategoryDescription("")
       setCategoryDialogOpen(false)
@@ -81,7 +81,7 @@ const CategoriesTagsContent = () => {
         description: `${categoryName} has been updated successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({ queryKey: ["categories"] })
       setCategoryName("")
       setCategoryDescription("")
       setEditingCategory(null)
@@ -106,7 +106,7 @@ const CategoriesTagsContent = () => {
         description: "Category has been deleted successfully.",
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({ queryKey: ["categories"] })
     },
     onError: (error: Error) => {
       toastManager.add({
@@ -129,7 +129,7 @@ const CategoriesTagsContent = () => {
         description: `${tagName} has been created successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({ queryKey: ["tags"] })
       setTagName("")
       setTagDialogOpen(false)
     },
@@ -156,7 +156,7 @@ const CategoriesTagsContent = () => {
         description: `${tagName} has been updated successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({ queryKey: ["tags"] })
       setTagName("")
       setEditingTag(null)
       setTagDialogOpen(false)
@@ -180,7 +180,7 @@ const CategoriesTagsContent = () => {
         description: "Tag has been deleted successfully.",
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({ queryKey: ["tags"] })
     },
     onError: (error: Error) => {
       toastManager.add({
@@ -199,7 +199,7 @@ const CategoriesTagsContent = () => {
     if (category) {
       setEditingCategory(category)
       setCategoryName(category.name)
-      setCategoryDescription(category.description || "")
+      setCategoryDescription(category.description ?? "")
     } else {
       setEditingCategory(null)
       setCategoryName("")

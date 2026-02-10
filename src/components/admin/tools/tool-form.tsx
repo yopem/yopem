@@ -154,7 +154,7 @@ const ToolForm = ({
         description: `${newCategoryName} has been created successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({ queryKey: ["categories"] })
       const currentCategoryIds = form.getFieldValue("categoryIds")
       form.setFieldValue("categoryIds", [...currentCategoryIds, category.id])
       setNewCategoryName("")
@@ -182,7 +182,7 @@ const ToolForm = ({
         description: `${newTagName} has been created successfully.`,
         type: "success",
       })
-      queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({ queryKey: ["tags"] })
       const currentTagIds = form.getFieldValue("tagIds")
       form.setFieldValue("tagIds", [...currentTagIds, tag.id])
       setNewTagName("")

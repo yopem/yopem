@@ -177,7 +177,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
               filteredCategories.map((category) => (
                 <label
                   key={category.id}
-                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded p-2 transition-colors"
+                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
                 >
                   <Checkbox
                     checked={categoryIds.includes(category.id)}
@@ -246,7 +246,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
               filteredTags.map((tag) => (
                 <label
                   key={tag.id}
-                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded p-2 transition-colors"
+                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
                 >
                   <Checkbox
                     checked={tagIds.includes(tag.id)}
