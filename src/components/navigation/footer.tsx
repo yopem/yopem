@@ -1,3 +1,4 @@
+"use client"
 import Link from "@/components/link"
 import Logo from "@/components/logo"
 import ThemeSwitcher from "@/components/theme/theme-switcher"

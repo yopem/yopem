@@ -21,21 +21,21 @@ interface R2Config {
   publicUrl: string
 }
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024
 const RETRY_DELAY_MS = 2000
 
 const VALID_IMAGE_SIGNATURES = [
-  { signature: [0xff, 0xd8, 0xff], ext: "jpg" }, // JPEG
-  { signature: [0x89, 0x50, 0x4e, 0x47], ext: "png" }, // PNG
-  { signature: [0x47, 0x49, 0x46, 0x38], ext: "gif" }, // GIF
-  { signature: [0x52, 0x49, 0x46, 0x46], ext: "webp" }, // WEBP (partial - needs more validation)
+  { signature: [0xff, 0xd8, 0xff], ext: "jpg" },
+  { signature: [0x89, 0x50, 0x4e, 0x47], ext: "png" },
+  { signature: [0x47, 0x49, 0x46, 0x38], ext: "gif" },
+  { signature: [0x52, 0x49, 0x46, 0x46], ext: "webp" },
 ]
 
 const VALID_VIDEO_SIGNATURES = [
-  { signature: [0x00, 0x00, 0x00], ext: "mp4" }, // MP4 (ftyp box at offset 4)
-  { signature: [0x1a, 0x45, 0xdf, 0xa3], ext: "webm" }, // WebM
-  { signature: [0x46, 0x4c, 0x56], ext: "flv" }, // FLV
+  { signature: [0x00, 0x00, 0x00], ext: "mp4" },
+  { signature: [0x1a, 0x45, 0xdf, 0xa3], ext: "webm" },
+  { signature: [0x46, 0x4c, 0x56], ext: "flv" },
 ]
 
 export class R2Storage {

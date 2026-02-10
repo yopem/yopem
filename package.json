@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "analyze": "next experimental-analyze",
-    "build": "bun run --bun next build",
+    "build": "next build",
     "check": "bun run lint && bun run typecheck && bun run format:check",
     "db:check": "drizzle-kit check",
     "db:drop": "drizzle-kit drop",
@@ -64,6 +64,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "server-only": "^0.0.1",
+    "shimmer-from-structure": "^2.3.0",
     "superjson": "^2.2.6",
     "tailwind-merge": "^3.4.0",
     "transliteration": "^2.6.1",

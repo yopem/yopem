@@ -20,7 +20,6 @@ export const OPTIONS = () => {
 
 const handler = new RPCHandler(appRouter, {
   interceptors: [
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     async ({ next }) => {
       try {
         return await next()

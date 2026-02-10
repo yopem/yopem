@@ -81,7 +81,6 @@ const ToolTestSheet = ({
           }
           break
         case "boolean":
-          // Boolean values are handled by checkbox, no validation needed
           break
         case "select":
           if (
@@ -104,7 +103,6 @@ const ToolTestSheet = ({
           break
         case "text":
         case "long_text":
-          // Text fields are free-form
           break
       }
     }

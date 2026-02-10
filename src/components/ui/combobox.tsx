@@ -44,7 +44,6 @@ function ComboboxInput({
   const { multiple } = React.useContext(ComboboxContext)
   const sizeValue = size ?? "default"
 
-  // multiple mode
   if (multiple) {
     return (
       <ComboboxPrimitive.Input
@@ -61,7 +60,6 @@ function ComboboxInput({
     )
   }
 
-  // single mode
   return (
     <div className="text-foreground relative w-full not-has-[>*.w-full]:w-fit has-disabled:opacity-64">
       {startAddon && (

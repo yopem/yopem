@@ -7,6 +7,9 @@ import { env } from "@/lib/env"
 
 export const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin
+  if (process.env["APP_ENV"] === "development") {
+    return "http://localhost:3000"
+  }
   return env.NEXT_PUBLIC_API_URL
 }
 

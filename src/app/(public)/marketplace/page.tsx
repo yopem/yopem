@@ -1,37 +1,14 @@
-import { desc, eq } from "drizzle-orm"
-import { Suspense } from "react"
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
 
 import MarketplaceGrid from "@/components/marketplace/marketplace-grid"
-import { db } from "@/lib/db"
-import { toolsTable } from "@/lib/db/schema"
+import { queryApi } from "@/lib/orpc/query"
 
-async function getInitialTools() {
-  "use server"
-  const tools = await db
-    .select({
-      id: toolsTable.id,
-      name: toolsTable.name,
-      description: toolsTable.description,
-      status: toolsTable.status,
-      costPerRun: toolsTable.costPerRun,
-      categoryId: toolsTable.categoryId,
-      createdAt: toolsTable.createdAt,
-    })
-    .from(toolsTable)
-    .where(eq(toolsTable.status, "active"))
-    .orderBy(desc(toolsTable.createdAt))
-    .limit(21)
-
-  return {
-    tools: tools.map((t) => ({
-      ...t,
-      createdAt: t.createdAt,
-    })),
-  }
-}
-
-export default async function MarketplacePage() {
-  const { tools } = await getInitialTools()
+export default function MarketplacePage() {
+  const { data, isLoading } = useQuery({
+    ...queryApi.tools.list.queryOptions({ input: { limit: 21 } }),
+  })
 
   return (
     <div className="container mx-auto py-8">
@@ -41,17 +18,16 @@ export default async function MarketplacePage() {
           Discover and use AI-powered tools for your workflows
         </p>
       </div>
-      <Suspense
-        fallback={
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-muted h-40 animate-pulse rounded-lg" />
-            ))}
-          </div>
-        }
-      >
-        <MarketplaceGrid initialTools={tools} />
-      </Suspense>
+
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-muted h-40 animate-pulse rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <MarketplaceGrid initialTools={data?.tools ?? []} />
+      )}
     </div>
   )
 }

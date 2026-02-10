@@ -2,7 +2,7 @@ import "@/styles/globals.css"
 
 import { type Metadata } from "next"
 import localFont from "next/font/local"
-import type { ReactNode } from "react"
+import { Suspense, type ReactNode } from "react"
 
 import Providers from "@/components/providers"
 import Scripts from "@/components/scripts"
@@ -68,7 +68,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Suspense fallback={null}>{children}</Suspense>
+        </Providers>
         <Scripts />
       </body>
     </html>

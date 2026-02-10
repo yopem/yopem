@@ -195,7 +195,6 @@ export const adminRouter = {
     const apiKeys = settings.settingValue as ApiKeyConfig[]
     const activeKeys = apiKeys.filter((key) => key.status === "active")
 
-    // Deduplicate by provider — pick the first active key per provider
     const uniqueByProvider = new Map<string, ApiKeyConfig>()
     for (const key of activeKeys) {
       if (!uniqueByProvider.has(key.provider)) {
@@ -203,7 +202,6 @@ export const adminRouter = {
       }
     }
 
-    // Fetch all providers in parallel instead of sequentially
     const entries = Array.from(uniqueByProvider.entries())
     const results = await Promise.all(
       entries.map(async ([provider, key]) => {

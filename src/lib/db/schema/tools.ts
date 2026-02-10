@@ -43,7 +43,7 @@ export const toolsTable = pgTable("tools", {
 })
 
 export const insertToolSchema = createInsertSchema(toolsTable).extend({
-  slug: z.string().optional(), // Slug is generated server-side, so it's optional on insert
+  slug: z.string().optional(),
 })
 export const updateToolSchema = createUpdateSchema(toolsTable)
 
