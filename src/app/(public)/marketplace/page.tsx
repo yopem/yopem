@@ -8,14 +8,12 @@ import MarketplaceSidebar from "@/components/marketplace/marketplace-sidebar"
 import { queryApi } from "@/lib/orpc/query"
 
 export default function MarketplacePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-    undefined,
-  )
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedPriceFilter, setSelectedPriceFilter] = useState<string>("all")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
-  const handleCategoryChange = (categoryId: string | undefined) => {
-    setSelectedCategory(categoryId)
+  const handleCategoriesChange = (categoryIds: string[]) => {
+    setSelectedCategories(categoryIds)
   }
 
   const handlePriceFilterChange = (filter: string | undefined) => {
@@ -51,10 +49,10 @@ export default function MarketplacePage() {
             <MarketplaceSidebar
               categories={categories}
               tags={tags}
-              selectedCategory={selectedCategory}
+              selectedCategories={selectedCategories}
               selectedTags={selectedTags}
               selectedPriceFilter={selectedPriceFilter}
-              onCategoryChange={handleCategoryChange}
+              onCategoriesChange={handleCategoriesChange}
               onTagsChange={handleTagsChange}
               onPriceFilterChange={handlePriceFilterChange}
             />
@@ -63,7 +61,7 @@ export default function MarketplacePage() {
 
         <div className="min-w-0 flex-1">
           <MarketplaceGrid
-            categoryId={selectedCategory}
+            categoryIds={selectedCategories}
             tagIds={selectedTags}
             priceFilter={selectedPriceFilter}
             status="active"

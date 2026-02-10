@@ -1,10 +1,10 @@
 "use client"
 
-import { Suspense } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react"
-import { Shimmer } from "shimmer-from-structure"
+import { Suspense } from "react"
 import { useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogPopup } from "@/components/ui/dialog"
@@ -289,7 +289,9 @@ const CategoriesTagsContent = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCategoryMutation.mutate(category.id)}
+                        onClick={() =>
+                          deleteCategoryMutation.mutate(category.id)
+                        }
                         disabled={deleteCategoryMutation.isPending}
                       >
                         <Trash2Icon className="size-4" />

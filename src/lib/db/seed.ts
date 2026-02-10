@@ -1,7 +1,13 @@
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
-import { toolsTable } from "@/lib/db/schema"
+import {
+  categoriesTable,
+  tagsTable,
+  toolCategoriesTable,
+  toolsTable,
+  toolTagsTable,
+} from "@/lib/db/schema"
 import { env } from "@/lib/env"
 import { createCustomId } from "@/lib/utils/custom-id"
 
@@ -38,6 +44,18 @@ async function clearExistingTools() {
 
   try {
     for (const slug of demoToolSlugs) {
+      const tools = await db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, slug))
+
+      for (const tool of tools) {
+        await db
+          .delete(toolCategoriesTable)
+          .where(eq(toolCategoriesTable.toolId, tool.id))
+        await db.delete(toolTagsTable).where(eq(toolTagsTable.toolId, tool.id))
+      }
+
       await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
     }
     console.info("✅ Cleared existing demo tools")
@@ -46,8 +64,112 @@ async function clearExistingTools() {
   }
 }
 
+async function seedCategories() {
+  console.info("🌱 Seeding categories...")
+
+  const categories = [
+    {
+      name: "Content Creation",
+      slug: "content-creation",
+      description: "Tools for creating and generating content",
+      icon: "FileText",
+      sortOrder: 1,
+    },
+    {
+      name: "Analysis",
+      slug: "analysis",
+      description: "Tools for analyzing and processing data",
+      icon: "LineChart",
+      sortOrder: 2,
+    },
+    {
+      name: "Finance",
+      slug: "finance",
+      description: "Financial and budgeting tools",
+      icon: "DollarSign",
+      sortOrder: 3,
+    },
+    {
+      name: "Productivity",
+      slug: "productivity",
+      description: "Tools to boost productivity",
+      icon: "Zap",
+      sortOrder: 4,
+    },
+    {
+      name: "Media",
+      slug: "media",
+      description: "Image and video processing tools",
+      icon: "Image",
+      sortOrder: 5,
+    },
+  ]
+
+  const createdCategories: Record<string, string> = {}
+
+  for (const category of categories) {
+    const [existing] = await db
+      .select()
+      .from(categoriesTable)
+      .where(eq(categoriesTable.slug, category.slug))
+
+    if (existing) {
+      createdCategories[category.slug] = existing.id
+      console.info(`✓ Category exists: ${category.name}`)
+    } else {
+      const id = createCustomId()
+      await db.insert(categoriesTable).values({ id, ...category })
+      createdCategories[category.slug] = id
+      console.info(`✅ Seeded category: ${category.name}`)
+    }
+  }
+
+  return createdCategories
+}
+
+async function seedTags() {
+  console.info("🌱 Seeding tags...")
+
+  const tags = [
+    { name: "Text Processing", slug: "text-processing" },
+    { name: "AI", slug: "ai" },
+    { name: "Automation", slug: "automation" },
+    { name: "Business", slug: "business" },
+    { name: "Creative", slug: "creative" },
+    { name: "Education", slug: "education" },
+    { name: "Social Media", slug: "social-media" },
+    { name: "Video", slug: "video" },
+    { name: "Image", slug: "image" },
+    { name: "Analytics", slug: "analytics" },
+  ]
+
+  const createdTags: Record<string, string> = {}
+
+  for (const tag of tags) {
+    const [existing] = await db
+      .select()
+      .from(tagsTable)
+      .where(eq(tagsTable.slug, tag.slug))
+
+    if (existing) {
+      createdTags[tag.slug] = existing.id
+      console.info(`✓ Tag exists: ${tag.name}`)
+    } else {
+      const id = createCustomId()
+      await db.insert(tagsTable).values({ id, ...tag })
+      createdTags[tag.slug] = id
+      console.info(`✅ Seeded tag: ${tag.name}`)
+    }
+  }
+
+  return createdTags
+}
+
 async function seedTools() {
   console.info("🌱 Seeding tools...")
+
+  const categories = await seedCategories()
+  const tags = await seedTags()
 
   const tools = [
     {
@@ -77,9 +199,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["content-creation"]],
+      tagIds: [tags["text-processing"], tags["ai"]],
     },
 
     {
@@ -109,9 +232,10 @@ async function seedTools() {
         maxTokens: 2048,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["analysis"], categories["content-creation"]],
+      tagIds: [tags["text-processing"], tags["ai"], tags["education"]],
     },
 
     {
@@ -141,9 +265,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["finance"]],
+      tagIds: [tags["business"], tags["automation"]],
     },
 
     {
@@ -178,9 +303,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["productivity"]],
+      tagIds: [tags["business"], tags["automation"]],
     },
 
     {
@@ -220,9 +346,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["content-creation"]],
+      tagIds: [tags["text-processing"], tags["creative"]],
     },
 
     {
@@ -252,9 +379,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["media"], categories["analysis"]],
+      tagIds: [tags["image"], tags["ai"]],
     },
 
     {
@@ -284,9 +412,10 @@ async function seedTools() {
         maxTokens: 2048,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["media"], categories["analysis"]],
+      tagIds: [tags["video"], tags["ai"], tags["analytics"]],
     },
 
     {
@@ -321,9 +450,10 @@ async function seedTools() {
         maxTokens: 1536,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["analysis"]],
+      tagIds: [tags["business"], tags["analytics"], tags["ai"]],
     },
 
     {
@@ -375,9 +505,10 @@ async function seedTools() {
         maxTokens: 1024,
       },
       isPublic: true,
-      categoryId: null,
       apiKeyId: null,
       createdBy: null,
+      categoryIds: [categories["media"], categories["content-creation"]],
+      tagIds: [tags["social-media"], tags["image"], tags["creative"]],
     },
 
     {

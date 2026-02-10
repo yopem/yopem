@@ -13,6 +13,7 @@ import {
   creditTransactionsTable,
   insertToolSchema,
   tagsTable,
+  toolCategoriesTable,
   toolRunsTable,
   toolsTable,
   toolTagsTable,
@@ -33,7 +34,7 @@ export const toolsRouter = {
           limit: z.number().min(1).max(100).default(20),
           cursor: z.string().optional(),
           search: z.string().optional(),
-          categoryId: z.string().optional(),
+          categoryIds: z.array(z.string()).optional(),
           status: z.enum(["draft", "active", "archived", "all"]).optional(),
           priceFilter: z.enum(["all", "free", "paid"]).optional(),
           tagIds: z.array(z.string()).optional(),
@@ -50,8 +51,27 @@ export const toolsRouter = {
         conditions.push(eq(toolsTable.status, "active"))
       }
 
-      if (input?.categoryId) {
-        conditions.push(eq(toolsTable.categoryId, input.categoryId))
+      if (input?.categoryIds && input.categoryIds.length > 0) {
+        const toolsWithAllCategories = await context.db
+          .select({
+            toolId: toolCategoriesTable.toolId,
+          })
+          .from(toolCategoriesTable)
+          .where(inArray(toolCategoriesTable.categoryId, input.categoryIds))
+          .groupBy(toolCategoriesTable.toolId)
+          .having(
+            sql`COUNT(DISTINCT ${toolCategoriesTable.categoryId}) = ${input.categoryIds.length}`,
+          )
+
+        const toolIdsWithAllCategories = toolsWithAllCategories.map(
+          (t) => t.toolId,
+        )
+
+        if (toolIdsWithAllCategories.length > 0) {
+          conditions.push(inArray(toolsTable.id, toolIdsWithAllCategories))
+        } else {
+          conditions.push(sql`1 = 0`)
+        }
       }
 
       if (input?.search) {
@@ -67,15 +87,21 @@ export const toolsRouter = {
       }
 
       if (input?.tagIds && input.tagIds.length > 0) {
-        const toolsWithTags = await context.db
-          .select({ toolId: toolTagsTable.toolId })
+        const toolsWithAllTags = await context.db
+          .select({
+            toolId: toolTagsTable.toolId,
+          })
           .from(toolTagsTable)
           .where(inArray(toolTagsTable.tagId, input.tagIds))
+          .groupBy(toolTagsTable.toolId)
+          .having(
+            sql`COUNT(DISTINCT ${toolTagsTable.tagId}) = ${input.tagIds.length}`,
+          )
 
-        const toolIdsWithTags = [...new Set(toolsWithTags.map((t) => t.toolId))]
+        const toolIdsWithAllTags = toolsWithAllTags.map((t) => t.toolId)
 
-        if (toolIdsWithTags.length > 0) {
-          conditions.push(inArray(toolsTable.id, toolIdsWithTags))
+        if (toolIdsWithAllTags.length > 0) {
+          conditions.push(inArray(toolsTable.id, toolIdsWithAllTags))
         } else {
           conditions.push(sql`1 = 0`)
         }
@@ -88,30 +114,42 @@ export const toolsRouter = {
           description: toolsTable.description,
           status: toolsTable.status,
           costPerRun: toolsTable.costPerRun,
-          categoryId: toolsTable.categoryId,
           createdAt: toolsTable.createdAt,
-          category: {
-            id: categoriesTable.id,
-            name: categoriesTable.name,
-            slug: categoriesTable.slug,
-          },
         })
         .from(toolsTable)
-        .leftJoin(
-          categoriesTable,
-          eq(toolsTable.categoryId, categoriesTable.id),
-        )
         .where(and(...conditions))
         .orderBy(desc(toolsTable.createdAt))
         .limit(limit + 1)
 
+      const toolsWithCategories = await Promise.all(
+        tools.map(async (tool) => {
+          const toolCategories = await context.db
+            .select({
+              id: categoriesTable.id,
+              name: categoriesTable.name,
+              slug: categoriesTable.slug,
+            })
+            .from(toolCategoriesTable)
+            .innerJoin(
+              categoriesTable,
+              eq(toolCategoriesTable.categoryId, categoriesTable.id),
+            )
+            .where(eq(toolCategoriesTable.toolId, tool.id))
+
+          return {
+            ...tool,
+            categories: toolCategories,
+          }
+        }),
+      )
+
       let nextCursor: string | undefined = undefined
-      if (tools.length > limit) {
-        const nextItem = tools.pop()
+      if (toolsWithCategories.length > limit) {
+        const nextItem = toolsWithCategories.pop()
         nextCursor = nextItem?.id
       }
 
-      return { tools, nextCursor }
+      return { tools: toolsWithCategories, nextCursor }
     }),
 
   getById: publicProcedure
@@ -126,19 +164,18 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
-      let category = null
-      if (tool.categoryId) {
-        const [cat] = await context.db
-          .select({
-            id: categoriesTable.id,
-            name: categoriesTable.name,
-            slug: categoriesTable.slug,
-          })
-          .from(categoriesTable)
-          .where(eq(categoriesTable.id, tool.categoryId))
-
-        category = cat ?? null
-      }
+      const toolCategories = await context.db
+        .select({
+          id: categoriesTable.id,
+          name: categoriesTable.name,
+          slug: categoriesTable.slug,
+        })
+        .from(toolCategoriesTable)
+        .innerJoin(
+          categoriesTable,
+          eq(toolCategoriesTable.categoryId, categoriesTable.id),
+        )
+        .where(eq(toolCategoriesTable.toolId, input.id))
 
       const toolTags = await context.db
         .select({
@@ -152,7 +189,7 @@ export const toolsRouter = {
 
       return {
         ...tool,
-        category,
+        categories: toolCategories,
         tags: toolTags,
       }
     }),
@@ -164,7 +201,6 @@ export const toolsRouter = {
         name: toolsTable.name,
         description: toolsTable.description,
         costPerRun: toolsTable.costPerRun,
-        categoryId: toolsTable.categoryId,
       })
       .from(toolsTable)
       .where(eq(toolsTable.status, "active"))
@@ -456,16 +492,16 @@ export const toolsRouter = {
   create: adminProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
-      const { tagIds, ...toolData } = input
+      const { tagIds, categoryIds, ...toolData } = input
 
-      if (toolData.categoryId) {
-        const [category] = await context.db
+      if (categoryIds && categoryIds.length > 0) {
+        const existingCategories = await context.db
           .select()
           .from(categoriesTable)
-          .where(eq(categoriesTable.id, toolData.categoryId))
+          .where(inArray(categoriesTable.id, categoryIds))
 
-        if (!category) {
-          throw new Error("Invalid category ID")
+        if (existingCategories.length !== categoryIds.length) {
+          throw new Error("One or more category IDs are invalid")
         }
       }
 
@@ -489,6 +525,15 @@ export const toolsRouter = {
         createdBy: context.session.id,
       })
 
+      if (categoryIds && categoryIds.length > 0) {
+        await context.db.insert(toolCategoriesTable).values(
+          categoryIds.map((categoryId) => ({
+            toolId: id,
+            categoryId,
+          })),
+        )
+      }
+
       if (tagIds && tagIds.length > 0) {
         await context.db.insert(toolTagsTable).values(
           tagIds.map((tagId) => ({
@@ -507,16 +552,16 @@ export const toolsRouter = {
       if (!input.id) {
         throw new Error("Tool ID is required")
       }
-      const { id, tagIds, ...data } = input
+      const { id, tagIds, categoryIds, ...data } = input
 
-      if (data.categoryId) {
-        const [category] = await context.db
+      if (categoryIds && categoryIds.length > 0) {
+        const existingCategories = await context.db
           .select()
           .from(categoriesTable)
-          .where(eq(categoriesTable.id, data.categoryId))
+          .where(inArray(categoriesTable.id, categoryIds))
 
-        if (!category) {
-          throw new Error("Invalid category ID")
+        if (existingCategories.length !== categoryIds.length) {
+          throw new Error("One or more category IDs are invalid")
         }
       }
 
@@ -548,8 +593,25 @@ export const toolsRouter = {
         .set({ ...data, ...(slug ? { slug } : {}), updatedAt: new Date() })
         .where(eq(toolsTable.id, id))
 
+      if (categoryIds !== undefined) {
+        await context.db
+          .delete(toolCategoriesTable)
+          .where(eq(toolCategoriesTable.toolId, id))
+
+        if (categoryIds.length > 0) {
+          await context.db.insert(toolCategoriesTable).values(
+            categoryIds.map((categoryId) => ({
+              toolId: id,
+              categoryId,
+            })),
+          )
+        }
+      }
+
       if (tagIds !== undefined) {
-        await context.db.delete(toolTagsTable).where(eq(toolTagsTable.toolId, id))
+        await context.db
+          .delete(toolTagsTable)
+          .where(eq(toolTagsTable.toolId, id))
 
         if (tagIds.length > 0) {
           await context.db.insert(toolTagsTable).values(

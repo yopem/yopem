@@ -14,10 +14,10 @@ import type { SelectCategory, SelectTag } from "@/lib/db/schema"
 interface MarketplaceSidebarProps {
   categories: SelectCategory[]
   tags: SelectTag[]
-  selectedCategory?: string
+  selectedCategories?: string[]
   selectedTags?: string[]
   selectedPriceFilter?: string
-  onCategoryChange: (categoryId: string | undefined) => void
+  onCategoriesChange: (categoryIds: string[]) => void
   onTagsChange: (tagIds: string[]) => void
   onPriceFilterChange: (filter: string | undefined) => void
 }
@@ -31,10 +31,10 @@ const PRICE_FILTERS = [
 const MarketplaceSidebar = ({
   categories,
   tags,
-  selectedCategory,
+  selectedCategories = [],
   selectedTags = [],
   selectedPriceFilter = "all",
-  onCategoryChange,
+  onCategoriesChange,
   onTagsChange,
   onPriceFilterChange,
 }: MarketplaceSidebarProps) => {
@@ -59,8 +59,16 @@ const MarketplaceSidebar = ({
     }
   }
 
+  const toggleCategory = (categoryId: string) => {
+    if (selectedCategories.includes(categoryId)) {
+      onCategoriesChange(selectedCategories.filter((id) => id !== categoryId))
+    } else {
+      onCategoriesChange([...selectedCategories, categoryId])
+    }
+  }
+
   const hasActiveFilters =
-    selectedCategory !== undefined ||
+    selectedCategories.length > 0 ||
     selectedPriceFilter !== "all" ||
     selectedTags.length > 0
 
@@ -137,27 +145,12 @@ const MarketplaceSidebar = ({
             aria-label="Category filters"
             className="space-y-1"
           >
-            <button
-              onClick={() => onCategoryChange(undefined)}
-              aria-pressed={selectedCategory === undefined}
-              className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
-                selectedCategory === undefined
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              }`}
-            >
-              <span>All Categories</span>
-              {selectedCategory === undefined && (
-                <CheckIcon className="size-3.5" aria-hidden="true" />
-              )}
-            </button>
-
             {categories.map((category) => {
-              const isSelected = selectedCategory === category.id
+              const isSelected = selectedCategories.includes(category.id)
               return (
                 <button
                   key={category.id}
-                  onClick={() => onCategoryChange(category.id)}
+                  onClick={() => toggleCategory(category.id)}
                   aria-pressed={isSelected}
                   className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
                     isSelected
@@ -231,7 +224,7 @@ const MarketplaceSidebar = ({
             variant="ghost"
             size="sm"
             onClick={() => {
-              onCategoryChange(undefined)
+              onCategoriesChange([])
               onPriceFilterChange("all")
               onTagsChange([])
             }}

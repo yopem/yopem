@@ -1,6 +1,7 @@
 import { ArrowRight as ArrowRightIcon } from "lucide-react"
 
 import Link from "@/components/link"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -14,10 +15,16 @@ interface ToolCardProps {
   name: string
   description: string | null
   costPerRun: string | null
-  categoryId: string | null
+  categories?: { id: string; name: string; slug: string }[]
 }
 
-const ToolCard = ({ id, name, description, costPerRun }: ToolCardProps) => {
+const ToolCard = ({
+  id,
+  name,
+  description,
+  costPerRun,
+  categories = [],
+}: ToolCardProps) => {
   const isFree = Number(costPerRun ?? 0) === 0
 
   return (
@@ -30,6 +37,24 @@ const ToolCard = ({ id, name, description, costPerRun }: ToolCardProps) => {
             </CardTitle>
             <ArrowRightIcon className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
           </div>
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-2">
+              {categories.slice(0, 2).map((category) => (
+                <Badge
+                  key={category.id}
+                  variant="secondary"
+                  className="text-xs"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+              {categories.length > 2 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{categories.length - 2}
+                </Badge>
+              )}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="flex-1 pb-3">

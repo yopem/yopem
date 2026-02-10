@@ -11,10 +11,8 @@ import { Button } from "@/components/ui/button"
 import { clientApi } from "@/lib/orpc/client"
 
 interface MarketplaceGridProps {
-  initialTools?: Awaited<
-    ReturnType<typeof clientApi.tools.list>
-  >["tools"]
-  categoryId?: string
+  initialTools?: Awaited<ReturnType<typeof clientApi.tools.list>>["tools"]
+  categoryIds?: string[]
   tagIds?: string[]
   priceFilter?: string
   status?: string
@@ -22,7 +20,7 @@ interface MarketplaceGridProps {
 
 const MarketplaceGrid = ({
   initialTools = [],
-  categoryId,
+  categoryIds = [],
   tagIds = [],
   priceFilter = "all",
   status = "active",
@@ -35,7 +33,7 @@ const MarketplaceGrid = ({
       queryKey: [
         "marketplace-tools",
         search,
-        categoryId,
+        categoryIds.join(","),
         status,
         priceFilter,
         tagIds.join(","),
@@ -43,7 +41,7 @@ const MarketplaceGrid = ({
       queryFn: async ({ pageParam }) => {
         const result = await clientApi.tools.list({
           search,
-          categoryId,
+          categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
           status: status as "draft" | "active" | "archived" | "all",
           priceFilter: priceFilter as "all" | "free" | "paid",
           tagIds: tagIds.length > 0 ? tagIds : undefined,

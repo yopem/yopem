@@ -45,7 +45,7 @@ export interface ConfigValues {
   apiKeyError?: string
   modelOptions: string[]
   availableApiKeys: ApiKeyConfig[]
-  categoryId?: string
+  categoryIds?: string[]
   tagIds?: string[]
   categories?: Category[]
   tags?: Tag[]
@@ -59,7 +59,7 @@ export interface ConfigHandlers {
   onCostPerRunChange: (value: number) => void
   onMarkupChange: (value: number) => void
   onApiKeyIdChange?: (value: string) => void
-  onCategoryChange?: (value: string) => void
+  onCategoriesChange?: (value: string[]) => void
   onTagsChange?: (value: string[]) => void
   onAddNewCategory?: () => void
   onAddNewTag?: () => void
@@ -82,7 +82,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
     apiKeyId,
     availableApiKeys,
     apiKeyError,
-    categoryId,
+    categoryIds = [],
     tagIds = [],
     categories = [],
     tags = [],
@@ -96,29 +96,45 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
     onCostPerRunChange,
     onMarkupChange,
     onApiKeyIdChange,
-    onCategoryChange,
+    onCategoriesChange,
     onTagsChange,
     onAddNewCategory,
     onAddNewTag,
   } = handlers
 
   const [tagSearchQuery, setTagSearchQuery] = useState("")
+  const [categorySearchQuery, setCategorySearchQuery] = useState("")
 
-  const markupPercentage = Math.round(markup * 100)
+  const toggleTag = (tagId: string) => {
+    if (tagIds.includes(tagId)) {
+      onTagsChange?.(tagIds.filter((id) => id !== tagId))
+    } else {
+      onTagsChange?.([...tagIds, tagId])
+    }
+  }
+
+  const toggleCategory = (categoryId: string) => {
+    if (categoryIds.includes(categoryId)) {
+      onCategoriesChange?.(categoryIds.filter((id) => id !== categoryId))
+    } else {
+      onCategoriesChange?.([...categoryIds, categoryId])
+    }
+  }
 
   const selectedTags = tags.filter((tag) => tagIds.includes(tag.id))
+  const selectedCategories = categories.filter((cat) =>
+    categoryIds.includes(cat.id),
+  )
+
   const filteredTags = tags.filter((tag) =>
     tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
   )
 
-  const toggleTag = (tagId: string) => {
-    if (!onTagsChange) return
-    if (tagIds.includes(tagId)) {
-      onTagsChange(tagIds.filter((id) => id !== tagId))
-    } else {
-      onTagsChange([...tagIds, tagId])
-    }
-  }
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+  )
+
+  const markupPercentage = Math.round(markup * 100)
 
   return (
     <aside className="bg-background flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
@@ -141,36 +157,57 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
             </Button>
           )}
         </div>
-        <div className="flex flex-col gap-2 px-3 pb-3">
+        <div className="flex flex-col gap-3 px-3 pb-3">
+          <Input
+            value={categorySearchQuery}
+            onChange={(e) => setCategorySearchQuery(e.target.value)}
+            placeholder="Search categories..."
+            className="h-8 text-sm"
+          />
           <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
             {categories.length === 0 ? (
               <p className="text-muted-foreground py-2 text-center text-xs">
                 No categories available
               </p>
+            ) : filteredCategories.length === 0 ? (
+              <p className="text-muted-foreground py-2 text-center text-xs">
+                No matching categories
+              </p>
             ) : (
-              <>
-                <label className="flex cursor-pointer items-center gap-2 rounded p-2 transition-colors hover:bg-muted/50">
+              filteredCategories.map((category) => (
+                <label
+                  key={category.id}
+                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded p-2 transition-colors"
+                >
                   <Checkbox
-                    checked={!categoryId}
-                    onCheckedChange={() => onCategoryChange?.("")}
+                    checked={categoryIds.includes(category.id)}
+                    onCheckedChange={() => toggleCategory(category.id)}
                   />
-                  <span className="text-sm">Uncategorized</span>
+                  <span className="text-sm">{category.name}</span>
                 </label>
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex cursor-pointer items-center gap-2 rounded p-2 transition-colors hover:bg-muted/50"
-                  >
-                    <Checkbox
-                      checked={categoryId === category.id}
-                      onCheckedChange={() => onCategoryChange?.(category.id)}
-                    />
-                    <span className="text-sm">{category.name}</span>
-                  </label>
-                ))}
-              </>
+              ))
             )}
           </div>
+          {selectedCategories.length > 0 && (
+            <div className="border-border flex flex-wrap gap-1 border-t pt-3">
+              {selectedCategories.map((category) => (
+                <Badge
+                  key={category.id}
+                  variant="secondary"
+                  className="text-xs"
+                >
+                  {category.name}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className="hover:text-destructive ml-1"
+                  >
+                    <XIcon className="size-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,7 +246,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
               filteredTags.map((tag) => (
                 <label
                   key={tag.id}
-                  className="flex cursor-pointer items-center gap-2 rounded p-2 transition-colors hover:bg-muted/50"
+                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded p-2 transition-colors"
                 >
                   <Checkbox
                     checked={tagIds.includes(tag.id)}
@@ -228,7 +265,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
                   <button
                     type="button"
                     onClick={() => toggleTag(tag.id)}
-                    className="ml-1 hover:text-destructive"
+                    className="hover:text-destructive ml-1"
                   >
                     <XIcon className="size-3" />
                   </button>

@@ -35,7 +35,6 @@ export const toolsTable = pgTable("tools", {
   costPerRun: decimal("cost_per_run", { precision: 10, scale: 4 }).default("0"),
   markup: decimal("markup", { precision: 5, scale: 4 }).default("0.2000"),
   isPublic: boolean("is_public").default(true),
-  categoryId: text("category_id"),
   apiKeyId: text("api_key_id"),
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -45,13 +44,15 @@ export const toolsTable = pgTable("tools", {
 export const insertToolSchema = createInsertSchema(toolsTable).extend({
   slug: z.string().optional(),
   tagIds: z.array(z.string()).optional(),
+  categoryIds: z.array(z.string()).optional(),
 })
 export const updateToolSchema = createUpdateSchema(toolsTable).extend({
   tagIds: z.array(z.string()).optional(),
+  categoryIds: z.array(z.string()).optional(),
 })
 
 export type SelectTool = typeof toolsTable.$inferSelect & {
-  category: { id: string; name: string; slug: string } | null
+  categories: { id: string; name: string; slug: string }[]
   tags: { id: string; name: string; slug: string }[]
 }
 export type InsertTool = typeof toolsTable.$inferInsert

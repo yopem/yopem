@@ -48,7 +48,7 @@ const toolFormSchema = insertToolSchema
     config: true,
     status: true,
     apiKeyId: true,
-    categoryId: true,
+    categoryIds: true,
     tagIds: true,
   })
   .extend({
@@ -97,7 +97,7 @@ const toolFormSchema = insertToolSchema
         { message: "Select type fields must have at least one option" },
       ),
     apiKeyId: z.string().min(1, "API key is required"),
-    categoryId: z.string().optional(),
+    categoryIds: z.array(z.string()).optional(),
     tagIds: z.array(z.string()).optional(),
   })
 
@@ -155,7 +155,8 @@ const ToolForm = ({
         type: "success",
       })
       queryClient.invalidateQueries({ queryKey: ["categories"] })
-      form.setFieldValue("categoryId", category.id)
+      const currentCategoryIds = form.getFieldValue("categoryIds")
+      form.setFieldValue("categoryIds", [...currentCategoryIds, category.id])
       setNewCategoryName("")
       setNewCategoryDescription("")
       setNewCategoryDialogOpen(false)
@@ -239,7 +240,7 @@ const ToolForm = ({
       markup: 0.2,
       apiKeyId: "",
       apiKeyError: "",
-      categoryId: "",
+      categoryIds: [] as string[],
       tagIds: [] as string[],
     },
     onSubmit: ({ value }) => {
@@ -266,7 +267,8 @@ const ToolForm = ({
         },
         status: "draft" as const,
         apiKeyId: value.apiKeyId,
-        ...(value.categoryId && { categoryId: value.categoryId }),
+        ...(value.categoryIds &&
+          value.categoryIds.length > 0 && { categoryIds: value.categoryIds }),
         ...(value.tagIds &&
           value.tagIds.length > 0 && { tagIds: value.tagIds }),
       }
@@ -316,7 +318,10 @@ const ToolForm = ({
         },
         status: "draft" as const,
         apiKeyId: formData.apiKeyId,
-        ...(formData.categoryId && { categoryId: formData.categoryId }),
+        ...(formData.categoryIds &&
+          formData.categoryIds.length > 0 && {
+            categoryIds: formData.categoryIds,
+          }),
         ...(formData.tagIds &&
           formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
       }
@@ -393,8 +398,15 @@ const ToolForm = ({
         form.setFieldValue("apiKeyId", initialData.apiKeyId)
       }
 
-      if (initialData.categoryId) {
-        form.setFieldValue("categoryId", initialData.categoryId)
+      if (
+        "categories" in initialData &&
+        Array.isArray(initialData.categories) &&
+        initialData.categories.length > 0
+      ) {
+        form.setFieldValue(
+          "categoryIds",
+          initialData.categories.map((cat: { id: string }) => cat.id),
+        )
       }
 
       if (
@@ -629,7 +641,7 @@ const ToolForm = ({
           markup: state.values.markup,
           apiKeyId: state.values.apiKeyId,
           apiKeyError: state.values.apiKeyError,
-          categoryId: state.values.categoryId,
+          categoryIds: state.values.categoryIds,
           tagIds: state.values.tagIds,
         })}
       >
@@ -642,7 +654,7 @@ const ToolForm = ({
           markup,
           apiKeyId,
           apiKeyError,
-          categoryId,
+          categoryIds,
           tagIds,
         }) => (
           <ConfigurationPanel
@@ -657,7 +669,7 @@ const ToolForm = ({
               apiKeyError,
               modelOptions: availableModels,
               availableApiKeys: safeApiKeys,
-              categoryId,
+              categoryIds,
               tagIds,
               categories,
               tags,
@@ -678,8 +690,8 @@ const ToolForm = ({
                 form.setFieldValue("apiKeyId", value)
                 form.setFieldValue("apiKeyError", "")
               },
-              onCategoryChange: (value) =>
-                form.setFieldValue("categoryId", value),
+              onCategoriesChange: (value) =>
+                form.setFieldValue("categoryIds", value),
               onTagsChange: (value) => form.setFieldValue("tagIds", value),
               onAddNewCategory: () => setNewCategoryDialogOpen(true),
               onAddNewTag: () => setNewTagDialogOpen(true),
@@ -688,7 +700,10 @@ const ToolForm = ({
         )}
       </form.Subscribe>
 
-      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+      <Dialog
+        open={newCategoryDialogOpen}
+        onOpenChange={setNewCategoryDialogOpen}
+      >
         <DialogPopup>
           <div className="flex flex-col gap-4 p-6">
             <div>
@@ -729,7 +744,9 @@ const ToolForm = ({
               <Button
                 type="button"
                 onClick={() => createCategoryMutation.mutate()}
-                disabled={!newCategoryName.trim() || createCategoryMutation.isPending}
+                disabled={
+                  !newCategoryName.trim() || createCategoryMutation.isPending
+                }
               >
                 {createCategoryMutation.isPending ? "Creating..." : "Create"}
               </Button>
