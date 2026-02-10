@@ -10,18 +10,10 @@ import ToolCard from "@/components/marketplace/tool-card"
 import { Button } from "@/components/ui/button"
 import { clientApi } from "@/lib/orpc/client"
 
-interface Tool {
-  id: string
-  name: string
-  description: string | null
-  status: "draft" | "active" | "archived"
-  costPerRun: string | null
-  categoryId: string | null
-  createdAt: Date | null
-}
-
 interface MarketplaceGridProps {
-  initialTools?: Tool[]
+  initialTools?: Awaited<
+    ReturnType<typeof clientApi.tools.list>
+  >["tools"]
   categoryId?: string
   priceFilter?: string
   status?: string
@@ -52,13 +44,15 @@ const MarketplaceGrid = ({
       },
       initialPageParam: undefined as string | undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      initialData: {
-        pages: [{ tools: initialTools, nextCursor: undefined }],
-        pageParams: [undefined],
-      },
+      ...(initialTools.length > 0 && {
+        initialData: {
+          pages: [{ tools: initialTools, nextCursor: undefined }],
+          pageParams: [undefined],
+        },
+      }),
     })
 
-  const tools = data.pages.flatMap((page) => page.tools)
+  const tools = data?.pages.flatMap((page) => page.tools) ?? []
 
   const handleSearch = (query: string) => {
     setSearch(query)

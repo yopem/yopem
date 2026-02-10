@@ -1,7 +1,15 @@
-import { asc } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
+import { z } from "zod"
 
-import { publicProcedure } from "@/lib/api/orpc"
-import { categoriesTable } from "@/lib/db/schema"
+import { adminProcedure, publicProcedure } from "@/lib/api/orpc"
+import { categoriesTable, insertCategorySchema } from "@/lib/db/schema"
+
+const createSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
 
 export const categoriesRouter = {
   list: publicProcedure.handler(async ({ context }) => {
@@ -17,4 +25,59 @@ export const categoriesRouter = {
 
     return categories
   }),
+
+  create: adminProcedure
+    .input(
+      insertCategorySchema.pick({ name: true, description: true }).extend({
+        name: z.string().min(1, "Category name is required").trim(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const slug = createSlug(input.name)
+
+      const [category] = await context.db
+        .insert(categoriesTable)
+        .values({
+          name: input.name,
+          slug,
+          description: input.description,
+        })
+        .returning()
+
+      return category
+    }),
+
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1, "Category name is required").trim(),
+        description: z.string().optional(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const slug = createSlug(input.name)
+
+      const [category] = await context.db
+        .update(categoriesTable)
+        .set({
+          name: input.name,
+          slug,
+          description: input.description,
+        })
+        .where(eq(categoriesTable.id, input.id))
+        .returning()
+
+      return category
+    }),
+
+  delete: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ context, input }) => {
+      await context.db
+        .delete(categoriesTable)
+        .where(eq(categoriesTable.id, input.id))
+
+      return { success: true }
+    }),
 }

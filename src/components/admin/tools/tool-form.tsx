@@ -1,6 +1,7 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   useEffect,
   useEffectEvent,
@@ -13,6 +14,7 @@ import {
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Combobox,
   ComboboxEmpty,
@@ -21,6 +23,7 @@ import {
   ComboboxList,
   ComboboxPopup,
 } from "@/components/ui/combobox"
+import { Dialog, DialogPopup } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -30,6 +33,7 @@ import { useAvailableModels } from "@/hooks/use-available-models"
 import { useCategories } from "@/hooks/use-categories"
 import { useTags } from "@/hooks/use-tags"
 import { insertToolSchema, type SelectTool } from "@/lib/db/schema"
+import { queryApi } from "@/lib/orpc/query"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 import {
   getProviderMismatchMessage,
@@ -133,6 +137,7 @@ const ToolForm = ({
   apiKeys,
   ref,
 }: ToolFormProps) => {
+  const queryClient = useQueryClient()
   const safeApiKeys = apiKeys ?? EMPTY_API_KEYS
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
@@ -140,6 +145,66 @@ const ToolForm = ({
   const { data: categoriesData } = useCategories()
   const { data: tagsData } = useTags()
   const [tagSearchQuery, setTagSearchQuery] = useState("")
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false)
+  const [newTagDialogOpen, setNewTagDialogOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [newCategoryDescription, setNewCategoryDescription] = useState("")
+  const [newTagName, setNewTagName] = useState("")
+
+  const createCategoryMutation = useMutation({
+    mutationFn: async () => {
+      return await queryApi.categories.create.call({
+        name: newCategoryName,
+        description: newCategoryDescription || undefined,
+      })
+    },
+    onSuccess: (category) => {
+      toastManager.add({
+        title: "Category created",
+        description: `${newCategoryName} has been created successfully.`,
+        type: "success",
+      })
+      queryClient.invalidateQueries({ queryKey: ["categories"] })
+      form.setFieldValue("categoryId", category.id)
+      setNewCategoryName("")
+      setNewCategoryDescription("")
+      setNewCategoryDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toastManager.add({
+        title: "Error creating category",
+        description: error.message,
+        type: "error",
+      })
+    },
+  })
+
+  const createTagMutation = useMutation({
+    mutationFn: async () => {
+      return await queryApi.tags.create.call({
+        name: newTagName,
+      })
+    },
+    onSuccess: (tag) => {
+      toastManager.add({
+        title: "Tag created",
+        description: `${newTagName} has been created successfully.`,
+        type: "success",
+      })
+      queryClient.invalidateQueries({ queryKey: ["tags"] })
+      const currentTagIds = form.getFieldValue("tagIds")
+      form.setFieldValue("tagIds", [...currentTagIds, tag.id])
+      setNewTagName("")
+      setNewTagDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toastManager.add({
+        title: "Error creating tag",
+        description: error.message,
+        type: "error",
+      })
+    },
+  })
 
   const availableModels = useMemo(() => {
     if (!availableModelsData || availableModelsData.length === 0) {
@@ -527,7 +592,18 @@ const ToolForm = ({
 
               return (
                 <Field>
-                  <FieldLabel>Category</FieldLabel>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel>Category</FieldLabel>
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      onClick={() => setNewCategoryDialogOpen(true)}
+                      className="h-auto p-0 text-xs"
+                    >
+                      + Add New Category
+                    </Button>
+                  </div>
                   <Combobox
                     value={selectedCategory}
                     items={allCategories}
@@ -563,7 +639,18 @@ const ToolForm = ({
           <form.Field name="tagIds">
             {(field) => (
               <Field>
-                <FieldLabel>Tags</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel>Tags</FieldLabel>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={() => setNewTagDialogOpen(true)}
+                    className="h-auto p-0 text-xs"
+                  >
+                    + Add New Tag
+                  </Button>
+                </div>
                 <div className="flex flex-col gap-2">
                   <Input
                     value={tagSearchQuery}
@@ -745,6 +832,95 @@ const ToolForm = ({
           />
         )}
       </form.Subscribe>
+
+      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+        <DialogPopup>
+          <div className="flex flex-col gap-4 p-6">
+            <div>
+              <h2 className="text-lg font-semibold">Create New Category</h2>
+              <p className="text-muted-foreground text-sm">
+                Add a new category to organize your tools
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel>Name</FieldLabel>
+                <Input
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Enter category name"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Description</FieldLabel>
+                <Textarea
+                  value={newCategoryDescription}
+                  onChange={(e) => setNewCategoryDescription(e.target.value)}
+                  placeholder="Enter category description (optional)"
+                  rows={3}
+                />
+              </Field>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNewCategoryDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => createCategoryMutation.mutate()}
+                disabled={!newCategoryName.trim() || createCategoryMutation.isPending}
+              >
+                {createCategoryMutation.isPending ? "Creating..." : "Create"}
+              </Button>
+            </div>
+          </div>
+        </DialogPopup>
+      </Dialog>
+
+      <Dialog open={newTagDialogOpen} onOpenChange={setNewTagDialogOpen}>
+        <DialogPopup>
+          <div className="flex flex-col gap-4 p-6">
+            <div>
+              <h2 className="text-lg font-semibold">Create New Tag</h2>
+              <p className="text-muted-foreground text-sm">
+                Add a new tag to label your tools
+              </p>
+            </div>
+
+            <Field>
+              <FieldLabel>Name</FieldLabel>
+              <Input
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                placeholder="Enter tag name"
+              />
+            </Field>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNewTagDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => createTagMutation.mutate()}
+                disabled={!newTagName.trim() || createTagMutation.isPending}
+              >
+                {createTagMutation.isPending ? "Creating..." : "Create"}
+              </Button>
+            </div>
+          </div>
+        </DialogPopup>
+      </Dialog>
     </div>
   )
 }

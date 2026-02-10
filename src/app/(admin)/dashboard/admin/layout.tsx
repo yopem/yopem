@@ -3,6 +3,7 @@ import {
   BotIcon,
   LayoutDashboardIcon,
   SettingsIcon,
+  TagsIcon,
 } from "lucide-react"
 import { redirect } from "next/navigation"
 import { type ReactNode } from "react"
@@ -31,6 +32,11 @@ export default async function AdminDashboardLayout({
       icon: <BotIcon className="size-4.5" />,
       label: "Tools",
       href: "/dashboard/admin/tools",
+    },
+    {
+      icon: <TagsIcon className="size-4.5" />,
+      label: "Categories & Tags",
+      href: "/dashboard/admin/categories-tags",
     },
     {
       icon: <ActivityIcon className="size-4.5" />,

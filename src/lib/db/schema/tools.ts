@@ -51,7 +51,7 @@ export const updateToolSchema = createUpdateSchema(toolsTable).extend({
 })
 
 export type SelectTool = typeof toolsTable.$inferSelect & {
-  category?: { id: string; name: string; slug: string } | null
-  tags?: { id: string; name: string; slug: string }[]
+  category: { id: string; name: string; slug: string } | null
+  tags: { id: string; name: string; slug: string }[]
 }
 export type InsertTool = typeof toolsTable.$inferInsert
