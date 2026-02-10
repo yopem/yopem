@@ -2,7 +2,11 @@ import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { executeAITool } from "@/lib/ai/executor"
-import { protectedProcedure, publicProcedure } from "@/lib/api/orpc"
+import {
+  adminProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "@/lib/api/orpc"
 import {
   adminSettingsTable,
   categoriesTable,
@@ -281,7 +285,7 @@ export const toolsRouter = {
       }
     }),
 
-  executePreview: protectedProcedure
+  executePreview: adminProcedure
     .input(
       z.object({
         systemRole: z.string(),
@@ -395,7 +399,7 @@ export const toolsRouter = {
       }
     }),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
       const id = createCustomId()
@@ -409,7 +413,7 @@ export const toolsRouter = {
       return { id }
     }),
 
-  update: protectedProcedure
+  update: adminProcedure
     .input(updateToolSchema)
     .handler(async ({ context, input }) => {
       if (!input.id) {
@@ -436,14 +440,14 @@ export const toolsRouter = {
       return { success: true }
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       await context.db.delete(toolsTable).where(eq(toolsTable.id, input.id))
       return { success: true }
     }),
 
-  duplicate: protectedProcedure
+  duplicate: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       const [tool] = await context.db
@@ -478,7 +482,7 @@ export const toolsRouter = {
       return { id: newId }
     }),
 
-  bulkUpdateStatus: protectedProcedure
+  bulkUpdateStatus: adminProcedure
     .input(
       z.object({
         ids: z.array(z.string()).min(1),
