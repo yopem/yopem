@@ -1,7 +1,6 @@
-import { ArrowRightIcon } from "lucide-react"
+import { ArrowRight as ArrowRightIcon } from "lucide-react"
 
 import Link from "@/components/link"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -18,28 +17,41 @@ interface ToolCardProps {
   categoryId: string | null
 }
 
-function ToolCard({ id, name, description, costPerRun }: ToolCardProps) {
+const ToolCard = ({ id, name, description, costPerRun }: ToolCardProps) => {
+  const isFree = Number(costPerRun ?? 0) === 0
+
   return (
-    <Card className="flex flex-col transition-all hover:shadow-md">
-      <CardHeader>
-        <CardTitle className="line-clamp-1 text-lg">{name}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <p className="text-muted-foreground line-clamp-2 text-sm">
-          {description ?? "No description available"}
-        </p>
-      </CardContent>
-      <CardFooter className="flex items-center justify-between">
-        <span className="text-muted-foreground text-xs">
-          {Number(costPerRun ?? 0) > 0 ? `${costPerRun} credits/run` : "Free"}
-        </span>
-        <Link href={`/marketplace/tools/${id}`}>
-          <Button variant="ghost" size="sm">
-            View <ArrowRightIcon className="ml-1 size-3" />
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
+    <Link href={`/marketplace/tools/${id}`} className="group block">
+      <Card className="border-border bg-card hover:border-foreground/20 hover:bg-accent/50 flex h-full cursor-pointer flex-col transition-colors duration-200">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="line-clamp-1 text-lg font-semibold">
+              {name}
+            </CardTitle>
+            <ArrowRightIcon className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
+          </div>
+        </CardHeader>
+
+        <CardContent className="flex-1 pb-3">
+          <p className="text-muted-foreground line-clamp-2 text-sm">
+            {description ?? "No description available"}
+          </p>
+        </CardContent>
+
+        <CardFooter className="border-border/50 border-t pt-3">
+          <div className="flex w-full items-center justify-between">
+            <span
+              className={`text-xs font-medium ${isFree ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              {isFree ? "Free" : `${costPerRun} credits/run`}
+            </span>
+            <span className="text-primary text-xs font-medium transition-colors duration-200">
+              View Details
+            </span>
+          </div>
+        </CardFooter>
+      </Card>
+    </Link>
   )
 }
 

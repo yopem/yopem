@@ -1,6 +1,6 @@
 "use client"
 
-import { SearchIcon } from "lucide-react"
+import { Search as SearchIcon, X as XIcon } from "lucide-react"
 import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ interface SearchBarProps {
   defaultValue?: string
 }
 
-function SearchBar({ onSearch, defaultValue = "" }: SearchBarProps) {
+const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
   const [query, setQuery] = useState(defaultValue)
 
   const handleSubmit = (e: FormEvent) => {
@@ -19,23 +19,42 @@ function SearchBar({ onSearch, defaultValue = "" }: SearchBarProps) {
     onSearch(query)
   }
 
+  const handleClear = () => {
+    setQuery("")
+    onSearch("")
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="relative flex w-full max-w-md">
-      <Input
-        type="search"
-        placeholder="Search tools..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="pr-10"
-      />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        className="absolute right-0"
-      >
-        <SearchIcon className="size-4" />
-      </Button>
+    <form onSubmit={handleSubmit} className="relative w-full">
+      <div className="relative flex items-stretch gap-2">
+        <div className="relative flex-1">
+          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2" />
+          <Input
+            type="search"
+            placeholder="Search tools by name or description..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search marketplace tools"
+            className="focus:border-foreground/20 placeholder:text-muted-foreground/70 h-11 px-10 text-sm transition-colors duration-200 [&_input]:h-full [&_input]:py-0"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 z-10 -translate-y-1/2 transition-colors duration-200"
+            >
+              <XIcon className="size-4" />
+              <span className="sr-only">Clear search</span>
+            </button>
+          )}
+        </div>
+        <Button
+          type="submit"
+          className="flex h-11 shrink-0 items-center justify-center px-6 text-sm font-medium transition-colors duration-200 sm:h-11"
+        >
+          Search
+        </Button>
+      </div>
     </form>
   )
 }

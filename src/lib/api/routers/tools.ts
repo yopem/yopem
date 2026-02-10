@@ -31,6 +31,7 @@ export const toolsRouter = {
           search: z.string().optional(),
           categoryId: z.string().optional(),
           status: z.enum(["draft", "active", "archived", "all"]).optional(),
+          priceFilter: z.enum(["all", "free", "paid"]).optional(),
         })
         .optional(),
     )
@@ -52,6 +53,12 @@ export const toolsRouter = {
         conditions.push(
           sql`(${ilike(toolsTable.name, `%${input.search}%`).getSQL()} OR ${ilike(toolsTable.description, `%${input.search}%`).getSQL()})`,
         )
+      }
+
+      if (input?.priceFilter === "free") {
+        conditions.push(eq(toolsTable.costPerRun, "0"))
+      } else if (input?.priceFilter === "paid") {
+        conditions.push(sql`${toolsTable.costPerRun} > 0`)
       }
 
       const tools = await context.db

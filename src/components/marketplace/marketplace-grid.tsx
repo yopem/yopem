@@ -1,19 +1,13 @@
 "use client"
 
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { ArrowRightIcon, SearchIcon } from "lucide-react"
+import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { memo, useState, type FormEvent } from "react"
+import { useState } from "react"
 
+import SearchBar from "@/components/marketplace/search-bar"
+import ToolCard from "@/components/marketplace/tool-card"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { clientApi } from "@/lib/orpc/client"
 
 interface Tool {
@@ -28,80 +22,29 @@ interface Tool {
 
 interface MarketplaceGridProps {
   initialTools?: Tool[]
+  categoryId?: string
+  priceFilter?: string
+  status?: string
 }
 
-const ToolCard = memo(({ id, name, description, costPerRun }: Tool) => {
-  return (
-    <Card className="flex flex-col transition-all hover:shadow-md">
-      <CardHeader>
-        <CardTitle className="line-clamp-1 text-lg">{name}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <p className="text-muted-foreground line-clamp-2 text-sm">
-          {description ?? "No description available"}
-        </p>
-      </CardContent>
-      <CardFooter className="flex items-center justify-between">
-        <span className="text-muted-foreground text-xs">
-          {Number(costPerRun ?? 0) > 0 ? `${costPerRun} credits/run` : "Free"}
-        </span>
-        <Button variant="ghost" size="sm">
-          <a href={`/marketplace/tools/${id}`} className="flex items-center">
-            View <ArrowRightIcon className="ml-1 size-3" />
-          </a>
-        </Button>
-      </CardFooter>
-    </Card>
-  )
-})
-
-const SearchBar = memo(
-  ({
-    onSearch,
-    defaultValue = "",
-  }: {
-    onSearch: (query: string) => void
-    defaultValue?: string
-  }) => {
-    const [query, setQuery] = useState(defaultValue)
-
-    const handleSubmit = (e: FormEvent) => {
-      e.preventDefault()
-      onSearch(query)
-    }
-
-    return (
-      <form onSubmit={handleSubmit} className="relative flex w-full max-w-md">
-        <Input
-          type="search"
-          placeholder="Search tools..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pr-10"
-        />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="icon"
-          className="absolute right-0"
-        >
-          <SearchIcon className="size-4" />
-        </Button>
-      </form>
-    )
-  },
-)
-
-function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
+const MarketplaceGrid = ({
+  initialTools = [],
+  categoryId,
+  priceFilter = "all",
+  status = "active",
+}: MarketplaceGridProps) => {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
-      queryKey: ["marketplace-tools", search],
+      queryKey: ["marketplace-tools", search, categoryId, status, priceFilter],
       queryFn: async ({ pageParam }) => {
         const result = await clientApi.tools.list({
           search,
+          categoryId,
+          status: status as "draft" | "active" | "archived" | "all",
+          priceFilter: priceFilter as "all" | "free" | "paid",
           cursor: pageParam,
           limit: 20,
         })
@@ -123,34 +66,64 @@ function MarketplaceGrid({ initialTools = [] }: MarketplaceGridProps) {
 
   return (
     <div className="space-y-6">
-      <SearchBar onSearch={handleSearch} defaultValue={search} />
+      <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1">
+          <SearchBar onSearch={handleSearch} defaultValue={search} />
+        </div>
+        <div className="text-muted-foreground text-sm whitespace-nowrap">
+          {!isLoading && (
+            <span>
+              {tools.length} {tools.length === 1 ? "tool" : "tools"}
+            </span>
+          )}
+        </div>
+      </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-muted h-40 animate-pulse rounded-lg" />
+            <div
+              key={i}
+              className="border-border bg-muted/50 h-48 animate-pulse rounded-lg border"
+            />
           ))}
         </div>
       ) : tools.length === 0 ? (
-        <div className="text-muted-foreground py-12 text-center">
-          No tools found. Try a different search.
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="bg-muted mb-4 rounded-full p-6">
+            <PackageIcon className="text-muted-foreground size-8" />
+          </div>
+          <h3 className="mb-1 text-lg font-semibold">No tools found</h3>
+          <p className="text-muted-foreground max-w-sm text-sm">
+            {search
+              ? "Try adjusting your search terms or clear the search to see all tools."
+              : "No tools are currently available in the marketplace."}
+          </p>
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {tools.map((tool) => (
               <ToolCard key={tool.id} {...tool} />
             ))}
           </div>
 
           {hasNextPage && (
-            <div className="flex justify-center">
+            <div className="flex justify-center pt-4">
               <Button
                 variant="outline"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
+                className="min-w-32 transition-colors duration-200"
               >
-                {isFetchingNextPage ? "Loading..." : "Load More"}
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2Icon className="mr-2 size-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
               </Button>
             </div>
           )}
