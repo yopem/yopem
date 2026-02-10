@@ -44,8 +44,14 @@ export const toolsTable = pgTable("tools", {
 
 export const insertToolSchema = createInsertSchema(toolsTable).extend({
   slug: z.string().optional(),
+  tagIds: z.array(z.string()).optional(),
 })
-export const updateToolSchema = createUpdateSchema(toolsTable)
+export const updateToolSchema = createUpdateSchema(toolsTable).extend({
+  tagIds: z.array(z.string()).optional(),
+})
 
-export type SelectTool = typeof toolsTable.$inferSelect
+export type SelectTool = typeof toolsTable.$inferSelect & {
+  category?: { id: string; name: string; slug: string } | null
+  tags?: { id: string; name: string; slug: string }[]
+}
 export type InsertTool = typeof toolsTable.$inferInsert

@@ -15,6 +15,7 @@ import {
   tagsTable,
   toolRunsTable,
   toolsTable,
+  toolTagsTable,
   updateToolSchema,
   userCreditsTable,
 } from "@/lib/db/schema"
@@ -73,8 +74,17 @@ export const toolsRouter = {
           costPerRun: toolsTable.costPerRun,
           categoryId: toolsTable.categoryId,
           createdAt: toolsTable.createdAt,
+          category: {
+            id: categoriesTable.id,
+            name: categoriesTable.name,
+            slug: categoriesTable.slug,
+          },
         })
         .from(toolsTable)
+        .leftJoin(
+          categoriesTable,
+          eq(toolsTable.categoryId, categoriesTable.id),
+        )
         .where(and(...conditions))
         .orderBy(desc(toolsTable.createdAt))
         .limit(limit + 1)
@@ -100,7 +110,35 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
-      return tool
+      let category = null
+      if (tool.categoryId) {
+        const [cat] = await context.db
+          .select({
+            id: categoriesTable.id,
+            name: categoriesTable.name,
+            slug: categoriesTable.slug,
+          })
+          .from(categoriesTable)
+          .where(eq(categoriesTable.id, tool.categoryId))
+
+        category = cat ?? null
+      }
+
+      const toolTags = await context.db
+        .select({
+          id: tagsTable.id,
+          name: tagsTable.name,
+          slug: tagsTable.slug,
+        })
+        .from(toolTagsTable)
+        .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
+        .where(eq(toolTagsTable.toolId, input.id))
+
+      return {
+        ...tool,
+        category,
+        tags: toolTags,
+      }
     }),
 
   getPopular: publicProcedure.handler(async ({ context }) => {
@@ -402,14 +440,48 @@ export const toolsRouter = {
   create: adminProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
+      const { tagIds, ...toolData } = input
+
+      if (toolData.categoryId) {
+        const [category] = await context.db
+          .select()
+          .from(categoriesTable)
+          .where(eq(categoriesTable.id, toolData.categoryId))
+
+        if (!category) {
+          throw new Error("Invalid category ID")
+        }
+      }
+
+      if (tagIds && tagIds.length > 0) {
+        const existingTags = await context.db
+          .select()
+          .from(tagsTable)
+          .where(inArray(tagsTable.id, tagIds))
+
+        if (existingTags.length !== tagIds.length) {
+          throw new Error("One or more tag IDs are invalid")
+        }
+      }
+
       const id = createCustomId()
-      const slug = await generateUniqueToolSlug(input.name)
+      const slug = await generateUniqueToolSlug(toolData.name)
       await context.db.insert(toolsTable).values({
-        ...input,
+        ...toolData,
         id,
         slug,
         createdBy: context.session.id,
       })
+
+      if (tagIds && tagIds.length > 0) {
+        await context.db.insert(toolTagsTable).values(
+          tagIds.map((tagId) => ({
+            toolId: id,
+            tagId,
+          })),
+        )
+      }
+
       return { id }
     }),
 
@@ -419,7 +491,29 @@ export const toolsRouter = {
       if (!input.id) {
         throw new Error("Tool ID is required")
       }
-      const { id, ...data } = input
+      const { id, tagIds, ...data } = input
+
+      if (data.categoryId) {
+        const [category] = await context.db
+          .select()
+          .from(categoriesTable)
+          .where(eq(categoriesTable.id, data.categoryId))
+
+        if (!category) {
+          throw new Error("Invalid category ID")
+        }
+      }
+
+      if (tagIds && tagIds.length > 0) {
+        const existingTags = await context.db
+          .select()
+          .from(tagsTable)
+          .where(inArray(tagsTable.id, tagIds))
+
+        if (existingTags.length !== tagIds.length) {
+          throw new Error("One or more tag IDs are invalid")
+        }
+      }
 
       let slug: string | undefined
       if (data.name) {
@@ -437,6 +531,20 @@ export const toolsRouter = {
         .update(toolsTable)
         .set({ ...data, ...(slug ? { slug } : {}), updatedAt: new Date() })
         .where(eq(toolsTable.id, id))
+
+      if (tagIds !== undefined) {
+        await context.db.delete(toolTagsTable).where(eq(toolTagsTable.toolId, id))
+
+        if (tagIds.length > 0) {
+          await context.db.insert(toolTagsTable).values(
+            tagIds.map((tagId) => ({
+              toolId: id,
+              tagId,
+            })),
+          )
+        }
+      }
+
       return { success: true }
     }),
 

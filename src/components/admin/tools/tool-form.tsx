@@ -7,16 +7,28 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
   type Ref,
 } from "react"
 import { z } from "zod"
 
+import { Badge } from "@/components/ui/badge"
+import {
+  Combobox,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxPopup,
+} from "@/components/ui/combobox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
 import { useAvailableModels } from "@/hooks/use-available-models"
+import { useCategories } from "@/hooks/use-categories"
+import { useTags } from "@/hooks/use-tags"
 import { insertToolSchema, type SelectTool } from "@/lib/db/schema"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 import {
@@ -41,6 +53,8 @@ const toolFormSchema = insertToolSchema
     config: true,
     status: true,
     apiKeyId: true,
+    categoryId: true,
+    tagIds: true,
   })
   .extend({
     name: z.string().min(1, "Tool name is required").trim(),
@@ -88,6 +102,8 @@ const toolFormSchema = insertToolSchema
         { message: "Select type fields must have at least one option" },
       ),
     apiKeyId: z.string().min(1, "API key is required"),
+    categoryId: z.string().optional(),
+    tagIds: z.array(z.string()).optional(),
   })
 
 export type ToolFormData = z.infer<typeof toolFormSchema>
@@ -121,6 +137,9 @@ const ToolForm = ({
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
   const { data: availableModelsData } = useAvailableModels()
+  const { data: categoriesData } = useCategories()
+  const { data: tagsData } = useTags()
+  const [tagSearchQuery, setTagSearchQuery] = useState("")
 
   const availableModels = useMemo(() => {
     if (!availableModelsData || availableModelsData.length === 0) {
@@ -128,6 +147,30 @@ const ToolForm = ({
     }
     return availableModelsData.map((model) => model.id)
   }, [availableModelsData])
+
+  const categories = useMemo(() => {
+    if (!categoriesData || categoriesData.length === 0) {
+      return []
+    }
+    return categoriesData.map((cat) => ({
+      value: cat.id,
+      label: cat.name,
+    }))
+  }, [categoriesData])
+
+  const tags = useMemo(() => {
+    if (!tagsData || tagsData.length === 0) {
+      return []
+    }
+    return tagsData
+  }, [tagsData])
+
+  const filteredTags = useMemo(() => {
+    if (!tagSearchQuery) return tags
+    return tags.filter((tag) =>
+      tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
+    )
+  }, [tags, tagSearchQuery])
 
   const form = useForm({
     defaultValues: {
@@ -151,6 +194,8 @@ const ToolForm = ({
       markup: 0.2,
       apiKeyId: "",
       apiKeyError: "",
+      categoryId: "",
+      tagIds: [] as string[],
     },
     onSubmit: ({ value }) => {
       const formData = {
@@ -176,6 +221,9 @@ const ToolForm = ({
         },
         status: "draft" as const,
         apiKeyId: value.apiKeyId,
+        ...(value.categoryId && { categoryId: value.categoryId }),
+        ...(value.tagIds &&
+          value.tagIds.length > 0 && { tagIds: value.tagIds }),
       }
 
       const result = toolFormSchema.safeParse(formData)
@@ -223,6 +271,9 @@ const ToolForm = ({
         },
         status: "draft" as const,
         apiKeyId: formData.apiKeyId,
+        ...(formData.categoryId && { categoryId: formData.categoryId }),
+        ...(formData.tagIds &&
+          formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
       }
     },
   }))
@@ -295,6 +346,21 @@ const ToolForm = ({
 
       if (initialData.apiKeyId) {
         form.setFieldValue("apiKeyId", initialData.apiKeyId)
+      }
+
+      if (initialData.categoryId) {
+        form.setFieldValue("categoryId", initialData.categoryId)
+      }
+
+      if (
+        "tags" in initialData &&
+        Array.isArray(initialData.tags) &&
+        initialData.tags.length > 0
+      ) {
+        form.setFieldValue(
+          "tagIds",
+          initialData.tags.map((tag: { id: string }) => tag.id),
+        )
       }
     }
   })
@@ -445,6 +511,122 @@ const ToolForm = ({
                   placeholder="Enter tool description"
                   rows={3}
                 />
+              </Field>
+            )}
+          </form.Field>
+
+          <form.Field name="categoryId">
+            {(field) => {
+              const allCategories = [
+                { value: "", label: "No category" },
+                ...categories,
+              ]
+              const selectedCategory =
+                allCategories.find((cat) => cat.value === field.state.value) ??
+                null
+
+              return (
+                <Field>
+                  <FieldLabel>Category</FieldLabel>
+                  <Combobox
+                    value={selectedCategory}
+                    items={allCategories}
+                    onValueChange={(newValue) => {
+                      if (
+                        newValue &&
+                        typeof newValue === "object" &&
+                        "value" in newValue
+                      ) {
+                        field.handleChange(newValue.value)
+                      } else {
+                        field.handleChange("")
+                      }
+                    }}
+                  >
+                    <ComboboxInput placeholder="Select a category" />
+                    <ComboboxPopup>
+                      <ComboboxEmpty>No categories found</ComboboxEmpty>
+                      <ComboboxList>
+                        {(item: { value: string; label: string }) => (
+                          <ComboboxItem key={item.value} value={item}>
+                            {item.label}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxPopup>
+                  </Combobox>
+                </Field>
+              )
+            }}
+          </form.Field>
+
+          <form.Field name="tagIds">
+            {(field) => (
+              <Field>
+                <FieldLabel>Tags</FieldLabel>
+                <div className="flex flex-col gap-2">
+                  <Input
+                    value={tagSearchQuery}
+                    onChange={(e) => setTagSearchQuery(e.target.value)}
+                    placeholder="Search tags..."
+                  />
+                  {tagSearchQuery && filteredTags.length > 0 && (
+                    <div className="bg-muted max-h-40 overflow-y-auto rounded-md border p-2">
+                      <div className="flex flex-wrap gap-1">
+                        {filteredTags.map((tag) => {
+                          const isSelected = field.state.value.includes(tag.id)
+                          return (
+                            <button
+                              key={tag.id}
+                              type="button"
+                              onClick={() => {
+                                if (!isSelected) {
+                                  field.handleChange([
+                                    ...field.state.value,
+                                    tag.id,
+                                  ])
+                                  setTagSearchQuery("")
+                                }
+                              }}
+                              className={`rounded px-2 py-1 text-sm transition-colors ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground cursor-not-allowed opacity-50"
+                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                              }`}
+                              disabled={isSelected}
+                            >
+                              {tag.name}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {field.state.value.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {field.state.value.map((tagId) => {
+                        const tag = tags.find((t) => t.id === tagId)
+                        if (!tag) return null
+                        return (
+                          <Badge key={tagId} variant="secondary">
+                            {tag.name}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.handleChange(
+                                  field.state.value.filter((id) => id !== tagId),
+                                )
+                              }}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </Field>
             )}
           </form.Field>
