@@ -3,13 +3,7 @@ import { z } from "zod"
 
 import { adminProcedure, publicProcedure } from "@/lib/api/orpc"
 import { insertTagSchema, tagsTable } from "@/lib/db/schema"
-
-const createSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-}
+import { generateUniqueTagSlug } from "@/lib/utils/slug"
 
 export const tagsRouter = {
   list: publicProcedure.handler(async ({ context }) => {
@@ -32,7 +26,7 @@ export const tagsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const slug = createSlug(input.name)
+      const slug = await generateUniqueTagSlug(input.name)
 
       const [tag] = await context.db
         .insert(tagsTable)
@@ -53,7 +47,7 @@ export const tagsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const slug = createSlug(input.name)
+      const slug = await generateUniqueTagSlug(input.name, input.id)
 
       const [tag] = await context.db
         .update(tagsTable)

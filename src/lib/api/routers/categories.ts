@@ -3,13 +3,7 @@ import { z } from "zod"
 
 import { adminProcedure, publicProcedure } from "@/lib/api/orpc"
 import { categoriesTable, insertCategorySchema } from "@/lib/db/schema"
-
-const createSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-}
+import { generateUniqueCategorySlug } from "@/lib/utils/slug"
 
 export const categoriesRouter = {
   list: publicProcedure.handler(async ({ context }) => {
@@ -33,7 +27,7 @@ export const categoriesRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const slug = createSlug(input.name)
+      const slug = await generateUniqueCategorySlug(input.name)
 
       const [category] = await context.db
         .insert(categoriesTable)
@@ -56,7 +50,7 @@ export const categoriesRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const slug = createSlug(input.name)
+      const slug = await generateUniqueCategorySlug(input.name, input.id)
 
       const [category] = await context.db
         .update(categoriesTable)

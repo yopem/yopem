@@ -63,3 +63,53 @@ export const generateUniqueToolSlug = async (text: string): Promise<string> => {
 
   return uniqueSlug
 }
+
+export const generateUniqueCategorySlug = async (
+  text: string,
+  excludeId?: string,
+): Promise<string> => {
+  const slug = slugify(text)
+  let uniqueSlug = slug
+  let suffix = 1
+
+  while (true) {
+    const existingCategory = await db.query.categoriesTable.findFirst({
+      where: (category, { eq, and, ne }) =>
+        excludeId
+          ? and(eq(category.slug, uniqueSlug), ne(category.id, excludeId))
+          : eq(category.slug, uniqueSlug),
+    })
+
+    if (!existingCategory) break
+
+    suffix++
+    uniqueSlug = `${slug}-${suffix}`
+  }
+
+  return uniqueSlug
+}
+
+export const generateUniqueTagSlug = async (
+  text: string,
+  excludeId?: string,
+): Promise<string> => {
+  const slug = slugify(text)
+  let uniqueSlug = slug
+  let suffix = 1
+
+  while (true) {
+    const existingTag = await db.query.tagsTable.findFirst({
+      where: (tag, { eq, and, ne }) =>
+        excludeId
+          ? and(eq(tag.slug, uniqueSlug), ne(tag.id, excludeId))
+          : eq(tag.slug, uniqueSlug),
+    })
+
+    if (!existingTag) break
+
+    suffix++
+    uniqueSlug = `${slug}-${suffix}`
+  }
+
+  return uniqueSlug
+}
