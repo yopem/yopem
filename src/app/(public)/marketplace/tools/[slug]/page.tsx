@@ -5,6 +5,8 @@ import { Suspense } from "react"
 
 import Link from "@/components/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ShimmerWrapper } from "@/components/ui/shimmer-wrapper"
+import { Skeleton } from "@/components/ui/skeleton"
 import { siteTitle } from "@/lib/env/client"
 import { serverApi } from "@/lib/orpc/server"
 
@@ -98,7 +100,13 @@ async function ToolData({ slug }: { slug: string }) {
 
       <ToolExecuteForm toolId={tool.id} costPerRun={tool.costPerRun} />
 
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <ShimmerWrapper>
+            <Skeleton className="h-16 w-full" />
+          </ShimmerWrapper>
+        }
+      >
         <UserCredits />
       </Suspense>
     </>
@@ -131,10 +139,12 @@ export default async function ToolDetailPage({
 
       <Suspense
         fallback={
-          <div className="animate-pulse space-y-4">
-            <div className="bg-muted h-8 w-1/3 rounded-sm" />
-            <div className="bg-muted h-32 rounded-sm" />
-          </div>
+          <ShimmerWrapper>
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-1/3" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </ShimmerWrapper>
         }
       >
         <ToolData slug={slug} />

@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import Link from "@/components/link"
 import {
@@ -29,6 +30,7 @@ import {
   MenuPopup,
   MenuTrigger,
 } from "@/components/ui/menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -250,26 +252,17 @@ function ToolsPage() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="bg-muted size-4 animate-pulse rounded-sm" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-muted h-4 w-32 animate-pulse rounded-sm" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-muted h-6 w-20 animate-pulse rounded-full" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-muted h-4 w-24 animate-pulse rounded-sm" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded-sm" />
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              ))
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Shimmer>
+                    <div className="flex flex-col gap-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  </Shimmer>
+                </TableCell>
+              </TableRow>
             ) : tools.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center">

@@ -8,11 +8,13 @@ import {
   TrendingUpIcon,
 } from "lucide-react"
 import { useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -232,22 +234,17 @@ export default function CreditsPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <div className="bg-muted h-4 w-32 animate-pulse rounded-sm" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="bg-muted h-4 w-48 animate-pulse rounded-sm" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="bg-muted h-6 w-20 animate-pulse rounded-full" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded-sm" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <TableRow>
+                  <TableCell colSpan={4}>
+                    <Shimmer>
+                      <div className="flex flex-col gap-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Skeleton key={i} className="h-12 w-full" />
+                        ))}
+                      </div>
+                    </Shimmer>
+                  </TableCell>
+                </TableRow>
               ) : !transactionsData || transactionsData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center">

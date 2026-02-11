@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { useCallback, useRef, useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
@@ -12,6 +13,7 @@ import ToolForm, {
 } from "@/components/admin/tools/tool-form"
 import ToolPreviewSheet from "@/components/admin/tools/tool-preview-sheet"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toastManager } from "@/components/ui/toast"
 import { useApiKeys } from "@/hooks/use-api-keys"
 import { queryApi } from "@/lib/orpc/query"
@@ -185,7 +187,11 @@ function EditToolPage() {
       />
 
       {isLoading ? (
-        <div className="text-muted-foreground p-8">Loading tool data...</div>
+        <Shimmer>
+          <div className="p-8">
+            <Skeleton className="h-96 w-full" />
+          </div>
+        </Shimmer>
       ) : error ? (
         <div className="text-destructive p-8">
           Error loading tool: {error.message}

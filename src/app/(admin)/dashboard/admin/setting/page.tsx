@@ -15,6 +15,7 @@ import {
   TrendingUpIcon,
 } from "lucide-react"
 import { memo, useCallback, useReducer, useState, type ReactNode } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
@@ -343,11 +344,13 @@ export default function AdminSettingsPage() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {statsLoading ? (
-              <>
-                <Skeleton className="h-24" />
-                <Skeleton className="h-24" />
-                <Skeleton className="h-24" />
-              </>
+              <Shimmer>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <Skeleton className="h-24" />
+                  <Skeleton className="h-24" />
+                  <Skeleton className="h-24" />
+                </div>
+              </Shimmer>
             ) : (
               <>
                 <Card>
@@ -409,10 +412,12 @@ export default function AdminSettingsPage() {
 
           <div className="flex flex-col gap-8">
             {keysLoading ? (
-              <>
-                <Skeleton className="h-48" />
-                <Skeleton className="h-48" />
-              </>
+              <Shimmer>
+                <div className="flex flex-col gap-8">
+                  <Skeleton className="h-48" />
+                  <Skeleton className="h-48" />
+                </div>
+              </Shimmer>
             ) : (
               apiKeys?.map((key) => (
                 <ProviderCard

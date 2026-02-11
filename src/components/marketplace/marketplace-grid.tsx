@@ -4,10 +4,12 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import SearchBar from "@/components/marketplace/search-bar"
 import ToolCard from "@/components/marketplace/tool-card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { clientApi } from "@/lib/orpc/client"
 
 interface MarketplaceGridProps {
@@ -82,14 +84,13 @@ const MarketplaceGrid = ({
       </div>
 
       {isLoading ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="border-border bg-muted/50 h-48 animate-pulse rounded-lg border"
-            />
-          ))}
-        </div>
+        <Shimmer>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full" />
+            ))}
+          </div>
+        </Shimmer>
       ) : tools.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="bg-muted mb-4 rounded-full p-6">
