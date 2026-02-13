@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
-import { Shimmer } from "shimmer-from-structure"
 
 import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
@@ -90,60 +89,60 @@ export default function RunsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <Shimmer loading={isLoading}>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="size-4 text-yellow-500" />
-                          <Badge className="bg-yellow-100 text-yellow-800">
-                            Pending
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">Loading...</TableCell>
-                      <TableCell className="text-muted-foreground">-</TableCell>
-                      <TableCell className="text-right">-</TableCell>
-                    </TableRow>
-                  ))
-                ) : runs.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-8 text-center">
-                      <p className="text-muted-foreground">
-                        No tool runs yet. Visit the marketplace to get started!
-                      </p>
-                      <div className="mt-4">
-                        <Link href="/marketplace">
-                          <Button variant="outline">Browse Marketplace</Button>
-                        </Link>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <ClockIcon className="text-muted-foreground size-4" />
+                        <span className="text-muted-foreground text-sm">
+                          Loading...
+                        </span>
                       </div>
                     </TableCell>
+                    <TableCell className="text-muted-foreground font-medium">
+                      Loading...
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">-</TableCell>
+                    <TableCell className="text-muted-foreground text-right">
+                      -
+                    </TableCell>
                   </TableRow>
-                ) : (
-                  runs.map((run) => (
-                    <TableRow key={run.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(run.status)}
-                          {getStatusBadge(run.status)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {run.toolName ?? "Unknown Tool"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDateTime(run.createdAt) || "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {Number(run.cost ?? 0) > 0
-                          ? `${run.cost} credits`
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </Shimmer>
+                ))
+              ) : runs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center">
+                    <p className="text-muted-foreground">
+                      No tool runs yet. Visit the marketplace to get started!
+                    </p>
+                    <div className="mt-4">
+                      <Link href="/marketplace">
+                        <Button variant="outline">Browse Marketplace</Button>
+                      </Link>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                runs.map((run) => (
+                  <TableRow key={run.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(run.status)}
+                        {getStatusBadge(run.status)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {run.toolName ?? "Unknown Tool"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDateTime(run.createdAt) || "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {Number(run.cost ?? 0) > 0 ? `${run.cost} credits` : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -8,7 +8,6 @@ import {
   TrendingUpIcon,
 } from "lucide-react"
 import { useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -232,62 +231,60 @@ export default function CreditsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <Shimmer loading={isLoading}>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-muted-foreground">-</TableCell>
-                      <TableCell>Loading...</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                          Loading
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        -
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : !transactionsData || transactionsData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-8 text-center">
-                      <p className="text-muted-foreground">
-                        No transactions yet
-                      </p>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-muted-foreground">-</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      Loading...
+                    </TableCell>
+                    <TableCell>
+                      <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                        Loading
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right">
+                      -
                     </TableCell>
                   </TableRow>
-                ) : (
-                  transactionsData.map((tx) => (
-                    <TableRow key={tx.id}>
-                      <TableCell className="text-muted-foreground">
-                        {formatDateOnly(tx.createdAt) || "-"}
-                      </TableCell>
-                      <TableCell>{tx.description ?? "-"}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            tx.type === "purchase"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {tx.type === "purchase" ? "Purchase" : "Usage"}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-medium ${
+                ))
+              ) : !transactionsData || transactionsData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center">
+                    <p className="text-muted-foreground">No transactions yet</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                transactionsData.map((tx) => (
+                  <TableRow key={tx.id}>
+                    <TableCell className="text-muted-foreground">
+                      {formatDateOnly(tx.createdAt) || "-"}
+                    </TableCell>
+                    <TableCell>{tx.description ?? "-"}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           tx.type === "purchase"
-                            ? "text-green-600"
-                            : "text-red-600"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {tx.type === "purchase" ? "+" : "-"}
-                        {Number(tx.amount).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </Shimmer>
+                        {tx.type === "purchase" ? "Purchase" : "Usage"}
+                      </span>
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${
+                        tx.type === "purchase"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {tx.type === "purchase" ? "+" : "-"}
+                      {Number(tx.amount).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
