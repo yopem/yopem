@@ -116,7 +116,7 @@ export class R2Storage {
     for (const { signature, ext } of VALID_IMAGE_SIGNATURES) {
       if (this.matchesSignature(buffer, signature)) {
         if (ext === "webp") {
-          const webpCheck = buffer.slice(8, 12).toString("ascii")
+          const webpCheck = buffer.subarray(8, 12).toString("ascii")
           if (webpCheck === "WEBP") {
             return ext
           }
@@ -131,7 +131,7 @@ export class R2Storage {
   private validateVideoMagicBytes(buffer: Buffer): string | null {
     for (const { signature, ext } of VALID_VIDEO_SIGNATURES) {
       if (ext === "mp4") {
-        const ftypCheck = buffer.slice(4, 8).toString("ascii")
+        const ftypCheck = buffer.subarray(4, 8).toString("ascii")
         if (ftypCheck === "ftyp") {
           return ext
         }
