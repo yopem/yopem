@@ -30,7 +30,6 @@ import {
   MenuPopup,
   MenuTrigger,
 } from "@/components/ui/menu"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -251,119 +250,132 @@ function ToolsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6}>
-                  <Shimmer>
-                    <div className="flex flex-col gap-2">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-12 w-full" />
-                      ))}
-                    </div>
-                  </Shimmer>
-                </TableCell>
-              </TableRow>
-            ) : tools.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center">
-                  <p className="text-muted-foreground">No tools found</p>
-                  <Link
-                    href="/dashboard/admin/tools/add"
-                    className="mt-2 inline-block"
-                  >
-                    <Button variant="outline" size="sm">
-                      Create your first tool
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ) : (
-              tools.map((tool) => (
-                <TableRow key={tool.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedToolIds.includes(tool.id)}
-                      onCheckedChange={() => handleToggleTool(tool.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
+            <Shimmer loading={isLoading}>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Checkbox checked={false} />
+                    </TableCell>
+                    <TableCell>Loading...</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                        draft
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">-</TableCell>
+                    <TableCell className="text-muted-foreground text-right">
+                      -
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon-sm">
+                        <MoreHorizontalIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : tools.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8 text-center">
+                    <p className="text-muted-foreground">No tools found</p>
                     <Link
-                      href={`/dashboard/admin/tools/edit/${tool.id}`}
-                      className="font-medium hover:underline"
+                      href="/dashboard/admin/tools/add"
+                      className="mt-2 inline-block"
                     >
-                      {tool.name}
+                      <Button variant="outline" size="sm">
+                        Create your first tool
+                      </Button>
                     </Link>
                   </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        tool.status === "active"
-                          ? `bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
-                          : tool.status === "draft"
-                            ? `bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
-                            : `bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
-                      }`}
-                    >
-                      {tool.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDateOnly(tool.createdAt) || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-right">
-                    -
-                  </TableCell>
-                  <TableCell>
-                    <Menu>
-                      <MenuTrigger
-                        render={
-                          <Button variant="ghost" size="icon-sm">
-                            <MoreHorizontalIcon className="size-4" />
-                          </Button>
-                        }
-                      />
-                      <MenuPopup>
-                        <MenuGroup>
-                          <MenuItem
-                            render={
-                              <Link
-                                href={`/dashboard/admin/tools/edit/${tool.id}`}
-                              >
-                                <PencilIcon className="size-4" />
-                                Edit
-                              </Link>
-                            }
-                          />
-                          <MenuItem
-                            onSelect={() =>
-                              duplicateToolMutation.mutate(tool.id)
-                            }
-                            disabled={duplicateToolMutation.isPending}
-                          >
-                            <CopyIcon className="size-4" />
-                            {duplicateToolMutation.isPending
-                              ? "Duplicating..."
-                              : "Duplicate"}
-                          </MenuItem>
-                          <MenuItem
-                            onSelect={() =>
-                              handleDeleteClick({
-                                id: tool.id,
-                                name: tool.name,
-                              })
-                            }
-                            variant="destructive"
-                          >
-                            <Trash2Icon className="size-4" />
-                            Delete
-                          </MenuItem>
-                        </MenuGroup>
-                      </MenuPopup>
-                    </Menu>
-                  </TableCell>
                 </TableRow>
-              ))
-            )}
+              ) : (
+                tools.map((tool) => (
+                  <TableRow key={tool.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedToolIds.includes(tool.id)}
+                        onCheckedChange={() => handleToggleTool(tool.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/admin/tools/edit/${tool.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {tool.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          tool.status === "active"
+                            ? `bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
+                            : tool.status === "draft"
+                              ? `bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
+                              : `bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
+                        }`}
+                      >
+                        {tool.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDateOnly(tool.createdAt) || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right">
+                      -
+                    </TableCell>
+                    <TableCell>
+                      <Menu>
+                        <MenuTrigger
+                          render={
+                            <Button variant="ghost" size="icon-sm">
+                              <MoreHorizontalIcon className="size-4" />
+                            </Button>
+                          }
+                        />
+                        <MenuPopup>
+                          <MenuGroup>
+                            <MenuItem
+                              render={
+                                <Link
+                                  href={`/dashboard/admin/tools/edit/${tool.id}`}
+                                >
+                                  <PencilIcon className="size-4" />
+                                  Edit
+                                </Link>
+                              }
+                            />
+                            <MenuItem
+                              onSelect={() =>
+                                duplicateToolMutation.mutate(tool.id)
+                              }
+                              disabled={duplicateToolMutation.isPending}
+                            >
+                              <CopyIcon className="size-4" />
+                              {duplicateToolMutation.isPending
+                                ? "Duplicating..."
+                                : "Duplicate"}
+                            </MenuItem>
+                            <MenuItem
+                              onSelect={() =>
+                                handleDeleteClick({
+                                  id: tool.id,
+                                  name: tool.name,
+                                })
+                              }
+                              variant="destructive"
+                            >
+                              <Trash2Icon className="size-4" />
+                              Delete
+                            </MenuItem>
+                          </MenuGroup>
+                        </MenuPopup>
+                      </Menu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </Shimmer>
           </TableBody>
         </Table>
       </div>

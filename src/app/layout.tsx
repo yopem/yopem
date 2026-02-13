@@ -6,7 +6,6 @@ import { Suspense, type ReactNode } from "react"
 
 import Providers from "@/components/providers"
 import Scripts from "@/components/scripts"
-import { ShimmerWrapper } from "@/components/ui/shimmer-wrapper"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   logoOgHeight,
@@ -130,12 +129,10 @@ export default function RootLayout({
         <Providers>
           <Suspense
             fallback={
-              <ShimmerWrapper>
-                <div className="flex flex-col gap-4 p-8">
-                  <Skeleton className="h-8 w-64" />
-                  <Skeleton className="h-96 w-full" />
-                </div>
-              </ShimmerWrapper>
+              <div className="flex flex-col gap-4 p-8">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-96 w-full" />
+              </div>
             }
           >
             {children}

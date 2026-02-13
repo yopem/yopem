@@ -42,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
 import {
@@ -342,95 +341,161 @@ export default function AdminSettingsPage() {
             }
           />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {statsLoading ? (
-              <Shimmer>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <Skeleton className="h-24" />
-                  <Skeleton className="h-24" />
-                  <Skeleton className="h-24" />
-                </div>
-              </Shimmer>
-            ) : (
-              <>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-muted-foreground text-sm">
-                          Total Requests
-                        </p>
-                        <p className="text-foreground text-2xl font-bold">
-                          {(stats?.totalRequests ?? 0).toLocaleString()}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          <TrendingUpIcon className="mr-1 inline size-3" />
-                          +12.5% from last month
-                        </p>
+          <Shimmer loading={statsLoading}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {statsLoading ? (
+                <>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Total Requests
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            0
+                          </p>
+                        </div>
+                        <BarChartIcon className="text-muted-foreground size-10" />
                       </div>
-                      <BarChartIcon className="text-muted-foreground size-10" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-muted-foreground text-sm">
-                          Active Keys
-                        </p>
-                        <p className="text-foreground text-2xl font-bold">
-                          {stats?.activeKeys ?? 0}
-                        </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Active Keys
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            0
+                          </p>
+                        </div>
+                        <KeyIcon className="text-muted-foreground size-10" />
                       </div>
-                      <KeyIcon className="text-muted-foreground size-10" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-muted-foreground text-sm">
-                          Monthly Cost
-                        </p>
-                        <p className="text-foreground text-2xl font-bold">
-                          ${(stats?.monthlyCost ?? 0).toLocaleString()}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          <TrendingDownIcon className="mr-1 inline size-3" />
-                          {stats?.costChange ?? 0}% cost efficiency
-                        </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Monthly Cost
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            $0
+                          </p>
+                        </div>
+                        <DollarSignIcon className="text-muted-foreground size-10" />
                       </div>
-                      <DollarSignIcon className="text-muted-foreground size-10" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Total Requests
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            {(stats?.totalRequests ?? 0).toLocaleString()}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            <TrendingUpIcon className="mr-1 inline size-3" />
+                            +12.5% from last month
+                          </p>
+                        </div>
+                        <BarChartIcon className="text-muted-foreground size-10" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Active Keys
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            {stats?.activeKeys ?? 0}
+                          </p>
+                        </div>
+                        <KeyIcon className="text-muted-foreground size-10" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-muted-foreground text-sm">
+                            Monthly Cost
+                          </p>
+                          <p className="text-foreground text-2xl font-bold">
+                            ${(stats?.monthlyCost ?? 0).toLocaleString()}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            <TrendingDownIcon className="mr-1 inline size-3" />
+                            {stats?.costChange ?? 0}% cost efficiency
+                          </p>
+                        </div>
+                        <DollarSignIcon className="text-muted-foreground size-10" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          </Shimmer>
 
           <div className="flex flex-col gap-8">
-            {keysLoading ? (
-              <Shimmer>
-                <div className="flex flex-col gap-8">
-                  <Skeleton className="h-48" />
-                  <Skeleton className="h-48" />
-                </div>
-              </Shimmer>
-            ) : (
-              apiKeys?.map((key) => (
-                <ProviderCard
-                  key={key.id}
-                  apiKey={key}
-                  isVisible={visibleKeys.has(key.id)}
-                  onToggleVisibility={toggleKeyVisibility}
-                  onEdit={openEditModal}
-                  onDelete={openDeleteModal}
-                  formatDateTime={formatDateTime}
-                />
-              ))
-            )}
+            <Shimmer loading={keysLoading}>
+              {keysLoading
+                ? Array.from({ length: 2 }).map((_, i) => (
+                    <Card key={i}>
+                      <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-foreground flex size-10 items-center justify-center rounded-md">
+                            <KeyIcon className="text-background size-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-foreground font-medium">
+                              Loading...
+                            </h3>
+                            <p className="text-muted-foreground text-xs">
+                              Loading provider...
+                            </p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <div className="space-y-2">
+                          <Label>Secret Key</Label>
+                          <Input
+                            type="password"
+                            value="loading..."
+                            readOnly
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                : apiKeys?.map((key) => (
+                    <ProviderCard
+                      key={key.id}
+                      apiKey={key}
+                      isVisible={visibleKeys.has(key.id)}
+                      onToggleVisibility={toggleKeyVisibility}
+                      onEdit={openEditModal}
+                      onDelete={openDeleteModal}
+                      formatDateTime={formatDateTime}
+                    />
+                  ))}
+            </Shimmer>
 
             <button
               onClick={() => dispatch({ type: "OPEN_ADD" })}

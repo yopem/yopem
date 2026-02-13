@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogPopup } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
 import { useCategories } from "@/hooks/use-categories"
@@ -256,54 +255,71 @@ const CategoriesTagsContent = () => {
 
           <div className="border-border rounded-lg border">
             <div className="divide-border divide-y">
-              {isLoadingCategories ? (
-                <Shimmer>
-                  <div className="flex flex-col gap-4 p-4">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                  </div>
-                </Shimmer>
-              ) : categories && categories.length > 0 ? (
-                categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between p-4"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-medium">{category.name}</h3>
-                      {category.description && (
+              <Shimmer loading={isLoadingCategories}>
+                {isLoadingCategories ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <h3 className="font-medium">Loading...</h3>
                         <p className="text-muted-foreground text-sm">
-                          {category.description}
+                          Loading description...
                         </p>
-                      )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm">
+                          <PencilIcon className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Trash2Icon className="size-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenCategoryDialog(category)}
-                      >
-                        <PencilIcon className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          deleteCategoryMutation.mutate(category.id)
-                        }
-                        disabled={deleteCategoryMutation.isPending}
-                      >
-                        <Trash2Icon className="size-4" />
-                      </Button>
+                  ))
+                ) : categories && categories.length > 0 ? (
+                  categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <h3 className="font-medium">{category.name}</h3>
+                        {category.description && (
+                          <p className="text-muted-foreground text-sm">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenCategoryDialog(category)}
+                        >
+                          <PencilIcon className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            deleteCategoryMutation.mutate(category.id)
+                          }
+                          disabled={deleteCategoryMutation.isPending}
+                        >
+                          <Trash2Icon className="size-4" />
+                        </Button>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-muted-foreground p-8 text-center">
+                    No categories yet. Create your first category to get
+                    started.
                   </div>
-                ))
-              ) : (
-                <div className="text-muted-foreground p-8 text-center">
-                  No categories yet. Create your first category to get started.
-                </div>
-              )}
+                )}
+              </Shimmer>
             </div>
           </div>
         </div>
@@ -319,45 +335,56 @@ const CategoriesTagsContent = () => {
 
           <div className="border-border rounded-lg border">
             <div className="divide-border divide-y">
-              {isLoadingTags ? (
-                <Shimmer>
-                  <div className="flex flex-col gap-4 p-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                </Shimmer>
-              ) : tags && tags.length > 0 ? (
-                tags.map((tag) => (
-                  <div
-                    key={tag.id}
-                    className="flex items-center justify-between p-4"
-                  >
-                    <h3 className="font-medium">{tag.name}</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenTagDialog(tag)}
-                      >
-                        <PencilIcon className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteTagMutation.mutate(tag.id)}
-                        disabled={deleteTagMutation.isPending}
-                      >
-                        <Trash2Icon className="size-4" />
-                      </Button>
+              <Shimmer loading={isLoadingTags}>
+                {isLoadingTags ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <h3 className="font-medium">Loading...</h3>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm">
+                          <PencilIcon className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Trash2Icon className="size-4" />
+                        </Button>
+                      </div>
                     </div>
+                  ))
+                ) : tags && tags.length > 0 ? (
+                  tags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <h3 className="font-medium">{tag.name}</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenTagDialog(tag)}
+                        >
+                          <PencilIcon className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteTagMutation.mutate(tag.id)}
+                          disabled={deleteTagMutation.isPending}
+                        >
+                          <Trash2Icon className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-muted-foreground p-8 text-center">
+                    No tags yet. Create your first tag to get started.
                   </div>
-                ))
-              ) : (
-                <div className="text-muted-foreground p-8 text-center">
-                  No tags yet. Create your first tag to get started.
-                </div>
-              )}
+                )}
+              </Shimmer>
             </div>
           </div>
         </div>
@@ -489,9 +516,28 @@ export default function CategoriesTagsPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8">
-          <Shimmer>
-            <Skeleton className="h-screen w-full" />
+        <div className="flex flex-col gap-8 p-8">
+          <Shimmer loading={true}>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Loading...</h1>
+              <p className="text-muted-foreground mt-2">
+                Loading categories and tags...
+              </p>
+            </div>
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-semibold">Categories</h2>
+                <div className="border-border rounded-lg border p-4">
+                  Loading...
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-semibold">Tags</h2>
+                <div className="border-border rounded-lg border p-4">
+                  Loading...
+                </div>
+              </div>
+            </div>
           </Shimmer>
         </div>
       }

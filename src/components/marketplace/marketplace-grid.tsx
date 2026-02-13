@@ -9,7 +9,6 @@ import { Shimmer } from "shimmer-from-structure"
 import SearchBar from "@/components/marketplace/search-bar"
 import ToolCard from "@/components/marketplace/tool-card"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { clientApi } from "@/lib/orpc/client"
 
 interface MarketplaceGridProps {
@@ -83,55 +82,61 @@ const MarketplaceGrid = ({
         </div>
       </div>
 
-      {isLoading ? (
-        <Shimmer>
+      <Shimmer loading={isLoading}>
+        {isLoading ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full" />
+              <div key={i} className="rounded-lg border p-4">
+                <div className="space-y-3">
+                  <div className="bg-muted h-5 w-2/3 rounded-sm" />
+                  <div className="bg-muted h-4 w-full rounded-sm" />
+                  <div className="bg-muted h-4 w-3/4 rounded-sm" />
+                </div>
+              </div>
             ))}
           </div>
-        </Shimmer>
-      ) : tools.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="bg-muted mb-4 rounded-full p-6">
-            <PackageIcon className="text-muted-foreground size-8" />
-          </div>
-          <h3 className="mb-1 text-lg font-semibold">No tools found</h3>
-          <p className="text-muted-foreground max-w-sm text-sm">
-            {search
-              ? "Try adjusting your search terms or clear the search to see all tools."
-              : "No tools are currently available in the marketplace."}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {tools.map((tool) => (
-              <ToolCard key={tool.id} {...tool} />
-            ))}
-          </div>
-
-          {hasNextPage && (
-            <div className="flex justify-center pt-4">
-              <Button
-                variant="outline"
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="min-w-32 transition-colors duration-200"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2Icon className="mr-2 size-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
-              </Button>
+        ) : tools.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="bg-muted mb-4 rounded-full p-6">
+              <PackageIcon className="text-muted-foreground size-8" />
             </div>
-          )}
-        </>
-      )}
+            <h3 className="mb-1 text-lg font-semibold">No tools found</h3>
+            <p className="text-muted-foreground max-w-sm text-sm">
+              {search
+                ? "Try adjusting your search terms or clear the search to see all tools."
+                : "No tools are currently available in the marketplace."}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {tools.map((tool) => (
+                <ToolCard key={tool.id} {...tool} />
+              ))}
+            </div>
+
+            {hasNextPage && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="min-w-32 transition-colors duration-200"
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2Icon className="mr-2 size-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More"
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </Shimmer>
     </div>
   )
 }

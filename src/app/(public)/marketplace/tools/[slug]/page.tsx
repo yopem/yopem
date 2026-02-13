@@ -5,7 +5,6 @@ import { Suspense } from "react"
 
 import Link from "@/components/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShimmerWrapper } from "@/components/ui/shimmer-wrapper"
 import { Skeleton } from "@/components/ui/skeleton"
 import { siteTitle } from "@/lib/env/client"
 import { serverApi } from "@/lib/orpc/server"
@@ -102,9 +101,9 @@ async function ToolData({ slug }: { slug: string }) {
 
       <Suspense
         fallback={
-          <ShimmerWrapper>
-            <Skeleton className="h-16 w-full" />
-          </ShimmerWrapper>
+          <div className="mb-8 rounded-lg border p-6">
+            <Skeleton className="h-6 w-32" />
+          </div>
         }
       >
         <UserCredits />
@@ -139,12 +138,15 @@ export default async function ToolDetailPage({
 
       <Suspense
         fallback={
-          <ShimmerWrapper>
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-1/3" />
-              <Skeleton className="h-32 w-full" />
-            </div>
-          </ShimmerWrapper>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Loading...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="mt-2 h-4 w-3/4" />
+            </CardContent>
+          </Card>
         }
       >
         <ToolData slug={slug} />
