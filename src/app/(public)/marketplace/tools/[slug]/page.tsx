@@ -1,7 +1,7 @@
 import { ArrowLeftIcon, CreditCardIcon } from "lucide-react"
 import { type Metadata } from "next"
 import { notFound } from "next/navigation"
-import { Suspense } from "react"
+import { cache, Suspense } from "react"
 
 import Link from "@/components/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,10 @@ import { serverApi } from "@/lib/orpc/server"
 import ToolExecuteForm from "./execute-form"
 import UserCredits from "./user-credits"
 
+const getToolBySlug = cache((slug: string) => {
+  return serverApi.tools.getBySlug({ slug })
+})
+
 export async function generateMetadata({
   params,
 }: {
@@ -20,7 +24,7 @@ export async function generateMetadata({
   const { slug } = await params
 
   try {
-    const tool = await serverApi.tools.getBySlug({ slug })
+    const tool = await getToolBySlug(slug)
 
     if (!tool) {
       return {
@@ -59,7 +63,7 @@ export async function generateMetadata({
 }
 
 async function ToolData({ slug }: { slug: string }) {
-  const tool = await serverApi.tools.getBySlug({ slug })
+  const tool = await getToolBySlug(slug)
 
   if (!tool) {
     notFound()

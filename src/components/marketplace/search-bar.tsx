@@ -37,7 +37,7 @@ const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
             aria-label="Search marketplace tools"
             className="focus:border-foreground/20 placeholder:text-muted-foreground/70 h-11 px-10 text-sm transition-colors duration-200 [&_input]:h-full [&_input]:py-0"
           />
-          {query && (
+          {query ? (
             <button
               type="button"
               onClick={handleClear}
@@ -46,7 +46,7 @@ const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
               <XIcon className="size-4" />
               <span className="sr-only">Clear search</span>
             </button>
-          )}
+          ) : null}
         </div>
         <Button
           type="submit"

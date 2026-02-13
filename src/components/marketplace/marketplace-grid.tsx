@@ -2,14 +2,29 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import SearchBar from "@/components/marketplace/search-bar"
-import ToolCard from "@/components/marketplace/tool-card"
 import { Button } from "@/components/ui/button"
 import { clientApi } from "@/lib/orpc/client"
+
+import type { ToolCardProps } from "./tool-card"
+
+const ToolCard = dynamic<ToolCardProps>(() => import("./tool-card"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-lg border p-4">
+      <div className="space-y-3">
+        <div className="bg-muted h-5 w-2/3 rounded-sm" />
+        <div className="bg-muted h-4 w-full rounded-sm" />
+        <div className="bg-muted h-4 w-3/4 rounded-sm" />
+      </div>
+    </div>
+  ),
+})
 
 interface MarketplaceGridProps {
   initialTools?: Awaited<ReturnType<typeof clientApi.tools.list>>["tools"]
@@ -29,16 +44,18 @@ const MarketplaceGrid = ({
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
 
+  const queryKey = [
+    "marketplace-tools",
+    search,
+    categoryIds.join(","),
+    status,
+    priceFilter,
+    tagIds.join(","),
+  ]
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
-      queryKey: [
-        "marketplace-tools",
-        search,
-        categoryIds.join(","),
-        status,
-        priceFilter,
-        tagIds.join(","),
-      ],
+      queryKey,
       queryFn: async ({ pageParam }) => {
         const result = await clientApi.tools.list({
           search,
@@ -67,6 +84,10 @@ const MarketplaceGrid = ({
     setSearch(query)
   }
 
+  const handleLoadMore = () => {
+    void fetchNextPage()
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -74,7 +95,7 @@ const MarketplaceGrid = ({
           <SearchBar onSearch={handleSearch} defaultValue={search} />
         </div>
         <div className="text-muted-foreground text-sm whitespace-nowrap">
-          {!isLoading && (
+          {isLoading ? null : (
             <span>
               {tools.length} {tools.length === 1 ? "tool" : "tools"}
             </span>
@@ -111,15 +132,22 @@ const MarketplaceGrid = ({
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {tools.map((tool) => (
-                <ToolCard key={tool.id} {...tool} />
+                <ToolCard
+                  key={tool.id}
+                  slug={tool.slug}
+                  name={tool.name}
+                  description={tool.description}
+                  costPerRun={tool.costPerRun}
+                  categories={tool.categories}
+                />
               ))}
             </div>
 
-            {hasNextPage && (
+            {hasNextPage ? (
               <div className="flex justify-center pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => fetchNextPage()}
+                  onClick={handleLoadMore}
                   disabled={isFetchingNextPage}
                   className="min-w-32 transition-colors duration-200"
                 >
@@ -133,7 +161,7 @@ const MarketplaceGrid = ({
                   )}
                 </Button>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </Shimmer>

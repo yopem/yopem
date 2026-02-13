@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-interface ToolCardProps {
+export interface ToolCardProps {
   slug: string
   name: string
   description: string | null

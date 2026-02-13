@@ -25,13 +25,13 @@ export default function MarketplacePage() {
     setSelectedTags(tagIds)
   }
 
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
-    ...queryApi.tools.getCategories.queryOptions({}),
-  })
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
+    queryApi.tools.getCategories.queryOptions({}),
+  )
 
-  const { data: tags = [], isLoading: isTagsLoading } = useQuery({
-    ...queryApi.tools.getTags.queryOptions({}),
-  })
+  const { data: tags = [], isLoading: isTagsLoading } = useQuery(
+    queryApi.tools.getTags.queryOptions({}),
+  )
 
   const isSidebarLoading = isCategoriesLoading || isTagsLoading
 

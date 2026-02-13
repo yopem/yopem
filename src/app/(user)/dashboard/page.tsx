@@ -30,9 +30,9 @@ const StatCard = memo(
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{value}</div>
-          {description && (
+          {description ? (
             <p className="text-muted-foreground text-xs">{description}</p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     )
