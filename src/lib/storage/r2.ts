@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   PutObjectCommand,
   S3Client,
   type S3ClientConfig,
@@ -12,6 +13,13 @@ import {
   r2Domain,
   r2SecretKey,
 } from "@/lib/env/server"
+
+export type AssetType =
+  | "images"
+  | "videos"
+  | "documents"
+  | "archives"
+  | "others"
 
 interface R2Config {
   accountId: string
@@ -164,6 +172,105 @@ export class R2Storage {
 
       throw new Error(
         `Failed to upload to R2 after retry: ${error instanceof Error ? error.message : "Unknown error"}`,
+      )
+    }
+  }
+
+  classifyFileType(mimeType: string, filename: string): AssetType {
+    const lowerMime = mimeType.toLowerCase()
+    const lowerFilename = filename.toLowerCase()
+
+    // Images
+    if (lowerMime.startsWith("image/")) {
+      return "images"
+    }
+
+    // Videos
+    if (lowerMime.startsWith("video/")) {
+      return "videos"
+    }
+
+    // Documents
+    if (
+      lowerMime.includes("pdf") ||
+      lowerMime.includes("text/") ||
+      lowerMime.includes("word") ||
+      lowerMime.includes("excel") ||
+      lowerMime.includes("powerpoint") ||
+      lowerMime.includes("opendocument") ||
+      lowerFilename.endsWith(".pdf") ||
+      lowerFilename.endsWith(".doc") ||
+      lowerFilename.endsWith(".docx") ||
+      lowerFilename.endsWith(".txt") ||
+      lowerFilename.endsWith(".rtf") ||
+      lowerFilename.endsWith(".odt") ||
+      lowerFilename.endsWith(".xls") ||
+      lowerFilename.endsWith(".xlsx") ||
+      lowerFilename.endsWith(".ppt") ||
+      lowerFilename.endsWith(".pptx")
+    ) {
+      return "documents"
+    }
+
+    // Archives
+    if (
+      lowerMime.includes("zip") ||
+      lowerMime.includes("rar") ||
+      lowerMime.includes("7z") ||
+      lowerMime.includes("gzip") ||
+      lowerMime.includes("tar") ||
+      lowerMime.includes("bzip") ||
+      lowerFilename.endsWith(".zip") ||
+      lowerFilename.endsWith(".rar") ||
+      lowerFilename.endsWith(".7z") ||
+      lowerFilename.endsWith(".gz") ||
+      lowerFilename.endsWith(".tar") ||
+      lowerFilename.endsWith(".bz2")
+    ) {
+      return "archives"
+    }
+
+    return "others"
+  }
+
+  async uploadAsset(
+    buffer: Buffer,
+    originalFilename: string,
+    mimeType: string,
+  ): Promise<{ url: string; type: AssetType; size: number; key: string }> {
+    const type = this.classifyFileType(mimeType, originalFilename)
+    const extension = originalFilename.split(".").pop() ?? "bin"
+    const baseName = originalFilename.replace(/\.[^/.]+$/, "")
+    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
+    const uniqueId = nanoid(6)
+    const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
+    const key = `${type}/${filename}`
+
+    await this.uploadWithRetry(buffer, key, mimeType)
+
+    const publicUrlWithProtocol = this.publicUrl.startsWith("http")
+      ? this.publicUrl
+      : `https://${this.publicUrl}`
+
+    return {
+      url: `${publicUrlWithProtocol}/${key}`,
+      type,
+      size: buffer.length,
+      key,
+    }
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      })
+
+      await this.client.send(command)
+    } catch (error) {
+      throw new Error(
+        `Failed to delete from R2: ${error instanceof Error ? error.message : "Unknown error"}`,
       )
     }
   }

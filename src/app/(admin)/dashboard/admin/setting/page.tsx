@@ -14,7 +14,14 @@ import {
   TrendingDownIcon,
   TrendingUpIcon,
 } from "lucide-react"
-import { memo, useCallback, useReducer, useState, type ReactNode } from "react"
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useReducer,
+  useState,
+  type ReactNode,
+} from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
@@ -52,6 +59,7 @@ import {
   useUpdateApiKey,
 } from "@/hooks/use-api-keys"
 import useFormatDate from "@/hooks/use-format-date"
+import { queryApi } from "@/lib/orpc/query"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
 
 const providerIcons: Record<string, ReactNode> = {
@@ -230,6 +238,42 @@ export default function AdminSettingsPage() {
   const addMutation = useAddApiKey()
   const updateMutation = useUpdateApiKey()
   const deleteMutation = useDeleteApiKey()
+
+  const [maxUploadSize, setMaxUploadSize] = useState<number>(50)
+  const [isAssetSettingsLoading, setIsAssetSettingsLoading] = useState(true)
+
+  const fetchAssetSettings = useCallback(async () => {
+    try {
+      const result = await queryApi.admin.getAssetSettings.call()
+      setMaxUploadSize(result.maxUploadSizeMB)
+    } catch (error) {
+      console.error("Failed to fetch asset settings:", error)
+    } finally {
+      setIsAssetSettingsLoading(false)
+    }
+  }, [])
+
+  const updateAssetSettings = useCallback(async () => {
+    try {
+      await queryApi.admin.updateAssetSettings.call({
+        maxUploadSizeMB: maxUploadSize,
+      })
+      toastManager.add({
+        title: "Asset settings updated",
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Failed to update asset settings:", error)
+      toastManager.add({
+        title: "Failed to update asset settings",
+        type: "error",
+      })
+    }
+  }, [maxUploadSize])
+
+  useEffect(() => {
+    void fetchAssetSettings()
+  }, [fetchAssetSettings])
 
   const handleAddProvider = useCallback(() => {
     void (async () => {
@@ -504,6 +548,44 @@ export default function AdminSettingsPage() {
               <PlusCircleIcon className="size-5 transition-transform group-hover:scale-110" />
               <span className="text-sm font-medium">Add New Provider</span>
             </button>
+
+            <div className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-foreground text-lg font-bold">
+                  Asset Upload Settings
+                </h2>
+              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="max-upload-size">
+                        Maximum Upload Size (MB)
+                      </Label>
+                      <Input
+                        id="max-upload-size"
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={maxUploadSize}
+                        onChange={(e) =>
+                          setMaxUploadSize(Number(e.target.value))
+                        }
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Set the maximum file size allowed for uploads (1-500 MB)
+                      </p>
+                    </div>
+                    <Button
+                      onClick={updateAssetSettings}
+                      disabled={isAssetSettingsLoading}
+                    >
+                      Save Settings
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             <div className="mt-8">
               <div className="mb-4 flex items-center justify-between">

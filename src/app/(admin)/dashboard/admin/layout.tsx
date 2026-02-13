@@ -1,6 +1,7 @@
 import {
   ActivityIcon,
   BotIcon,
+  FileImageIcon,
   LayoutDashboardIcon,
   SettingsIcon,
   TagsIcon,
@@ -32,6 +33,11 @@ export default async function AdminDashboardLayout({
       icon: <BotIcon className="size-4.5" />,
       label: "Tools",
       href: "/dashboard/admin/tools",
+    },
+    {
+      icon: <FileImageIcon className="size-4.5" />,
+      label: "Assets",
+      href: "/dashboard/admin/assets",
     },
     {
       icon: <TagsIcon className="size-4.5" />,

@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm"
+import { z } from "zod"
 
 import { adminProcedure } from "@/lib/api/orpc"
 import { adminSettingsTable } from "@/lib/db/schema"
@@ -13,6 +14,7 @@ import { decryptApiKey, encryptApiKey, maskApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
+const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
 const MODEL_CACHE_PREFIX = "models:"
 const MODEL_CACHE_TTL = 300
 
@@ -241,6 +243,46 @@ export const adminRouter = {
 
     return allModels
   }),
+
+  getAssetSettings: adminProcedure.handler(async ({ context }) => {
+    const [settings] = await context.db
+      .select()
+      .from(adminSettingsTable)
+      .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+
+    return {
+      maxUploadSizeMB:
+        settings && typeof settings.settingValue === "number"
+          ? settings.settingValue
+          : 50,
+    }
+  }),
+
+  updateAssetSettings: adminProcedure
+    .input(z.object({ maxUploadSizeMB: z.number().min(1).max(500) }))
+    .handler(async ({ context, input }) => {
+      const [existing] = await context.db
+        .select()
+        .from(adminSettingsTable)
+        .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+
+      if (existing) {
+        await context.db
+          .update(adminSettingsTable)
+          .set({
+            settingValue: input.maxUploadSizeMB,
+            updatedAt: new Date(),
+          })
+          .where(eq(adminSettingsTable.id, existing.id))
+      } else {
+        await context.db.insert(adminSettingsTable).values({
+          settingKey: ASSETS_MAX_SIZE_KEY,
+          settingValue: input.maxUploadSizeMB,
+        })
+      }
+
+      return { success: true }
+    }),
 }
 
 async function fetchModelsForProvider(

@@ -35,7 +35,7 @@
     "@ai-sdk/openai-compatible": "^2.0.28",
     "@anthropic-ai/sdk": "^0.74.0",
     "@aws-sdk/client-s3": "^3.987.0",
-    "@base-ui/react": "^1.1.0",
+    "@base-ui/react": "^1.2.0",
     "@next/third-parties": "16.1.6",
     "@openauthjs/openauth": "^0.4.3",
     "@orpc/client": "^1.13.5",
