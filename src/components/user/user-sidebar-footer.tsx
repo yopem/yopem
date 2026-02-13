@@ -44,7 +44,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
       <MenuTrigger
         className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
         render={
-          <div className="flex items-center gap-3 p-2">
+          <button className="flex items-center gap-3 p-2">
             <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-full border text-xs font-bold">
               {user.avatar ? (
                 <Image
@@ -70,7 +70,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
               <p className="text-muted-foreground text-xs">{user.email}</p>
             </div>
             <ChevronUpIcon className="text-muted-foreground size-4" />
-          </div>
+          </button>
         }
       />
       <MenuPopup side="top" align="end" sideOffset={8} className="min-w-56">
