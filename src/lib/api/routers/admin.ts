@@ -17,9 +17,20 @@ const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
 const MODEL_CACHE_PREFIX = "models:"
 const MODEL_CACHE_TTL = 300
+const SETTINGS_CACHE_TTL = 300
 
 export const adminRouter = {
   getApiKeys: adminProcedure.handler(async ({ context }) => {
+    const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
+    const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+
+    if (cached) {
+      return cached.map((key) => ({
+        ...key,
+        apiKey: maskApiKey(decryptApiKey(key.apiKey)),
+      }))
+    }
+
     const [settings] = await context.db
       .select()
       .from(adminSettingsTable)
@@ -30,6 +41,7 @@ export const adminRouter = {
     }
 
     const apiKeys = settings.settingValue as ApiKeyConfig[]
+    await context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
 
     return apiKeys.map((key) => {
       try {
@@ -88,6 +100,7 @@ export const adminRouter = {
       }
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true, id: newKey.id }
     }),
@@ -142,6 +155,7 @@ export const adminRouter = {
         .where(eq(adminSettingsTable.id, settings.id))
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
     }),
@@ -170,6 +184,7 @@ export const adminRouter = {
         .where(eq(adminSettingsTable.id, settings.id))
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
     }),
@@ -245,17 +260,26 @@ export const adminRouter = {
   }),
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
+    const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
+    const cached = await context.redis.getCache<number>(cacheKey)
+
+    if (cached !== null) {
+      return { maxUploadSizeMB: cached }
+    }
+
     const [settings] = await context.db
       .select()
       .from(adminSettingsTable)
       .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
 
-    return {
-      maxUploadSizeMB:
-        settings && typeof settings.settingValue === "number"
-          ? settings.settingValue
-          : 50,
-    }
+    const maxUploadSizeMB =
+      settings && typeof settings.settingValue === "number"
+        ? settings.settingValue
+        : 50
+
+    await context.redis.setCache(cacheKey, maxUploadSizeMB, SETTINGS_CACHE_TTL)
+
+    return { maxUploadSizeMB }
   }),
 
   updateAssetSettings: adminProcedure
@@ -280,6 +304,8 @@ export const adminRouter = {
           settingValue: input.maxUploadSizeMB,
         })
       }
+
+      await context.redis.deleteCache(`settings:${ASSETS_MAX_SIZE_KEY}`)
 
       return { success: true }
     }),

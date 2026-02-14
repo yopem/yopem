@@ -127,35 +127,53 @@ export const toolsRouter = {
         .orderBy(desc(toolsTable.createdAt))
         .limit(limit + 1)
 
-      const toolsWithCategories = await Promise.all(
-        tools.map(async (tool) => {
-          const toolCategories = await context.db
-            .select({
-              id: categoriesTable.id,
-              name: categoriesTable.name,
-              slug: categoriesTable.slug,
-            })
-            .from(toolCategoriesTable)
-            .innerJoin(
-              categoriesTable,
-              eq(toolCategoriesTable.categoryId, categoriesTable.id),
-            )
-            .where(eq(toolCategoriesTable.toolId, tool.id))
+      const toolIds = tools.map((t) => t.id)
 
-          const thumbnail =
-            tool.thumbnailAssetId && tool.thumbnailUrl
-              ? { id: tool.thumbnailAssetId, url: tool.thumbnailUrl }
-              : null
+      const categoriesMap = new Map<
+        string,
+        { id: string; name: string; slug: string }[]
+      >()
+      if (toolIds.length > 0) {
+        const toolCategories = await context.db
+          .select({
+            toolId: toolCategoriesTable.toolId,
+            id: categoriesTable.id,
+            name: categoriesTable.name,
+            slug: categoriesTable.slug,
+          })
+          .from(toolCategoriesTable)
+          .innerJoin(
+            categoriesTable,
+            eq(toolCategoriesTable.categoryId, categoriesTable.id),
+          )
+          .where(inArray(toolCategoriesTable.toolId, toolIds))
 
-          const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
-
-          return {
-            ...toolData,
-            categories: toolCategories,
-            thumbnail,
+        for (const row of toolCategories) {
+          if (!categoriesMap.has(row.toolId)) {
+            categoriesMap.set(row.toolId, [])
           }
-        }),
-      )
+          categoriesMap.get(row.toolId)!.push({
+            id: row.id,
+            name: row.name,
+            slug: row.slug,
+          })
+        }
+      }
+
+      const toolsWithCategories = tools.map((tool) => {
+        const thumbnail =
+          tool.thumbnailAssetId && tool.thumbnailUrl
+            ? { id: tool.thumbnailAssetId, url: tool.thumbnailUrl }
+            : null
+
+        const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
+
+        return {
+          ...toolData,
+          categories: categoriesMap.get(tool.id) ?? [],
+          thumbnail,
+        }
+      })
 
       let nextCursor: string | undefined = undefined
       if (toolsWithCategories.length > limit) {
