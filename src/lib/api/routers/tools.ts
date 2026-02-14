@@ -196,50 +196,47 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
-      const toolCategories = await context.db
-        .select({
-          id: categoriesTable.id,
-          name: categoriesTable.name,
-          slug: categoriesTable.slug,
-        })
-        .from(toolCategoriesTable)
-        .innerJoin(
-          categoriesTable,
-          eq(toolCategoriesTable.categoryId, categoriesTable.id),
-        )
-        .where(eq(toolCategoriesTable.toolId, input.id))
-
-      const toolTags = await context.db
-        .select({
-          id: tagsTable.id,
-          name: tagsTable.name,
-          slug: tagsTable.slug,
-        })
-        .from(toolTagsTable)
-        .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
-        .where(eq(toolTagsTable.toolId, input.id))
-
-      let thumbnail = null
-      if (tool.thumbnailId) {
-        const [thumbnailAsset] = await context.db
-          .select({
-            id: assetsTable.id,
-            url: assetsTable.url,
-            originalName: assetsTable.originalName,
-          })
-          .from(assetsTable)
-          .where(eq(assetsTable.id, tool.thumbnailId))
-
-        if (thumbnailAsset) {
-          thumbnail = thumbnailAsset
-        }
-      }
+      const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all(
+        [
+          context.db
+            .select({
+              id: categoriesTable.id,
+              name: categoriesTable.name,
+              slug: categoriesTable.slug,
+            })
+            .from(toolCategoriesTable)
+            .innerJoin(
+              categoriesTable,
+              eq(toolCategoriesTable.categoryId, categoriesTable.id),
+            )
+            .where(eq(toolCategoriesTable.toolId, input.id)),
+          context.db
+            .select({
+              id: tagsTable.id,
+              name: tagsTable.name,
+              slug: tagsTable.slug,
+            })
+            .from(toolTagsTable)
+            .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
+            .where(eq(toolTagsTable.toolId, input.id)),
+          tool.thumbnailId
+            ? context.db
+                .select({
+                  id: assetsTable.id,
+                  url: assetsTable.url,
+                  originalName: assetsTable.originalName,
+                })
+                .from(assetsTable)
+                .where(eq(assetsTable.id, tool.thumbnailId))
+            : Promise.resolve([]),
+        ],
+      )
 
       return {
         ...tool,
-        categories: toolCategories,
-        tags: toolTags,
-        thumbnail,
+        categories: categoriesResult,
+        tags: tagsResult,
+        thumbnail: thumbnailResult[0] ?? null,
       }
     }),
 
@@ -254,50 +251,47 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
-      const toolCategories = await context.db
-        .select({
-          id: categoriesTable.id,
-          name: categoriesTable.name,
-          slug: categoriesTable.slug,
-        })
-        .from(toolCategoriesTable)
-        .innerJoin(
-          categoriesTable,
-          eq(toolCategoriesTable.categoryId, categoriesTable.id),
-        )
-        .where(eq(toolCategoriesTable.toolId, tool.id))
-
-      const toolTags = await context.db
-        .select({
-          id: tagsTable.id,
-          name: tagsTable.name,
-          slug: tagsTable.slug,
-        })
-        .from(toolTagsTable)
-        .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
-        .where(eq(toolTagsTable.toolId, tool.id))
-
-      let thumbnail = null
-      if (tool.thumbnailId) {
-        const [thumbnailAsset] = await context.db
-          .select({
-            id: assetsTable.id,
-            url: assetsTable.url,
-            originalName: assetsTable.originalName,
-          })
-          .from(assetsTable)
-          .where(eq(assetsTable.id, tool.thumbnailId))
-
-        if (thumbnailAsset) {
-          thumbnail = thumbnailAsset
-        }
-      }
+      const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all(
+        [
+          context.db
+            .select({
+              id: categoriesTable.id,
+              name: categoriesTable.name,
+              slug: categoriesTable.slug,
+            })
+            .from(toolCategoriesTable)
+            .innerJoin(
+              categoriesTable,
+              eq(toolCategoriesTable.categoryId, categoriesTable.id),
+            )
+            .where(eq(toolCategoriesTable.toolId, tool.id)),
+          context.db
+            .select({
+              id: tagsTable.id,
+              name: tagsTable.name,
+              slug: tagsTable.slug,
+            })
+            .from(toolTagsTable)
+            .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
+            .where(eq(toolTagsTable.toolId, tool.id)),
+          tool.thumbnailId
+            ? context.db
+                .select({
+                  id: assetsTable.id,
+                  url: assetsTable.url,
+                  originalName: assetsTable.originalName,
+                })
+                .from(assetsTable)
+                .where(eq(assetsTable.id, tool.thumbnailId))
+            : Promise.resolve([]),
+        ],
+      )
 
       return {
         ...tool,
-        categories: toolCategories,
-        tags: toolTags,
-        thumbnail,
+        categories: categoriesResult,
+        tags: tagsResult,
+        thumbnail: thumbnailResult[0] ?? null,
       }
     }),
 
