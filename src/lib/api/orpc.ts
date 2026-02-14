@@ -3,6 +3,7 @@ import { ORPCError, os } from "@orpc/server"
 import { auth } from "@/lib/auth/session"
 import { createRedisCache } from "@/lib/cache/client"
 import { db } from "@/lib/db"
+import { logger } from "@/lib/utils/logger"
 
 export async function createRPCContext(opts: {
   headers: Headers
@@ -68,7 +69,7 @@ const timingMiddleware = o.middleware(async ({ next, path }) => {
   try {
     return await next()
   } finally {
-    console.info(
+    logger.info(
       `[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`,
     )
   }

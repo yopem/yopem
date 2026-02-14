@@ -1,7 +1,9 @@
+import { LoggingHandlerPlugin } from "@orpc/experimental-pino"
 import { RPCHandler } from "@orpc/server/fetch"
 
 import { createRPCContext } from "@/lib/api/orpc"
 import { appRouter } from "@/lib/api/root"
+import { logger } from "@/lib/utils/logger"
 
 const setCorsHeaders = (res: Response) => {
   res.headers.set("Access-Control-Allow-Origin", "*")
@@ -28,6 +30,13 @@ const handler = new RPCHandler(appRouter, {
         throw error
       }
     },
+  ],
+  plugins: [
+    new LoggingHandlerPlugin({
+      logger,
+      logRequestResponse: true,
+      logRequestAbort: true,
+    }),
   ],
 })
 

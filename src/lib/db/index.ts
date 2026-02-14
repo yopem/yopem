@@ -3,6 +3,7 @@ import { Pool } from "pg"
 
 import * as schema from "@/lib/db/schema"
 import { appEnv, databaseUrl } from "@/lib/env/server"
+import { logger } from "@/lib/utils/logger"
 
 const pool = new Pool({
   connectionString: databaseUrl,
@@ -37,7 +38,7 @@ export function getPoolMetrics() {
 
 export function logPoolMetrics() {
   const metrics = getPoolMetrics()
-  console.info(
+  logger.info(
     `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,
   )
 }

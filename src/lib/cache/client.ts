@@ -1,6 +1,7 @@
 import type { Redis } from "ioredis"
 
 import { redisKeyPrefix, redisUrl } from "@/lib/env/server"
+import { logger } from "@/lib/utils/logger"
 
 export function createRedisCache() {
   let redis: Redis | null = null
@@ -23,7 +24,7 @@ export function createRedisCache() {
       })
 
       redis.on("connect", () => {
-        console.info("Redis connected successfully")
+        logger.info("Redis connected successfully")
       })
 
       return redis
@@ -131,7 +132,7 @@ export function createRedisCache() {
     if (redis) {
       try {
         await redis.quit()
-        console.info("Redis connection closed successfully")
+        logger.info("Redis connection closed successfully")
         redis = null
       } catch (error) {
         console.error("Failed to close Redis connection:", error)
