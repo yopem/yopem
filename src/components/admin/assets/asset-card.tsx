@@ -7,7 +7,7 @@ import { memo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import useFormatDate from "@/hooks/use-format-date"
+import { formatDateOnly } from "@/lib/utils/format-date"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
@@ -36,7 +36,6 @@ function formatFileSize(bytes: number): string {
 }
 
 function AssetCardComponent({ asset, onPreview, onDelete }: AssetCardProps) {
-  const { formatDateOnly } = useFormatDate()
   const isImage = asset.type === "images"
 
   return (

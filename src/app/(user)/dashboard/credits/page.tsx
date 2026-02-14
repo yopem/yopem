@@ -22,8 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { toastManager } from "@/components/ui/toast"
-import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
+import { formatDateOnly } from "@/lib/utils/format-date"
 
 const creditPackages = [
   { amount: 100, price: 10 },
@@ -34,7 +34,6 @@ const creditPackages = [
 
 export default function CreditsPage() {
   const [customAmount, setCustomAmount] = useState("")
-  const { formatDateOnly } = useFormatDate()
 
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),

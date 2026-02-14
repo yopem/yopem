@@ -7,8 +7,8 @@ import { memo } from "react"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
+import { formatDateOnly } from "@/lib/utils/format-date"
 
 const StatCard = memo(
   ({
@@ -70,8 +70,6 @@ interface RunsData {
 }
 
 function DashboardPage() {
-  const { formatDateOnly } = useFormatDate()
-
   const { data: stats } = useQuery({
     ...queryApi.user.getStats.queryOptions(),
     retry: false,

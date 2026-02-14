@@ -58,9 +58,9 @@ import {
   useDeleteApiKey,
   useUpdateApiKey,
 } from "@/hooks/use-api-keys"
-import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
+import { formatDateTime } from "@/lib/utils/format-date"
 import { logger } from "@/lib/utils/logger"
 
 const providerIcons: Record<string, ReactNode> = {
@@ -198,8 +198,6 @@ function modalReducer(_state: ModalState, action: ModalAction): ModalState {
 }
 
 export default function AdminSettingsPage() {
-  const { formatDateTime } = useFormatDate()
-
   const breadcrumbItems = [
     { label: "Settings", href: "/dashboard/admin/setting" },
     { label: "API Configuration" },

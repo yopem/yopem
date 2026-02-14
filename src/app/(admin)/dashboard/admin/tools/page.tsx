@@ -38,8 +38,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { toastManager } from "@/components/ui/toast"
-import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
+import { formatDateOnly } from "@/lib/utils/format-date"
 
 function ToolsPage() {
   const router = useRouter()
@@ -49,7 +49,6 @@ function ToolsPage() {
     name: string
   } | null>(null)
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([])
-  const { formatDateOnly } = useFormatDate()
 
   const {
     data: toolsData,

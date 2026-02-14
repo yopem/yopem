@@ -1,14 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import {
-  AlertTriangleIcon,
-  CheckIcon,
-  CopyIcon,
-  PlayIcon,
-  SparklesIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { AlertTriangleIcon, CopyIcon, PlayIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -34,7 +27,6 @@ export default function ToolExecuteForm({
   const [inputValue, setInputValue] = useState("")
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const cost = Number(costPerRun ?? 0)
 
@@ -73,8 +65,6 @@ export default function ToolExecuteForm({
   const handleCopy = async () => {
     if (output) {
       await navigator.clipboard.writeText(output)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     }
   }
 
@@ -84,16 +74,13 @@ export default function ToolExecuteForm({
   }
 
   return (
-    <Card className="border-border/50 overflow-hidden shadow-lg">
-      <CardHeader className="from-primary/5 via-primary/5 bg-linear-to-r to-transparent pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <SparklesIcon className="text-primary size-5" />
-          Execute Tool
-        </CardTitle>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Run tool</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
+      <CardContent className="space-y-4">
         <div>
-          <label htmlFor="input" className="text-sm leading-none font-medium">
+          <label htmlFor="input" className="text-sm font-medium">
             Input
           </label>
           <Textarea
@@ -101,23 +88,25 @@ export default function ToolExecuteForm({
             placeholder="Enter your input..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="mt-1 min-h-[120px] resize-y"
+            className="mt-1.5 min-h-[100px]"
           />
         </div>
 
         {cost > 0 && (
-          <div className="bg-muted/50 rounded-lg p-3">
+          <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Cost per run:</span>
+              <span className="text-gray-600 dark:text-gray-400">Cost:</span>
               <span className="font-medium">{cost} credits</span>
             </div>
             {creditsData && (
               <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Your balance:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Balance:
+                </span>
                 <span
                   className={
                     hasInsufficientCredits
-                      ? "text-destructive font-medium"
+                      ? "font-medium text-red-600"
                       : "font-medium"
                   }
                 >
@@ -126,7 +115,7 @@ export default function ToolExecuteForm({
               </div>
             )}
             {hasInsufficientCredits && (
-              <div className="text-destructive mt-2 flex items-center gap-2 text-sm">
+              <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
                 <AlertTriangleIcon className="size-4" />
                 Insufficient credits
               </div>
@@ -138,51 +127,45 @@ export default function ToolExecuteForm({
           onClick={handleExecute}
           disabled={executeMutation.isPending || hasInsufficientCredits}
           className="w-full"
-          size="lg"
         >
           <PlayIcon className="mr-2 size-4" />
           {executeMutation.isPending
-            ? "Executing..."
+            ? "Running..."
             : cost > 0
-              ? `Execute (${cost} credits)`
-              : "Execute"}
+              ? `Run (${cost} credits)`
+              : "Run"}
         </Button>
 
         {error && (
-          <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-md p-3 text-sm">
-            <AlertTriangleIcon className="size-4 shrink-0" />
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}
 
         {output && (
-          <div className="border-border/50 bg-muted/30 rounded-lg border p-4">
+          <div className="rounded-md border p-3">
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="font-medium">Output</h4>
+              <span className="text-sm font-medium">Output</span>
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
-                  className="h-8 px-2"
+                  className="h-7 px-2"
                 >
-                  {copied ? (
-                    <CheckIcon className="size-4 text-green-500" />
-                  ) : (
-                    <CopyIcon className="size-4" />
-                  )}
+                  <CopyIcon className="size-3.5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClear}
-                  className="h-8 px-2"
+                  className="h-7 px-2"
                 >
-                  <Trash2Icon className="size-4" />
+                  Clear
                 </Button>
               </div>
             </div>
-            <pre className="max-h-[400px] overflow-y-auto text-sm whitespace-pre-wrap">
+            <pre className="max-h-[200px] overflow-auto text-sm whitespace-pre-wrap">
               {output}
             </pre>
           </div>

@@ -38,16 +38,16 @@ export default function MarketplacePage() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          AI Tools Marketplace
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+          Browse Tools
         </h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl">
-          Discover and use AI-powered tools for your workflows
+        <p className="text-muted-foreground mt-1 text-sm">
+          Explore and use AI-powered tools to automate your workflows
         </p>
       </div>
 
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <div className="w-full shrink-0 lg:w-64">
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <div className="w-full shrink-0 lg:w-56">
           <div className="sticky top-20">
             <Shimmer loading={isSidebarLoading}>
               <MarketplaceSidebar

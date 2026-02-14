@@ -15,8 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import useFormatDate from "@/hooks/use-format-date"
 import { queryApi } from "@/lib/orpc/query"
+import { formatDateTime } from "@/lib/utils/format-date"
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -41,8 +41,6 @@ const getStatusBadge = (status: string) => {
 }
 
 export default function RunsPage() {
-  const { formatDateTime } = useFormatDate()
-
   const { data: runsData, isLoading } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 50 } }),
     retry: false,
