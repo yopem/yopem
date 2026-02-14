@@ -139,6 +139,7 @@ const MarketplaceGrid = ({
                   description={tool.description}
                   costPerRun={tool.costPerRun}
                   categories={tool.categories}
+                  thumbnail={tool.thumbnail}
                 />
               ))}
             </div>

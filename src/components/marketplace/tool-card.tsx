@@ -1,4 +1,5 @@
-import { ArrowRight as ArrowRightIcon } from "lucide-react"
+import { ArrowRight as ArrowRightIcon, Image as ImageIcon } from "lucide-react"
+import Image from "next/image"
 
 import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +17,7 @@ export interface ToolCardProps {
   description: string | null
   costPerRun: string | null
   categories?: { id: string; name: string; slug: string }[]
+  thumbnail?: { id: string; url: string } | null
 }
 
 const ToolCard = ({
@@ -24,12 +26,28 @@ const ToolCard = ({
   description,
   costPerRun,
   categories = [],
+  thumbnail,
 }: ToolCardProps) => {
   const isFree = Number(costPerRun ?? 0) === 0
 
   return (
     <Link href={`/marketplace/tools/${slug}`} className="group block">
       <Card className="border-border bg-card hover:border-foreground/20 hover:bg-accent/50 flex h-full cursor-pointer flex-col transition-colors duration-200">
+        {thumbnail ? (
+          <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
+            <Image
+              src={thumbnail.url}
+              alt={`${name} thumbnail`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div className="bg-muted flex aspect-video w-full items-center justify-center rounded-t-lg">
+            <ImageIcon className="text-muted-foreground size-12" />
+          </div>
+        )}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="line-clamp-1 text-lg font-semibold">

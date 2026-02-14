@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/orpc"
 import {
   adminSettingsTable,
+  assetsTable,
   categoriesTable,
   creditTransactionsTable,
   insertToolSchema,
@@ -116,6 +117,7 @@ export const toolsRouter = {
           status: toolsTable.status,
           costPerRun: toolsTable.costPerRun,
           createdAt: toolsTable.createdAt,
+          thumbnailId: toolsTable.thumbnailId,
         })
         .from(toolsTable)
         .where(and(...conditions))
@@ -137,9 +139,25 @@ export const toolsRouter = {
             )
             .where(eq(toolCategoriesTable.toolId, tool.id))
 
+          let thumbnail = null
+          if (tool.thumbnailId) {
+            const [thumbnailAsset] = await context.db
+              .select({
+                id: assetsTable.id,
+                url: assetsTable.url,
+              })
+              .from(assetsTable)
+              .where(eq(assetsTable.id, tool.thumbnailId))
+
+            if (thumbnailAsset) {
+              thumbnail = thumbnailAsset
+            }
+          }
+
           return {
             ...tool,
             categories: toolCategories,
+            thumbnail,
           }
         }),
       )
@@ -188,10 +206,27 @@ export const toolsRouter = {
         .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
         .where(eq(toolTagsTable.toolId, input.id))
 
+      let thumbnail = null
+      if (tool.thumbnailId) {
+        const [thumbnailAsset] = await context.db
+          .select({
+            id: assetsTable.id,
+            url: assetsTable.url,
+            originalName: assetsTable.originalName,
+          })
+          .from(assetsTable)
+          .where(eq(assetsTable.id, tool.thumbnailId))
+
+        if (thumbnailAsset) {
+          thumbnail = thumbnailAsset
+        }
+      }
+
       return {
         ...tool,
         categories: toolCategories,
         tags: toolTags,
+        thumbnail,
       }
     }),
 
@@ -229,27 +264,69 @@ export const toolsRouter = {
         .innerJoin(tagsTable, eq(toolTagsTable.tagId, tagsTable.id))
         .where(eq(toolTagsTable.toolId, tool.id))
 
+      let thumbnail = null
+      if (tool.thumbnailId) {
+        const [thumbnailAsset] = await context.db
+          .select({
+            id: assetsTable.id,
+            url: assetsTable.url,
+            originalName: assetsTable.originalName,
+          })
+          .from(assetsTable)
+          .where(eq(assetsTable.id, tool.thumbnailId))
+
+        if (thumbnailAsset) {
+          thumbnail = thumbnailAsset
+        }
+      }
+
       return {
         ...tool,
         categories: toolCategories,
         tags: toolTags,
+        thumbnail,
       }
     }),
 
   getPopular: publicProcedure.handler(async ({ context }) => {
-    const popular = await context.db
+    const tools = await context.db
       .select({
         id: toolsTable.id,
         slug: toolsTable.slug,
         name: toolsTable.name,
         description: toolsTable.description,
         costPerRun: toolsTable.costPerRun,
+        thumbnailId: toolsTable.thumbnailId,
       })
       .from(toolsTable)
       .where(eq(toolsTable.status, "active"))
       .limit(10)
 
-    return popular
+    const toolsWithThumbnails = await Promise.all(
+      tools.map(async (tool) => {
+        let thumbnail = null
+        if (tool.thumbnailId) {
+          const [thumbnailAsset] = await context.db
+            .select({
+              id: assetsTable.id,
+              url: assetsTable.url,
+            })
+            .from(assetsTable)
+            .where(eq(assetsTable.id, tool.thumbnailId))
+
+          if (thumbnailAsset) {
+            thumbnail = thumbnailAsset
+          }
+        }
+
+        return {
+          ...tool,
+          thumbnail,
+        }
+      }),
+    )
+
+    return toolsWithThumbnails
   }),
 
   getCategories: publicProcedure.handler(async ({ context }) => {
@@ -535,7 +612,22 @@ export const toolsRouter = {
   create: adminProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
-      const { tagIds, categoryIds, ...toolData } = input
+      const { tagIds, categoryIds, thumbnailId, ...toolData } = input
+
+      if (thumbnailId) {
+        const [asset] = await context.db
+          .select()
+          .from(assetsTable)
+          .where(eq(assetsTable.id, thumbnailId))
+
+        if (!asset) {
+          throw new Error("Thumbnail asset not found")
+        }
+
+        if (asset.type !== "images") {
+          throw new Error("Thumbnail must be an image asset")
+        }
+      }
 
       if (categoryIds && categoryIds.length > 0) {
         const existingCategories = await context.db
@@ -595,7 +687,22 @@ export const toolsRouter = {
       if (!input.id) {
         throw new Error("Tool ID is required")
       }
-      const { id, tagIds, categoryIds, ...data } = input
+      const { id, tagIds, categoryIds, thumbnailId, ...data } = input
+
+      if (thumbnailId) {
+        const [asset] = await context.db
+          .select()
+          .from(assetsTable)
+          .where(eq(assetsTable.id, thumbnailId))
+
+        if (!asset) {
+          throw new Error("Thumbnail asset not found")
+        }
+
+        if (asset.type !== "images") {
+          throw new Error("Thumbnail must be an image asset")
+        }
+      }
 
       if (categoryIds && categoryIds.length > 0) {
         const existingCategories = await context.db

@@ -18,6 +18,7 @@
     "db:studio": "bun run drizzle-kit studio",
     "db:up": "bun run drizzle-kit up",
     "dev": "bun run --bun next dev --turbopack",
+    "fix": "bun run lint:fix && bun run format:write",
     "format:check": "oxfmt --check .",
     "format:write": "oxfmt --write .",
     "lint": "oxlint --type-aware .",

@@ -20,6 +20,7 @@ import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 import ApiKeySelector from "./api-key-selector"
 import ModelSelect from "./model-select"
 import RangeSlider from "./range-slider"
+import { ThumbnailSelector } from "./thumbnail-selector"
 
 interface Category {
   id: string
@@ -49,6 +50,7 @@ export interface ConfigValues {
   tagIds?: string[]
   categories?: Category[]
   tags?: Tag[]
+  thumbnailId?: string
 }
 
 export interface ConfigHandlers {
@@ -63,6 +65,7 @@ export interface ConfigHandlers {
   onTagsChange?: (value: string[]) => void
   onAddNewCategory?: () => void
   onAddNewTag?: () => void
+  onThumbnailIdChange?: (value: string | undefined) => void
 }
 
 interface ConfigurationPanelProps {
@@ -275,6 +278,15 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
           )}
         </div>
       </div>
+
+      <div className="bg-border h-px w-full" />
+
+      {handlers.onThumbnailIdChange && (
+        <ThumbnailSelector
+          value={config.thumbnailId}
+          onChange={handlers.onThumbnailIdChange}
+        />
+      )}
 
       <div className="bg-border h-px w-full" />
 

@@ -50,6 +50,7 @@ const toolFormSchema = insertToolSchema
     apiKeyId: true,
     categoryIds: true,
     tagIds: true,
+    thumbnailId: true,
   })
   .extend({
     name: z.string().min(1, "Tool name is required").trim(),
@@ -99,6 +100,7 @@ const toolFormSchema = insertToolSchema
     apiKeyId: z.string().min(1, "API key is required"),
     categoryIds: z.array(z.string()).optional(),
     tagIds: z.array(z.string()).optional(),
+    thumbnailId: z.string().optional(),
   })
 
 export type ToolFormData = z.infer<typeof toolFormSchema>
@@ -242,6 +244,7 @@ const ToolForm = ({
       apiKeyError: "",
       categoryIds: [] as string[],
       tagIds: [] as string[],
+      thumbnailId: undefined as string | undefined,
     },
     onSubmit: ({ value }) => {
       const formData = {
@@ -271,6 +274,7 @@ const ToolForm = ({
           value.categoryIds.length > 0 && { categoryIds: value.categoryIds }),
         ...(value.tagIds &&
           value.tagIds.length > 0 && { tagIds: value.tagIds }),
+        ...(value.thumbnailId && { thumbnailId: value.thumbnailId }),
       }
 
       const result = toolFormSchema.safeParse(formData)
@@ -324,6 +328,7 @@ const ToolForm = ({
           }),
         ...(formData.tagIds &&
           formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
+        ...(formData.thumbnailId && { thumbnailId: formData.thumbnailId }),
       }
     },
   }))
@@ -418,6 +423,10 @@ const ToolForm = ({
           "tagIds",
           initialData.tags.map((tag: { id: string }) => tag.id),
         )
+      }
+
+      if ("thumbnail" in initialData && initialData.thumbnail) {
+        form.setFieldValue("thumbnailId", initialData.thumbnail.id)
       }
     }
   })
@@ -643,6 +652,7 @@ const ToolForm = ({
           apiKeyError: state.values.apiKeyError,
           categoryIds: state.values.categoryIds,
           tagIds: state.values.tagIds,
+          thumbnailId: state.values.thumbnailId,
         })}
       >
         {({
@@ -656,6 +666,7 @@ const ToolForm = ({
           apiKeyError,
           categoryIds,
           tagIds,
+          thumbnailId,
         }) => (
           <ConfigurationPanel
             config={{
@@ -673,6 +684,7 @@ const ToolForm = ({
               tagIds,
               categories,
               tags,
+              thumbnailId,
             }}
             handlers={{
               onModelEngineChange: (value) =>
@@ -695,6 +707,8 @@ const ToolForm = ({
               onTagsChange: (value) => form.setFieldValue("tagIds", value),
               onAddNewCategory: () => setNewCategoryDialogOpen(true),
               onAddNewTag: () => setNewTagDialogOpen(true),
+              onThumbnailIdChange: (value) =>
+                form.setFieldValue("thumbnailId", value),
             }}
           />
         )}
