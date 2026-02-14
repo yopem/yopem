@@ -8,6 +8,7 @@ import { getR2Storage } from "@/lib/storage/r2"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
+const SETTINGS_CACHE_TTL = 300
 
 const listAssetsInputSchema = z.object({
   limit: z.number().min(1).max(100).default(20),
@@ -53,6 +54,16 @@ export const assetsRouter = {
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
+    const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
+    const cached = await context.redis.getCache<number>(cacheKey)
+
+    if (cached !== null) {
+      return {
+        maxSizeMB: cached,
+        maxSizeBytes: cached * 1024 * 1024,
+      }
+    }
+
     const [settings] = await context.db
       .select()
       .from(adminSettingsTable)
@@ -63,6 +74,8 @@ export const assetsRouter = {
         ? settings.settingValue
         : MAX_UPLOAD_SIZE_MB
 
+    await context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+
     return {
       maxSizeMB,
       maxSizeBytes: maxSizeMB * 1024 * 1024,
@@ -72,28 +85,32 @@ export const assetsRouter = {
   upload: adminProcedure
     .input(z.instanceof(File))
     .handler(async ({ context, input: file }) => {
-      // Get max upload size from settings
-      const [settings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+      const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
+      let maxSizeMB = await context.redis.getCache<number>(cacheKey)
 
-      const maxSizeMB =
-        settings && typeof settings.settingValue === "number"
-          ? settings.settingValue
-          : MAX_UPLOAD_SIZE_MB
+      if (maxSizeMB === null) {
+        const [settings] = await context.db
+          .select()
+          .from(adminSettingsTable)
+          .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+
+        maxSizeMB =
+          settings && typeof settings.settingValue === "number"
+            ? settings.settingValue
+            : MAX_UPLOAD_SIZE_MB
+
+        await context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+      }
+
       const maxSizeBytes = maxSizeMB * 1024 * 1024
 
-      // Validate size
       if (file.size > maxSizeBytes) {
         throw new Error(`File size exceeds ${maxSizeMB}MB limit`)
       }
 
-      // Convert File to Buffer
       const arrayBuffer = await file.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
 
-      // Upload to R2
       const r2 = getR2Storage()
       const { url, type, size, key } = await r2.uploadAsset(
         buffer,
@@ -101,7 +118,6 @@ export const assetsRouter = {
         file.type || "application/octet-stream",
       )
 
-      // Save to database
       const [asset] = await context.db
         .insert(assetsTable)
         .values({
