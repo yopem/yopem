@@ -1,4 +1,4 @@
-import { pgTable, primaryKey, text } from "drizzle-orm/pg-core"
+import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core"
 
 export const toolCategoriesTable = pgTable(
   "tool_categories",
@@ -9,6 +9,10 @@ export const toolCategoriesTable = pgTable(
   (table) => {
     return {
       pk: primaryKey({ columns: [table.toolId, table.categoryId] }),
+      toolIdIdx: index("idx_tool_categories_tool_id").on(table.toolId),
+      categoryIdIdx: index("idx_tool_categories_category_id").on(
+        table.categoryId,
+      ),
     }
   },
 )
