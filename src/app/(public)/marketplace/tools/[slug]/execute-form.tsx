@@ -37,8 +37,8 @@ export default function ToolExecuteForm({
       setOutput(data.output)
       setError(null)
     },
-    onError: (err: Error) => {
-      setError(err.message)
+    onError: (error: Error) => {
+      setError(error.message)
       setOutput(null)
     },
   })

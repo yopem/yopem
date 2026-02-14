@@ -4,6 +4,7 @@ import { AlertTriangleIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
+import { logger } from "@/lib/utils/logger"
 
 export default function GlobalError({
   error,
@@ -13,7 +14,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error("Global error:", error)
+    logger.error(`Global error: ${error}`)
   }, [error])
 
   return (

@@ -11,7 +11,7 @@ export function createRedisCache() {
     if (redis) return redis
 
     if (!redisUrl) {
-      console.warn("Redis URL not found. Caching will be disabled.")
+      logger.warn("Redis URL not found. Caching will be disabled.")
       return null
     }
 
@@ -19,8 +19,8 @@ export function createRedisCache() {
       const { default: RedisClient } = await import("ioredis")
       redis = new RedisClient(redisUrl)
 
-      redis.on("error", (err: Error) => {
-        console.error("Redis connection error:", err)
+      redis.on("error", (error: Error) => {
+        logger.error(`Redis connection error: ${error.message}`)
       })
 
       redis.on("connect", () => {
@@ -29,7 +29,7 @@ export function createRedisCache() {
 
       return redis
     } catch (error) {
-      console.error("Failed to create Redis client:", error)
+      logger.error(`Failed to create Redis client: ${error}`)
       return null
     }
   }
@@ -68,7 +68,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.setex(prefixedKey, ttlSeconds, serialized)
     } catch (error) {
-      console.error("Failed to set cache:", error)
+      logger.error(`Failed to set cache: ${error}`)
     }
   }
 
@@ -88,7 +88,7 @@ export function createRedisCache() {
         return val
       })
     } catch (error) {
-      console.error("Failed to get cache:", error)
+      logger.error(`Failed to get cache: ${error}`)
       return null
     }
   }
@@ -101,7 +101,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.del(prefixedKey)
     } catch (error) {
-      console.error("Failed to delete cache:", error)
+      logger.error(`Failed to delete cache: ${error}`)
     }
   }
 
@@ -116,7 +116,7 @@ export function createRedisCache() {
         await client.del(...keys)
       }
     } catch (error) {
-      console.error("Failed to invalidate cache pattern:", error)
+      logger.error(`Failed to invalidate cache pattern: ${error}`)
     }
   }
 
@@ -135,7 +135,7 @@ export function createRedisCache() {
         logger.info("Redis connection closed successfully")
         redis = null
       } catch (error) {
-        console.error("Failed to close Redis connection:", error)
+        logger.error(`Failed to close Redis connection: ${error}`)
         if (redis) {
           redis.disconnect()
           redis = null

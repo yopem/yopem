@@ -59,10 +59,10 @@ function EditToolPage() {
         type: "success",
       })
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error updating tool",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
@@ -99,10 +99,10 @@ function EditToolPage() {
         type: "success",
       })
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Preview execution failed",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },

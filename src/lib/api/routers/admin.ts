@@ -12,6 +12,7 @@ import {
 import { failure, success, type Result } from "@/lib/types/result"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
+import { logger } from "@/lib/utils/logger"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
@@ -51,7 +52,7 @@ export const adminRouter = {
           apiKey: maskApiKey(decrypted),
         }
       } catch (error) {
-        console.error(`Failed to decrypt API key ${key.id}:`, error)
+        logger.error(`Failed to decrypt API key ${key.id}: ${error}`)
         return {
           ...key,
           apiKey: "Error: Failed to decrypt",
@@ -240,10 +241,12 @@ export const adminRouter = {
             await context.redis.setCache(cacheKey, result.data, MODEL_CACHE_TTL)
             return { provider, models: result.data }
           }
-          console.error(`Failed to fetch models for ${provider}:`, result.error)
+          logger.error(
+            `Failed to fetch models for ${provider}: ${result.error}`,
+          )
           return { provider, models: [] as { id: string; name: string }[] }
         } catch (error) {
-          console.error(`Failed to fetch models for ${provider}:`, error)
+          logger.error(`Failed to fetch models for ${provider}: ${error}`)
           return { provider, models: [] as { id: string; name: string }[] }
         }
       }),

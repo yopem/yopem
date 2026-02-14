@@ -1,5 +1,7 @@
 import { cookies } from "next/headers"
 
+import { logger } from "@/lib/utils/logger"
+
 import { createORPCClientFromLink, createORPCLink } from "./shared"
 
 const createServerFetchWithCookies = () => {
@@ -20,7 +22,7 @@ const createServerFetchWithCookies = () => {
         }
       }
     } catch (error) {
-      console.error("Could not access cookies in server context:", error)
+      logger.error(`Could not access cookies in server context: ${error}`)
     }
 
     return fetch(input, {

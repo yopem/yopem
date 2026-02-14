@@ -10,6 +10,7 @@ import {
 } from "@/lib/db/schema"
 import { env } from "@/lib/env"
 import { createCustomId } from "@/lib/utils/custom-id"
+import { logger } from "@/lib/utils/logger"
 
 const databaseUrl = env.DATABASE_URL
 if (!databaseUrl) {
@@ -26,7 +27,7 @@ const createSlug = (name: string): string => {
 }
 
 async function clearExistingTools() {
-  console.info("🗑️  Clearing existing demo tools...")
+  logger.info("🗑️  Clearing existing demo tools...")
 
   const demoToolSlugs = [
     "article-summarizer",
@@ -58,14 +59,14 @@ async function clearExistingTools() {
 
       await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
     }
-    console.info("✅ Cleared existing demo tools")
+    logger.info("✅ Cleared existing demo tools")
   } catch (error) {
-    console.warn("⚠️  No existing tools to clear or error occurred:", error)
+    logger.warn(`⚠️  No existing tools to clear or error occurred: ${error}`)
   }
 }
 
 async function seedCategories() {
-  console.info("🌱 Seeding categories...")
+  logger.info("🌱 Seeding categories...")
 
   const categories = [
     {
@@ -115,12 +116,12 @@ async function seedCategories() {
 
     if (existing) {
       createdCategories[category.slug] = existing.id
-      console.info(`✓ Category exists: ${category.name}`)
+      logger.info(`✓ Category exists: ${category.name}`)
     } else {
       const id = createCustomId()
       await db.insert(categoriesTable).values({ id, ...category })
       createdCategories[category.slug] = id
-      console.info(`✅ Seeded category: ${category.name}`)
+      logger.info(`✅ Seeded category: ${category.name}`)
     }
   }
 
@@ -128,7 +129,7 @@ async function seedCategories() {
 }
 
 async function seedTags() {
-  console.info("🌱 Seeding tags...")
+  logger.info("🌱 Seeding tags...")
 
   const tags = [
     { name: "Text Processing", slug: "text-processing" },
@@ -153,12 +154,12 @@ async function seedTags() {
 
     if (existing) {
       createdTags[tag.slug] = existing.id
-      console.info(`✓ Tag exists: ${tag.name}`)
+      logger.info(`✓ Tag exists: ${tag.name}`)
     } else {
       const id = createCustomId()
       await db.insert(tagsTable).values({ id, ...tag })
       createdTags[tag.slug] = id
-      console.info(`✅ Seeded tag: ${tag.name}`)
+      logger.info(`✅ Seeded tag: ${tag.name}`)
     }
   }
 
@@ -166,7 +167,7 @@ async function seedTags() {
 }
 
 async function seedTools() {
-  console.info("🌱 Seeding tools...")
+  logger.info("🌱 Seeding tools...")
 
   const categories = await seedCategories()
   const tags = await seedTags()
@@ -632,28 +633,28 @@ async function seedTools() {
 
     for (const tool of tools) {
       await db.insert(toolsTable).values(tool)
-      console.info(`✅ Seeded: ${tool.name}`)
+      logger.info(`✅ Seeded: ${tool.name}`)
     }
 
-    console.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
-    console.info("\nTools created:")
+    logger.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
+    logger.info("\nTools created:")
     tools.forEach((tool, index) => {
-      console.info(
+      logger.info(
         `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
       )
     })
   } catch (error) {
-    console.error("❌ Error seeding tools:", error)
+    logger.error(`❌ Error seeding tools: ${error}`)
     throw error
   }
 }
 
 seedTools()
   .then(() => {
-    console.info("\n✨ Seeding completed successfully!")
+    logger.info("\n✨ Seeding completed successfully!")
     process.exit(0)
   })
   .catch((error) => {
-    console.error("\n💥 Seeding failed:", error)
+    logger.error(`\n💥 Seeding failed: ${error}`)
     process.exit(1)
   })

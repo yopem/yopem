@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogPopup } from "@/components/ui/dialog"
 import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
+import { logger } from "@/lib/utils/logger"
 
 interface Asset {
   id: string
@@ -53,7 +54,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       })
       setAssets(result.assets as Asset[])
     } catch (error) {
-      console.error("Failed to load assets:", error)
+      logger.error(`Failed to load assets: ${error}`)
     } finally {
       setLoading(false)
     }
@@ -67,7 +68,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         setCurrentThumbnail(asset)
       }
     } catch (error) {
-      console.error("Failed to load thumbnail:", error)
+      logger.error(`Failed to load thumbnail: ${error}`)
     }
   }
 

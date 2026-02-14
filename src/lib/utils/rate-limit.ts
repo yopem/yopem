@@ -1,5 +1,7 @@
 import type { Redis } from "ioredis"
 
+import { logger } from "@/lib/utils/logger"
+
 export async function checkRateLimit(
   getRedisClient: () => Promise<Redis | null>,
   key: string,
@@ -38,7 +40,7 @@ export async function checkRateLimit(
       remaining: maxRequests - count - 1,
     }
   } catch (error) {
-    console.error("Rate limit check failed:", error)
+    logger.error(`Rate limit check failed: ${error}`)
     return {
       isLimited: false,
       remaining: maxRequests,

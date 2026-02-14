@@ -1,6 +1,7 @@
 import crypto from "crypto"
 
 import { env } from "@/lib/env"
+import { logger } from "@/lib/utils/logger"
 
 function getEncryptionKey(): Buffer {
   const key = env.API_KEY_ENCRYPTION_SECRET
@@ -17,7 +18,7 @@ export function encryptApiKey(plaintext: string): string {
     const authTag = cipher.getAuthTag()
     return `${iv.toString("base64")}:${encrypted}:${authTag.toString("base64")}`
   } catch (error) {
-    console.error("Error encrypting API key:", error)
+    logger.error(`Error encrypting API key: ${error}`)
     throw new Error("Failed to encrypt API key")
   }
 }
@@ -27,7 +28,7 @@ export function decryptApiKey(ciphertext: string): string {
     const key = getEncryptionKey()
     const parts = ciphertext.split(":")
     if (parts.length !== 3) {
-      console.error("Invalid encrypted data format. Parts:", parts.length)
+      logger.error(`Invalid encrypted data format. Parts: ${parts.length}`)
       throw new Error("Invalid encrypted data format")
     }
     const [ivBase64, encryptedBase64, authTagBase64] = parts
@@ -40,7 +41,7 @@ export function decryptApiKey(ciphertext: string): string {
     decrypted += decipher.final("utf8")
     return decrypted
   } catch (error) {
-    console.error("Error decrypting API key:", error)
+    logger.error(`Error decrypting API key: ${error}`)
     throw new Error("Failed to decrypt API key")
   }
 }

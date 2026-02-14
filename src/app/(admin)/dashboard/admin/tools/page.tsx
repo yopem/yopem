@@ -95,10 +95,10 @@ function ToolsPage() {
       setSelectedTool(null)
       refetch()
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error deleting tool",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
@@ -118,10 +118,10 @@ function ToolsPage() {
       refetch()
       router.push(`/dashboard/admin/tools/edit/${data.id}`)
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error duplicating tool",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
@@ -146,10 +146,10 @@ function ToolsPage() {
       setSelectedToolIds([])
       refetch()
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error updating tools",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },

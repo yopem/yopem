@@ -43,7 +43,7 @@
     "no-class-assign": "off",
     "no-compare-neg-zero": "error",
     "no-cond-assign": "error",
-    "no-console": ["error", { "allow": ["error", "warn", "info"] }],
+    "no-console": "error",
     "no-const-assign": "off",
     "no-constant-binary-expression": "error",
     "no-constant-condition": "error",

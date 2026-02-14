@@ -86,10 +86,10 @@ export default function AssetsPage() {
       })
       void refetch()
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Upload failed",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
@@ -108,10 +108,10 @@ export default function AssetsPage() {
       setDeleteAsset(null)
       void refetch()
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Delete failed",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },

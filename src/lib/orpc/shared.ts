@@ -31,7 +31,8 @@ export const createORPCLink = (
       }),
     interceptors: [
       onError((error) => {
-        console.error(error)
+        // oxlint-disable-next-line no-console
+        console.error(`ORPC Error: ${error}`)
       }),
     ],
   })

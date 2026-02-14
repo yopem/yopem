@@ -1,5 +1,7 @@
 import { cookies as getCookies } from "next/headers"
 
+import { logger } from "@/lib/utils/logger"
+
 import { authClient } from "./client"
 import { subjects } from "./subjects"
 
@@ -39,7 +41,7 @@ export async function auth() {
   })
 
   if (verified.err) {
-    console.error("Error verifying token:", verified.err)
+    logger.error(`Error verifying token: ${verified.err}`)
 
     return false
   }

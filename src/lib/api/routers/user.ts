@@ -18,6 +18,7 @@ import {
 } from "@/lib/schemas/api-keys"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
+import { logger } from "@/lib/utils/logger"
 import { checkRateLimit, RATE_LIMITS } from "@/lib/utils/rate-limit"
 
 export const userRouter = {
@@ -203,7 +204,7 @@ export const userRouter = {
         apiKey: maskApiKey(decryptApiKey(key.apiKey)),
       }))
     } catch (error) {
-      console.error("Error parsing API keys:", error)
+      logger.error(`Error parsing API keys: ${error}`)
       return []
     }
   }),
@@ -249,7 +250,7 @@ export const userRouter = {
         try {
           existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         } catch (error) {
-          console.error("Error parsing existing API keys:", error)
+          logger.error(`Error parsing existing API keys: ${error}`)
         }
       }
 
@@ -339,7 +340,7 @@ export const userRouter = {
           ),
         }
       } catch (error) {
-        console.error("Error updating API key:", error)
+        logger.error(`Error updating API key: ${error}`)
         throw new Error("Failed to update API key")
       }
     }),
@@ -389,7 +390,7 @@ export const userRouter = {
 
         return { success: true, id: input.id }
       } catch (error) {
-        console.error("Error deleting API key:", error)
+        logger.error(`Error deleting API key: ${error}`)
         throw new Error("Failed to delete API key")
       }
     }),
@@ -407,7 +408,7 @@ export const userRouter = {
         const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         activeKeys = apiKeys.filter((key) => key.status === "active").length
       } catch (error) {
-        console.error("Error parsing API keys:", error)
+        logger.error(`Error parsing API keys: ${error}`)
       }
     }
 

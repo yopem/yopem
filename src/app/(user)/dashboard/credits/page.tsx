@@ -83,10 +83,10 @@ export default function CreditsPage() {
       })
       setCustomAmount("")
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error purchasing credits",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },

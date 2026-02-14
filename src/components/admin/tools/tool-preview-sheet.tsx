@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { logger } from "@/lib/utils/logger"
 
 interface ToolInputVariable {
   variableName: string
@@ -227,7 +228,7 @@ const ToolPreviewSheet = ({
                     handleChange(result)
                   }
                   reader.onerror = () => {
-                    console.error("Failed to read image file")
+                    logger.error("Failed to read image file")
                   }
                   reader.readAsDataURL(file)
                 }
@@ -261,7 +262,7 @@ const ToolPreviewSheet = ({
                     handleChange(result)
                   }
                   reader.onerror = () => {
-                    console.error("Failed to read video file")
+                    logger.error("Failed to read video file")
                   }
                   reader.readAsDataURL(file)
                 }

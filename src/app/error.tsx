@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
 import { appEnv } from "@/lib/env/client"
+import { logger } from "@/lib/utils/logger"
 
 export default function Error({
   error,
@@ -15,7 +16,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error("Route error:", error)
+    logger.error(`Route error: ${error}`)
   }, [error])
 
   return (

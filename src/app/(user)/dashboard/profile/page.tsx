@@ -42,10 +42,10 @@ export default function ProfilePage() {
         type: "success",
       })
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error updating profile",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },

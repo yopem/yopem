@@ -12,14 +12,14 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 })
 
-pool.on("error", (err) => {
-  console.error("Unexpected error on idle database connection", err)
+pool.on("error", (error: Error) => {
+  logger.error(`Unexpected error on idle database connection: ${error.message}`)
   logPoolMetrics()
 })
 
 pool.on("connect", () => {
   if (appEnv === "development") {
-    console.info("New database connection established")
+    logger.info("New database connection established")
   }
 })
 

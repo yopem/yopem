@@ -45,10 +45,10 @@ function AddToolPage() {
       })
       router.push(`/dashboard/admin/tools/edit/${data.id}`)
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Error creating tool",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
@@ -85,10 +85,10 @@ function AddToolPage() {
         type: "success",
       })
     },
-    onError: (err: Error) => {
+    onError: (error: Error) => {
       toastManager.add({
         title: "Preview execution failed",
-        description: err.message,
+        description: error.message,
         type: "error",
       })
     },
