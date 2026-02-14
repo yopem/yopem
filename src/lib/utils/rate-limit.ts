@@ -40,7 +40,7 @@ export async function checkRateLimit(
       remaining: maxRequests - count - 1,
     }
   } catch (error) {
-    logger.error(`Rate limit check failed: ${error}`)
+    logger.error(`Rate limit check failed: ${String(error)}`)
     return {
       isLimited: false,
       remaining: maxRequests,

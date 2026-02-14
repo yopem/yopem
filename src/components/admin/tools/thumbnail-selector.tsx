@@ -54,7 +54,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       })
       setAssets(result.assets as Asset[])
     } catch (error) {
-      logger.error(`Failed to load assets: ${error}`)
+      logger.error(`Failed to load assets: ${String(error)}`)
     } finally {
       setLoading(false)
     }
@@ -68,7 +68,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         setCurrentThumbnail(asset)
       }
     } catch (error) {
-      logger.error(`Failed to load thumbnail: ${error}`)
+      logger.error(`Failed to load thumbnail: ${String(error)}`)
     }
   }
 

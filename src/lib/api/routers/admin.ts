@@ -52,7 +52,7 @@ export const adminRouter = {
           apiKey: maskApiKey(decrypted),
         }
       } catch (error) {
-        logger.error(`Failed to decrypt API key ${key.id}: ${error}`)
+        logger.error(`Failed to decrypt API key ${key.id}: ${String(error)}`)
         return {
           ...key,
           apiKey: "Error: Failed to decrypt",
@@ -242,11 +242,13 @@ export const adminRouter = {
             return { provider, models: result.data }
           }
           logger.error(
-            `Failed to fetch models for ${provider}: ${result.error}`,
+            `Failed to fetch models for ${provider}: ${result.error.message}`,
           )
           return { provider, models: [] as { id: string; name: string }[] }
         } catch (error) {
-          logger.error(`Failed to fetch models for ${provider}: ${error}`)
+          logger.error(
+            `Failed to fetch models for ${provider}: ${String(error)}`,
+          )
           return { provider, models: [] as { id: string; name: string }[] }
         }
       }),

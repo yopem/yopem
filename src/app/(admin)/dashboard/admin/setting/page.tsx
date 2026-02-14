@@ -248,7 +248,7 @@ export default function AdminSettingsPage() {
       const result = await queryApi.admin.getAssetSettings.call()
       setMaxUploadSize(result.maxUploadSizeMB)
     } catch (error) {
-      logger.error(`Failed to fetch asset settings: ${error}`)
+      logger.error(`Failed to fetch asset settings: ${String(error)}`)
     } finally {
       setIsAssetSettingsLoading(false)
     }
@@ -264,7 +264,7 @@ export default function AdminSettingsPage() {
         type: "success",
       })
     } catch (error) {
-      logger.error(`Failed to update asset settings: ${error}`)
+      logger.error(`Failed to update asset settings: ${String(error)}`)
       toastManager.add({
         title: "Failed to update asset settings",
         type: "error",
@@ -294,7 +294,7 @@ export default function AdminSettingsPage() {
         })
       } catch (error) {
         toastManager.add({ title: "Failed to add provider", type: "error" })
-        logger.error(`Error adding provider: ${error}`)
+        logger.error(`Error adding provider: ${String(error)}`)
       }
     })()
   }, [addMutation, formData])
@@ -317,7 +317,7 @@ export default function AdminSettingsPage() {
         dispatch({ type: "CLOSE" })
       } catch (error) {
         toastManager.add({ title: "Failed to update provider", type: "error" })
-        logger.error(`Error updating provider: ${error}`)
+        logger.error(`Error updating provider: ${String(error)}`)
       }
     })()
   }, [updateMutation, modalState])
@@ -334,7 +334,7 @@ export default function AdminSettingsPage() {
         dispatch({ type: "CLOSE" })
       } catch (error) {
         toastManager.add({ title: "Failed to delete provider", type: "error" })
-        logger.error(`Error deleting provider: ${error}`)
+        logger.error(`Error deleting provider: ${String(error)}`)
       }
     })()
   }, [deleteMutation, modalState])

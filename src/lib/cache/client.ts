@@ -29,7 +29,7 @@ export function createRedisCache() {
 
       return redis
     } catch (error) {
-      logger.error(`Failed to create Redis client: ${error}`)
+      logger.error(`Failed to create Redis client: ${String(error)}`)
       return null
     }
   }
@@ -68,7 +68,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.setex(prefixedKey, ttlSeconds, serialized)
     } catch (error) {
-      logger.error(`Failed to set cache: ${error}`)
+      logger.error(`Failed to set cache: ${String(error)}`)
     }
   }
 
@@ -88,7 +88,7 @@ export function createRedisCache() {
         return val
       })
     } catch (error) {
-      logger.error(`Failed to get cache: ${error}`)
+      logger.error(`Failed to get cache: ${String(error)}`)
       return null
     }
   }
@@ -101,7 +101,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.del(prefixedKey)
     } catch (error) {
-      logger.error(`Failed to delete cache: ${error}`)
+      logger.error(`Failed to delete cache: ${String(error)}`)
     }
   }
 
@@ -116,7 +116,7 @@ export function createRedisCache() {
         await client.del(...keys)
       }
     } catch (error) {
-      logger.error(`Failed to invalidate cache pattern: ${error}`)
+      logger.error(`Failed to invalidate cache pattern: ${String(error)}`)
     }
   }
 
@@ -135,7 +135,7 @@ export function createRedisCache() {
         logger.info("Redis connection closed successfully")
         redis = null
       } catch (error) {
-        logger.error(`Failed to close Redis connection: ${error}`)
+        logger.error(`Failed to close Redis connection: ${String(error)}`)
         if (redis) {
           redis.disconnect()
           redis = null

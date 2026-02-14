@@ -18,7 +18,7 @@ export function encryptApiKey(plaintext: string): string {
     const authTag = cipher.getAuthTag()
     return `${iv.toString("base64")}:${encrypted}:${authTag.toString("base64")}`
   } catch (error) {
-    logger.error(`Error encrypting API key: ${error}`)
+    logger.error(`Error encrypting API key: ${String(error)}`)
     throw new Error("Failed to encrypt API key")
   }
 }
@@ -41,7 +41,7 @@ export function decryptApiKey(ciphertext: string): string {
     decrypted += decipher.final("utf8")
     return decrypted
   } catch (error) {
-    logger.error(`Error decrypting API key: ${error}`)
+    logger.error(`Error decrypting API key: ${String(error)}`)
     throw new Error("Failed to decrypt API key")
   }
 }

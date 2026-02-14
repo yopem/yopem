@@ -41,7 +41,7 @@ export async function auth() {
   })
 
   if (verified.err) {
-    logger.error(`Error verifying token: ${verified.err}`)
+    logger.error(`Error verifying token: ${JSON.stringify(verified.err)}`)
 
     return false
   }

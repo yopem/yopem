@@ -26,7 +26,7 @@ const handler = new RPCHandler(appRouter, {
       try {
         return await next()
       } catch (error) {
-        logger.error(`Error: ${error}`)
+        logger.error(`Error: ${String(error)}`)
         throw error
       }
     },

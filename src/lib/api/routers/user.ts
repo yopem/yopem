@@ -204,7 +204,7 @@ export const userRouter = {
         apiKey: maskApiKey(decryptApiKey(key.apiKey)),
       }))
     } catch (error) {
-      logger.error(`Error parsing API keys: ${error}`)
+      logger.error(`Error parsing API keys: ${String(error)}`)
       return []
     }
   }),
@@ -250,7 +250,7 @@ export const userRouter = {
         try {
           existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         } catch (error) {
-          logger.error(`Error parsing existing API keys: ${error}`)
+          logger.error(`Error parsing existing API keys: ${String(error)}`)
         }
       }
 
@@ -340,7 +340,7 @@ export const userRouter = {
           ),
         }
       } catch (error) {
-        logger.error(`Error updating API key: ${error}`)
+        logger.error(`Error updating API key: ${String(error)}`)
         throw new Error("Failed to update API key")
       }
     }),
@@ -390,7 +390,7 @@ export const userRouter = {
 
         return { success: true, id: input.id }
       } catch (error) {
-        logger.error(`Error deleting API key: ${error}`)
+        logger.error(`Error deleting API key: ${String(error)}`)
         throw new Error("Failed to delete API key")
       }
     }),
@@ -408,7 +408,7 @@ export const userRouter = {
         const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         activeKeys = apiKeys.filter((key) => key.status === "active").length
       } catch (error) {
-        logger.error(`Error parsing API keys: ${error}`)
+        logger.error(`Error parsing API keys: ${String(error)}`)
       }
     }
 

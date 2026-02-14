@@ -4,6 +4,7 @@ import type { RouterClient } from "@orpc/server"
 
 import type { appRouter } from "@/lib/api/root"
 import { env } from "@/lib/env"
+import { logger } from "@/lib/utils/logger"
 
 export const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin
@@ -31,8 +32,17 @@ export const createORPCLink = (
       }),
     interceptors: [
       onError((error) => {
-        // oxlint-disable-next-line no-console
-        console.error(`ORPC Error: ${error}`)
+        const isAbortError =
+          error instanceof Error &&
+          (error.name === "AbortError" ||
+            error.message === "signal is aborted without reason")
+        if (isAbortError) {
+          logger.info("Fetch aborted as expected")
+        } else {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
+          logger.error(errorMessage)
+        }
       }),
     ],
   })

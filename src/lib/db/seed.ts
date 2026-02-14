@@ -61,7 +61,9 @@ async function clearExistingTools() {
     }
     logger.info("✅ Cleared existing demo tools")
   } catch (error) {
-    logger.warn(`⚠️  No existing tools to clear or error occurred: ${error}`)
+    logger.warn(
+      `⚠️  No existing tools to clear or error occurred: ${String(error)}`,
+    )
   }
 }
 
@@ -644,7 +646,7 @@ async function seedTools() {
       )
     })
   } catch (error) {
-    logger.error(`❌ Error seeding tools: ${error}`)
+    logger.error(`❌ Error seeding tools: ${String(error)}`)
     throw error
   }
 }

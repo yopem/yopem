@@ -22,7 +22,9 @@ const createServerFetchWithCookies = () => {
         }
       }
     } catch (error) {
-      logger.error(`Could not access cookies in server context: ${error}`)
+      logger.error(
+        `Could not access cookies in server context: ${String(error)}`,
+      )
     }
 
     return fetch(input, {
