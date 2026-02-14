@@ -118,8 +118,11 @@ export const toolsRouter = {
           costPerRun: toolsTable.costPerRun,
           createdAt: toolsTable.createdAt,
           thumbnailId: toolsTable.thumbnailId,
+          thumbnailUrl: assetsTable.url,
+          thumbnailAssetId: assetsTable.id,
         })
         .from(toolsTable)
+        .leftJoin(assetsTable, eq(toolsTable.thumbnailId, assetsTable.id))
         .where(and(...conditions))
         .orderBy(desc(toolsTable.createdAt))
         .limit(limit + 1)
@@ -139,23 +142,15 @@ export const toolsRouter = {
             )
             .where(eq(toolCategoriesTable.toolId, tool.id))
 
-          let thumbnail = null
-          if (tool.thumbnailId) {
-            const [thumbnailAsset] = await context.db
-              .select({
-                id: assetsTable.id,
-                url: assetsTable.url,
-              })
-              .from(assetsTable)
-              .where(eq(assetsTable.id, tool.thumbnailId))
+          const thumbnail =
+            tool.thumbnailAssetId && tool.thumbnailUrl
+              ? { id: tool.thumbnailAssetId, url: tool.thumbnailUrl }
+              : null
 
-            if (thumbnailAsset) {
-              thumbnail = thumbnailAsset
-            }
-          }
+          const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
 
           return {
-            ...tool,
+            ...toolData,
             categories: toolCategories,
             thumbnail,
           }
@@ -297,36 +292,27 @@ export const toolsRouter = {
         description: toolsTable.description,
         costPerRun: toolsTable.costPerRun,
         thumbnailId: toolsTable.thumbnailId,
+        thumbnailUrl: assetsTable.url,
+        thumbnailAssetId: assetsTable.id,
       })
       .from(toolsTable)
+      .leftJoin(assetsTable, eq(toolsTable.thumbnailId, assetsTable.id))
       .where(eq(toolsTable.status, "active"))
       .limit(10)
 
-    const toolsWithThumbnails = await Promise.all(
-      tools.map(async (tool) => {
-        let thumbnail = null
-        if (tool.thumbnailId) {
-          const [thumbnailAsset] = await context.db
-            .select({
-              id: assetsTable.id,
-              url: assetsTable.url,
-            })
-            .from(assetsTable)
-            .where(eq(assetsTable.id, tool.thumbnailId))
+    return tools.map((tool) => {
+      const thumbnail =
+        tool.thumbnailAssetId && tool.thumbnailUrl
+          ? { id: tool.thumbnailAssetId, url: tool.thumbnailUrl }
+          : null
 
-          if (thumbnailAsset) {
-            thumbnail = thumbnailAsset
-          }
-        }
+      const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
 
-        return {
-          ...tool,
-          thumbnail,
-        }
-      }),
-    )
-
-    return toolsWithThumbnails
+      return {
+        ...toolData,
+        thumbnail,
+      }
+    })
   }),
 
   getCategories: publicProcedure.handler(async ({ context }) => {
@@ -740,7 +726,12 @@ export const toolsRouter = {
 
       await context.db
         .update(toolsTable)
-        .set({ ...data, ...(slug ? { slug } : {}), updatedAt: new Date() })
+        .set({
+          ...data,
+          ...(slug ? { slug } : {}),
+          thumbnailId: thumbnailId ?? null,
+          updatedAt: new Date(),
+        })
         .where(eq(toolsTable.id, id))
 
       if (categoryIds !== undefined) {

@@ -10,6 +10,7 @@ import { siteTitle } from "@/lib/env/client"
 import { serverApi } from "@/lib/orpc/server"
 
 import ToolExecuteForm from "./execute-form"
+import ThumbnailDisplay from "./thumbnail-display"
 import UserCredits from "./user-credits"
 
 const getToolBySlug = cache((slug: string) => {
@@ -71,6 +72,9 @@ async function ToolData({ slug }: { slug: string }) {
 
   return (
     <>
+      {tool.thumbnail && (
+        <ThumbnailDisplay thumbnail={tool.thumbnail} name={tool.name} />
+      )}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">

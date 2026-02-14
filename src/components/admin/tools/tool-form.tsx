@@ -274,7 +274,7 @@ const ToolForm = ({
           value.categoryIds.length > 0 && { categoryIds: value.categoryIds }),
         ...(value.tagIds &&
           value.tagIds.length > 0 && { tagIds: value.tagIds }),
-        ...(value.thumbnailId && { thumbnailId: value.thumbnailId }),
+        thumbnailId: value.thumbnailId,
       }
 
       const result = toolFormSchema.safeParse(formData)

@@ -1,5 +1,8 @@
+"use client"
+
 import { ArrowRight as ArrowRightIcon, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
+import { useState } from "react"
 
 import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
@@ -29,11 +32,12 @@ const ToolCard = ({
   thumbnail,
 }: ToolCardProps) => {
   const isFree = Number(costPerRun ?? 0) === 0
+  const [imageError, setImageError] = useState(false)
 
   return (
     <Link href={`/marketplace/tools/${slug}`} className="group block">
       <Card className="border-border bg-card hover:border-foreground/20 hover:bg-accent/50 flex h-full cursor-pointer flex-col transition-colors duration-200">
-        {thumbnail ? (
+        {thumbnail && !imageError ? (
           <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
             <Image
               src={thumbnail.url}
@@ -41,6 +45,7 @@ const ToolCard = ({
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
+              onError={() => setImageError(true)}
             />
           </div>
         ) : (
