@@ -30,6 +30,7 @@ const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
         <div className="relative flex-1">
           <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2" />
           <Input
+            id="marketplace-search"
             type="search"
             placeholder="Search tools by name or description..."
             value={query}
