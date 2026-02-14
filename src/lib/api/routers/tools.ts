@@ -346,11 +346,20 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const [tool] = await context.db
-        .select()
-        .from(toolsTable)
-        .where(eq(toolsTable.id, input.toolId))
+      const cacheKey = `settings:${apiKeyEncryptionSecret}`
+      const [toolResult, cachedApiKeys, userCreditsResult] = await Promise.all([
+        context.db
+          .select()
+          .from(toolsTable)
+          .where(eq(toolsTable.id, input.toolId)),
+        context.redis.getCache<ApiKeyConfig[]>(cacheKey),
+        context.db
+          .select()
+          .from(userCreditsTable)
+          .where(eq(userCreditsTable.userId, context.session.id)),
+      ])
 
+      const [tool] = toolResult
       if (tool === undefined) {
         throw new Error("Tool not found")
       }
@@ -365,18 +374,21 @@ export const toolsRouter = {
         )
       }
 
-      const [adminSettings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
+      let apiKeys = cachedApiKeys
+      if (!apiKeys) {
+        const [adminSettings] = await context.db
+          .select()
+          .from(adminSettingsTable)
+          .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
 
-      if (!adminSettings?.settingValue) {
-        throw new Error(
-          "No API keys configured. Please add an API key in settings.",
-        )
+        if (!adminSettings?.settingValue) {
+          throw new Error(
+            "No API keys configured. Please add an API key in settings.",
+          )
+        }
+        apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       }
 
-      const apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
 
       if (!selectedKey) {
@@ -391,10 +403,7 @@ export const toolsRouter = {
         )
       }
 
-      let [userCredits] = await context.db
-        .select()
-        .from(userCreditsTable)
-        .where(eq(userCreditsTable.userId, context.session.id))
+      let [userCredits] = userCreditsResult
 
       if (!userCredits) {
         const newCredits = {
@@ -556,18 +565,25 @@ export const toolsRouter = {
         throw new Error("API key is required for preview execution")
       }
 
-      const [adminSettings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
+      const cacheKey = `settings:${apiKeyEncryptionSecret}`
+      const cachedApiKeys =
+        await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
 
-      if (!adminSettings?.settingValue) {
-        throw new Error(
-          "No API keys configured. Please add an API key in settings.",
-        )
+      let apiKeys = cachedApiKeys
+      if (!apiKeys) {
+        const [adminSettings] = await context.db
+          .select()
+          .from(adminSettingsTable)
+          .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
+
+        if (!adminSettings?.settingValue) {
+          throw new Error(
+            "No API keys configured. Please add an API key in settings.",
+          )
+        }
+        apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       }
 
-      const apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
 
       if (!selectedKey) {
