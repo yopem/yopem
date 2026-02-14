@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
 import * as schema from "@/lib/db/schema"
-import { databaseUrl } from "@/lib/env/server"
+import { appEnv, databaseUrl } from "@/lib/env/server"
 
 const pool = new Pool({
   connectionString: databaseUrl,
@@ -13,8 +13,31 @@ const pool = new Pool({
 
 pool.on("error", (err) => {
   console.error("Unexpected error on idle database connection", err)
+  logPoolMetrics()
+})
+
+pool.on("connect", () => {
+  if (appEnv === "development") {
+    console.info("New database connection established")
+  }
 })
 
 export const db = drizzle(pool, {
   schema,
 })
+
+export function getPoolMetrics() {
+  return {
+    total: pool.totalCount,
+    idle: pool.idleCount,
+    waiting: pool.waitingCount,
+    active: pool.totalCount - pool.idleCount,
+  }
+}
+
+export function logPoolMetrics() {
+  const metrics = getPoolMetrics()
+  console.info(
+    `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,
+  )
+}
