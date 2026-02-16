@@ -1,7 +1,7 @@
 pre-commit:
   commands:
     quality:
-      run: bun run check
+      run: bun run fix && bun run check
 
 pre-push:
   commands:
