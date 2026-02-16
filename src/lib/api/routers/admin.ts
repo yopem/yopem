@@ -323,14 +323,6 @@ async function fetchModelsForProvider(
   switch (provider) {
     case "openai":
       return await fetchOpenAIModels(apiKey)
-    case "anthropic":
-      return await fetchAnthropicModels(apiKey)
-    case "google":
-      return await fetchGoogleModels(apiKey)
-    case "mistral":
-      return await fetchMistralModels(apiKey)
-    case "azure":
-      return fetchAzureModels(apiKey)
     case "openrouter":
       return await fetchOpenRouterModels(apiKey)
     default:
@@ -353,30 +345,13 @@ async function fetchOpenAIModels(
       })
     }
     const data = await response.json()
-    const filteredModels =
-      data.data
-        ?.filter(
-          (m: { id: string }) =>
-            m.id.includes("gpt") && !m.id.includes("instruct"),
-        )
-        .map((m: { id: string }) => ({
-          id: m.id,
-          name: m.id.toUpperCase().replace(/-/g, " "),
-        })) ?? []
+    const allModels =
+      data.data?.map((m: { id: string }) => ({
+        id: m.id,
+        name: m.id.toUpperCase().replace(/-/g, " "),
+      })) ?? []
 
-    const sortedModels = filteredModels.sort(
-      (a: { id: string }, b: { id: string }) => {
-        if (a.id === "gpt-4o") return -1
-        if (b.id === "gpt-4o") return 1
-        if (a.id === "gpt-4o-mini") return -1
-        if (b.id === "gpt-4o-mini") return 1
-        if (a.id.startsWith("gpt-4") && !b.id.startsWith("gpt-4")) return 1
-        if (b.id.startsWith("gpt-4") && !a.id.startsWith("gpt-4")) return -1
-        return 0
-      },
-    )
-
-    return success(sortedModels)
+    return success(allModels)
   } catch (error) {
     return failure({
       provider: "openai",
@@ -385,117 +360,6 @@ async function fetchOpenAIModels(
         error instanceof Error ? error.message : "Unknown error occurred",
     })
   }
-}
-
-async function fetchAnthropicModels(
-  apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/models", {
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-    })
-    if (!response.ok) {
-      return failure({
-        provider: "anthropic",
-        errorType: response.status === 401 ? "auth" : "network",
-        message: `API request failed with status ${response.status}`,
-      })
-    }
-    const data = await response.json()
-    const models =
-      data.data?.map((m: { id: string; display_name?: string }) => ({
-        id: m.id,
-        name: m.display_name ?? m.id,
-      })) ?? []
-    return success(models)
-  } catch (error) {
-    return failure({
-      provider: "anthropic",
-      errorType: "network",
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    })
-  }
-}
-
-async function fetchGoogleModels(
-  apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-    )
-    if (!response.ok) {
-      return failure({
-        provider: "google",
-        errorType: response.status === 401 ? "auth" : "network",
-        message: `API request failed with status ${response.status}`,
-      })
-    }
-    const data = await response.json()
-    const models =
-      data.models
-        ?.filter(
-          (m: { name: string; supportedGenerationMethods?: string[] }) =>
-            m.name.includes("gemini") &&
-            m.supportedGenerationMethods?.includes("generateContent"),
-        )
-        .map((m: { name: string; displayName?: string }) => {
-          const id = m.name.replace("models/", "")
-          return {
-            id,
-            name: m.displayName ?? id,
-          }
-        }) ?? []
-    return success(models)
-  } catch (error) {
-    return failure({
-      provider: "google",
-      errorType: "network",
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    })
-  }
-}
-
-async function fetchMistralModels(
-  apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
-  try {
-    const response = await fetch("https://api.mistral.ai/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!response.ok) {
-      return failure({
-        provider: "mistral",
-        errorType: response.status === 401 ? "auth" : "network",
-        message: `API request failed with status ${response.status}`,
-      })
-    }
-    const data = await response.json()
-    const models =
-      data.data?.map((m: { id: string }) => ({
-        id: m.id,
-        name: m.id,
-      })) ?? []
-    return success(models)
-  } catch (error) {
-    return failure({
-      provider: "mistral",
-      errorType: "network",
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    })
-  }
-}
-
-function fetchAzureModels(
-  _apiKey: string,
-): Result<{ id: string; name: string }[]> {
-  return success([])
 }
 
 async function fetchOpenRouterModels(

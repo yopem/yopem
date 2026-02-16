@@ -28,13 +28,8 @@
     "typecheck": "bun run tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.44",
-    "@ai-sdk/azure": "^3.0.30",
-    "@ai-sdk/google": "^3.0.29",
-    "@ai-sdk/mistral": "^3.0.20",
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/openai-compatible": "^2.0.30",
-    "@anthropic-ai/sdk": "^0.74.0",
     "@aws-sdk/client-s3": "^3.990.0",
     "@base-ui/react": "^1.2.0",
     "@next/third-parties": "16.1.6",

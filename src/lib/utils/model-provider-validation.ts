@@ -9,23 +9,7 @@ export function getProviderForModel(
     return "openai"
   }
 
-  if (modelLower.includes("claude")) {
-    return "anthropic"
-  }
-
-  if (modelLower.includes("gemini") || modelLower.includes("palm")) {
-    return "google"
-  }
-
-  if (modelLower.includes("azure")) {
-    return "azure"
-  }
-
-  if (modelLower.includes("mistral")) {
-    return "mistral"
-  }
-
-  if (modelLower.includes("llama")) {
+  if (modelLower.includes("llama") || modelLower.includes("openrouter")) {
     return "openrouter"
   }
 
@@ -57,12 +41,7 @@ export function getProviderMismatchMessage(
 
   const providerNames: Record<ApiKeyProvider, string> = {
     openai: "OpenAI",
-    anthropic: "Anthropic",
-    google: "Google",
-    azure: "Azure",
     openrouter: "OpenRouter",
-    mistral: "Mistral",
-    other: "Other",
   }
 
   return `The selected API key (${providerNames[apiKeyProvider]}) is not compatible with ${modelEngine}. Please select a ${providerNames[requiredProvider]} API key.`

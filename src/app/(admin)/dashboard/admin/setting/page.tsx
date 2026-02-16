@@ -3,7 +3,6 @@
 import {
   BarChartIcon,
   BotIcon,
-  BrainIcon,
   DollarSignIcon,
   EyeIcon,
   EyeOffIcon,
@@ -65,18 +64,12 @@ import { logger } from "@/lib/utils/logger"
 
 const providerIcons: Record<string, ReactNode> = {
   openai: <BotIcon className="text-background" />,
-  anthropic: <BrainIcon className="text-background" />,
-  google: <KeyIcon className="text-background" />,
-  azure: <KeyIcon className="text-background" />,
-  other: <KeyIcon className="text-background" />,
+  openrouter: <KeyIcon className="text-background" />,
 }
 
 const providerNames: Record<string, string> = {
   openai: "OpenAI",
-  anthropic: "Anthropic",
-  google: "Google AI",
-  azure: "Azure OpenAI",
-  other: "Other",
+  openrouter: "OpenRouter",
 }
 
 const ProviderCard = memo(
@@ -631,10 +624,7 @@ export default function AdminSettingsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="openai">OpenAI</SelectItem>
-                    <SelectItem value="anthropic">Anthropic</SelectItem>
-                    <SelectItem value="google">Google AI</SelectItem>
-                    <SelectItem value="azure">Azure OpenAI</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="openrouter">OpenRouter</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

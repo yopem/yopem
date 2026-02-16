@@ -20,12 +20,7 @@ interface ApiKeySelectorProps {
 
 const providerDisplayNames: Record<string, string> = {
   openai: "OpenAI",
-  anthropic: "Anthropic",
-  google: "Google",
-  azure: "Azure",
   openrouter: "OpenRouter",
-  mistral: "Mistral",
-  other: "Other",
 }
 
 const ApiKeySelector = ({

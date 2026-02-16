@@ -1,11 +1,7 @@
 import type { ApiKeyProvider } from "@/lib/schemas/api-keys"
 import { getR2Storage } from "@/lib/storage/r2"
 
-import { AnthropicProvider } from "./providers/anthropic"
-import { AzureProvider } from "./providers/azure"
 import type { AIProvider, ExecutionResponse } from "./providers/base"
-import { GoogleProvider } from "./providers/google"
-import { MistralProvider } from "./providers/mistral"
 import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
 
@@ -43,18 +39,8 @@ function getProviderInstance(
   switch (provider) {
     case "openai":
       return new OpenAIProvider({ apiKey, model })
-    case "anthropic":
-      return new AnthropicProvider({ apiKey, model })
-    case "google":
-      return new GoogleProvider({ apiKey, model })
-    case "azure":
-      return new AzureProvider({ apiKey, model })
     case "openrouter":
       return new OpenRouterProvider({ apiKey, model })
-    case "mistral":
-      return new MistralProvider({ apiKey, model })
-    default:
-      throw new Error(`Unsupported provider: ${provider}`)
   }
 }
 

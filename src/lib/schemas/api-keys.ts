@@ -1,14 +1,6 @@
 import { z } from "zod"
 
-export const apiKeyProviderSchema = z.enum([
-  "openai",
-  "anthropic",
-  "google",
-  "azure",
-  "openrouter",
-  "mistral",
-  "other",
-])
+export const apiKeyProviderSchema = z.enum(["openai", "openrouter"])
 
 export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
 
