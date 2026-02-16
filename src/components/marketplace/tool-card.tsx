@@ -1,6 +1,6 @@
 "use client"
 
-import { Image as ImageIcon } from "lucide-react"
+import { Image as ImageIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 
@@ -11,21 +11,28 @@ export interface ToolCardProps {
   slug: string
   name: string
   description: string | null
+  excerpt?: string | null
   costPerRun: string | null
   categories?: { id: string; name: string; slug: string }[]
   thumbnail?: { id: string; url: string } | null
+  averageRating?: number | null
+  reviewCount?: number
 }
 
 const ToolCard = ({
   slug,
   name,
   description,
+  excerpt,
   costPerRun,
   categories = [],
   thumbnail,
+  averageRating,
+  reviewCount,
 }: ToolCardProps) => {
   const isFree = Number(costPerRun ?? 0) === 0
   const [imageError, setImageError] = useState(false)
+  const hasReviews = reviewCount && reviewCount > 0
 
   return (
     <Link
@@ -57,7 +64,7 @@ const ToolCard = ({
 
         <CardContent className="flex-1 pb-2">
           <p className="text-muted-foreground line-clamp-2 text-sm">
-            {description ?? "No description available"}
+            {excerpt ?? description ?? "No description available"}
           </p>
         </CardContent>
 
@@ -70,11 +77,19 @@ const ToolCard = ({
             >
               {isFree ? "Free" : `${costPerRun} credits`}
             </span>
-            {categories.length > 0 && (
-              <span className="text-muted-foreground text-xs">
-                {categories[0].name}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {hasReviews && averageRating && (
+                <div className="flex items-center gap-1">
+                  <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs">{averageRating.toFixed(1)}</span>
+                </div>
+              )}
+              {categories.length > 0 && (
+                <span className="text-muted-foreground text-xs">
+                  {categories[0].name}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </Card>

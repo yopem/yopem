@@ -137,9 +137,12 @@ const MarketplaceGrid = ({
                   slug={tool.slug}
                   name={tool.name}
                   description={tool.description}
+                  excerpt={tool.excerpt}
                   costPerRun={tool.costPerRun}
                   categories={tool.categories}
                   thumbnail={tool.thumbnail}
+                  averageRating={tool.averageRating}
+                  reviewCount={tool.reviewCount}
                 />
               ))}
             </div>

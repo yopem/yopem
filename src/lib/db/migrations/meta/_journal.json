@@ -92,6 +92,20 @@
       "when": 1771050436023,
       "tag": "0012_red_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1771228899335,
+      "tag": "0013_gigantic_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1771267792166,
+      "tag": "0014_cynical_electro",
+      "breakpoints": true
     }
   ]
 }

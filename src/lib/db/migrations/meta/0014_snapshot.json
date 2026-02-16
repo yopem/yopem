@@ -1,6 +1,6 @@
 {
-  "id": "40d9f10c-9fa9-4bd7-bad1-cef9159f6db3",
-  "prevId": "320fbac7-f212-47a9-8282-822f7d9059c3",
+  "id": "c7c955ff-8404-4762-97c2-7e6c27b1f88f",
+  "prevId": "40d9f10c-9fa9-4bd7-bad1-cef9159f6db3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -936,6 +936,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "user_name": {
+          "name": "user_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "rating": {
           "name": "rating",

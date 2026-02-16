@@ -1,4 +1,10 @@
-import { CalendarIcon, FolderIcon, TagIcon, CreditCardIcon } from "lucide-react"
+import {
+  CalendarIcon,
+  FolderIcon,
+  TagIcon,
+  CreditCardIcon,
+  StarIcon,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +19,8 @@ interface ToolInfoProps {
     createdAt: Date | null
     categories: { id: string; name: string; slug: string }[]
     tags: { id: string; name: string; slug: string }[]
+    averageRating?: number | null
+    reviewCount?: number
   }
 }
 
@@ -25,6 +33,8 @@ const ToolInfo = ({ tool }: ToolInfoProps) => {
         day: "numeric",
       })
     : "N/A"
+
+  const hasReviews = tool.reviewCount && tool.reviewCount > 0
 
   return (
     <div className="space-y-4">
@@ -44,6 +54,33 @@ const ToolInfo = ({ tool }: ToolInfoProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {hasReviews && (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <StarIcon
+                      key={i}
+                      className={`size-4 ${
+                        i < Math.round(tool.averageRating ?? 0)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300 dark:text-gray-600"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-medium">
+                  {tool.averageRating?.toFixed(1)}
+                </span>
+                <span className="text-muted-foreground text-sm">
+                  ({tool.reviewCount}{" "}
+                  {tool.reviewCount === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+              <Separator />
+            </>
+          )}
+
           <div>
             <p className="text-muted-foreground mb-2 text-sm">Description</p>
             <p className="text-sm/relaxed">

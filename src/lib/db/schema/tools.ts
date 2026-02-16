@@ -24,6 +24,7 @@ export const toolsTable = pgTable("tools", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
+  excerpt: text("excerpt"),
   status: text("status", { enum: toolStatusEnum }).default("draft").notNull(),
   config: jsonb("config"),
   systemRole: text("system_role"),
@@ -58,5 +59,7 @@ export type SelectTool = typeof toolsTable.$inferSelect & {
   categories: { id: string; name: string; slug: string }[]
   tags: { id: string; name: string; slug: string }[]
   thumbnail?: { id: string; url: string; originalName: string } | null
+  averageRating?: number | null
+  reviewCount?: number
 }
 export type InsertTool = typeof toolsTable.$inferInsert

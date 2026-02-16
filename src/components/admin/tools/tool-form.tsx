@@ -40,6 +40,7 @@ const toolFormSchema = insertToolSchema
   .pick({
     name: true,
     description: true,
+    excerpt: true,
     systemRole: true,
     userInstructionTemplate: true,
     inputVariable: true,
@@ -55,6 +56,7 @@ const toolFormSchema = insertToolSchema
   .extend({
     name: z.string().min(1, "Tool name is required").trim(),
     description: z.string().min(1, "Tool description is required").trim(),
+    excerpt: z.string().max(500).optional(),
     systemRole: z.string().min(1, "System role is required").trim(),
     userInstructionTemplate: z
       .string()
@@ -224,6 +226,7 @@ const ToolForm = ({
     defaultValues: {
       name: "",
       description: "",
+      excerpt: "",
       inputFields: [] as {
         id: string
         variableName: string
@@ -250,6 +253,7 @@ const ToolForm = ({
       const formData = {
         name: value.name,
         description: value.description,
+        excerpt: value.excerpt || undefined,
         systemRole: value.systemRole,
         userInstructionTemplate: value.userInstructionTemplate,
         inputVariable: value.inputFields.map((field) => ({
@@ -302,6 +306,7 @@ const ToolForm = ({
       return {
         name: formData.name,
         description: formData.description,
+        excerpt: formData.excerpt || undefined,
         systemRole: formData.systemRole,
         userInstructionTemplate: formData.userInstructionTemplate,
         inputVariable: formData.inputFields.map((field) => ({
@@ -347,6 +352,7 @@ const ToolForm = ({
     if (mode === "edit" && initialData) {
       form.setFieldValue("name", initialData.name)
       form.setFieldValue("description", initialData.description ?? "")
+      form.setFieldValue("excerpt", initialData.excerpt ?? "")
       form.setFieldValue("systemRole", initialData.systemRole ?? "")
       form.setFieldValue(
         "userInstructionTemplate",
@@ -577,6 +583,24 @@ const ToolForm = ({
                   placeholder="Enter tool description"
                   rows={3}
                 />
+              </Field>
+            )}
+          </form.Field>
+
+          <form.Field name="excerpt">
+            {(field) => (
+              <Field>
+                <FieldLabel>Excerpt (optional)</FieldLabel>
+                <Textarea
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Short summary for tool cards (max 500 chars)"
+                  rows={2}
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  A short summary that appears on tool cards. If empty, the
+                  description will be used.
+                </p>
               </Field>
             )}
           </form.Field>

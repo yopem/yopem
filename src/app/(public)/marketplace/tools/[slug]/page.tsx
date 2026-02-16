@@ -7,15 +7,21 @@ import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { auth } from "@/lib/auth/session"
 import { siteTitle } from "@/lib/env/client"
 import { serverApi } from "@/lib/orpc/server"
 
 import ToolExecuteForm from "./execute-form"
 import ToolInfo from "./tool-info"
+import ToolReviewsSection from "./tool-reviews-section"
 import UserCredits from "./user-credits"
 
 const getToolBySlug = cache((slug: string) => {
   return serverApi.tools.getBySlug({ slug })
+})
+
+const getReviewsBySlug = cache((slug: string) => {
+  return serverApi.tools.getReviews({ slug })
 })
 
 export async function generateMetadata({
@@ -65,11 +71,16 @@ export async function generateMetadata({
 }
 
 async function ToolData({ slug }: { slug: string }) {
-  const tool = await getToolBySlug(slug)
+  const [tool, reviewsData] = await Promise.all([
+    getToolBySlug(slug),
+    getReviewsBySlug(slug),
+  ])
 
   if (!tool) {
     notFound()
   }
+
+  const session = await auth()
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -94,6 +105,12 @@ async function ToolData({ slug }: { slug: string }) {
         </div>
 
         <ToolExecuteForm toolId={tool.id} costPerRun={tool.costPerRun} />
+
+        <ToolReviewsSection
+          slug={slug}
+          reviews={reviewsData.reviews}
+          isAuthenticated={!!session}
+        />
       </div>
 
       <div className="space-y-4">

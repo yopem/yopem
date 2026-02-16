@@ -16,6 +16,7 @@ import {
   tagsTable,
   toolCategoriesTable,
   toolRunsTable,
+  toolReviewsTable,
   toolsTable,
   toolTagsTable,
   updateToolSchema,
@@ -113,6 +114,7 @@ export const toolsRouter = {
           id: toolsTable.id,
           slug: toolsTable.slug,
           name: toolsTable.name,
+          excerpt: toolsTable.excerpt,
           description: toolsTable.description,
           status: toolsTable.status,
           costPerRun: toolsTable.costPerRun,
@@ -160,6 +162,30 @@ export const toolsRouter = {
         }
       }
 
+      const ratingsMap = new Map<
+        string,
+        { averageRating: number | null; reviewCount: number }
+      >()
+      if (toolIds.length > 0) {
+        const ratings = await context.db
+          .select({
+            toolId: toolReviewsTable.toolId,
+            avgRating: sql`AVG(${toolReviewsTable.rating})`,
+            count: sql`COUNT(*)`,
+          })
+          .from(toolReviewsTable)
+          .where(inArray(toolReviewsTable.toolId, toolIds))
+          .groupBy(toolReviewsTable.toolId)
+
+        for (const row of ratings) {
+          const avg = row.avgRating ? Number(row.avgRating) : null
+          ratingsMap.set(row.toolId, {
+            averageRating: avg ? Math.round(avg * 10) / 10 : null,
+            reviewCount: Number(row.count),
+          })
+        }
+      }
+
       const toolsWithCategories = tools.map((tool) => {
         const thumbnail =
           tool.thumbnailAssetId && tool.thumbnailUrl
@@ -167,9 +193,14 @@ export const toolsRouter = {
             : null
 
         const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
+        const rating = ratingsMap.get(tool.id) ?? {
+          averageRating: null,
+          reviewCount: 0,
+        }
 
         return {
           ...toolData,
+          ...rating,
           categories: categoriesMap.get(tool.id) ?? [],
           thumbnail,
         }
@@ -251,8 +282,8 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
-      const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all(
-        [
+      const [categoriesResult, tagsResult, thumbnailResult, ratingResult] =
+        await Promise.all([
           context.db
             .select({
               id: categoriesTable.id,
@@ -284,14 +315,27 @@ export const toolsRouter = {
                 .from(assetsTable)
                 .where(eq(assetsTable.id, tool.thumbnailId))
             : Promise.resolve([]),
-        ],
-      )
+          context.db
+            .select({
+              avgRating: sql`AVG(${toolReviewsTable.rating})`,
+              count: sql`COUNT(*)`,
+            })
+            .from(toolReviewsTable)
+            .where(eq(toolReviewsTable.toolId, tool.id)),
+        ])
+
+      const avgRating = ratingResult[0]?.avgRating
+        ? Number(ratingResult[0].avgRating)
+        : null
+      const reviewCount = Number(ratingResult[0]?.count ?? 0)
 
       return {
         ...tool,
         categories: categoriesResult,
         tags: tagsResult,
         thumbnail: thumbnailResult[0] ?? null,
+        averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
+        reviewCount,
       }
     }),
 
@@ -851,5 +895,140 @@ export const toolsRouter = {
         .where(inArray(toolsTable.id, input.ids))
 
       return { success: true, count: input.ids.length }
+    }),
+
+  getReviews: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ context, input }) => {
+      const [tool] = await context.db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, input.slug))
+
+      if (!tool) {
+        throw new Error("Tool not found")
+      }
+
+      const reviews = await context.db
+        .select({
+          id: toolReviewsTable.id,
+          rating: toolReviewsTable.rating,
+          reviewText: toolReviewsTable.reviewText,
+          createdAt: toolReviewsTable.createdAt,
+          userId: toolReviewsTable.userId,
+          userName: toolReviewsTable.userName,
+        })
+        .from(toolReviewsTable)
+        .where(eq(toolReviewsTable.toolId, tool.id))
+        .orderBy(desc(toolReviewsTable.createdAt))
+
+      const avgRatingResult = await context.db
+        .select({
+          avgRating: sql`AVG(${toolReviewsTable.rating})`,
+          count: sql`COUNT(*)`,
+        })
+        .from(toolReviewsTable)
+        .where(eq(toolReviewsTable.toolId, tool.id))
+
+      const avgRating = avgRatingResult[0]?.avgRating
+        ? Number(avgRatingResult[0].avgRating)
+        : null
+      const reviewCount = Number(avgRatingResult[0]?.count ?? 0)
+
+      return {
+        reviews,
+        averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
+        reviewCount,
+      }
+    }),
+
+  submitReview: protectedProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+        rating: z.number().min(1).max(5),
+        reviewText: z.string().max(2000).optional(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const [tool] = await context.db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, input.slug))
+
+      if (!tool) {
+        throw new Error("Tool not found")
+      }
+
+      const existingReview = await context.db
+        .select()
+        .from(toolReviewsTable)
+        .where(
+          eq(toolReviewsTable.toolId, tool.id) &&
+            eq(toolReviewsTable.userId, context.session.id),
+        )
+
+      if (existingReview.length > 0) {
+        await context.db
+          .update(toolReviewsTable)
+          .set({
+            rating: input.rating,
+            reviewText: input.reviewText ?? null,
+            updatedAt: new Date(),
+          })
+          .where(eq(toolReviewsTable.id, existingReview[0].id))
+
+        return { success: true, existing: true }
+      }
+
+      const id = createCustomId()
+      await context.db.insert(toolReviewsTable).values({
+        id,
+        toolId: tool.id,
+        userId: context.session.id,
+        userName:
+          context.session.username ??
+          context.session.name ??
+          context.session.email ??
+          null,
+        rating: input.rating,
+        reviewText: input.reviewText ?? null,
+      })
+
+      return { success: true, existing: false }
+    }),
+
+  updateReview: protectedProcedure
+    .input(
+      z.object({
+        reviewId: z.string(),
+        rating: z.number().min(1).max(5),
+        reviewText: z.string().max(2000).optional(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const [review] = await context.db
+        .select()
+        .from(toolReviewsTable)
+        .where(eq(toolReviewsTable.id, input.reviewId))
+
+      if (!review) {
+        throw new Error("Review not found")
+      }
+
+      if (review.userId !== context.session.id) {
+        throw new Error("You can only update your own reviews")
+      }
+
+      await context.db
+        .update(toolReviewsTable)
+        .set({
+          rating: input.rating,
+          reviewText: input.reviewText ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(toolReviewsTable.id, input.reviewId))
+
+      return { success: true }
     }),
 }
