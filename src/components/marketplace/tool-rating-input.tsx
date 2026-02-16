@@ -1,11 +1,12 @@
 "use client"
 
 import { StarIcon } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
+import { logger } from "@/lib/utils/logger"
 
 interface ToolRatingInputProps {
   slug: string
@@ -18,6 +19,36 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
   const [reviewText, setReviewText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [hasUsedTool, setHasUsedTool] = useState<boolean | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadReviewData = async () => {
+      try {
+        const { clientApi } = await import("@/lib/orpc/client")
+
+        const [reviewData, usageData] = await Promise.all([
+          clientApi.tools.getUserReview({ slug }),
+          clientApi.tools.hasUsedTool({ slug }),
+        ])
+
+        setHasUsedTool(usageData.hasUsed)
+
+        if (reviewData) {
+          setRating(reviewData.rating)
+          setReviewText(reviewData.reviewText ?? "")
+          setIsEditing(true)
+        }
+      } catch (error) {
+        logger.error(`Failed to load review data: ${String(error)}`)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadReviewData()
+  }, [slug])
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -37,19 +68,36 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
       })
 
       toastManager.add({
-        title: "Review submitted",
+        title: isEditing ? "Review updated" : "Review submitted",
         description: "Thank you for your feedback!",
         type: "success",
       })
 
-      setRating(0)
-      setReviewText("")
+      setIsEditing(true)
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit review")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="py-4 text-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  if (hasUsedTool === false) {
+    return (
+      <div className="py-4 text-center">
+        <p className="text-muted-foreground">
+          You need to use this tool before you can review it
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -104,7 +152,11 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
         disabled={isSubmitting || rating === 0}
         className="w-full"
       >
-        {isSubmitting ? "Submitting..." : "Submit Review"}
+        {isSubmitting
+          ? "Submitting..."
+          : isEditing
+            ? "Update Review"
+            : "Submit Review"}
       </Button>
     </div>
   )

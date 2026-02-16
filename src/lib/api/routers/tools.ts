@@ -960,12 +960,31 @@ export const toolsRouter = {
         throw new Error("Tool not found")
       }
 
+      const [hasUsed] = await context.db
+        .select({ count: sql`COUNT(*)` })
+        .from(toolRunsTable)
+        .where(
+          and(
+            eq(toolRunsTable.toolId, tool.id),
+            eq(toolRunsTable.userId, context.session.id),
+            eq(toolRunsTable.status, "completed"),
+          ),
+        )
+
+      if (Number(hasUsed?.count) === 0) {
+        throw new Error(
+          "You must use this tool at least once before reviewing it",
+        )
+      }
+
       const existingReview = await context.db
         .select()
         .from(toolReviewsTable)
         .where(
-          eq(toolReviewsTable.toolId, tool.id) &&
+          and(
+            eq(toolReviewsTable.toolId, tool.id),
             eq(toolReviewsTable.userId, context.session.id),
+          ),
         )
 
       if (existingReview.length > 0) {
@@ -1030,5 +1049,56 @@ export const toolsRouter = {
         .where(eq(toolReviewsTable.id, input.reviewId))
 
       return { success: true }
+    }),
+
+  getUserReview: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ context, input }) => {
+      const [tool] = await context.db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, input.slug))
+
+      if (!tool) {
+        throw new Error("Tool not found")
+      }
+
+      const [review] = await context.db
+        .select()
+        .from(toolReviewsTable)
+        .where(
+          and(
+            eq(toolReviewsTable.toolId, tool.id),
+            eq(toolReviewsTable.userId, context.session.id),
+          ),
+        )
+
+      return review ?? null
+    }),
+
+  hasUsedTool: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ context, input }) => {
+      const [tool] = await context.db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, input.slug))
+
+      if (!tool) {
+        throw new Error("Tool not found")
+      }
+
+      const [result] = await context.db
+        .select({ count: sql`COUNT(*)` })
+        .from(toolRunsTable)
+        .where(
+          and(
+            eq(toolRunsTable.toolId, tool.id),
+            eq(toolRunsTable.userId, context.session.id),
+            eq(toolRunsTable.status, "completed"),
+          ),
+        )
+
+      return { hasUsed: Number(result?.count) > 0 }
     }),
 }
