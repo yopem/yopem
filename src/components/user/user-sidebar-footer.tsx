@@ -1,10 +1,11 @@
 "use client"
 
-import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
+import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import Image from "next/image"
 import { unstable_rethrow } from "next/navigation"
 import { useState } from "react"
 
+import Link from "@/components/link"
 import {
   Menu,
   MenuItem,
@@ -75,8 +76,16 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
       />
       <MenuPopup side="top" align="end" sideOffset={8} className="min-w-56">
         <MenuItem>
-          <UserIcon className="mr-2 size-4" />
-          <span>Profile</span>
+          <Link href="/" className="flex items-center">
+            <HomeIcon className="mr-2 size-4" />
+            <span>Home</span>
+          </Link>
+        </MenuItem>
+        <MenuItem>
+          <Link href="/dashboard/profile" className="flex items-center">
+            <UserIcon className="mr-2 size-4" />
+            <span>Profile</span>
+          </Link>
         </MenuItem>
         <MenuSeparator />
         <MenuItem

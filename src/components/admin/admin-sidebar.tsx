@@ -9,8 +9,8 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar"
+import UserSidebarFooter from "@/components/user/user-sidebar-footer"
 
-import AdminSidebarFooter from "./admin-sidebar-footer"
 import AdminSidebarHeader from "./admin-sidebar-header"
 import AdminSidebarNav from "./admin-sidebar-nav"
 
@@ -52,7 +52,7 @@ const AdminSidebar = ({
         <div className="flex items-center justify-center">
           <ThemeSwitcher />
         </div>
-        <AdminSidebarFooter user={user} />
+        <UserSidebarFooter user={user} />
       </SidebarFooter>
     </Sidebar>
   )
