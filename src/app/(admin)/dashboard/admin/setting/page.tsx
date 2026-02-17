@@ -25,7 +25,6 @@ import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
-import AccessManagementTable from "@/components/admin/settings/access-management-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -194,25 +193,6 @@ export default function AdminSettingsPage() {
   const breadcrumbItems = [
     { label: "Settings", href: "/dashboard/admin/setting" },
     { label: "API Configuration" },
-  ]
-
-  const users = [
-    {
-      id: "1",
-      name: "David Chen",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuC03MDeOhoU810hDPn7ScY1hZVCP_Fq_X_Bc95ljrQghnbo5b9E-Ly7yTMerVDlnBB5D8pm-ZXcQ05Bp2oq2_SfnHXRZp4d4Y1-irwMHZEpLUAcLw41VIVJG44GeHjwRFM2pKH1cxLsBlrjUM784xP8dl08ySP7OROnofzgwGINJYT6ojxnhpRMiyQm5GNkbDNUrFmTENiEzx-h4f86-4JbVgfGoYU7kOwULS22wB-FnvX7ea_daTEXvt9wuyV6mMc6QJABq2TnMr4",
-      role: "owner" as const,
-      permissions: "Full Access",
-    },
-    {
-      id: "2",
-      name: "Sarah Miller",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDOk281IWtOILWpcd8lnAawqs9upcktcEdpObjdj1BNgZJxwhXsrTU9jbqu72BUoJjSrqw6CSOJMI7dd1hnqH4vcNwxxpJnmhaOoGrKwyi3E66FzWfYkFdRMly_gf6o1MRwLsAWnrmmgFcCgk4qAGhuEvmCOOHNAPDyEV4jgj9yACPOH4QSoJulPFS5UBN3owyofIHmMgGTufyBHFlxWCfN5yFKOqnKkVijK0Wf8q9q06nUvRJV7xjGPUydQBYbc0ZAQ3-SL5TTktM",
-      role: "developer" as const,
-      permissions: "Read Only",
-    },
   ]
 
   const [modalState, dispatch] = useReducer(modalReducer, { type: "closed" })
@@ -577,18 +557,6 @@ export default function AdminSettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-
-            <div className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-foreground text-lg font-bold">
-                  Key Access Management
-                </h2>
-                <Button variant="outline" size="sm">
-                  Manage Roles
-                </Button>
-              </div>
-              <AccessManagementTable users={users} />
             </div>
           </div>
         </div>
