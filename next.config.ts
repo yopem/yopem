@@ -32,8 +32,8 @@ const config: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "*.yopem.com",
+        protocol: "https",
+        hostname: "assets.yopem.com",
       },
       {
         protocol: "https",
