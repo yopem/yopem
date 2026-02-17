@@ -6,7 +6,6 @@ import {
   DollarSignIcon,
   EyeIcon,
   EyeOffIcon,
-  HelpCircleIcon,
   KeyIcon,
   MoreVerticalIcon,
   PlusCircleIcon,
@@ -345,16 +344,6 @@ export default function AdminSettingsPage() {
           <AdminPageHeader
             title="API Configuration"
             description="Manage API keys and secrets for your AI providers. Keys are encrypted at rest. Rotate keys periodically for enhanced security."
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <HelpCircleIcon className="size-4" />
-                Documentation
-              </Button>
-            }
           />
 
           <Shimmer loading={statsLoading}>
