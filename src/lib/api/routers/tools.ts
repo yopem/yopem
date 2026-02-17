@@ -540,11 +540,13 @@ export const toolsRouter = {
       }
       await context.db.insert(creditTransactionsTable).values(newTransaction)
 
-      checkAndTriggerAutoTopup(context.session.id, context.session.email).catch(
-        () => {
-          return
-        },
-      )
+      checkAndTriggerAutoTopup(
+        context.session.id,
+        context.session.email,
+        context.session.username ?? context.session.name,
+      ).catch(() => {
+        return
+      })
 
       return {
         runId,

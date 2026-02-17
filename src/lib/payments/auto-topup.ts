@@ -114,6 +114,7 @@ export async function updateAutoTopupSettings(
 export async function checkAndTriggerAutoTopup(
   userId: string,
   userEmail: string,
+  userName?: string,
 ): Promise<{ triggered: boolean; checkoutUrl?: string }> {
   const [credits] = await db
     .select()
@@ -193,6 +194,7 @@ export async function checkAndTriggerAutoTopup(
       customerId: polarCustomerId ?? undefined,
       metadata: {
         userId,
+        ...(userName && { userName }),
         amount: String(amount),
         auto_topup: "true",
       },

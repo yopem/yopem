@@ -9,8 +9,6 @@ import {
   KeyIcon,
   MoreVerticalIcon,
   PlusCircleIcon,
-  TrendingDownIcon,
-  TrendingUpIcon,
 } from "lucide-react"
 import {
   memo,
@@ -24,6 +22,7 @@ import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
+import StatsCard from "@/components/admin/stats-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -348,111 +347,59 @@ export default function AdminSettingsPage() {
 
           <Shimmer loading={statsLoading}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {statsLoading ? (
-                <>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Total Requests
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            0
-                          </p>
-                        </div>
-                        <BarChartIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Active Keys
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            0
-                          </p>
-                        </div>
-                        <KeyIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Monthly Cost
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            $0
-                          </p>
-                        </div>
-                        <DollarSignIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              ) : (
-                <>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Total Requests
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            {(stats?.totalRequests ?? 0).toLocaleString()}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            <TrendingUpIcon className="mr-1 inline size-3" />
-                            +12.5% from last month
-                          </p>
-                        </div>
-                        <BarChartIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Active Keys
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            {stats?.activeKeys ?? 0}
-                          </p>
-                        </div>
-                        <KeyIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-muted-foreground text-sm">
-                            Monthly Cost
-                          </p>
-                          <p className="text-foreground text-2xl font-bold">
-                            ${(stats?.monthlyCost ?? 0).toLocaleString()}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            <TrendingDownIcon className="mr-1 inline size-3" />
-                            {stats?.costChange ?? 0}% cost efficiency
-                          </p>
-                        </div>
-                        <DollarSignIcon className="text-muted-foreground size-10" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
+              <StatsCard
+                title="Total Requests"
+                value={(stats?.totalRequests ?? 0).toLocaleString()}
+                change={
+                  stats?.requestsThisMonth !== undefined &&
+                  stats?.totalRequests !== undefined &&
+                  stats.totalRequests > 0
+                    ? (() => {
+                        const prevMonthRequests =
+                          stats.totalRequests - stats.requestsThisMonth
+                        const trend =
+                          prevMonthRequests === 0 && stats.requestsThisMonth > 0
+                            ? 100
+                            : prevMonthRequests === 0
+                              ? 0
+                              : ((stats.requestsThisMonth - prevMonthRequests) /
+                                  prevMonthRequests) *
+                                100
+                        return {
+                          value: `${trend >= 0 ? "+" : ""}${trend.toFixed(1)}% from last month`,
+                          trend: trend > 0 ? "up" : trend < 0 ? "down" : "neutral",
+                        }
+                      })()
+                    : undefined
+                }
+                icon={<BarChartIcon className="size-4.5" />}
+                loading={statsLoading}
+              />
+              <StatsCard
+                title="Active Keys"
+                value={stats?.activeKeys?.toString() ?? "0"}
+                icon={<KeyIcon className="size-4.5" />}
+                loading={statsLoading}
+              />
+              <StatsCard
+                title="Monthly Cost"
+                value={`$${(stats?.monthlyCost ?? 0).toFixed(2)}`}
+                change={
+                  stats?.costChange !== undefined
+                    ? {
+                        value: `${stats.costChange >= 0 ? "+" : ""}${stats.costChange.toFixed(1)}% from last month`,
+                        trend:
+                          stats.costChange > 0
+                            ? "up"
+                            : stats.costChange < 0
+                              ? "down"
+                              : "neutral",
+                      }
+                    : undefined
+                }
+                icon={<DollarSignIcon className="size-4.5" />}
+                loading={statsLoading}
+              />
             </div>
           </Shimmer>
 

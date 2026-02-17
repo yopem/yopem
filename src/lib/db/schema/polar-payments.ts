@@ -25,6 +25,7 @@ export const polarPaymentsTable = pgTable(
       .primaryKey()
       .$defaultFn(() => createCustomId()),
     userId: text("user_id").notNull(),
+    userName: text("user_name"),
     polarPaymentId: text("polar_payment_id").notNull().unique(),
     polarCustomerId: text("polar_customer_id"),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),

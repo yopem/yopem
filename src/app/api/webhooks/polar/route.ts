@@ -61,6 +61,12 @@ export async function handlePolarOrderPaid(payload: PolarWebhookPayload) {
             ? userIdFromMetadata
             : (order.customerId ?? "")
 
+        const userNameFromMetadata = order.metadata?.["userName"]
+        const userName =
+          typeof userNameFromMetadata === "string"
+            ? userNameFromMetadata
+            : undefined
+
         if (!userId) {
           logger.error(
             `No userId found in order metadata or customerId: orderId=${order.id}`,
@@ -88,6 +94,7 @@ export async function handlePolarOrderPaid(payload: PolarWebhookPayload) {
 
         const result = await grantCredits({
           userId,
+          userName,
           polarPaymentId: order.id,
           polarCustomerId: order.customerId ?? undefined,
           amount: String(order.totalAmount / 100),

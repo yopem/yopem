@@ -92,6 +92,7 @@ export const GET = async (req: NextRequest) => {
       customerId: polarCustomerId ?? undefined,
       metadata: {
         userId: session.id,
+        userName: session.username ?? session.name ?? session.email,
         amount: String(amountNum),
         auto_topup: String(autoTopup),
       },

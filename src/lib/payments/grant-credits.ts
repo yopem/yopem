@@ -11,6 +11,7 @@ import { logger } from "@/lib/utils/logger"
 
 interface GrantCreditsParams {
   userId: string
+  userName?: string
   polarPaymentId: string
   polarCustomerId?: string | null
   amount: string
@@ -22,6 +23,7 @@ interface GrantCreditsParams {
 export async function grantCredits(params: GrantCreditsParams) {
   const {
     userId,
+    userName,
     polarPaymentId,
     polarCustomerId,
     amount,
@@ -45,6 +47,7 @@ export async function grantCredits(params: GrantCreditsParams) {
     await tx.insert(polarPaymentsTable).values({
       id: createCustomId(),
       userId,
+      userName,
       polarPaymentId,
       polarCustomerId,
       amount,

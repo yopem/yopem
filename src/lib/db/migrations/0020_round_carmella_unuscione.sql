@@ -1,0 +1,1 @@
+ALTER TABLE "polar_payments" ADD COLUMN "user_name" text;

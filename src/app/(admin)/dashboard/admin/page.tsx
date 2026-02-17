@@ -1,15 +1,15 @@
+"use client"
+
 import {
-  AlertTriangleIcon,
   BadgeCheckIcon,
   DollarSignIcon,
   KeyIcon,
-  LogOutIcon,
   PlusIcon,
   ServerIcon,
-  UserPlusIcon,
   UsersIcon,
   ZapIcon,
 } from "lucide-react"
+import { Shimmer } from "shimmer-from-structure"
 
 import ActivityFeed from "@/components/admin/activity-feed"
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
@@ -18,55 +18,43 @@ import ChartPlaceholder from "@/components/admin/chart-placeholder"
 import StatsCard from "@/components/admin/stats-card"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
+import { useActivityFeed } from "@/hooks/use-activity-feed"
+import { useSystemMetrics } from "@/hooks/use-system-metrics"
 
-const ACTIVITY_ITEMS = [
-  {
-    icon: <UserPlusIcon className="text-foreground size-4" />,
-    message: (
-      <>
-        New user <span className="font-bold">alex_dev</span> joined the
-        platform.
-      </>
-    ),
-    timestamp: "2 minutes ago",
-  },
-  {
-    icon: <AlertTriangleIcon className="text-foreground size-4" />,
-    message: (
-      <>
-        High latency detected on <span className="font-bold">GPT-4-Turbo</span>.
-      </>
-    ),
-    timestamp: "15 minutes ago",
-  },
-  {
-    icon: <KeyIcon className="text-foreground size-4" />,
-    message: (
-      <>
-        New API Key generated for{" "}
-        <span className="font-bold">internal_service</span>.
-      </>
-    ),
-    timestamp: "1 hour ago",
-  },
-  {
-    icon: <BadgeCheckIcon className="text-foreground size-4" />,
-    message: (
-      <>
-        Subscription upgraded by <span className="font-bold">Studio_B</span>.
-      </>
-    ),
-    timestamp: "3 hours ago",
-  },
-  {
-    icon: <LogOutIcon className="text-foreground size-4" />,
-    message: "Admin session timeout.",
-    timestamp: "5 hours ago",
-  },
-]
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}k`
+  }
+  return num.toString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount)
+}
 
 export default function AdminDashboardPage() {
   const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
+
+  const { data: metrics, isLoading: metricsLoading } = useSystemMetrics()
+  const { data: activityFeed, isLoading: activityLoading } = useActivityFeed()
+
+  const activityItems =
+    activityFeed?.map((activity) => ({
+      icon:
+        activity.type === "payment" ? (
+          <BadgeCheckIcon className="text-foreground size-4" />
+        ) : (
+          <KeyIcon className="text-foreground size-4" />
+        ),
+      message: activity.message,
+      timestamp: new Date(activity.timestamp).toLocaleString(),
+    })) ?? []
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -88,32 +76,62 @@ export default function AdminDashboardPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Revenue"
-          value="$12,450.00"
-          change={{ value: "+12% vs last month", trend: "up" }}
-          icon={<DollarSignIcon className="size-4.5" />}
-        />
-        <StatsCard
-          title="Active Users"
-          value="1,234"
-          change={{ value: "+5% vs last month", trend: "up" }}
-          icon={<UsersIcon className="size-4.5" />}
-        />
-        <StatsCard
-          title="AI Requests"
-          value="45.2k"
-          change={{ value: "+18% vs last month", trend: "up" }}
-          icon={<ZapIcon className="size-4.5" />}
-        />
-        <StatsCard
-          title="System Uptime"
-          value="99.9%"
-          change={{ value: "Stable", trend: "neutral" }}
-          icon={<ServerIcon className="size-4.5" />}
-        />
-      </div>
+      <Shimmer loading={metricsLoading}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Total Revenue"
+            value={formatCurrency(metrics?.revenue ?? 0)}
+            change={{
+              value: metrics?.revenueChange ?? "N/A",
+              trend: metrics?.revenueChange?.startsWith("+")
+                ? "up"
+                : metrics?.revenueChange?.startsWith("-")
+                  ? "down"
+                  : "neutral",
+            }}
+            icon={<DollarSignIcon className="size-4.5" />}
+            loading={metricsLoading}
+          />
+          <StatsCard
+            title="Active Users"
+            value={formatNumber(metrics?.activeUsers ?? 0)}
+            change={{
+              value: metrics?.activeUsersChange ?? "N/A",
+              trend: metrics?.activeUsersChange?.startsWith("+")
+                ? "up"
+                : metrics?.activeUsersChange?.startsWith("-")
+                  ? "down"
+                  : "neutral",
+            }}
+            icon={<UsersIcon className="size-4.5" />}
+            loading={metricsLoading}
+          />
+          <StatsCard
+            title="AI Requests"
+            value={formatNumber(metrics?.aiRequests ?? 0)}
+            change={{
+              value: metrics?.aiRequestsChange ?? "N/A",
+              trend: metrics?.aiRequestsChange?.startsWith("+")
+                ? "up"
+                : metrics?.aiRequestsChange?.startsWith("-")
+                  ? "down"
+                  : "neutral",
+            }}
+            icon={<ZapIcon className="size-4.5" />}
+            loading={metricsLoading}
+          />
+          <StatsCard
+            title="System Uptime"
+            value={`${metrics?.systemUptime ?? 99.9}%`}
+            change={{
+              value: metrics?.systemUptimeChange ?? "Stable",
+              trend: "neutral",
+            }}
+            icon={<ServerIcon className="size-4.5" />}
+            loading={metricsLoading}
+          />
+        </div>
+      </Shimmer>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -123,7 +141,9 @@ export default function AdminDashboardPage() {
           />
         </div>
         <div className="lg:col-span-1">
-          <ActivityFeed items={ACTIVITY_ITEMS} />
+          <Shimmer loading={activityLoading}>
+            <ActivityFeed items={activityItems} />
+          </Shimmer>
         </div>
       </div>
     </div>
