@@ -87,6 +87,7 @@ export const GET = async (req: NextRequest) => {
 
     const checkout = await polar.checkouts.create({
       products: [polarProductId],
+      amount: Math.round(amountNum * 100),
       successUrl,
       customerId: polarCustomerId ?? undefined,
       metadata: {
