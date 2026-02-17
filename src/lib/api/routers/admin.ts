@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { adminProcedure } from "@/lib/api/orpc"
 import { adminSettingsTable } from "@/lib/db/schema"
+import { WebhookMetrics } from "@/lib/payments/webhook-metrics"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
@@ -313,6 +314,156 @@ export const adminRouter = {
       await context.redis.deleteCache(`settings:${ASSETS_MAX_SIZE_KEY}`)
 
       return { success: true }
+    }),
+
+  getWebhookMetrics: adminProcedure
+    .input(
+      z.object({
+        eventType: z.enum(["order.paid", "order.refunded"]).optional(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const redisClient = await context.redis.getRedisClient()
+      const metricsTracker = new WebhookMetrics(redisClient)
+
+      const eventTypes = input.eventType
+        ? [input.eventType]
+        : ["order.paid", "order.refunded"]
+
+      const metricsPromises = eventTypes.map((eventType) =>
+        metricsTracker.getMetricsSummary(eventType).then((summary) => ({
+          eventType,
+          ...summary,
+        })),
+      )
+
+      const metrics = await Promise.all(metricsPromises)
+
+      return { metrics }
+    }),
+
+  getWebhookMetricsHistory: adminProcedure
+    .input(
+      z.object({
+        eventType: z.enum(["order.paid", "order.refunded"]).optional(),
+        timeRange: z.enum(["24h", "7d"]),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const redisClient = await context.redis.getRedisClient()
+
+      if (!redisClient) {
+        return {
+          dataPoints: [],
+          summary: {
+            totalProcessed: 0,
+            successCount: 0,
+            failureCount: 0,
+            successRate: 0,
+            avgProcessingTime: 0,
+          },
+        }
+      }
+
+      const endDate = new Date()
+      const startDate =
+        input.timeRange === "24h"
+          ? new Date(endDate.getTime() - 24 * 60 * 60 * 1000)
+          : new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+      const eventTypes = input.eventType
+        ? [input.eventType]
+        : ["order.paid", "order.refunded"]
+
+      const dataPointsMap = new Map<
+        string,
+        {
+          successCount: number
+          failureCount: number
+          totalTime: number
+          totalCount: number
+        }
+      >()
+
+      for (const eventType of eventTypes) {
+        let currentDate = new Date(startDate)
+        while (currentDate <= endDate) {
+          const dateStr = currentDate.toISOString().split("T")[0]
+
+          const existing = dataPointsMap.get(dateStr) ?? {
+            successCount: 0,
+            failureCount: 0,
+            totalTime: 0,
+            totalCount: 0,
+          }
+
+          const [successCount, failureCount, totalTime, totalCount] =
+            await Promise.all([
+              redisClient
+                .get(`webhook:metrics:${eventType}:success:${dateStr}`)
+                .then((v) => Number.parseInt(v ?? "0", 10)),
+              redisClient
+                .get(`webhook:metrics:${eventType}:failure:${dateStr}`)
+                .then((v) => Number.parseInt(v ?? "0", 10)),
+              redisClient
+                .get(`webhook:metrics:${eventType}:processing_time:${dateStr}`)
+                .then((v) => Number.parseInt(v ?? "0", 10)),
+              redisClient
+                .get(`webhook:metrics:${eventType}:processing_count:${dateStr}`)
+                .then((v) => Number.parseInt(v ?? "0", 10)),
+            ])
+
+          dataPointsMap.set(dateStr, {
+            successCount: existing.successCount + successCount,
+            failureCount: existing.failureCount + failureCount,
+            totalTime: existing.totalTime + totalTime,
+            totalCount: existing.totalCount + totalCount,
+          })
+
+          currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1))
+        }
+      }
+
+      const dataPoints = Array.from(dataPointsMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, data]) => ({
+          date,
+          successCount: data.successCount,
+          failureCount: data.failureCount,
+          avgProcessingTime:
+            data.totalCount > 0 ? data.totalTime / data.totalCount : 0,
+        }))
+
+      const totalProcessed = dataPoints.reduce(
+        (sum, dp) => sum + dp.successCount + dp.failureCount,
+        0,
+      )
+      const successCount = dataPoints.reduce(
+        (sum, dp) => sum + dp.successCount,
+        0,
+      )
+      const failureCount = dataPoints.reduce(
+        (sum, dp) => sum + dp.failureCount,
+        0,
+      )
+      const totalAvgTime = dataPoints.reduce(
+        (sum, dp) => sum + dp.avgProcessingTime,
+        0,
+      )
+      const avgProcessingTime =
+        dataPoints.length > 0 ? totalAvgTime / dataPoints.length : 0
+
+      return {
+        dataPoints,
+        summary: {
+          totalProcessed,
+          successCount,
+          failureCount,
+          successRate:
+            totalProcessed > 0 ? (successCount / totalProcessed) * 100 : 0,
+          avgProcessingTime,
+        },
+      }
     }),
 }
 

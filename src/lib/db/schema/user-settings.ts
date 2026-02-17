@@ -10,6 +10,7 @@ export const userSettingsTable = pgTable("user_settings", {
   userId: text("user_id").notNull().unique(),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
+  polarCustomerId: text("polar_customer_id"),
   preferences: jsonb("preferences"),
   apiKeys: jsonb("api_keys"),
   createdAt: timestamp("created_at").defaultNow(),

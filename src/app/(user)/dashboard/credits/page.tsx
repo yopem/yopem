@@ -1,18 +1,9 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import {
-  CreditCardIcon,
-  PlusIcon,
-  TrendingDownIcon,
-  TrendingUpIcon,
-} from "lucide-react"
-import { useState } from "react"
+import { CreditCardIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -21,20 +12,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
 import { formatDateOnly } from "@/lib/utils/format-date"
 
-const creditPackages = [
-  { amount: 100, price: 10 },
-  { amount: 500, price: 40 },
-  { amount: 1000, price: 75 },
-  { amount: 5000, price: 350 },
-]
-
 export default function CreditsPage() {
-  const [customAmount, setCustomAmount] = useState("")
-
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
     retry: false,
@@ -70,24 +51,41 @@ export default function CreditsPage() {
       | undefined
   }
 
+  const { data: productsData } = useQuery({
+    ...queryApi.user.getProducts.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as {
+    data:
+      | {
+          productId: string
+          credits: number
+          price: number
+          currency: string
+        }[]
+      | undefined
+  }
+
+  const { data: pendingCheckouts } = useQuery({
+    ...queryApi.user.getPendingCheckouts.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as {
+    data:
+      | {
+          id: string
+          checkoutId: string
+          productId: string
+          status: string
+          createdAt: Date | null
+        }[]
+      | undefined
+  }
+
   const purchaseMutation = useMutation({
-    mutationFn: async (amount: number) => {
-      await queryApi.user.addCredits.call({ amount })
-    },
-    onSuccess: () => {
-      toastManager.add({
-        title: "Credits purchased",
-        description: "Your credits have been added successfully.",
-        type: "success",
-      })
-      setCustomAmount("")
-    },
-    onError: (error: Error) => {
-      toastManager.add({
-        title: "Error purchasing credits",
-        description: error.message,
-        type: "error",
-      })
+    mutationFn: (productId: string) => {
+      window.location.href = `/checkout?productId=${productId}&successUrl=${encodeURIComponent(window.location.href)}`
+      return Promise.resolve()
     },
   })
 
@@ -95,15 +93,9 @@ export default function CreditsPage() {
   const totalPurchased = Number(creditsData?.totalPurchased ?? 0)
   const totalUsed = Number(creditsData?.totalUsed ?? 0)
 
-  const handlePurchasePackage = (amount: number) => {
-    purchaseMutation.mutate(amount)
+  const handlePurchasePackage = (productId: string) => {
+    purchaseMutation.mutate(productId)
   }
-
-  const handleCustomPurchase = () => {
-    purchaseMutation.mutate(Number(customAmount))
-  }
-
-  const customAmountValue = Number(customAmount)
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -170,51 +162,43 @@ export default function CreditsPage() {
           <CardTitle>Purchase Credits</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {pendingCheckouts &&
+            pendingCheckouts.length > 0 &&
+            pendingCheckouts.filter((c) => c.status === "pending").length >
+              0 && (
+              <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-yellow-900">
+                  Pending Payments
+                </h3>
+                <p className="text-xs text-yellow-700">
+                  You have{" "}
+                  {
+                    pendingCheckouts.filter((c) => c.status === "pending")
+                      .length
+                  }{" "}
+                  pending checkout session(s). Complete your payment to receive
+                  credits.
+                </p>
+              </div>
+            )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {creditPackages.map((pkg) => (
+            {productsData?.map((pkg) => (
               <button
-                key={pkg.amount}
+                key={pkg.productId}
                 type="button"
-                onClick={() => handlePurchasePackage(pkg.amount)}
+                onClick={() => handlePurchasePackage(pkg.productId)}
                 disabled={purchaseMutation.isPending}
                 className="bg-card hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-center gap-2 rounded-lg border p-6 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="text-3xl font-bold">{pkg.amount}</span>
+                <span className="text-3xl font-bold">{pkg.credits}</span>
                 <span className="text-muted-foreground text-sm font-medium">
                   ${pkg.price}
                 </span>
               </button>
             ))}
           </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <Label htmlFor="custom-amount">Custom Amount</Label>
-              <Input
-                id="custom-amount"
-                type="number"
-                placeholder="Enter amount"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                min={1}
-                className="mt-1.5"
-              />
-            </div>
-            <Button
-              onClick={handleCustomPurchase}
-              disabled={
-                purchaseMutation.isPending ||
-                !customAmount ||
-                customAmountValue < 1
-              }
-            >
-              <PlusIcon className="mr-2 size-4" />
-              Purchase
-            </Button>
-          </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>

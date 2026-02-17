@@ -6,6 +6,13 @@ export const appEnv = env.APP_ENV
 export const databaseUrl = env.DATABASE_URL
 export const redisUrl = env.REDIS_URL
 export const redisKeyPrefix = env.REDIS_KEY_PREFIX
+
+export const polarAccessToken = env.POLAR_ACCESS_TOKEN
+export const polarWebhookSecret = env.POLAR_WEBHOOK_SECRET
+export const polarProductStarterId = env.POLAR_PRODUCT_STARTER_ID
+export const polarProductBasicId = env.POLAR_PRODUCT_BASIC_ID
+export const polarProductProId = env.POLAR_PRODUCT_PRO_ID
+export const polarProductEnterpriseId = env.POLAR_PRODUCT_ENTERPRISE_ID
 export const apiKeyEncryptionSecret = env.API_KEY_ENCRYPTION_SECRET
 
 export const authIssuer = env.AUTH_ISSUER

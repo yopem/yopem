@@ -4,11 +4,14 @@ import { z } from "zod"
 import { adminProcedure, protectedProcedure } from "@/lib/api/orpc"
 import {
   creditTransactionsTable,
+  polarCheckoutSessionsTable,
+  polarPaymentsTable,
   toolRunsTable,
   toolsTable,
   userCreditsTable,
   userSettingsTable,
 } from "@/lib/db/schema"
+import { getProductsList } from "@/lib/payments/product-pricing-map"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -141,6 +144,59 @@ export const userRouter = {
 
       return transactions
     }),
+
+  getPurchases: protectedProcedure
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(20),
+        })
+        .optional(),
+    )
+    .handler(async ({ context, input }) => {
+      const limit = input?.limit ?? 20
+
+      const purchases = await context.db
+        .select({
+          id: polarPaymentsTable.id,
+          polarPaymentId: polarPaymentsTable.polarPaymentId,
+          amount: polarPaymentsTable.amount,
+          currency: polarPaymentsTable.currency,
+          status: polarPaymentsTable.status,
+          productId: polarPaymentsTable.productId,
+          creditsGranted: polarPaymentsTable.creditsGranted,
+          refundedAmount: polarPaymentsTable.refundedAmount,
+          createdAt: polarPaymentsTable.createdAt,
+          updatedAt: polarPaymentsTable.updatedAt,
+        })
+        .from(polarPaymentsTable)
+        .where(eq(polarPaymentsTable.userId, context.session.id))
+        .orderBy(desc(polarPaymentsTable.createdAt))
+        .limit(limit)
+
+      return purchases
+    }),
+
+  getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
+    const checkouts = await context.db
+      .select({
+        id: polarCheckoutSessionsTable.id,
+        checkoutId: polarCheckoutSessionsTable.checkoutId,
+        productId: polarCheckoutSessionsTable.productId,
+        status: polarCheckoutSessionsTable.status,
+        createdAt: polarCheckoutSessionsTable.createdAt,
+      })
+      .from(polarCheckoutSessionsTable)
+      .where(eq(polarCheckoutSessionsTable.userId, context.session.id))
+      .orderBy(desc(polarCheckoutSessionsTable.createdAt))
+      .limit(10)
+
+    return checkouts
+  }),
+
+  getProducts: protectedProcedure.handler(() => {
+    return getProductsList()
+  }),
 
   addCredits: protectedProcedure
     .input(
