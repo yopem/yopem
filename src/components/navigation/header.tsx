@@ -16,9 +16,11 @@ const Header = async () => {
               <Logo className="size-full p-0.5" />
             </Link>
           </div>
-          <h2 className="text-foreground text-lg/tight font-bold tracking-tight">
-            Yopem
-          </h2>
+          <Link href="/">
+            <h2 className="text-foreground text-lg/tight font-bold tracking-tight">
+              Yopem
+            </h2>
+          </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
           <Link

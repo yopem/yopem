@@ -15,7 +15,9 @@ const Footer = () => {
                   <Logo className="size-full p-0.5" />
                 </Link>
               </div>
-              <h3 className="text-foreground text-lg font-bold">Yopem</h3>
+              <Link href="/">
+                <h3 className="text-foreground text-lg font-bold">Yopem</h3>
+              </Link>
             </div>
             <p className="text-muted-foreground mb-4 max-w-md">
               Access powerful AI tools with simple credit-based pricing. No

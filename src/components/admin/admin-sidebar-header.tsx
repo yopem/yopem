@@ -15,9 +15,11 @@ const AdminSidebarHeader = ({ title, subtitle }: AdminSidebarHeaderProps) => {
         </Link>
       </div>
       <div className="flex flex-col">
-        <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">
-          {title}
-        </h1>
+        <Link href="/">
+          <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">
+            {title}
+          </h1>
+        </Link>
         <p className="text-muted-foreground mt-1 text-[10px] font-medium tracking-wider uppercase">
           {subtitle}
         </p>
