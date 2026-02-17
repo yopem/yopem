@@ -45,7 +45,10 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
       <MenuTrigger
         className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
         render={
-          <button className="flex items-center gap-3 p-2">
+          <button
+            className="flex items-center gap-3 p-2"
+            id="user-sidebar-footer-trigger"
+          >
             <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-full border text-xs font-bold">
               {user.avatar ? (
                 <Image
