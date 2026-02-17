@@ -186,6 +186,8 @@ export const userRouter = {
         id: polarCheckoutSessionsTable.id,
         checkoutId: polarCheckoutSessionsTable.checkoutId,
         productId: polarCheckoutSessionsTable.productId,
+        checkoutUrl: polarCheckoutSessionsTable.checkoutUrl,
+        amount: polarCheckoutSessionsTable.amount,
         status: polarCheckoutSessionsTable.status,
         createdAt: polarCheckoutSessionsTable.createdAt,
       })

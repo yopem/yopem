@@ -20,6 +20,8 @@ export const polarCheckoutSessionsTable = pgTable(
     userId: text("user_id").notNull(),
     checkoutId: text("checkout_id").notNull().unique(),
     productId: text("product_id").notNull(),
+    checkoutUrl: text("checkout_url").notNull(),
+    amount: text("amount").notNull(),
     status: text("status", { enum: polarCheckoutSessionStatusEnum })
       .notNull()
       .default("pending"),

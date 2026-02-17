@@ -2,7 +2,9 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
+  ClockIcon,
   CreditCardIcon,
+  ExternalLinkIcon,
   TrendingDownIcon,
   TrendingUpIcon,
   ZapIcon,
@@ -119,6 +121,8 @@ export default function CreditsPage() {
           id: string
           checkoutId: string
           productId: string
+          checkoutUrl: string
+          amount: string
           status: string
           createdAt: Date | null
         }[]
@@ -275,10 +279,13 @@ export default function CreditsPage() {
             pendingCheckouts.filter((c) => c.status === "pending").length >
               0 && (
               <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-                <h3 className="mb-2 text-sm font-semibold text-yellow-900">
-                  Pending Payments
-                </h3>
-                <p className="text-xs text-yellow-700">
+                <div className="mb-3 flex items-center gap-2">
+                  <ClockIcon className="size-4 text-yellow-700" />
+                  <h3 className="text-sm font-semibold text-yellow-900">
+                    Pending Payments
+                  </h3>
+                </div>
+                <p className="mb-3 text-xs text-yellow-700">
                   You have{" "}
                   {
                     pendingCheckouts.filter((c) => c.status === "pending")
@@ -287,6 +294,36 @@ export default function CreditsPage() {
                   pending checkout session(s). Complete your payment to receive
                   credits.
                 </p>
+                <div className="space-y-2">
+                  {pendingCheckouts
+                    .filter((c) => c.status === "pending")
+                    .map((checkout) => (
+                      <div
+                        key={checkout.id}
+                        className="flex items-center justify-between rounded-sm bg-white p-2"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            ${Number(checkout.amount).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDateOnly(checkout.createdAt)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(checkout.checkoutUrl, "_blank")
+                          }
+                          className="gap-1"
+                        >
+                          Pay Now
+                          <ExternalLinkIcon className="size-3" />
+                        </Button>
+                      </div>
+                    ))}
+                </div>
               </div>
             )}
 

@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
-import { userSettingsTable } from "@/lib/db/schema"
+import { polarCheckoutSessionsTable, userSettingsTable } from "@/lib/db/schema"
 import { siteDomain } from "@/lib/env/client"
 import { appEnv, polarAccessToken, polarProductId } from "@/lib/env/server"
 import { validateTopupAmount } from "@/lib/payments/credit-calculation"
@@ -95,6 +95,15 @@ export const GET = async (req: NextRequest) => {
         amount: String(amountNum),
         auto_topup: String(autoTopup),
       },
+    })
+
+    await db.insert(polarCheckoutSessionsTable).values({
+      id: createCustomId(),
+      userId: session.id,
+      checkoutId: checkout.id,
+      productId: polarProductId,
+      checkoutUrl: checkout.url,
+      amount: String(amountNum),
     })
 
     return Response.redirect(checkout.url, 303)
