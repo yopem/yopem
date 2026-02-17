@@ -12,7 +12,9 @@ const Header = async () => {
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4">
         <div className="mr-8 flex items-center gap-2">
           <div className="bg-card text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded-sm">
-            <Logo className="size-full p-0.5" />
+            <Link href="/">
+              <Logo className="size-full p-0.5" />
+            </Link>
           </div>
           <h2 className="text-foreground text-lg/tight font-bold tracking-tight">
             Yopem

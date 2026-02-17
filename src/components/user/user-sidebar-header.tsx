@@ -1,3 +1,4 @@
+import Link from "@/components/link"
 import Logo from "@/components/logo"
 
 interface UserSidebarHeaderProps {
@@ -9,7 +10,9 @@ const UserSidebarHeader = ({ title, subtitle }: UserSidebarHeaderProps) => {
   return (
     <div className="flex items-center gap-3">
       <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
-        <Logo className="size-5" />
+        <Link href="/">
+          <Logo className="size-5" />
+        </Link>
       </div>
       <div className="flex flex-col">
         <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">

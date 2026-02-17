@@ -11,7 +11,9 @@ const Footer = () => {
           <div className="flex-1">
             <div className="mb-4 flex items-center gap-2">
               <div className="bg-card flex size-6 items-center justify-center overflow-hidden rounded-sm">
-                <Logo className="size-full p-0.5" />
+                <Link href="/">
+                  <Logo className="size-full p-0.5" />
+                </Link>
               </div>
               <h3 className="text-foreground text-lg font-bold">Yopem</h3>
             </div>
