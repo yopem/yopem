@@ -35,6 +35,14 @@ const Header = async () => {
               Dashboard
             </Link>
           )}
+          {session && session.role === "admin" && (
+            <Link
+              className="text-muted-foreground hover:text-foreground/80 transition-colors"
+              href="/dashboard/admin"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
