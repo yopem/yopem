@@ -299,7 +299,7 @@ export default function CreditsPage() {
                 min="1"
                 max="1000"
                 step="0.01"
-                placeholder="Enter amount ($1 - $1000)"
+                placeholder="Enter amount (start from $5)"
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
                 className="mt-2"

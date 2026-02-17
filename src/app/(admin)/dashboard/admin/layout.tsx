@@ -26,7 +26,7 @@ export default async function AdminDashboardLayout({
   const navItems = [
     {
       icon: <LayoutDashboardIcon className="size-4.5" />,
-      label: "Dashboard",
+      label: "Overview",
       href: "/dashboard/admin",
     },
     {
