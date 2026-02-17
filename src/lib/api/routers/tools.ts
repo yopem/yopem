@@ -23,6 +23,7 @@ import {
   userCreditsTable,
 } from "@/lib/db/schema"
 import { apiKeyEncryptionSecret } from "@/lib/env/server"
+import { checkAndTriggerAutoTopup } from "@/lib/payments/auto-topup"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 import { decryptApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
@@ -538,6 +539,12 @@ export const toolsRouter = {
         toolRunId: runId,
       }
       await context.db.insert(creditTransactionsTable).values(newTransaction)
+
+      checkAndTriggerAutoTopup(context.session.id, context.session.email).catch(
+        () => {
+          return
+        },
+      )
 
       return {
         runId,

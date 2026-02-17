@@ -1,6 +1,7 @@
 import { ArrowLeftIcon } from "lucide-react"
 import { type Metadata } from "next"
 import { notFound } from "next/navigation"
+import { connection } from "next/server"
 import { cache, Suspense } from "react"
 
 import Link from "@/components/link"
@@ -16,11 +17,13 @@ import ToolInfo from "./tool-info"
 import ToolReviewsSection from "./tool-reviews-section"
 import UserCredits from "./user-credits"
 
-const getToolBySlug = cache((slug: string) => {
+const getToolBySlug = cache(async (slug: string) => {
+  await connection()
   return serverApi.tools.getBySlug({ slug })
 })
 
-const getReviewsBySlug = cache((slug: string) => {
+const getReviewsBySlug = cache(async (slug: string) => {
+  await connection()
   return serverApi.tools.getReviews({ slug })
 })
 

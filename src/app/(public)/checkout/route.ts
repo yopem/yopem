@@ -4,10 +4,10 @@ import type { NextRequest } from "next/server"
 
 import { auth } from "@/lib/auth/session"
 import { db } from "@/lib/db"
-import { polarCheckoutSessionsTable, userSettingsTable } from "@/lib/db/schema"
+import { userSettingsTable } from "@/lib/db/schema"
 import { siteDomain } from "@/lib/env/client"
-import { appEnv, polarAccessToken } from "@/lib/env/server"
-import { getProductIdFromSlug } from "@/lib/payments/product-credits-map"
+import { appEnv, polarAccessToken, polarProductId } from "@/lib/env/server"
+import { validateTopupAmount } from "@/lib/payments/credit-calculation"
 import { createCustomId } from "@/lib/utils/custom-id"
 import { logger } from "@/lib/utils/logger"
 
@@ -20,23 +20,21 @@ export const GET = async (req: NextRequest) => {
     }
 
     const searchParams = req.nextUrl.searchParams
-    const productId = searchParams.get("productId")
+    const amount = searchParams.get("amount")
+    const autoTopup = searchParams.get("auto_topup") === "true"
     const successUrl =
       searchParams.get("successUrl") ??
       `https://${siteDomain}/dashboard/credits`
 
-    if (!productId) {
-      return new Response("Missing productId parameter", { status: 400 })
+    if (!amount) {
+      return new Response("Missing amount parameter", { status: 400 })
     }
 
-    const isUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        productId,
-      )
-    const polarProductId = isUUID ? productId : getProductIdFromSlug(productId)
+    const amountNum = Number.parseFloat(amount)
+    const validation = validateTopupAmount(amountNum)
 
-    if (!polarProductId) {
-      return new Response("Invalid productId", { status: 400 })
+    if (!validation.isValid) {
+      return new Response(validation.error, { status: 400 })
     }
 
     const serverConfig = appEnv === "development" ? "sandbox" : "production"
@@ -93,22 +91,10 @@ export const GET = async (req: NextRequest) => {
       customerId: polarCustomerId ?? undefined,
       metadata: {
         userId: session.id,
+        amount: String(amountNum),
+        auto_topup: String(autoTopup),
       },
     })
-
-    try {
-      await db.insert(polarCheckoutSessionsTable).values({
-        id: createCustomId(),
-        userId: session.id,
-        checkoutId: checkout.id,
-        productId,
-        status: "pending",
-      })
-    } catch (error) {
-      logger.error(
-        `Failed to create checkout session: userId=${session.id}, error=${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
 
     return Response.redirect(checkout.url, 303)
   } catch (error) {

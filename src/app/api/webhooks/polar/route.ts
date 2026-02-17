@@ -8,8 +8,8 @@ import {
   polarPaymentEventsTable,
 } from "@/lib/db/schema"
 import { polarWebhookSecret } from "@/lib/env/server"
+import { calculateCreditsFromAmount } from "@/lib/payments/credit-calculation"
 import { grantCredits } from "@/lib/payments/grant-credits"
-import { validateAndGetCredits } from "@/lib/payments/product-credits-map"
 import { refundCredits } from "@/lib/payments/refund-credits"
 import { WebhookMonitor } from "@/lib/payments/webhook-monitor"
 import { createCustomId } from "@/lib/utils/custom-id"
@@ -68,23 +68,29 @@ export async function handlePolarOrderPaid(payload: PolarWebhookPayload) {
           return
         }
 
-        const creditsGranted = validateAndGetCredits(
-          productId,
-          order.metadata as Record<string, string> | undefined,
-        )
-
-        if (!creditsGranted) {
+        const amountFromMetadata = order.metadata?.["amount"]
+        if (!amountFromMetadata || typeof amountFromMetadata !== "string") {
           logger.error(
-            `Failed to validate credits for product: orderId=${order.id}, productId=${productId}`,
+            `Missing or invalid amount in metadata: orderId=${order.id}`,
           )
           return
         }
+
+        const amountInDollars = Number.parseFloat(amountFromMetadata)
+        if (Number.isNaN(amountInDollars)) {
+          logger.error(
+            `Invalid amount in metadata: orderId=${order.id}, amount=${amountFromMetadata}`,
+          )
+          return
+        }
+
+        const creditsGranted = calculateCreditsFromAmount(amountInDollars)
 
         const result = await grantCredits({
           userId,
           polarPaymentId: order.id,
           polarCustomerId: order.customerId ?? undefined,
-          amount: String(order.totalAmount),
+          amount: String(order.totalAmount / 100),
           currency: order.currency,
           productId,
           creditsGranted,

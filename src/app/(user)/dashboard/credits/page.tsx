@@ -1,9 +1,19 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CreditCardIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
+import {
+  CreditCardIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+  ZapIcon,
+} from "lucide-react"
+import { useEffect, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
@@ -16,6 +26,12 @@ import { queryApi } from "@/lib/orpc/query"
 import { formatDateOnly } from "@/lib/utils/format-date"
 
 export default function CreditsPage() {
+  const [customAmount, setCustomAmount] = useState("")
+  const [amountError, setAmountError] = useState("")
+  const [autoTopupEnabled, setAutoTopupEnabled] = useState(false)
+  const [autoTopupThreshold, setAutoTopupThreshold] = useState("")
+  const [autoTopupAmount, setAutoTopupAmount] = useState("")
+
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
     retry: false,
@@ -35,6 +51,48 @@ export default function CreditsPage() {
       | null
   } & { isLoading: boolean }
 
+  const { data: autoTopupSettings } = useQuery({
+    ...queryApi.user.getAutoTopupSettings.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  }) as {
+    data:
+      | {
+          enabled: boolean
+          threshold: number | null
+          amount: number | null
+        }
+      | undefined
+  }
+
+  useEffect(() => {
+    if (autoTopupSettings) {
+      setAutoTopupEnabled(autoTopupSettings.enabled)
+      setAutoTopupThreshold(
+        autoTopupSettings.threshold ? String(autoTopupSettings.threshold) : "",
+      )
+      setAutoTopupAmount(
+        autoTopupSettings.amount ? String(autoTopupSettings.amount) : "",
+      )
+    }
+  }, [autoTopupSettings])
+
+  const updateAutoTopupMutation = useMutation({
+    mutationFn: (settings: {
+      enabled: boolean
+      threshold?: number
+      amount?: number
+    }) => {
+      return queryApi.user.updateAutoTopupSettings.call(settings)
+    },
+    onSuccess: () => {
+      alert("Auto-topup settings updated successfully")
+    },
+    onError: (error: Error) => {
+      alert(`Failed to update auto-topup settings: ${error.message}`)
+    },
+  })
+
   const { data: transactionsData } = useQuery({
     ...queryApi.user.getTransactions.queryOptions({ input: { limit: 20 } }),
     retry: false,
@@ -47,21 +105,6 @@ export default function CreditsPage() {
           type: string
           description: string | null
           createdAt: Date | null
-        }[]
-      | undefined
-  }
-
-  const { data: productsData } = useQuery({
-    ...queryApi.user.getProducts.queryOptions(),
-    retry: false,
-    refetchOnWindowFocus: false,
-  }) as {
-    data:
-      | {
-          productId: string
-          credits: number
-          price: number
-          currency: string
         }[]
       | undefined
   }
@@ -83,19 +126,84 @@ export default function CreditsPage() {
   }
 
   const purchaseMutation = useMutation({
-    mutationFn: (productId: string) => {
-      window.location.href = `/checkout?productId=${productId}&successUrl=${encodeURIComponent(window.location.href)}`
+    mutationFn: (amount: number) => {
+      window.location.href = `/checkout?amount=${amount}&successUrl=${encodeURIComponent(window.location.href)}`
       return Promise.resolve()
     },
   })
 
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value)
+    setAmountError("")
+
+    if (!value) return
+
+    const amount = Number.parseFloat(value)
+    if (Number.isNaN(amount)) {
+      setAmountError("Please enter a valid number")
+      return
+    }
+
+    if (amount < 1) {
+      setAmountError("Minimum amount is $1")
+      return
+    }
+
+    if (amount > 1000) {
+      setAmountError("Maximum amount is $1000")
+      return
+    }
+  }
+
+  const handlePurchase = () => {
+    const amount = Number.parseFloat(customAmount)
+    if (Number.isNaN(amount) || amount < 1 || amount > 1000) {
+      setAmountError("Please enter a valid amount between $1 and $1000")
+      return
+    }
+
+    purchaseMutation.mutate(amount)
+  }
+
+  const handleSaveAutoTopup = () => {
+    if (autoTopupEnabled) {
+      const threshold = Number.parseFloat(autoTopupThreshold)
+      const amount = Number.parseFloat(autoTopupAmount)
+
+      if (Number.isNaN(threshold) || Number.isNaN(amount)) {
+        alert("Please enter valid numbers for threshold and amount")
+        return
+      }
+
+      if (threshold < 1 || amount < 1) {
+        alert("Threshold and amount must be at least $1")
+        return
+      }
+
+      if (threshold >= amount) {
+        alert("Threshold must be less than auto-topup amount")
+        return
+      }
+
+      updateAutoTopupMutation.mutate({
+        enabled: true,
+        threshold,
+        amount,
+      })
+    } else {
+      updateAutoTopupMutation.mutate({
+        enabled: false,
+      })
+    }
+  }
+
+  const calculateCredits = (amount: number) => {
+    return Math.floor(amount * 10)
+  }
+
   const balance = Number(creditsData?.balance ?? 0)
   const totalPurchased = Number(creditsData?.totalPurchased ?? 0)
   const totalUsed = Number(creditsData?.totalUsed ?? 0)
-
-  const handlePurchasePackage = (productId: string) => {
-    purchaseMutation.mutate(productId)
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -181,22 +289,136 @@ export default function CreditsPage() {
                 </p>
               </div>
             )}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {productsData?.map((pkg) => (
-              <button
-                key={pkg.productId}
-                type="button"
-                onClick={() => handlePurchasePackage(pkg.productId)}
-                disabled={purchaseMutation.isPending}
-                className="bg-card hover:bg-accent hover:text-accent-foreground flex flex-col items-center justify-center gap-2 rounded-lg border p-6 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span className="text-3xl font-bold">{pkg.credits}</span>
-                <span className="text-muted-foreground text-sm font-medium">
-                  ${pkg.price}
-                </span>
-              </button>
-            ))}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="amount">Amount (USD)</Label>
+              <Input
+                id="amount"
+                type="number"
+                min="1"
+                max="1000"
+                step="0.01"
+                placeholder="Enter amount ($1 - $1000)"
+                value={customAmount}
+                onChange={(e) => handleCustomAmountChange(e.target.value)}
+                className="mt-2"
+              />
+              {amountError && (
+                <p className="mt-1 text-sm text-red-600">{amountError}</p>
+              )}
+              {customAmount &&
+                !amountError &&
+                !Number.isNaN(Number.parseFloat(customAmount)) && (
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    ${Number.parseFloat(customAmount).toFixed(2)} ={" "}
+                    {calculateCredits(Number.parseFloat(customAmount))} credits
+                  </p>
+                )}
+            </div>
+
+            <Button
+              onClick={handlePurchase}
+              disabled={
+                purchaseMutation.isPending || !customAmount || !!amountError
+              }
+              className="w-full"
+            >
+              {purchaseMutation.isPending
+                ? "Processing..."
+                : "Purchase Credits"}
+            </Button>
+
+            <p className="text-muted-foreground text-center text-xs">
+              Ratio: $10 = 100 credits
+            </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ZapIcon className="size-5" />
+            Auto Top-up
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="auto-topup-enabled">Enable Auto Top-up</Label>
+              <p className="text-muted-foreground text-sm">
+                Automatically purchase credits when balance is low
+              </p>
+            </div>
+            <Switch
+              id="auto-topup-enabled"
+              checked={autoTopupEnabled}
+              onCheckedChange={setAutoTopupEnabled}
+            />
+          </div>
+
+          {autoTopupEnabled && (
+            <>
+              <div>
+                <Label htmlFor="threshold">Threshold (credits)</Label>
+                <Input
+                  id="threshold"
+                  type="number"
+                  min="1"
+                  max="1000"
+                  placeholder="Trigger when balance falls below"
+                  value={autoTopupThreshold}
+                  onChange={(e) => setAutoTopupThreshold(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="auto-amount">Top-up Amount (USD)</Label>
+                <Input
+                  id="auto-amount"
+                  type="number"
+                  min="1"
+                  max="1000"
+                  step="0.01"
+                  placeholder="Amount to purchase"
+                  value={autoTopupAmount}
+                  onChange={(e) => setAutoTopupAmount(e.target.value)}
+                  className="mt-2"
+                />
+                {autoTopupAmount &&
+                  !Number.isNaN(Number.parseFloat(autoTopupAmount)) && (
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Will purchase{" "}
+                      {calculateCredits(Number.parseFloat(autoTopupAmount))}{" "}
+                      credits
+                    </p>
+                  )}
+              </div>
+
+              <Button
+                onClick={handleSaveAutoTopup}
+                disabled={updateAutoTopupMutation.isPending}
+                className="w-full"
+              >
+                {updateAutoTopupMutation.isPending
+                  ? "Saving..."
+                  : "Save Auto Top-up Settings"}
+              </Button>
+            </>
+          )}
+
+          {!autoTopupEnabled && (
+            <Button
+              onClick={handleSaveAutoTopup}
+              disabled={updateAutoTopupMutation.isPending}
+              variant="outline"
+              className="w-full"
+            >
+              Save Settings
+            </Button>
+          )}
         </CardContent>
       </Card>
       <Card>

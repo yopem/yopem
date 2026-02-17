@@ -11,7 +11,10 @@ import {
   userCreditsTable,
   userSettingsTable,
 } from "@/lib/db/schema"
-import { getProductsList } from "@/lib/payments/product-pricing-map"
+import {
+  MAX_TOPUP_AMOUNT,
+  MIN_TOPUP_AMOUNT,
+} from "@/lib/payments/credit-calculation"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -192,10 +195,6 @@ export const userRouter = {
       .limit(10)
 
     return checkouts
-  }),
-
-  getProducts: protectedProcedure.handler(() => {
-    return getProductsList()
   }),
 
   addCredits: protectedProcedure
@@ -476,4 +475,104 @@ export const userRouter = {
       costChange: -5,
     }
   }),
+
+  getAutoTopupSettings: protectedProcedure.handler(async ({ context }) => {
+    const [credits] = await context.db
+      .select({
+        autoTopupEnabled: userCreditsTable.autoTopupEnabled,
+        autoTopupThreshold: userCreditsTable.autoTopupThreshold,
+        autoTopupAmount: userCreditsTable.autoTopupAmount,
+      })
+      .from(userCreditsTable)
+      .where(eq(userCreditsTable.userId, context.session.id))
+
+    return credits
+      ? {
+          enabled: credits.autoTopupEnabled,
+          threshold: credits.autoTopupThreshold
+            ? Number(credits.autoTopupThreshold)
+            : null,
+          amount: credits.autoTopupAmount
+            ? Number(credits.autoTopupAmount)
+            : null,
+        }
+      : {
+          enabled: false,
+          threshold: null,
+          amount: null,
+        }
+  }),
+
+  updateAutoTopupSettings: protectedProcedure
+    .input(
+      z.object({
+        enabled: z.boolean(),
+        threshold: z
+          .number()
+          .min(MIN_TOPUP_AMOUNT)
+          .max(MAX_TOPUP_AMOUNT)
+          .optional(),
+        amount: z
+          .number()
+          .min(MIN_TOPUP_AMOUNT)
+          .max(MAX_TOPUP_AMOUNT)
+          .optional(),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      // Validate that if enabled, both threshold and amount must be provided
+      if (input.enabled && (!input.threshold || !input.amount)) {
+        throw new Error(
+          "Both threshold and amount are required when enabling auto-topup",
+        )
+      }
+
+      // Validate that threshold is less than amount
+      if (
+        input.enabled &&
+        input.threshold &&
+        input.amount &&
+        input.threshold >= input.amount
+      ) {
+        throw new Error("Threshold must be less than top-up amount")
+      }
+
+      const [credits] = await context.db
+        .select()
+        .from(userCreditsTable)
+        .where(eq(userCreditsTable.userId, context.session.id))
+
+      if (credits) {
+        await context.db
+          .update(userCreditsTable)
+          .set({
+            autoTopupEnabled: input.enabled,
+            autoTopupThreshold: input.threshold
+              ? String(input.threshold)
+              : null,
+            autoTopupAmount: input.amount ? String(input.amount) : null,
+            updatedAt: new Date(),
+          })
+          .where(eq(userCreditsTable.userId, context.session.id))
+      } else {
+        // Create credits record if it doesn't exist
+        await context.db.insert(userCreditsTable).values({
+          id: createCustomId(),
+          userId: context.session.id,
+          balance: "0",
+          totalPurchased: "0",
+          totalUsed: "0",
+          autoTopupEnabled: input.enabled,
+          autoTopupThreshold: input.threshold ? String(input.threshold) : null,
+          autoTopupAmount: input.amount ? String(input.amount) : null,
+        })
+      }
+
+      return {
+        success: true,
+        enabled: input.enabled,
+        threshold: input.threshold ?? null,
+        amount: input.amount ?? null,
+      }
+    }),
 }
