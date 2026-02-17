@@ -300,13 +300,13 @@ export default function CreditsPage() {
                     .map((checkout) => (
                       <div
                         key={checkout.id}
-                        className="flex items-center justify-between rounded-sm bg-white p-2"
+                        className="bg-card text-card-foreground flex items-center justify-between rounded-md p-2 shadow-sm"
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-card-foreground text-sm font-medium">
                             ${Number(checkout.amount).toFixed(2)}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-muted-foreground text-xs">
                             {formatDateOnly(checkout.createdAt)}
                           </p>
                         </div>
@@ -342,7 +342,7 @@ export default function CreditsPage() {
                 className="mt-2"
               />
               {amountError && (
-                <p className="mt-1 text-sm text-red-600">{amountError}</p>
+                <p className="text-destructive mt-1 text-sm">{amountError}</p>
               )}
               {customAmount &&
                 !amountError &&
