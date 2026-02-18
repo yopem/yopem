@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
+import { clientApi } from "@/lib/orpc/client"
 import { logger } from "@/lib/utils/logger"
 
 interface ToolRatingInputProps {
@@ -24,30 +25,44 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const loadReviewData = async () => {
-      try {
-        const { clientApi } = await import("@/lib/orpc/client")
+    let cancelled = false
 
-        const [reviewData, usageData] = await Promise.all([
+    const loadReviewData = async () => {
+      let reviewData
+      let usageData
+
+      try {
+        const [r, u] = await Promise.all([
           clientApi.tools.getUserReview({ slug }),
           clientApi.tools.hasUsedTool({ slug }),
         ])
-
-        setHasUsedTool(usageData.hasUsed)
-
-        if (reviewData) {
-          setRating(reviewData.rating)
-          setReviewText(reviewData.reviewText ?? "")
-          setIsEditing(true)
-        }
+        reviewData = r
+        usageData = u
       } catch (error) {
-        logger.error(`Failed to load review data: ${String(error)}`)
-      } finally {
+        if (!cancelled) {
+          logger.error(`Failed to load review data: ${String(error)}`)
+        }
+      }
+
+      if (!cancelled && usageData) {
+        setHasUsedTool(usageData.hasUsed)
+      }
+
+      if (!cancelled && reviewData) {
+        setRating(reviewData.rating)
+        setReviewText(reviewData.reviewText ?? "")
+        setIsEditing(true)
+      }
+
+      if (!cancelled) {
         setIsLoading(false)
       }
     }
 
     void loadReviewData()
+    return () => {
+      cancelled = true
+    }
   }, [slug])
 
   const handleSubmit = async () => {
@@ -59,27 +74,31 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
     setIsSubmitting(true)
     setError(null)
 
+    const reviewTextParam = reviewText.trim() || undefined
+    const toastTitle = isEditing ? "Review updated" : "Review submitted"
+
     try {
-      const { clientApi } = await import("@/lib/orpc/client")
       await clientApi.tools.submitReview({
         slug,
         rating,
-        reviewText: reviewText.trim() || undefined,
+        reviewText: reviewTextParam,
       })
 
       toastManager.add({
-        title: isEditing ? "Review updated" : "Review submitted",
+        title: toastTitle,
         description: "Thank you for your feedback!",
         type: "success",
       })
 
       setIsEditing(true)
-      onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit review")
-    } finally {
-      setIsSubmitting(false)
     }
+
+    if (onSuccess) {
+      onSuccess()
+    }
+    setIsSubmitting(false)
   }
 
   if (isLoading) {

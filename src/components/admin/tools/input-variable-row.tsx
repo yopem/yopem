@@ -178,7 +178,10 @@ const InputVariableRow = ({
           {safeOptions.length > 0 && (
             <div className="space-y-2">
               {safeOptions.map((option, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div
+                  key={`${option.value}-${index}`}
+                  className="flex items-center gap-2"
+                >
                   <Input
                     nativeInput={true}
                     value={option.label}

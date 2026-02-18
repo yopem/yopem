@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import CTA from "@/components/landing/cta"
@@ -7,6 +8,11 @@ import Pricing from "@/components/landing/pricing"
 import Footer from "@/components/navigation/footer"
 import Header from "@/components/navigation/header"
 import { Skeleton } from "@/components/ui/skeleton"
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "AI-powered tools to automate your workflows",
+}
 
 export default function HomePage() {
   return (

@@ -9,7 +9,7 @@ import {
   TrendingUpIcon,
   ZapIcon,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,13 +27,15 @@ import {
 import { queryApi } from "@/lib/orpc/query"
 import { formatDateOnly } from "@/lib/utils/format-date"
 
+interface AutoTopupState {
+  enabled: boolean
+  threshold: string
+  amount: string
+}
+
 export default function CreditsPage() {
   const [customAmount, setCustomAmount] = useState("")
   const [amountError, setAmountError] = useState("")
-  const [autoTopupEnabled, setAutoTopupEnabled] = useState(false)
-  const [autoTopupThreshold, setAutoTopupThreshold] = useState("")
-  const [autoTopupAmount, setAutoTopupAmount] = useState("")
-
   const { data: creditsData, isLoading } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
     retry: false,
@@ -67,17 +69,14 @@ export default function CreditsPage() {
       | undefined
   }
 
-  useEffect(() => {
-    if (autoTopupSettings) {
-      setAutoTopupEnabled(autoTopupSettings.enabled)
-      setAutoTopupThreshold(
-        autoTopupSettings.threshold ? String(autoTopupSettings.threshold) : "",
-      )
-      setAutoTopupAmount(
-        autoTopupSettings.amount ? String(autoTopupSettings.amount) : "",
-      )
-    }
-  }, [autoTopupSettings])
+  // Initialize state from query data only once on mount
+  const [autoTopup, setAutoTopup] = useState<AutoTopupState>(() => ({
+    enabled: autoTopupSettings?.enabled ?? false,
+    threshold: autoTopupSettings?.threshold
+      ? String(autoTopupSettings.threshold)
+      : "",
+    amount: autoTopupSettings?.amount ? String(autoTopupSettings.amount) : "",
+  }))
 
   const updateAutoTopupMutation = useMutation({
     mutationFn: (settings: {
@@ -170,9 +169,9 @@ export default function CreditsPage() {
   }
 
   const handleSaveAutoTopup = () => {
-    if (autoTopupEnabled) {
-      const threshold = Number.parseFloat(autoTopupThreshold)
-      const amount = Number.parseFloat(autoTopupAmount)
+    if (autoTopup.enabled) {
+      const threshold = Number.parseFloat(autoTopup.threshold)
+      const amount = Number.parseFloat(autoTopup.amount)
 
       if (Number.isNaN(threshold) || Number.isNaN(amount)) {
         alert("Please enter valid numbers for threshold and amount")
@@ -390,12 +389,14 @@ export default function CreditsPage() {
             </div>
             <Switch
               id="auto-topup-enabled"
-              checked={autoTopupEnabled}
-              onCheckedChange={setAutoTopupEnabled}
+              checked={autoTopup.enabled}
+              onCheckedChange={(checked) =>
+                setAutoTopup((prev) => ({ ...prev, enabled: checked }))
+              }
             />
           </div>
 
-          {autoTopupEnabled && (
+          {autoTopup.enabled && (
             <>
               <div>
                 <Label htmlFor="threshold">Threshold (credits)</Label>
@@ -405,8 +406,13 @@ export default function CreditsPage() {
                   min="1"
                   max="1000"
                   placeholder="Trigger when balance falls below"
-                  value={autoTopupThreshold}
-                  onChange={(e) => setAutoTopupThreshold(e.target.value)}
+                  value={autoTopup.threshold}
+                  onChange={(e) =>
+                    setAutoTopup((prev) => ({
+                      ...prev,
+                      threshold: e.target.value,
+                    }))
+                  }
                   className="mt-2"
                 />
               </div>
@@ -420,15 +426,20 @@ export default function CreditsPage() {
                   max="1000"
                   step="0.01"
                   placeholder="Amount to purchase"
-                  value={autoTopupAmount}
-                  onChange={(e) => setAutoTopupAmount(e.target.value)}
+                  value={autoTopup.amount}
+                  onChange={(e) =>
+                    setAutoTopup((prev) => ({
+                      ...prev,
+                      amount: e.target.value,
+                    }))
+                  }
                   className="mt-2"
                 />
-                {autoTopupAmount &&
-                  !Number.isNaN(Number.parseFloat(autoTopupAmount)) && (
+                {autoTopup.amount &&
+                  !Number.isNaN(Number.parseFloat(autoTopup.amount)) && (
                     <p className="text-muted-foreground mt-1 text-sm">
                       Will purchase{" "}
-                      {calculateCredits(Number.parseFloat(autoTopupAmount))}{" "}
+                      {calculateCredits(Number.parseFloat(autoTopup.amount))}{" "}
                       credits
                     </p>
                   )}
@@ -446,7 +457,7 @@ export default function CreditsPage() {
             </>
           )}
 
-          {!autoTopupEnabled && (
+          {!autoTopup.enabled && (
             <Button
               onClick={handleSaveAutoTopup}
               disabled={updateAutoTopupMutation.isPending}

@@ -212,14 +212,26 @@ export default function AdminSettingsPage() {
   const [maxUploadSize, setMaxUploadSize] = useState<number>(50)
   const [isAssetSettingsLoading, setIsAssetSettingsLoading] = useState(true)
 
-  const fetchAssetSettings = useCallback(async () => {
-    try {
-      const result = await queryApi.admin.getAssetSettings.call()
-      setMaxUploadSize(result.maxUploadSizeMB)
-    } catch (error) {
-      logger.error(`Failed to fetch asset settings: ${String(error)}`)
-    } finally {
-      setIsAssetSettingsLoading(false)
+  useEffect(() => {
+    let cancelled = false
+    const fetchAssetSettings = async () => {
+      try {
+        const result = await queryApi.admin.getAssetSettings.call()
+        if (!cancelled) {
+          setMaxUploadSize(result.maxUploadSizeMB)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          logger.error(`Failed to fetch asset settings: ${String(error)}`)
+        }
+      }
+      if (!cancelled) {
+        setIsAssetSettingsLoading(false)
+      }
+    }
+    void fetchAssetSettings()
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -240,10 +252,6 @@ export default function AdminSettingsPage() {
       })
     }
   }, [maxUploadSize])
-
-  useEffect(() => {
-    void fetchAssetSettings()
-  }, [fetchAssetSettings])
 
   const handleAddProvider = useCallback(() => {
     void (async () => {

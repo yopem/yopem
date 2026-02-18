@@ -31,21 +31,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
   const [uploading, setUploading] = useState(false)
   const [activeTab, setActiveTab] = useState<"library" | "upload">("library")
 
-  useEffect(() => {
-    if (dialogOpen && activeTab === "library") {
-      void loadAssets()
-    }
-  }, [dialogOpen, activeTab])
-
-  useEffect(() => {
-    if (value) {
-      void loadCurrentThumbnail(value)
-    } else {
-      setCurrentThumbnail(null)
-    }
-  }, [value])
-
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     setLoading(true)
     try {
       const result = await queryApi.assets.list.call({
@@ -55,12 +41,11 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       setAssets(result.assets as Asset[])
     } catch (error) {
       logger.error(`Failed to load assets: ${String(error)}`)
-    } finally {
-      setLoading(false)
     }
-  }
+    setLoading(false)
+  }, [])
 
-  const loadCurrentThumbnail = async (id: string) => {
+  const loadCurrentThumbnail = useCallback(async (id: string) => {
     try {
       const result = await queryApi.assets.list.call({ limit: 100 })
       const asset = (result.assets as Asset[]).find((a) => a.id === id)
@@ -70,7 +55,35 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
     } catch (error) {
       logger.error(`Failed to load thumbnail: ${String(error)}`)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    if (dialogOpen && activeTab === "library") {
+      const load = async () => {
+        if (!cancelled) await loadAssets()
+      }
+      void load()
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [dialogOpen, activeTab, loadAssets])
+
+  useEffect(() => {
+    let cancelled = false
+    const runEffect = async () => {
+      if (value) {
+        await loadCurrentThumbnail(value)
+      } else if (!cancelled) {
+        setCurrentThumbnail(null)
+      }
+    }
+    void runEffect()
+    return () => {
+      cancelled = true
+    }
+  }, [value, loadCurrentThumbnail])
 
   const handleSelect = () => {
     if (selectedAssetId) {
@@ -108,11 +121,10 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
           description: error instanceof Error ? error.message : "Unknown error",
           type: "error",
         })
-      } finally {
-        setUploading(false)
-        if (event.target) {
-          event.target.value = ""
-        }
+      }
+      setUploading(false)
+      if (event.target) {
+        event.target.value = ""
       }
     },
     [onChange],

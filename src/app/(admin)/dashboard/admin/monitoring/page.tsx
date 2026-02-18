@@ -10,6 +10,7 @@ import {
   XCircleIcon,
   ZapIcon,
 } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
@@ -19,17 +20,38 @@ import ActivityLogsList from "@/components/admin/monitoring/activity-logs-list"
 import TimeRangeToggle, {
   type TimeRange,
 } from "@/components/admin/monitoring/time-range-toggle"
-import UptimeChart from "@/components/admin/monitoring/uptime-chart"
 import UptimeStats from "@/components/admin/monitoring/uptime-stats"
-import WebhookEventsChart from "@/components/admin/monitoring/webhook-events-chart"
 import WebhookFilterToggle, {
   type EventType,
 } from "@/components/admin/monitoring/webhook-filter-toggle"
-import WebhookProcessingChart from "@/components/admin/monitoring/webhook-processing-chart"
 import StatsCard from "@/components/admin/stats-card"
 import { useApiKeyStats } from "@/hooks/use-api-keys"
 import { useSystemMetrics } from "@/hooks/use-system-metrics"
 import { queryApi } from "@/lib/orpc/query"
+
+const UptimeChart = dynamic(
+  () => import("@/components/admin/monitoring/uptime-chart"),
+  {
+    ssr: false,
+    loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,
+  },
+)
+
+const WebhookEventsChart = dynamic(
+  () => import("@/components/admin/monitoring/webhook-events-chart"),
+  {
+    ssr: false,
+    loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,
+  },
+)
+
+const WebhookProcessingChart = dynamic(
+  () => import("@/components/admin/monitoring/webhook-processing-chart"),
+  {
+    ssr: false,
+    loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,
+  },
+)
 
 interface MetricsData {
   dataPoints: {
@@ -81,25 +103,35 @@ export default function MonitoringPage() {
   const { data: apiKeyStats, isLoading: apiKeyLoading } = useApiKeyStats()
 
   useEffect(() => {
+    let cancelled = false
     const loadMetrics = async () => {
       setWebhookLoading(true)
       setWebhookError(null)
+      const eventTypeParam = eventType === "all" ? undefined : eventType
       try {
         const result = await queryApi.admin.getWebhookMetricsHistory.call({
-          eventType: eventType === "all" ? undefined : eventType,
+          eventType: eventTypeParam,
           timeRange,
         })
-        setWebhookMetrics(result)
+        if (!cancelled) {
+          setWebhookMetrics(result)
+        }
       } catch (err) {
-        setWebhookError(
-          err instanceof Error ? err.message : "Failed to load metrics",
-        )
-      } finally {
+        if (!cancelled) {
+          setWebhookError(
+            err instanceof Error ? err.message : "Failed to load metrics",
+          )
+        }
+      }
+      if (!cancelled) {
         setWebhookLoading(false)
       }
     }
 
     void loadMetrics()
+    return () => {
+      cancelled = true
+    }
   }, [eventType, timeRange])
 
   return (

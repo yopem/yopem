@@ -38,7 +38,10 @@ const FeatureBuilderHeader = ({
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-8">
       <div className="flex items-center gap-2">
         {breadcrumbItems.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
+          <div
+            key={`${item.label}-${index}`}
+            className="flex items-center gap-2"
+          >
             {item.href ? (
               <a
                 href={item.href}

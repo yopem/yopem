@@ -12,6 +12,8 @@ interface RangeSliderProps {
   formatValue?: (value: number) => string
 }
 
+const defaultFormatValue = (v: number) => v.toString()
+
 const RangeSlider = ({
   label,
   value,
@@ -19,14 +21,15 @@ const RangeSlider = ({
   max,
   step,
   onChange,
-  formatValue = (v) => v.toString(),
+  formatValue,
 }: RangeSliderProps) => {
+  const format = formatValue ?? defaultFormatValue
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">{label}</label>
         <span className="bg-muted rounded-sm px-1.5 py-0.5 font-mono text-xs">
-          {formatValue(value)}
+          {format(value)}
         </span>
       </div>
       <Slider

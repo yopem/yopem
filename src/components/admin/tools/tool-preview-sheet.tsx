@@ -59,7 +59,7 @@ const ToolPreviewSheet = ({
     if (open) {
       animationTimerRef.current = setTimeout(() => setIsVisible(true), 10)
     } else {
-      setIsVisible(false)
+      animationTimerRef.current = setTimeout(() => setIsVisible(false), 10)
     }
 
     return () => {

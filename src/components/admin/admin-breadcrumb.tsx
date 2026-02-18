@@ -13,7 +13,7 @@ const AdminBreadcrumb = ({ items }: AdminBreadcrumbProps) => {
   return (
     <div className="flex items-center gap-2 pt-2 text-sm">
       {items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
+        <div key={`${item.label}-${index}`} className="flex items-center gap-2">
           {item.href ? (
             <Link
               href={item.href}
