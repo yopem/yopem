@@ -1,18 +1,34 @@
 "use client"
 
+import {
+  BarChartIcon,
+  CheckCircleIcon,
+  DollarSignIcon,
+  KeyIcon,
+  ServerIcon,
+  UsersIcon,
+  XCircleIcon,
+  ZapIcon,
+} from "lucide-react"
 import { useEffect, useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
+import ActivityLogsList from "@/components/admin/monitoring/activity-logs-list"
 import TimeRangeToggle, {
   type TimeRange,
 } from "@/components/admin/monitoring/time-range-toggle"
+import UptimeChart from "@/components/admin/monitoring/uptime-chart"
+import UptimeStats from "@/components/admin/monitoring/uptime-stats"
 import WebhookEventsChart from "@/components/admin/monitoring/webhook-events-chart"
 import WebhookFilterToggle, {
   type EventType,
 } from "@/components/admin/monitoring/webhook-filter-toggle"
 import WebhookProcessingChart from "@/components/admin/monitoring/webhook-processing-chart"
-import WebhookStatsCards from "@/components/admin/monitoring/webhook-stats-cards"
+import StatsCard from "@/components/admin/stats-card"
+import { useApiKeyStats } from "@/hooks/use-api-keys"
+import { useSystemMetrics } from "@/hooks/use-system-metrics"
 import { queryApi } from "@/lib/orpc/query"
 
 interface MetricsData {
@@ -31,96 +47,301 @@ interface MetricsData {
   }
 }
 
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}k`
+  }
+  return num.toString()
+}
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount)
+}
+
 const breadcrumbItems = [
   { label: "Home", href: "/" },
   { label: "Dashboard", href: "/dashboard/admin" },
   { label: "Monitoring" },
 ]
 
-const MonitoringPage = () => {
+export default function MonitoringPage() {
   const [eventType, setEventType] = useState<EventType>("all")
   const [timeRange, setTimeRange] = useState<TimeRange>("24h")
-  const [metrics, setMetrics] = useState<MetricsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [webhookMetrics, setWebhookMetrics] = useState<MetricsData | null>(null)
+  const [webhookLoading, setWebhookLoading] = useState(true)
+  const [webhookError, setWebhookError] = useState<string | null>(null)
+
+  const { data: systemMetrics, isLoading: systemLoading } = useSystemMetrics()
+  const { data: apiKeyStats, isLoading: apiKeyLoading } = useApiKeyStats()
 
   useEffect(() => {
     const loadMetrics = async () => {
-      setLoading(true)
-      setError(null)
+      setWebhookLoading(true)
+      setWebhookError(null)
       try {
         const result = await queryApi.admin.getWebhookMetricsHistory.call({
           eventType: eventType === "all" ? undefined : eventType,
           timeRange,
         })
-        setMetrics(result)
+        setWebhookMetrics(result)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load metrics")
+        setWebhookError(
+          err instanceof Error ? err.message : "Failed to load metrics",
+        )
       } finally {
-        setLoading(false)
+        setWebhookLoading(false)
       }
     }
 
     void loadMetrics()
   }, [eventType, timeRange])
 
-  if (loading) {
-    return (
-      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-        <AdminBreadcrumb items={breadcrumbItems} />
-        <div className="animate-pulse">
-          <div className="mb-4 h-8 w-64 rounded-sm bg-gray-200"></div>
-          <div className="h-96 rounded-sm bg-gray-200"></div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error || !metrics) {
-    return (
-      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-        <AdminBreadcrumb items={breadcrumbItems} />
-        <div className="text-center text-red-600">
-          {error ?? "Failed to load metrics"}
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <AdminBreadcrumb items={breadcrumbItems} />
 
       <AdminPageHeader
-        title="Webhook Monitoring"
-        description="Monitor Polar webhook processing metrics and performance"
+        title="System Monitoring"
+        description="Complete platform health and performance metrics"
       />
 
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="text-sm font-medium">Event Type:</div>
-          <WebhookFilterToggle value={eventType} onChange={setEventType} />
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">
+            System Overview
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Key platform metrics and performance indicators
+          </p>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="text-sm font-medium">Time Range:</div>
-          <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
+        <Shimmer loading={systemLoading}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total Revenue"
+              value={formatCurrency(systemMetrics?.revenue ?? 0)}
+              change={
+                systemMetrics?.revenueChange
+                  ? {
+                      value: systemMetrics.revenueChange,
+                      trend: systemMetrics.revenueChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.revenueChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<DollarSignIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="Active Users"
+              value={formatNumber(systemMetrics?.activeUsers ?? 0)}
+              change={
+                systemMetrics?.activeUsersChange
+                  ? {
+                      value: systemMetrics.activeUsersChange,
+                      trend: systemMetrics.activeUsersChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.activeUsersChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<UsersIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="AI Requests"
+              value={formatNumber(systemMetrics?.aiRequests ?? 0)}
+              change={
+                systemMetrics?.aiRequestsChange
+                  ? {
+                      value: systemMetrics.aiRequestsChange,
+                      trend: systemMetrics.aiRequestsChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.aiRequestsChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<ZapIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="System Uptime"
+              value={systemMetrics?.systemUptime ?? "99.9%"}
+              change={
+                systemMetrics?.systemUptimeChange
+                  ? {
+                      value: systemMetrics.systemUptimeChange,
+                      trend: "neutral",
+                    }
+                  : undefined
+              }
+              icon={<ServerIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+          </div>
+        </Shimmer>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">API Usage</h2>
+          <p className="text-muted-foreground text-sm">
+            API key utilization and cost metrics
+          </p>
         </div>
-      </div>
 
-      <WebhookStatsCards
-        totalProcessed={metrics.summary.totalProcessed}
-        successCount={metrics.summary.successCount}
-        failureCount={metrics.summary.failureCount}
-        avgProcessingTime={metrics.summary.avgProcessingTime}
-      />
+        <Shimmer loading={apiKeyLoading}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <StatsCard
+              title="Total Requests"
+              value={(apiKeyStats?.totalRequests ?? 0).toLocaleString()}
+              icon={<BarChartIcon className="size-4.5" />}
+              loading={apiKeyLoading}
+            />
+            <StatsCard
+              title="Active Keys"
+              value={apiKeyStats?.activeKeys?.toString() ?? "0"}
+              icon={<KeyIcon className="size-4.5" />}
+              loading={apiKeyLoading}
+            />
+            <StatsCard
+              title="Monthly Cost"
+              value={`$${(apiKeyStats?.monthlyCost ?? 0).toFixed(2)}`}
+              change={
+                apiKeyStats?.costChange && apiKeyStats.costChange !== "N/A"
+                  ? {
+                      value: `${apiKeyStats.costChange} from last month`,
+                      trend: apiKeyStats.costChange.startsWith("+")
+                        ? "up"
+                        : apiKeyStats.costChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<DollarSignIcon className="size-4.5" />}
+              loading={apiKeyLoading}
+            />
+          </div>
+        </Shimmer>
+      </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <WebhookEventsChart data={metrics.dataPoints} />
-        <WebhookProcessingChart data={metrics.dataPoints} />
-      </div>
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">
+            Webhook Monitoring
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Polar webhook processing metrics and performance
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="text-sm font-medium">Event Type:</div>
+            <WebhookFilterToggle value={eventType} onChange={setEventType} />
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="text-sm font-medium">Time Range:</div>
+            <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
+          </div>
+        </div>
+
+        {webhookError ? (
+          <div className="text-center text-red-600">{webhookError}</div>
+        ) : (
+          <>
+            <Shimmer loading={webhookLoading}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title="Total Processed"
+                  value={(
+                    webhookMetrics?.summary.totalProcessed ?? 0
+                  ).toLocaleString()}
+                  icon={<BarChartIcon className="size-4.5" />}
+                  loading={webhookLoading}
+                />
+                <StatsCard
+                  title="Success Count"
+                  value={(
+                    webhookMetrics?.summary.successCount ?? 0
+                  ).toLocaleString()}
+                  change={{
+                    value: "",
+                    trend: "up",
+                  }}
+                  icon={<CheckCircleIcon className="size-4.5" />}
+                  loading={webhookLoading}
+                />
+                <StatsCard
+                  title="Failure Count"
+                  value={(
+                    webhookMetrics?.summary.failureCount ?? 0
+                  ).toLocaleString()}
+                  change={{
+                    value: "",
+                    trend: "down",
+                  }}
+                  icon={<XCircleIcon className="size-4.5" />}
+                  loading={webhookLoading}
+                />
+                <StatsCard
+                  title="Success Rate"
+                  value={`${(webhookMetrics?.summary.successRate ?? 0).toFixed(1)}%`}
+                  icon={<CheckCircleIcon className="size-4.5" />}
+                  loading={webhookLoading}
+                />
+              </div>
+            </Shimmer>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <WebhookEventsChart data={webhookMetrics?.dataPoints ?? []} />
+              <WebhookProcessingChart data={webhookMetrics?.dataPoints ?? []} />
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">
+            System Uptime
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Platform availability and downtime metrics
+          </p>
+        </div>
+        <UptimeStats />
+        <div className="mt-4">
+          <UptimeChart />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">
+            Activity Logs
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            System events and operational activity
+          </p>
+        </div>
+        <ActivityLogsList />
+      </section>
     </div>
   )
 }
-
-export default MonitoringPage

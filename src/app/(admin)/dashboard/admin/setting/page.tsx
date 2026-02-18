@@ -367,7 +367,8 @@ export default function AdminSettingsPage() {
                                 100
                         return {
                           value: `${trend >= 0 ? "+" : ""}${trend.toFixed(1)}% from last month`,
-                          trend: trend > 0 ? "up" : trend < 0 ? "down" : "neutral",
+                          trend:
+                            trend > 0 ? "up" : trend < 0 ? "down" : "neutral",
                         }
                       })()
                     : undefined
@@ -385,15 +386,14 @@ export default function AdminSettingsPage() {
                 title="Monthly Cost"
                 value={`$${(stats?.monthlyCost ?? 0).toFixed(2)}`}
                 change={
-                  stats?.costChange !== undefined
+                  stats?.costChange !== undefined && stats.costChange !== "N/A"
                     ? {
-                        value: `${stats.costChange >= 0 ? "+" : ""}${stats.costChange.toFixed(1)}% from last month`,
-                        trend:
-                          stats.costChange > 0
-                            ? "up"
-                            : stats.costChange < 0
-                              ? "down"
-                              : "neutral",
+                        value: `${stats.costChange} from last month`,
+                        trend: stats.costChange.startsWith("+")
+                          ? "up"
+                          : stats.costChange.startsWith("-")
+                            ? "down"
+                            : "neutral",
                       }
                     : undefined
                 }

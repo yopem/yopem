@@ -148,6 +148,13 @@
       "when": 1771362109134,
       "tag": "0020_round_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1771434647196,
+      "tag": "0021_rare_talos",
+      "breakpoints": true
     }
   ]
 }
