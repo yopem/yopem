@@ -17,6 +17,11 @@ import ToolInfo from "./tool-info"
 import ToolReviewsSection from "./tool-reviews-section"
 import UserCredits from "./user-credits"
 
+export async function generateStaticParams() {
+  const result = await serverApi.tools.list({ limit: 1000 })
+  return result.tools.map((tool: { slug: string }) => ({ slug: tool.slug }))
+}
+
 const getToolBySlug = cache(async (slug: string) => {
   await connection()
   return serverApi.tools.getBySlug({ slug })
