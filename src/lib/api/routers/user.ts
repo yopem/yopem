@@ -469,12 +469,66 @@ export const userRouter = {
       }
     }
 
+    const now = new Date()
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfPreviousMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    )
+    const endOfPreviousMonth = startOfCurrentMonth
+
+    const [totalRequestsResult] = await context.db
+      .select({
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(toolRunsTable)
+      .where(eq(toolRunsTable.userId, context.session.id))
+
+    const totalRequests = Number(totalRequestsResult?.count ?? 0)
+
+    const [currentMonthResult] = await context.db
+      .select({
+        count: sql<number>`COUNT(*)`,
+        cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
+      })
+      .from(toolRunsTable)
+      .where(
+        sql`${toolRunsTable.userId} = ${context.session.id} AND ${toolRunsTable.createdAt} >= ${startOfCurrentMonth}`,
+      )
+
+    const requestsThisMonth = Number(currentMonthResult?.count ?? 0)
+    const monthlyCost = Number(currentMonthResult?.cost ?? 0)
+
+    const [previousMonthResult] = await context.db
+      .select({
+        cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
+      })
+      .from(toolRunsTable)
+      .where(
+        sql`${toolRunsTable.userId} = ${context.session.id} AND ${toolRunsTable.createdAt} >= ${startOfPreviousMonth} AND ${toolRunsTable.createdAt} < ${endOfPreviousMonth}`,
+      )
+
+    const previousMonthCost = Number(previousMonthResult?.cost ?? 0)
+
+    let costChange = "0%"
+    if (previousMonthCost > 0) {
+      const changePercent =
+        ((monthlyCost - previousMonthCost) / previousMonthCost) * 100
+      costChange =
+        changePercent >= 0
+          ? `+${changePercent.toFixed(1)}%`
+          : `${changePercent.toFixed(1)}%`
+    } else if (monthlyCost > 0) {
+      costChange = "+100%"
+    }
+
     return {
-      totalRequests: 1200000,
+      totalRequests,
       activeKeys,
-      monthlyCost: 2405,
-      requestsThisMonth: 150000,
-      costChange: -5,
+      monthlyCost,
+      requestsThisMonth,
+      costChange,
     }
   }),
 

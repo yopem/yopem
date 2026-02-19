@@ -259,7 +259,7 @@ export default function MonitoringPage() {
             />
             <StatsCard
               title="System Uptime"
-              value={systemMetrics?.systemUptime ?? "99.9%"}
+              value={systemMetrics?.systemUptime ?? "0.0%"}
               change={
                 systemMetrics?.systemUptimeChange
                   ? {

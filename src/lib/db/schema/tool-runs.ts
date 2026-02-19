@@ -38,6 +38,11 @@ export const toolRunsTable = pgTable(
   (table) => {
     return {
       userIdIdx: index("idx_tool_runs_user_id").on(table.userId),
+      createdAtIdx: index("idx_tool_runs_created_at").on(table.createdAt),
+      userIdCreatedAtIdx: index("idx_tool_runs_user_id_created_at").on(
+        table.userId,
+        table.createdAt,
+      ),
     }
   },
 )

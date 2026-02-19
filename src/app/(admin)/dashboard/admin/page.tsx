@@ -14,7 +14,7 @@ import { Shimmer } from "shimmer-from-structure"
 import ActivityFeed from "@/components/admin/activity-feed"
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
-import ChartPlaceholder from "@/components/admin/chart-placeholder"
+import AiRequestsChart from "@/components/admin/ai-requests-chart"
 import StatsCard from "@/components/admin/stats-card"
 import Link from "@/components/link"
 import { Button } from "@/components/ui/button"
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
           />
           <StatsCard
             title="System Uptime"
-            value={`${metrics?.systemUptime ?? 99.9}%`}
+            value={metrics?.systemUptime ?? "0.0%"}
             change={{
               value: metrics?.systemUptimeChange ?? "Stable",
               trend: "neutral",
@@ -135,10 +135,7 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <ChartPlaceholder
-            title="Token Usage Overview"
-            subtitle="45,200 Tokens"
-          />
+          <AiRequestsChart totalRequests={metrics?.aiRequests ?? 0} />
         </div>
         <div className="lg:col-span-1">
           <Shimmer loading={activityLoading}>

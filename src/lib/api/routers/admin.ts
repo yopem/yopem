@@ -967,6 +967,79 @@ export const adminRouter = {
 
       return metrics
     }),
+
+  getAiRequestsHistory: adminProcedure
+    .input(
+      z.object({
+        timeRange: z.enum(["7d", "30d"]).default("7d"),
+      }),
+    )
+    .output(
+      z.object({
+        dataPoints: z.array(
+          z.object({
+            date: z.string(),
+            requests: z.number(),
+          }),
+        ),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const cacheKey = `admin:metrics:ai_requests_history:${input.timeRange}`
+      const cached = await context.redis.getCache<{
+        dataPoints: { date: string; requests: number }[]
+      }>(cacheKey)
+
+      if (cached) {
+        return cached
+      }
+
+      const now = new Date()
+      const days = input.timeRange === "7d" ? 7 : 30
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+
+      const dataPointsMap = new Map<
+        string,
+        { date: string; requests: number }
+      >()
+
+      for (let i = 0; i < days; i++) {
+        const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
+        const dateStr = date.toISOString().split("T")[0]
+        dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })
+      }
+
+      const runs = await context.db
+        .select({
+          createdAt: toolRunsTable.createdAt,
+        })
+        .from(toolRunsTable)
+        .where(
+          and(
+            gte(toolRunsTable.createdAt, startDate),
+            sql`${toolRunsTable.status} IN ('completed', 'failed')`,
+          ),
+        )
+
+      for (const run of runs) {
+        if (run.createdAt) {
+          const dateStr = run.createdAt.toISOString().split("T")[0]
+          const existing = dataPointsMap.get(dateStr)
+          if (existing) {
+            existing.requests += 1
+          }
+        }
+      }
+
+      const dataPoints = Array.from(dataPointsMap.values()).sort((a, b) =>
+        a.date.localeCompare(b.date),
+      )
+
+      const result = { dataPoints }
+      await context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
+
+      return result
+    }),
 }
 
 function calculateTrend(current: number, previous: number): string {
