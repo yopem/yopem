@@ -18,5 +18,3 @@ export const appRouter = {
   tags: tagsRouter,
   assets: assetsRouter,
 }
-
-export type AppRouter = typeof appRouter

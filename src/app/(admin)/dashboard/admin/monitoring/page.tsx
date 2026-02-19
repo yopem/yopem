@@ -11,7 +11,7 @@ import {
   ZapIcon,
 } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useEffect, useState } from "react"
+import { useEffect, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
@@ -92,12 +92,62 @@ const breadcrumbItems = [
   { label: "Monitoring" },
 ]
 
+interface MetricsState {
+  eventType: EventType
+  timeRange: TimeRange
+  webhookMetrics: MetricsData | null
+  webhookLoading: boolean
+  webhookError: string | null
+}
+
+type MetricsAction =
+  | { type: "SET_EVENT_TYPE"; payload: EventType }
+  | { type: "SET_TIME_RANGE"; payload: TimeRange }
+  | { type: "FETCH_START" }
+  | { type: "FETCH_SUCCESS"; payload: MetricsData }
+  | { type: "FETCH_ERROR"; payload: string }
+
+const initialMetricsState: MetricsState = {
+  eventType: "all",
+  timeRange: "24h",
+  webhookMetrics: null,
+  webhookLoading: true,
+  webhookError: null,
+}
+
+const metricsReducer = (
+  state: MetricsState,
+  action: MetricsAction,
+): MetricsState => {
+  switch (action.type) {
+    case "SET_EVENT_TYPE":
+      return { ...state, eventType: action.payload }
+    case "SET_TIME_RANGE":
+      return { ...state, timeRange: action.payload }
+    case "FETCH_START":
+      return { ...state, webhookLoading: true, webhookError: null }
+    case "FETCH_SUCCESS":
+      return {
+        ...state,
+        webhookLoading: false,
+        webhookMetrics: action.payload,
+      }
+    case "FETCH_ERROR":
+      return {
+        ...state,
+        webhookLoading: false,
+        webhookError: action.payload,
+      }
+    default:
+      return state
+  }
+}
+
 export default function MonitoringPage() {
-  const [eventType, setEventType] = useState<EventType>("all")
-  const [timeRange, setTimeRange] = useState<TimeRange>("24h")
-  const [webhookMetrics, setWebhookMetrics] = useState<MetricsData | null>(null)
-  const [webhookLoading, setWebhookLoading] = useState(true)
-  const [webhookError, setWebhookError] = useState<string | null>(null)
+  const [
+    { eventType, timeRange, webhookMetrics, webhookLoading, webhookError },
+    dispatch,
+  ] = useReducer(metricsReducer, initialMetricsState)
 
   const { data: systemMetrics, isLoading: systemLoading } = useSystemMetrics()
   const { data: apiKeyStats, isLoading: apiKeyLoading } = useApiKeyStats()
@@ -105,8 +155,7 @@ export default function MonitoringPage() {
   useEffect(() => {
     let cancelled = false
     const loadMetrics = async () => {
-      setWebhookLoading(true)
-      setWebhookError(null)
+      dispatch({ type: "FETCH_START" })
       const eventTypeParam = eventType === "all" ? undefined : eventType
       try {
         const result = await queryApi.admin.getWebhookMetricsHistory.call({
@@ -114,17 +163,16 @@ export default function MonitoringPage() {
           timeRange,
         })
         if (!cancelled) {
-          setWebhookMetrics(result)
+          dispatch({ type: "FETCH_SUCCESS", payload: result })
         }
       } catch (err) {
         if (!cancelled) {
-          setWebhookError(
-            err instanceof Error ? err.message : "Failed to load metrics",
-          )
+          dispatch({
+            type: "FETCH_ERROR",
+            payload:
+              err instanceof Error ? err.message : "Failed to load metrics",
+          })
         }
-      }
-      if (!cancelled) {
-        setWebhookLoading(false)
       }
     }
 
@@ -284,12 +332,18 @@ export default function MonitoringPage() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="text-sm font-medium">Event Type:</div>
-            <WebhookFilterToggle value={eventType} onChange={setEventType} />
+            <WebhookFilterToggle
+              value={eventType}
+              onChange={(v) => dispatch({ type: "SET_EVENT_TYPE", payload: v })}
+            />
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="text-sm font-medium">Time Range:</div>
-            <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
+            <TimeRangeToggle
+              value={timeRange}
+              onChange={(v) => dispatch({ type: "SET_TIME_RANGE", payload: v })}
+            />
           </div>
         </div>
 

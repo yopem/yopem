@@ -5,6 +5,7 @@ import {
   type S3ClientConfig,
 } from "@aws-sdk/client-s3"
 import { nanoid } from "nanoid"
+import { transliterate as tr } from "transliteration"
 
 import {
   cfAccountId,
@@ -14,12 +15,7 @@ import {
   r2SecretKey,
 } from "@/lib/env/server"
 
-export type AssetType =
-  | "images"
-  | "videos"
-  | "documents"
-  | "archives"
-  | "others"
+type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
 interface R2Config {
   accountId: string
@@ -46,7 +42,7 @@ const VALID_VIDEO_SIGNATURES = [
   { signature: [0x46, 0x4c, 0x56], ext: "flv" },
 ]
 
-export class R2Storage {
+class R2Storage {
   private client: S3Client
   private bucketName: string
   private publicUrl: string
@@ -240,7 +236,7 @@ export class R2Storage {
   ): Promise<{ url: string; type: AssetType; size: number; key: string }> {
     const type = this.classifyFileType(mimeType, originalFilename)
     const extension = originalFilename.split(".").pop() ?? "bin"
-    const baseName = originalFilename.replace(/\.[^/.]+$/, "")
+    const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
     const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
     const uniqueId = nanoid(6)
     const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`

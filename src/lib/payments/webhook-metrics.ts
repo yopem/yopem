@@ -2,7 +2,7 @@ import type { Redis } from "ioredis"
 
 import { logger } from "@/lib/utils/logger"
 
-export interface WebhookMetricsSummary {
+interface WebhookMetricsSummary {
   totalProcessed: number
   successCount: number
   failureCount: number

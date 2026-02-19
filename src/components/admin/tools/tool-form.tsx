@@ -1,118 +1,27 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-  useEffect,
-  useEffectEvent,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-  type Ref,
-} from "react"
-import { z } from "zod"
+import { useImperativeHandle, type Ref } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogPopup } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { toastManager } from "@/components/ui/toast"
-import { useAvailableModels } from "@/hooks/use-available-models"
-import { useCategories } from "@/hooks/use-categories"
-import { useTags } from "@/hooks/use-tags"
-import { insertToolSchema, type SelectTool } from "@/lib/db/schema"
-import { queryApi } from "@/lib/orpc/query"
+import type { SelectTool } from "@/lib/db/schema"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
-import {
-  getProviderMismatchMessage,
-  validateModelProviderMatch,
-} from "@/lib/utils/model-provider-validation"
 
 import ConfigurationPanel from "./configuration-panel"
-import type { InputFieldType, SelectOption } from "./input-variable-row"
 import InputVariableSection from "./input-variable-section"
 import PromptLogicSection from "./prompt-logic-section"
+import ToolFormCategoryDialog from "./tool-form-category-dialog"
+import ToolFormTagDialog from "./tool-form-tag-dialog"
+import useToolForm, {
+  type ToolFormData,
+  type ToolFormRef,
+} from "./use-tool-form"
 
-const toolFormSchema = insertToolSchema
-  .pick({
-    name: true,
-    description: true,
-    excerpt: true,
-    systemRole: true,
-    userInstructionTemplate: true,
-    inputVariable: true,
-    outputFormat: true,
-    costPerRun: true,
-    config: true,
-    status: true,
-    apiKeyId: true,
-    categoryIds: true,
-    tagIds: true,
-    thumbnailId: true,
-  })
-  .extend({
-    name: z.string().min(1, "Tool name is required").trim(),
-    description: z.string().min(1, "Tool description is required").trim(),
-    excerpt: z.string().max(500).optional(),
-    systemRole: z.string().min(1, "System role is required").trim(),
-    userInstructionTemplate: z
-      .string()
-      .min(1, "User instruction template is required")
-      .trim(),
-    inputVariable: z
-      .array(
-        z.object({
-          variableName: z.string().min(1),
-          type: z.enum([
-            "text",
-            "long_text",
-            "number",
-            "boolean",
-            "select",
-            "image",
-            "video",
-          ]),
-          description: z.string(),
-          options: z
-            .array(
-              z.object({
-                label: z.string(),
-                value: z.string(),
-              }),
-            )
-            .optional(),
-          isOptional: z.boolean().optional(),
-        }),
-      )
-      .min(1, "At least one input field is required")
-      .refine(
-        (fields) => {
-          return fields.every((field) => {
-            if (field.type === "select") {
-              return field.options && field.options.length > 0
-            }
-            return true
-          })
-        },
-        { message: "Select type fields must have at least one option" },
-      ),
-    apiKeyId: z.string().min(1, "API key is required"),
-    categoryIds: z.array(z.string()).optional(),
-    tagIds: z.array(z.string()).optional(),
-    thumbnailId: z.string().optional(),
-  })
+export type { ToolFormData, ToolFormRef }
 
-export type ToolFormData = z.infer<typeof toolFormSchema>
-
-export interface ToolFormRef {
-  submit: () => void
-  getValues: () => ToolFormData
-}
-
-export interface ToolFormProps {
+interface ToolFormProps {
   mode: "create" | "edit"
   initialData?: SelectTool
   onSubmit: (data: ToolFormData) => void | Promise<void>
@@ -122,8 +31,6 @@ export interface ToolFormProps {
   ref?: Ref<ToolFormRef>
 }
 
-const EMPTY_API_KEYS: ApiKeyConfig[] = []
-
 const ToolForm = ({
   mode,
   initialData,
@@ -132,408 +39,31 @@ const ToolForm = ({
   apiKeys,
   ref,
 }: ToolFormProps) => {
-  const queryClient = useQueryClient()
-  const safeApiKeys = apiKeys ?? EMPTY_API_KEYS
-  const systemRoleRef = useRef<HTMLTextAreaElement>(null)
-  const userInstructionRef = useRef<HTMLTextAreaElement>(null)
-  const { data: availableModelsData } = useAvailableModels()
-  const { data: categoriesData } = useCategories()
-  const { data: tagsData } = useTags()
-  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false)
-  const [newTagDialogOpen, setNewTagDialogOpen] = useState(false)
-  const [newCategoryName, setNewCategoryName] = useState("")
-  const [newCategoryDescription, setNewCategoryDescription] = useState("")
-  const [newTagName, setNewTagName] = useState("")
-
-  const createCategoryMutation = useMutation({
-    mutationFn: async () => {
-      return await queryApi.categories.create.call({
-        name: newCategoryName,
-        description: newCategoryDescription || undefined,
-      })
-    },
-    onSuccess: (category) => {
-      toastManager.add({
-        title: "Category created",
-        description: `${newCategoryName} has been created successfully.`,
-        type: "success",
-      })
-      void queryClient.invalidateQueries({ queryKey: ["categories"] })
-      const currentCategoryIds = form.getFieldValue("categoryIds")
-      form.setFieldValue("categoryIds", [...currentCategoryIds, category.id])
-      setNewCategoryName("")
-      setNewCategoryDescription("")
-      setNewCategoryDialogOpen(false)
-    },
-    onError: (error: Error) => {
-      toastManager.add({
-        title: "Error creating category",
-        description: error.message,
-        type: "error",
-      })
-    },
-  })
-
-  const createTagMutation = useMutation({
-    mutationFn: async () => {
-      return await queryApi.tags.create.call({
-        name: newTagName,
-      })
-    },
-    onSuccess: (tag) => {
-      toastManager.add({
-        title: "Tag created",
-        description: `${newTagName} has been created successfully.`,
-        type: "success",
-      })
-      void queryClient.invalidateQueries({ queryKey: ["tags"] })
-      const currentTagIds = form.getFieldValue("tagIds")
-      form.setFieldValue("tagIds", [...currentTagIds, tag.id])
-      setNewTagName("")
-      setNewTagDialogOpen(false)
-    },
-    onError: (error: Error) => {
-      toastManager.add({
-        title: "Error creating tag",
-        description: error.message,
-        type: "error",
-      })
-    },
-  })
-
-  const availableModels = useMemo(() => {
-    if (!availableModelsData || availableModelsData.length === 0) {
-      return []
-    }
-    return availableModelsData.map((model) => model.id)
-  }, [availableModelsData])
-
-  const categories = useMemo(() => {
-    if (!categoriesData || categoriesData.length === 0) {
-      return []
-    }
-    return categoriesData
-  }, [categoriesData])
-
-  const tags = useMemo(() => {
-    if (!tagsData || tagsData.length === 0) {
-      return []
-    }
-    return tagsData
-  }, [tagsData])
-
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      description: "",
-      excerpt: "",
-      inputFields: [] as {
-        id: string
-        variableName: string
-        type: InputFieldType
-        description: string
-        options?: SelectOption[]
-        isOptional?: boolean
-      }[],
-      systemRole: "",
-      userInstructionTemplate: "",
-      modelEngine: "",
-      temperature: 0.7,
-      maxTokens: 2048,
-      outputFormat: "plain" as "plain" | "json" | "image" | "video",
-      costPerRun: mode === "create" ? 0 : 0.05,
-      markup: 0.2,
-      apiKeyId: "",
-      apiKeyError: "",
-      categoryIds: [] as string[],
-      tagIds: [] as string[],
-      thumbnailId: undefined as string | undefined,
-    },
-    onSubmit: ({ value }) => {
-      const formData = {
-        name: value.name,
-        description: value.description,
-        excerpt: value.excerpt || undefined,
-        systemRole: value.systemRole,
-        userInstructionTemplate: value.userInstructionTemplate,
-        inputVariable: value.inputFields.map((field) => ({
-          variableName: field.variableName,
-          type: field.type,
-          description: field.description,
-          ...(field.options && { options: field.options }),
-          ...(field.isOptional !== undefined && {
-            isOptional: field.isOptional,
-          }),
-        })),
-        outputFormat: value.outputFormat,
-        costPerRun: String(value.costPerRun),
-        config: {
-          modelEngine: value.modelEngine,
-          temperature: value.temperature,
-          maxTokens: value.maxTokens,
-        },
-        status: "draft" as const,
-        apiKeyId: value.apiKeyId,
-        ...(value.categoryIds &&
-          value.categoryIds.length > 0 && { categoryIds: value.categoryIds }),
-        ...(value.tagIds &&
-          value.tagIds.length > 0 && { tagIds: value.tagIds }),
-        thumbnailId: value.thumbnailId,
-      }
-
-      const result = toolFormSchema.safeParse(formData)
-
-      if (!result.success) {
-        const firstError = result.error.issues[0]
-        toastManager.add({
-          title: "Validation Error",
-          description: firstError.message,
-          type: "error",
-        })
-        return
-      }
-
-      void onSubmit(formData)
-    },
-  })
+  const {
+    form,
+    getFormValues,
+    safeApiKeys,
+    systemRoleRef,
+    userInstructionRef,
+    availableModels,
+    categories,
+    tags,
+    dialogsState,
+    dialogsDispatch,
+    createCategoryMutation,
+    createTagMutation,
+    handleInsertVariable,
+    handleAddField,
+    handleUpdateField,
+    handleDeleteField,
+  } = useToolForm({ mode, initialData, onSubmit, apiKeys })
 
   useImperativeHandle(ref, () => ({
     submit: () => {
       void form.handleSubmit()
     },
-    getValues: () => {
-      const formData = form.state.values
-      return {
-        name: formData.name,
-        description: formData.description,
-        excerpt: formData.excerpt || undefined,
-        systemRole: formData.systemRole,
-        userInstructionTemplate: formData.userInstructionTemplate,
-        inputVariable: formData.inputFields.map((field) => ({
-          variableName: field.variableName,
-          type: field.type,
-          description: field.description,
-          ...(field.options && { options: field.options }),
-          ...(field.isOptional !== undefined && {
-            isOptional: field.isOptional,
-          }),
-        })),
-        outputFormat: formData.outputFormat,
-        costPerRun: String(formData.costPerRun),
-        config: {
-          modelEngine: formData.modelEngine,
-          temperature: formData.temperature,
-          maxTokens: formData.maxTokens,
-        },
-        status: "draft" as const,
-        apiKeyId: formData.apiKeyId,
-        ...(formData.categoryIds &&
-          formData.categoryIds.length > 0 && {
-            categoryIds: formData.categoryIds,
-          }),
-        ...(formData.tagIds &&
-          formData.tagIds.length > 0 && { tagIds: formData.tagIds }),
-        ...(formData.thumbnailId && { thumbnailId: formData.thumbnailId }),
-      }
-    },
+    getValues: getFormValues,
   }))
-
-  const onModelsAvailable = useEffectEvent(() => {
-    if (availableModels.length > 0 && !form.getFieldValue("modelEngine")) {
-      form.setFieldValue("modelEngine", availableModels[0])
-    }
-  })
-
-  useEffect(() => {
-    onModelsAvailable()
-  }, [availableModels])
-
-  const onInitialDataLoaded = useEffectEvent(() => {
-    if (mode === "edit" && initialData) {
-      form.setFieldValue("name", initialData.name)
-      form.setFieldValue("description", initialData.description ?? "")
-      form.setFieldValue("excerpt", initialData.excerpt ?? "")
-      form.setFieldValue("systemRole", initialData.systemRole ?? "")
-      form.setFieldValue(
-        "userInstructionTemplate",
-        initialData.userInstructionTemplate ?? "",
-      )
-
-      if (
-        initialData.inputVariable &&
-        Array.isArray(initialData.inputVariable)
-      ) {
-        form.setFieldValue(
-          "inputFields",
-          (
-            initialData.inputVariable as {
-              variableName: string
-              type: InputFieldType
-              description: string
-              options?: SelectOption[]
-            }[]
-          ).map((field, index) => ({
-            id: String(index + 1),
-            ...field,
-          })),
-        )
-      }
-
-      if (initialData.config && typeof initialData.config === "object") {
-        const config = initialData.config as {
-          modelEngine?: string
-          temperature?: number
-          maxTokens?: number
-        }
-        if (config.modelEngine)
-          form.setFieldValue("modelEngine", config.modelEngine)
-        if (config.temperature !== undefined)
-          form.setFieldValue("temperature", config.temperature)
-        if (config.maxTokens !== undefined)
-          form.setFieldValue("maxTokens", config.maxTokens)
-      }
-
-      if (initialData.outputFormat) {
-        form.setFieldValue("outputFormat", initialData.outputFormat)
-      }
-
-      if (initialData.costPerRun) {
-        form.setFieldValue("costPerRun", Number(initialData.costPerRun))
-      }
-
-      if (initialData.markup) {
-        form.setFieldValue("markup", Number(initialData.markup))
-      }
-
-      if (initialData.apiKeyId) {
-        form.setFieldValue("apiKeyId", initialData.apiKeyId)
-      }
-
-      if (
-        "categories" in initialData &&
-        Array.isArray(initialData.categories) &&
-        initialData.categories.length > 0
-      ) {
-        form.setFieldValue(
-          "categoryIds",
-          initialData.categories.map((cat: { id: string }) => cat.id),
-        )
-      }
-
-      if (
-        "tags" in initialData &&
-        Array.isArray(initialData.tags) &&
-        initialData.tags.length > 0
-      ) {
-        form.setFieldValue(
-          "tagIds",
-          initialData.tags.map((tag: { id: string }) => tag.id),
-        )
-      }
-
-      if ("thumbnail" in initialData && initialData.thumbnail) {
-        form.setFieldValue("thumbnailId", initialData.thumbnail.id)
-      }
-    }
-  })
-
-  useEffect(() => {
-    onInitialDataLoaded()
-  }, [initialData, mode])
-
-  const onApiKeyOrModelChange = useEffectEvent(() => {
-    const apiKeyId = form.getFieldValue("apiKeyId")
-    const modelEngine = form.getFieldValue("modelEngine")
-
-    if (apiKeyId && modelEngine) {
-      const selectedKey = safeApiKeys.find((key) => key.id === apiKeyId)
-      if (selectedKey) {
-        const isValid = validateModelProviderMatch(
-          modelEngine,
-          selectedKey.provider,
-        )
-        if (!isValid) {
-          const errorMessage = getProviderMismatchMessage(
-            modelEngine,
-            selectedKey.provider,
-          )
-          form.setFieldValue("apiKeyError", errorMessage)
-        } else {
-          form.setFieldValue("apiKeyError", "")
-        }
-      }
-    }
-  })
-
-  useEffect(() => {
-    onApiKeyOrModelChange()
-  }, [form.state.values.apiKeyId, form.state.values.modelEngine, safeApiKeys])
-
-  const handleInsertVariable = (
-    variable: string,
-    target: "systemRole" | "userInstruction",
-  ) => {
-    const fieldName =
-      target === "systemRole" ? "systemRole" : "userInstructionTemplate"
-    const currentValue = form.getFieldValue(fieldName)
-    const ref = target === "systemRole" ? systemRoleRef : userInstructionRef
-
-    const textarea = ref.current
-    if (textarea && textarea === document.activeElement) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const newValue =
-        currentValue.substring(0, start) +
-        `{{${variable}}}` +
-        currentValue.substring(end)
-      form.setFieldValue(fieldName, newValue)
-
-      setTimeout(() => {
-        const newPosition = start + variable.length + 4
-        textarea.selectionStart = textarea.selectionEnd = newPosition
-        textarea.focus()
-      }, 0)
-    } else {
-      form.setFieldValue(fieldName, `${currentValue}\n{{${variable}}}`)
-    }
-  }
-
-  const handleAddField = () => {
-    const newId = String(Date.now())
-    const currentFields = form.getFieldValue("inputFields")
-    form.setFieldValue("inputFields", [
-      ...currentFields,
-      {
-        id: newId,
-        variableName: "",
-        type: "text" as const,
-        description: "",
-      },
-    ])
-  }
-
-  const handleUpdateField = (
-    id: string,
-    updates: Partial<{
-      variableName: string
-      type: InputFieldType
-      description: string
-      options: SelectOption[]
-      isOptional: boolean
-    }>,
-  ) => {
-    const currentFields = form.getFieldValue("inputFields")
-    const updatedFields = currentFields.map((field) =>
-      field.id === id ? { ...field, ...updates } : field,
-    )
-    form.setFieldValue("inputFields", updatedFields)
-  }
-
-  const handleDeleteField = (id: string) => {
-    const currentFields = form.getFieldValue("inputFields")
-    const filteredFields = currentFields.filter((field) => field.id !== id)
-    form.setFieldValue("inputFields", filteredFields)
-  }
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -729,8 +259,9 @@ const ToolForm = ({
               onCategoriesChange: (value) =>
                 form.setFieldValue("categoryIds", value),
               onTagsChange: (value) => form.setFieldValue("tagIds", value),
-              onAddNewCategory: () => setNewCategoryDialogOpen(true),
-              onAddNewTag: () => setNewTagDialogOpen(true),
+              onAddNewCategory: () =>
+                dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" }),
+              onAddNewTag: () => dialogsDispatch({ type: "OPEN_TAG_DIALOG" }),
               onThumbnailIdChange: (value) =>
                 form.setFieldValue("thumbnailId", value),
             }}
@@ -738,99 +269,42 @@ const ToolForm = ({
         )}
       </form.Subscribe>
 
-      <Dialog
-        open={newCategoryDialogOpen}
-        onOpenChange={setNewCategoryDialogOpen}
-      >
-        <DialogPopup>
-          <div className="flex flex-col gap-4 p-6">
-            <div>
-              <h2 className="text-lg font-semibold">Create New Category</h2>
-              <p className="text-muted-foreground text-sm">
-                Add a new category to organize your tools
-              </p>
-            </div>
+      <ToolFormCategoryDialog
+        open={dialogsState.category.open}
+        name={dialogsState.category.name}
+        description={dialogsState.category.description}
+        createMutation={createCategoryMutation}
+        onOpenChange={(open) =>
+          open
+            ? dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
+            : dialogsDispatch({ type: "CLOSE_CATEGORY_DIALOG" })
+        }
+        onNameChange={(value) =>
+          dialogsDispatch({ type: "SET_CATEGORY_NAME", payload: value })
+        }
+        onDescriptionChange={(value) =>
+          dialogsDispatch({
+            type: "SET_CATEGORY_DESCRIPTION",
+            payload: value,
+          })
+        }
+        onCancel={() => dialogsDispatch({ type: "CLOSE_CATEGORY_DIALOG" })}
+      />
 
-            <div className="flex flex-col gap-4">
-              <Field>
-                <FieldLabel>Name</FieldLabel>
-                <Input
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Enter category name"
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Description</FieldLabel>
-                <Textarea
-                  value={newCategoryDescription}
-                  onChange={(e) => setNewCategoryDescription(e.target.value)}
-                  placeholder="Enter category description (optional)"
-                  rows={3}
-                />
-              </Field>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setNewCategoryDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={() => createCategoryMutation.mutate()}
-                disabled={
-                  !newCategoryName.trim() || createCategoryMutation.isPending
-                }
-              >
-                {createCategoryMutation.isPending ? "Creating..." : "Create"}
-              </Button>
-            </div>
-          </div>
-        </DialogPopup>
-      </Dialog>
-
-      <Dialog open={newTagDialogOpen} onOpenChange={setNewTagDialogOpen}>
-        <DialogPopup>
-          <div className="flex flex-col gap-4 p-6">
-            <div>
-              <h2 className="text-lg font-semibold">Create New Tag</h2>
-              <p className="text-muted-foreground text-sm">
-                Add a new tag to label your tools
-              </p>
-            </div>
-
-            <Field>
-              <FieldLabel>Name</FieldLabel>
-              <Input
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                placeholder="Enter tag name"
-              />
-            </Field>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setNewTagDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={() => createTagMutation.mutate()}
-                disabled={!newTagName.trim() || createTagMutation.isPending}
-              >
-                {createTagMutation.isPending ? "Creating..." : "Create"}
-              </Button>
-            </div>
-          </div>
-        </DialogPopup>
-      </Dialog>
+      <ToolFormTagDialog
+        open={dialogsState.tag.open}
+        name={dialogsState.tag.name}
+        createMutation={createTagMutation}
+        onOpenChange={(open) =>
+          open
+            ? dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
+            : dialogsDispatch({ type: "CLOSE_TAG_DIALOG" })
+        }
+        onNameChange={(value) =>
+          dialogsDispatch({ type: "SET_TAG_NAME", payload: value })
+        }
+        onCancel={() => dialogsDispatch({ type: "CLOSE_TAG_DIALOG" })}
+      />
     </div>
   )
 }

@@ -4,16 +4,12 @@ export const apiKeyProviderSchema = z.enum(["openai", "openrouter"])
 
 export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
 
-export const apiKeyStatusSchema = z.enum(["active", "inactive"])
+const apiKeyStatusSchema = z.enum(["active", "inactive"])
 
-export type ApiKeyStatus = z.infer<typeof apiKeyStatusSchema>
-
-export const apiKeyRestrictionsSchema = z.object({
+const apiKeyRestrictionsSchema = z.object({
   enabled: z.boolean(),
   projectIds: z.array(z.string()).optional(),
 })
-
-export type ApiKeyRestrictions = z.infer<typeof apiKeyRestrictionsSchema>
 
 export const apiKeyConfigSchema = z.object({
   id: z.string(),
@@ -29,10 +25,6 @@ export const apiKeyConfigSchema = z.object({
 })
 
 export type ApiKeyConfig = z.infer<typeof apiKeyConfigSchema>
-
-export const apiKeysArraySchema = z.array(apiKeyConfigSchema)
-
-export type ApiKeysArray = z.infer<typeof apiKeysArraySchema>
 
 export const addApiKeyInputSchema = z.object({
   provider: apiKeyProviderSchema,
@@ -66,13 +58,3 @@ export const deleteApiKeyInputSchema = z.object({
 })
 
 export type DeleteApiKeyInput = z.infer<typeof deleteApiKeyInputSchema>
-
-export const apiKeyStatsSchema = z.object({
-  totalRequests: z.number(),
-  activeKeys: z.number(),
-  monthlyCost: z.number(),
-  requestsThisMonth: z.number(),
-  costChange: z.number(),
-})
-
-export type ApiKeyStats = z.infer<typeof apiKeyStatsSchema>

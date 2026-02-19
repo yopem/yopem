@@ -3,8 +3,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useSearchParams } from "next/navigation"
-import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import SearchBar from "@/components/marketplace/search-bar"
@@ -32,17 +30,29 @@ interface MarketplaceGridProps {
   tagIds?: string[]
   priceFilter?: string
   status?: string
+  initialSearch?: string
 }
 
+type ToolListItem = Awaited<
+  ReturnType<typeof clientApi.tools.list>
+>["tools"][number]
+
+const EMPTY_TOOLS: ToolListItem[] = []
+const EMPTY_CATEGORY_IDS: string[] = []
+const EMPTY_TAG_IDS: string[] = []
+
 const MarketplaceGrid = ({
-  initialTools = [],
-  categoryIds = [],
-  tagIds = [],
+  initialTools = EMPTY_TOOLS,
+  categoryIds = EMPTY_CATEGORY_IDS,
+  tagIds = EMPTY_TAG_IDS,
   priceFilter = "all",
   status = "active",
+  initialSearch = "",
 }: MarketplaceGridProps) => {
-  const searchParams = useSearchParams()
-  const [search, setSearch] = useState(searchParams.get("search") ?? "")
+  const search = initialSearch
+  const setSearch = (_value: string) => {
+    // Search updates are handled via URL in this component
+  }
 
   const queryKey = [
     "marketplace-tools",

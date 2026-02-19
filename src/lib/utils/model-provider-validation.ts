@@ -1,8 +1,6 @@
 import type { ApiKeyProvider } from "@/lib/schemas/api-keys"
 
-export function getProviderForModel(
-  modelEngine: string,
-): ApiKeyProvider | null {
+function getProviderForModel(modelEngine: string): ApiKeyProvider | null {
   const modelLower = modelEngine.toLowerCase()
 
   if (modelLower.includes("gpt")) {

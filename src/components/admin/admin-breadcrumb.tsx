@@ -12,8 +12,8 @@ interface AdminBreadcrumbProps {
 const AdminBreadcrumb = ({ items }: AdminBreadcrumbProps) => {
   return (
     <div className="flex items-center gap-2 pt-2 text-sm">
-      {items.map((item, index) => (
-        <div key={`${item.label}-${index}`} className="flex items-center gap-2">
+      {items.map((item) => (
+        <div key={item.label} className="flex items-center gap-2">
           {item.href ? (
             <Link
               href={item.href}
@@ -24,7 +24,9 @@ const AdminBreadcrumb = ({ items }: AdminBreadcrumbProps) => {
           ) : (
             <span className="text-foreground font-medium">{item.label}</span>
           )}
-          {index < items.length - 1 && <span className="text-border">/</span>}
+          {items.indexOf(item) < items.length - 1 && (
+            <span className="text-border">/</span>
+          )}
         </div>
       ))}
     </div>

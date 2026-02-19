@@ -179,7 +179,7 @@ const InputVariableRow = ({
             <div className="space-y-2">
               {safeOptions.map((option, index) => (
                 <div
-                  key={`${option.value}-${index}`}
+                  key={option.value || `option-${index}`}
                   className="flex items-center gap-2"
                 >
                   <Input

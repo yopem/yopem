@@ -37,11 +37,8 @@ const FeatureBuilderHeader = ({
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-8">
       <div className="flex items-center gap-2">
-        {breadcrumbItems.map((item, index) => (
-          <div
-            key={`${item.label}-${index}`}
-            className="flex items-center gap-2"
-          >
+        {breadcrumbItems.map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
             {item.href ? (
               <a
                 href={item.href}
@@ -52,7 +49,7 @@ const FeatureBuilderHeader = ({
             ) : (
               <span className="text-sm font-medium">{item.label}</span>
             )}
-            {index < breadcrumbItems.length - 1 && (
+            {breadcrumbItems.indexOf(item) < breadcrumbItems.length - 1 && (
               <span className="text-border text-sm">/</span>
             )}
           </div>

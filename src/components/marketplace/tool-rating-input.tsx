@@ -1,7 +1,7 @@
 "use client"
 
 import { StarIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useReducer } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,15 +14,103 @@ interface ToolRatingInputProps {
   onSuccess?: () => void
 }
 
+interface RatingState {
+  rating: number
+  hoverRating: number
+  reviewText: string
+  isSubmitting: boolean
+  error: string | null
+  isEditing: boolean
+  hasUsedTool: boolean | null
+  isLoading: boolean
+}
+
+type RatingAction =
+  | { type: "SET_HOVER_RATING"; payload: number }
+  | { type: "SET_RATING"; payload: number }
+  | { type: "SET_REVIEW_TEXT"; payload: string }
+  | { type: "SUBMIT_START" }
+  | { type: "SUBMIT_ERROR"; payload: string }
+  | { type: "SUBMIT_SUCCESS" }
+  | { type: "SET_ERROR"; payload: string | null }
+  | {
+      type: "LOAD_SUCCESS"
+      payload: {
+        hasUsed: boolean
+        rating: number
+        reviewText: string
+        isEditing: boolean
+      }
+    }
+  | { type: "LOAD_NO_REVIEW"; payload: { hasUsed: boolean } }
+  | { type: "LOAD_ERROR" }
+
+const initialState: RatingState = {
+  rating: 0,
+  hoverRating: 0,
+  reviewText: "",
+  isSubmitting: false,
+  error: null,
+  isEditing: false,
+  hasUsedTool: null,
+  isLoading: true,
+}
+
+const ratingReducer = (
+  state: RatingState,
+  action: RatingAction,
+): RatingState => {
+  switch (action.type) {
+    case "SET_HOVER_RATING":
+      return { ...state, hoverRating: action.payload }
+    case "SET_RATING":
+      return { ...state, rating: action.payload }
+    case "SET_REVIEW_TEXT":
+      return { ...state, reviewText: action.payload }
+    case "SUBMIT_START":
+      return { ...state, isSubmitting: true, error: null }
+    case "SUBMIT_ERROR":
+      return { ...state, isSubmitting: false, error: action.payload }
+    case "SUBMIT_SUCCESS":
+      return { ...state, isSubmitting: false, isEditing: true }
+    case "SET_ERROR":
+      return { ...state, error: action.payload }
+    case "LOAD_SUCCESS":
+      return {
+        ...state,
+        isLoading: false,
+        hasUsedTool: action.payload.hasUsed,
+        rating: action.payload.rating,
+        reviewText: action.payload.reviewText,
+        isEditing: action.payload.isEditing,
+      }
+    case "LOAD_NO_REVIEW":
+      return {
+        ...state,
+        isLoading: false,
+        hasUsedTool: action.payload.hasUsed,
+      }
+    case "LOAD_ERROR":
+      return { ...state, isLoading: false }
+    default:
+      return state
+  }
+}
+
 const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
-  const [rating, setRating] = useState(0)
-  const [hoverRating, setHoverRating] = useState(0)
-  const [reviewText, setReviewText] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [hasUsedTool, setHasUsedTool] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [
+    {
+      rating,
+      hoverRating,
+      reviewText,
+      isSubmitting,
+      error,
+      isEditing,
+      hasUsedTool,
+      isLoading,
+    },
+    dispatch,
+  ] = useReducer(ratingReducer, initialState)
 
   useEffect(() => {
     let cancelled = false
@@ -38,24 +126,31 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
         ])
         reviewData = r
         usageData = u
-      } catch (error) {
+      } catch (err) {
         if (!cancelled) {
-          logger.error(`Failed to load review data: ${String(error)}`)
+          logger.error(`Failed to load review data: ${String(err)}`)
+          dispatch({ type: "LOAD_ERROR" })
         }
+        return
       }
 
-      if (!cancelled && usageData) {
-        setHasUsedTool(usageData.hasUsed)
-      }
+      if (cancelled) return
 
-      if (!cancelled && reviewData) {
-        setRating(reviewData.rating)
-        setReviewText(reviewData.reviewText ?? "")
-        setIsEditing(true)
-      }
-
-      if (!cancelled) {
-        setIsLoading(false)
+      if (reviewData) {
+        dispatch({
+          type: "LOAD_SUCCESS",
+          payload: {
+            hasUsed: usageData?.hasUsed ?? false,
+            rating: reviewData.rating,
+            reviewText: reviewData.reviewText ?? "",
+            isEditing: true,
+          },
+        })
+      } else {
+        dispatch({
+          type: "LOAD_NO_REVIEW",
+          payload: { hasUsed: usageData?.hasUsed ?? false },
+        })
       }
     }
 
@@ -67,12 +162,11 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      setError("Please select a rating")
+      dispatch({ type: "SET_ERROR", payload: "Please select a rating" })
       return
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    dispatch({ type: "SUBMIT_START" })
 
     const reviewTextParam = reviewText.trim() || undefined
     const toastTitle = isEditing ? "Review updated" : "Review submitted"
@@ -90,15 +184,17 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
         type: "success",
       })
 
-      setIsEditing(true)
+      dispatch({ type: "SUBMIT_SUCCESS" })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit review")
+      dispatch({
+        type: "SUBMIT_ERROR",
+        payload: err instanceof Error ? err.message : "Failed to submit review",
+      })
     }
 
     if (onSuccess) {
       onSuccess()
     }
-    setIsSubmitting(false)
   }
 
   if (isLoading) {
@@ -122,19 +218,27 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium">Your Rating</label>
-        <div className="mt-2 flex gap-1">
+        <label htmlFor="rating" className="text-sm font-medium">
+          Your Rating
+        </label>
+        <div id="rating" className="mt-2 flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starValue = i + 1
             const isFilled = starValue <= (hoverRating || rating)
             return (
               <button
-                key={i}
+                key={starValue}
                 type="button"
                 className="transition-colors hover:scale-110"
-                onMouseEnter={() => setHoverRating(starValue)}
-                onMouseLeave={() => setHoverRating(0)}
-                onClick={() => setRating(starValue)}
+                onMouseEnter={() =>
+                  dispatch({ type: "SET_HOVER_RATING", payload: starValue })
+                }
+                onMouseLeave={() =>
+                  dispatch({ type: "SET_HOVER_RATING", payload: 0 })
+                }
+                onClick={() =>
+                  dispatch({ type: "SET_RATING", payload: starValue })
+                }
               >
                 <StarIcon
                   className={`size-6 ${
@@ -150,12 +254,17 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
       </div>
 
       <div>
-        <label className="text-sm font-medium">Review (optional)</label>
+        <label htmlFor="review-text" className="text-sm font-medium">
+          Review (optional)
+        </label>
         <Textarea
+          id="review-text"
           className="mt-2"
           placeholder="Share your experience with this tool..."
           value={reviewText}
-          onChange={(e) => setReviewText(e.target.value)}
+          onChange={(e) =>
+            dispatch({ type: "SET_REVIEW_TEXT", payload: e.target.value })
+          }
           maxLength={2000}
           rows={3}
         />

@@ -11,7 +11,7 @@ const config: NextConfig = {
   typescript: { ignoreBuildErrors: false },
   productionBrowserSourceMaps: false,
   compiler: {
-    // oxlint-disable-next-line eslint-plugin-unicorn/no-useless-spread
+    // oxlint_disable-next-line eslint-plugin-unicorn/no-useless-spread
     ...(process.env["APP_ENV"] === "production"
       ? {
           removeConsole: {

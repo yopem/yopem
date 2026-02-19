@@ -1,14 +1,14 @@
 "use client"
 
-import { Image as ImageIcon, Upload as UploadIcon, XIcon } from "lucide-react"
-import Image from "next/image"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useReducer } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogPopup } from "@/components/ui/dialog"
-import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
 import { logger } from "@/lib/utils/logger"
+
+import AssetLibrary from "./asset-library"
+import ThumbnailDisplay from "./thumbnail-display"
+import UploadTab from "./upload-tab"
 
 interface Asset {
   id: string
@@ -22,27 +22,94 @@ interface ThumbnailSelectorProps {
   onChange: (value: string | undefined) => void
 }
 
-export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
-  const [currentThumbnail, setCurrentThumbnail] = useState<Asset | null>(null)
-  const [assets, setAssets] = useState<Asset[]>([])
-  const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [activeTab, setActiveTab] = useState<"library" | "upload">("library")
+interface SelectorState {
+  dialogOpen: boolean
+  selectedAssetId: string | null
+  currentThumbnail: Asset | null
+  assets: Asset[]
+  loading: boolean
+  uploading: boolean
+  activeTab: "library" | "upload"
+}
+
+type SelectorAction =
+  | { type: "OPEN_DIALOG" }
+  | { type: "CLOSE_DIALOG" }
+  | { type: "SET_SELECTED_ASSET"; payload: string | null }
+  | { type: "SET_CURRENT_THUMBNAIL"; payload: Asset | null }
+  | { type: "SET_ASSETS"; payload: Asset[] }
+  | { type: "PREPEND_ASSET"; payload: Asset }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_UPLOADING"; payload: boolean }
+  | { type: "SET_TAB"; payload: "library" | "upload" }
+
+const initialState: SelectorState = {
+  dialogOpen: false,
+  selectedAssetId: null,
+  currentThumbnail: null,
+  assets: [],
+  loading: false,
+  uploading: false,
+  activeTab: "library",
+}
+
+const selectorReducer = (
+  state: SelectorState,
+  action: SelectorAction,
+): SelectorState => {
+  switch (action.type) {
+    case "OPEN_DIALOG":
+      return { ...state, dialogOpen: true }
+    case "CLOSE_DIALOG":
+      return {
+        ...state,
+        dialogOpen: false,
+        selectedAssetId: null,
+        activeTab: "library",
+      }
+    case "SET_SELECTED_ASSET":
+      return { ...state, selectedAssetId: action.payload }
+    case "SET_CURRENT_THUMBNAIL":
+      return { ...state, currentThumbnail: action.payload }
+    case "SET_ASSETS":
+      return { ...state, assets: action.payload }
+    case "PREPEND_ASSET":
+      return { ...state, assets: [action.payload, ...state.assets] }
+    case "SET_LOADING":
+      return { ...state, loading: action.payload }
+    case "SET_UPLOADING":
+      return { ...state, uploading: action.payload }
+    case "SET_TAB":
+      return { ...state, activeTab: action.payload }
+    default:
+      return state
+  }
+}
+
+function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
+  const [state, dispatch] = useReducer(selectorReducer, initialState)
+  const {
+    dialogOpen,
+    selectedAssetId,
+    currentThumbnail,
+    assets,
+    loading,
+    uploading,
+    activeTab,
+  } = state
 
   const loadAssets = useCallback(async () => {
-    setLoading(true)
+    dispatch({ type: "SET_LOADING", payload: true })
     try {
       const result = await queryApi.assets.list.call({
         type: "images",
         limit: 100,
       })
-      setAssets(result.assets as Asset[])
+      dispatch({ type: "SET_ASSETS", payload: result.assets as Asset[] })
     } catch (error) {
       logger.error(`Failed to load assets: ${String(error)}`)
     }
-    setLoading(false)
+    dispatch({ type: "SET_LOADING", payload: false })
   }, [])
 
   const loadCurrentThumbnail = useCallback(async (id: string) => {
@@ -50,7 +117,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       const result = await queryApi.assets.list.call({ limit: 100 })
       const asset = (result.assets as Asset[]).find((a) => a.id === id)
       if (asset) {
-        setCurrentThumbnail(asset)
+        dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: asset })
       }
     } catch (error) {
       logger.error(`Failed to load thumbnail: ${String(error)}`)
@@ -76,7 +143,7 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       if (value) {
         await loadCurrentThumbnail(value)
       } else if (!cancelled) {
-        setCurrentThumbnail(null)
+        dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: null })
       }
     }
     void runEffect()
@@ -89,14 +156,12 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
     if (selectedAssetId) {
       onChange(selectedAssetId)
     }
-    setDialogOpen(false)
-    setSelectedAssetId(null)
-    setActiveTab("library")
+    dispatch({ type: "CLOSE_DIALOG" })
   }
 
   const handleClear = () => {
     onChange(undefined)
-    setCurrentThumbnail(null)
+    dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: null })
   }
 
   const handleFileUpload = useCallback(
@@ -104,25 +169,16 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       const file = event.target.files?.[0]
       if (!file) return
 
-      setUploading(true)
+      dispatch({ type: "SET_UPLOADING", payload: true })
       try {
         const asset = await queryApi.assets.upload.call(file)
-        setAssets((prev) => [asset as Asset, ...prev])
+        dispatch({ type: "PREPEND_ASSET", payload: asset as Asset })
         onChange(asset.id)
-        setDialogOpen(false)
-        toastManager.add({
-          title: "Upload successful",
-          description: "Thumbnail has been uploaded",
-          type: "success",
-        })
+        dispatch({ type: "CLOSE_DIALOG" })
       } catch (error) {
-        toastManager.add({
-          title: "Upload failed",
-          description: error instanceof Error ? error.message : "Unknown error",
-          type: "error",
-        })
+        logger.error(`Upload failed: ${String(error)}`)
       }
-      setUploading(false)
+      dispatch({ type: "SET_UPLOADING", payload: false })
       if (event.target) {
         event.target.value = ""
       }
@@ -137,56 +193,21 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
           <h4 className="text-sm font-semibold">Thumbnail</h4>
         </div>
         <div className="flex flex-col gap-2 px-3 pb-3">
-          {currentThumbnail ? (
-            <div className="relative flex flex-col gap-2">
-              <div className="relative aspect-video w-full overflow-hidden rounded-md border">
-                <Image
-                  src={currentThumbnail.url}
-                  alt={currentThumbnail.originalName}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setDialogOpen(true)}
-                >
-                  Change
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClear}
-                >
-                  <XIcon className="size-4" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(true)}
-                className="w-full"
-              >
-                <ImageIcon className="mr-2 size-4" />
-                Select Thumbnail
-              </Button>
-              <p className="text-muted-foreground text-xs">
-                Add an image to make your tool stand out
-              </p>
-            </div>
-          )}
+          <ThumbnailDisplay
+            thumbnail={currentThumbnail}
+            onChange={() => dispatch({ type: "OPEN_DIALOG" })}
+            onClear={handleClear}
+          />
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!open) dispatch({ type: "CLOSE_DIALOG" })
+          else dispatch({ type: "OPEN_DIALOG" })
+        }}
+      >
         <DialogPopup className="max-w-5xl">
           <div className="flex flex-col gap-4 p-6">
             <div className="shrink-0">
@@ -204,7 +225,9 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
                     ? "border-primary text-primary"
                     : "text-muted-foreground hover:text-foreground border-transparent"
                 }`}
-                onClick={() => setActiveTab("library")}
+                onClick={() =>
+                  dispatch({ type: "SET_TAB", payload: "library" })
+                }
               >
                 Library
               </button>
@@ -215,128 +238,32 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
                     ? "border-primary text-primary"
                     : "text-muted-foreground hover:text-foreground border-transparent"
                 }`}
-                onClick={() => setActiveTab("upload")}
+                onClick={() => dispatch({ type: "SET_TAB", payload: "upload" })}
               >
                 Upload New
               </button>
             </div>
 
             {activeTab === "library" ? (
-              <>
-                <div className="min-h-0 shrink">
-                  {loading ? (
-                    <div className="flex h-60 items-center justify-center">
-                      <p className="text-muted-foreground">Loading assets...</p>
-                    </div>
-                  ) : assets.length === 0 ? (
-                    <div className="flex h-60 flex-col items-center justify-center gap-2">
-                      <ImageIcon className="text-muted-foreground size-12" />
-                      <p className="text-muted-foreground text-sm">
-                        No images available
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveTab("upload")}
-                      >
-                        <UploadIcon className="mr-2 size-4" />
-                        Upload New Image
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                      {assets.map((asset) => (
-                        <div
-                          key={asset.id}
-                          className={`relative aspect-square cursor-pointer overflow-hidden rounded-md border-2 transition-colors ${
-                            selectedAssetId === asset.id
-                              ? "border-primary"
-                              : "hover:border-muted-foreground border-transparent"
-                          }`}
-                          onClick={() => setSelectedAssetId(asset.id)}
-                        >
-                          <Image
-                            src={asset.url}
-                            alt={asset.originalName}
-                            fill
-                            className="bg-muted object-contain p-2"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex shrink-0 justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setDialogOpen(false)
-                      setActiveTab("library")
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSelect}
-                    disabled={!selectedAssetId}
-                  >
-                    Select
-                  </Button>
-                </div>
-              </>
+              <AssetLibrary
+                assets={assets}
+                selectedAssetId={selectedAssetId}
+                loading={loading}
+                onSelect={(id) =>
+                  dispatch({ type: "SET_SELECTED_ASSET", payload: id })
+                }
+                onSwitchToUpload={() =>
+                  dispatch({ type: "SET_TAB", payload: "upload" })
+                }
+                onConfirm={handleSelect}
+                onCancel={() => dispatch({ type: "CLOSE_DIALOG" })}
+              />
             ) : (
-              <>
-                <div className="shrink">
-                  <div className="hover:border-muted-foreground flex h-60 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                      className="hidden"
-                      id="thumbnail-upload"
-                    />
-                    <label
-                      htmlFor="thumbnail-upload"
-                      className="flex size-full cursor-pointer flex-col items-center justify-center"
-                    >
-                      {uploading ? (
-                        <>
-                          <div className="border-primary mb-2 size-8 animate-spin rounded-full border-2 border-t-transparent" />
-                          <p className="text-muted-foreground text-sm">
-                            Uploading...
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <UploadIcon className="text-muted-foreground mb-2 size-12" />
-                          <p className="text-sm font-medium">Click to upload</p>
-                          <p className="text-muted-foreground text-xs">
-                            PNG, JPG, GIF, WebP up to 50MB
-                          </p>
-                        </>
-                      )}
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex shrink-0 justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setDialogOpen(false)
-                      setActiveTab("library")
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </>
+              <UploadTab
+                uploading={uploading}
+                onUpload={handleFileUpload}
+                onCancel={() => dispatch({ type: "CLOSE_DIALOG" })}
+              />
             )}
           </div>
         </DialogPopup>

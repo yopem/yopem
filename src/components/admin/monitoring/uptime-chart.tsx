@@ -1,20 +1,41 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import dynamic from "next/dynamic"
 import { useState } from "react"
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { queryApi } from "@/lib/orpc/query"
+
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
+  { ssr: false },
+)
+const LineChart = dynamic(
+  () => import("recharts").then((m) => ({ default: m.LineChart })),
+  { ssr: false },
+)
+const CartesianGrid = dynamic(
+  () => import("recharts").then((m) => ({ default: m.CartesianGrid })),
+  { ssr: false },
+)
+const XAxis = dynamic(
+  () => import("recharts").then((m) => ({ default: m.XAxis })),
+  { ssr: false },
+)
+const YAxis = dynamic(
+  () => import("recharts").then((m) => ({ default: m.YAxis })),
+  { ssr: false },
+)
+const Tooltip = dynamic(
+  () => import("recharts").then((m) => ({ default: m.Tooltip })),
+  { ssr: false },
+)
+const Line = dynamic(
+  () => import("recharts").then((m) => ({ default: m.Line })),
+  { ssr: false },
+)
 
 const UptimeChart = () => {
   const [timeRange, setTimeRange] = useState<"7d" | "30d">("7d")

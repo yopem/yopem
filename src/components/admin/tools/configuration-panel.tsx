@@ -1,12 +1,5 @@
 "use client"
 
-import { XIcon } from "lucide-react"
-import { useState } from "react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -18,24 +11,14 @@ import {
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
 
 import ApiKeySelector from "./api-key-selector"
+import CategorySelector, { type Category } from "./category-selector"
 import ModelSelect from "./model-select"
+import PricingSection from "./pricing-section"
 import RangeSlider from "./range-slider"
-import { ThumbnailSelector } from "./thumbnail-selector"
+import TagSelector, { type Tag } from "./tag-selector"
+import ThumbnailSelector from "./thumbnail-selector"
 
-interface Category {
-  id: string
-  name: string
-  slug: string
-  description?: string | null
-}
-
-interface Tag {
-  id: string
-  name: string
-  slug: string
-}
-
-export interface ConfigValues {
+interface ConfigValues {
   modelEngine: string
   temperature: number
   maxTokens: number
@@ -53,7 +36,7 @@ export interface ConfigValues {
   thumbnailId?: string
 }
 
-export interface ConfigHandlers {
+interface ConfigHandlers {
   onModelEngineChange: (value: string) => void
   onTemperatureChange: (value: number) => void
   onMaxTokensChange: (value: number) => void
@@ -103,41 +86,8 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
     onTagsChange,
     onAddNewCategory,
     onAddNewTag,
+    onThumbnailIdChange,
   } = handlers
-
-  const [tagSearchQuery, setTagSearchQuery] = useState("")
-  const [categorySearchQuery, setCategorySearchQuery] = useState("")
-
-  const toggleTag = (tagId: string) => {
-    if (tagIds.includes(tagId)) {
-      onTagsChange?.(tagIds.filter((id) => id !== tagId))
-    } else {
-      onTagsChange?.([...tagIds, tagId])
-    }
-  }
-
-  const toggleCategory = (categoryId: string) => {
-    if (categoryIds.includes(categoryId)) {
-      onCategoriesChange?.(categoryIds.filter((id) => id !== categoryId))
-    } else {
-      onCategoriesChange?.([...categoryIds, categoryId])
-    }
-  }
-
-  const selectedTags = tags.filter((tag) => tagIds.includes(tag.id))
-  const selectedCategories = categories.filter((cat) =>
-    categoryIds.includes(cat.id),
-  )
-
-  const filteredTags = tags.filter((tag) =>
-    tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
-  )
-
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
-  )
-
-  const markupPercentage = Math.round(markup * 100)
 
   return (
     <aside className="bg-background flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
@@ -145,146 +95,30 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
         Configuration
       </h3>
 
-      <div className="border-border flex flex-col gap-3 rounded-lg border">
-        <div className="border-border flex items-center justify-between border-b p-3">
-          <h4 className="text-sm font-semibold">Category</h4>
-          {onAddNewCategory && (
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={onAddNewCategory}
-              className="h-auto p-0 text-xs"
-            >
-              + Add New
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-col gap-3 px-3 pb-3">
-          <Input
-            value={categorySearchQuery}
-            onChange={(e) => setCategorySearchQuery(e.target.value)}
-            placeholder="Search categories..."
-            className="h-8 text-sm"
-          />
-          <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
-            {categories.length === 0 ? (
-              <p className="text-muted-foreground py-2 text-center text-xs">
-                No categories available
-              </p>
-            ) : filteredCategories.length === 0 ? (
-              <p className="text-muted-foreground py-2 text-center text-xs">
-                No matching categories
-              </p>
-            ) : (
-              filteredCategories.map((category) => (
-                <label
-                  key={category.id}
-                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
-                >
-                  <Checkbox
-                    checked={categoryIds.includes(category.id)}
-                    onCheckedChange={() => toggleCategory(category.id)}
-                  />
-                  <span className="text-sm">{category.name}</span>
-                </label>
-              ))
-            )}
-          </div>
-          {selectedCategories.length > 0 && (
-            <div className="border-border flex flex-wrap gap-1 border-t pt-3">
-              {selectedCategories.map((category) => (
-                <Badge
-                  key={category.id}
-                  variant="secondary"
-                  className="text-xs"
-                >
-                  {category.name}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(category.id)}
-                    className="hover:text-destructive ml-1"
-                  >
-                    <XIcon className="size-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {onCategoriesChange && (
+        <CategorySelector
+          categories={categories}
+          selectedIds={categoryIds}
+          onChange={onCategoriesChange}
+          onAddNew={onAddNewCategory}
+        />
+      )}
 
-      <div className="border-border flex flex-col gap-3 rounded-lg border">
-        <div className="border-border flex items-center justify-between border-b p-3">
-          <h4 className="text-sm font-semibold">Tags</h4>
-          {onAddNewTag && (
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={onAddNewTag}
-              className="h-auto p-0 text-xs"
-            >
-              + Add New
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-col gap-3 px-3 pb-3">
-          <Input
-            value={tagSearchQuery}
-            onChange={(e) => setTagSearchQuery(e.target.value)}
-            placeholder="Search tags..."
-            className="h-8 text-sm"
-          />
-          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
-            {tags.length === 0 ? (
-              <p className="text-muted-foreground py-2 text-center text-xs">
-                No tags available
-              </p>
-            ) : filteredTags.length === 0 ? (
-              <p className="text-muted-foreground py-2 text-center text-xs">
-                No matching tags
-              </p>
-            ) : (
-              filteredTags.map((tag) => (
-                <label
-                  key={tag.id}
-                  className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
-                >
-                  <Checkbox
-                    checked={tagIds.includes(tag.id)}
-                    onCheckedChange={() => toggleTag(tag.id)}
-                  />
-                  <span className="text-sm">{tag.name}</span>
-                </label>
-              ))
-            )}
-          </div>
-          {selectedTags.length > 0 && (
-            <div className="border-border flex flex-wrap gap-1 border-t pt-3">
-              {selectedTags.map((tag) => (
-                <Badge key={tag.id} variant="secondary" className="text-xs">
-                  {tag.name}
-                  <button
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className="hover:text-destructive ml-1"
-                  >
-                    <XIcon className="size-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {onTagsChange && (
+        <TagSelector
+          tags={tags}
+          selectedIds={tagIds}
+          onChange={onTagsChange}
+          onAddNew={onAddNewTag}
+        />
+      )}
 
       <div className="bg-border h-px w-full" />
 
-      {handlers.onThumbnailIdChange && (
+      {onThumbnailIdChange && (
         <ThumbnailSelector
           value={config.thumbnailId}
-          onChange={handlers.onThumbnailIdChange}
+          onChange={onThumbnailIdChange}
         />
       )}
 
@@ -308,6 +142,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
             options={modelOptions}
           />
         </div>
+
         <RangeSlider
           label="Temperature"
           value={temperature}
@@ -317,6 +152,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
           onChange={onTemperatureChange}
           formatValue={(v) => v.toFixed(1)}
         />
+
         <RangeSlider
           label="Max Tokens"
           value={maxTokens}
@@ -327,7 +163,9 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
           formatValue={(v) => v.toString()}
         />
       </div>
+
       <div className="bg-border h-px w-full" />
+
       <div className="flex flex-col gap-2">
         <Label htmlFor="output-format">Output Format</Label>
         <Select
@@ -354,51 +192,15 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
           </SelectPopup>
         </Select>
       </div>
+
       <div className="bg-border h-px w-full" />
-      <div className="flex flex-col gap-4">
-        <span className="text-sm font-medium">Usage Pricing</span>
-        <div className="bg-muted/50 flex flex-col gap-3 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">
-              Cost per run
-            </span>
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={costPerRun}
-                onChange={(e) => {
-                  const newValue = Number(e.target.value)
-                  onCostPerRunChange(newValue)
-                }}
-                className="border-input focus:border-foreground w-16 border-b bg-transparent p-0 text-right font-mono text-sm focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">
-              Markup
-            </span>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={markupPercentage}
-                onChange={(e) => {
-                  const percentage = Number(e.target.value)
-                  if (percentage >= 0 && percentage <= 100) {
-                    onMarkupChange(percentage / 100)
-                  }
-                }}
-                className="border-input focus:border-foreground w-12 border-b bg-transparent p-0 text-right font-mono text-sm focus:outline-none"
-              />
-              <span className="text-muted-foreground font-mono text-xs">%</span>
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <PricingSection
+        costPerRun={costPerRun}
+        markup={markup}
+        onCostPerRunChange={onCostPerRunChange}
+        onMarkupChange={onMarkupChange}
+      />
     </aside>
   )
 }

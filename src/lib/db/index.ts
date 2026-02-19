@@ -27,7 +27,7 @@ export const db = drizzle(pool, {
   schema,
 })
 
-export function getPoolMetrics() {
+function getPoolMetrics() {
   return {
     total: pool.totalCount,
     idle: pool.idleCount,
@@ -36,7 +36,7 @@ export function getPoolMetrics() {
   }
 }
 
-export function logPoolMetrics() {
+function logPoolMetrics() {
   const metrics = getPoolMetrics()
   logger.info(
     `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,

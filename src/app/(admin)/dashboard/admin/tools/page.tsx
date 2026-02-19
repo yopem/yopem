@@ -1,45 +1,25 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import {
-  CopyIcon,
-  MoreHorizontalIcon,
-  PencilIcon,
-  PlusIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useState } from "react"
 
+import DeleteDialog from "@/components/admin/tools/delete-dialog"
+import ToolsTable from "@/components/admin/tools/tools-table"
 import Link from "@/components/link"
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogPopup,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Menu,
-  MenuGroup,
-  MenuItem,
-  MenuPopup,
-  MenuTrigger,
-} from "@/components/ui/menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { toastManager } from "@/components/ui/toast"
 import { queryApi } from "@/lib/orpc/query"
-import { formatDateOnly } from "@/lib/utils/format-date"
+
+interface Tool {
+  id: string
+  name: string
+  description: string | null
+  status: string
+  costPerRun: string | null
+  createdAt: Date | null
+}
 
 function ToolsPage() {
   const router = useRouter()
@@ -64,14 +44,7 @@ function ToolsPage() {
   }) as {
     data:
       | {
-          tools: {
-            id: string
-            name: string
-            description: string | null
-            status: string
-            costPerRun: string | null
-            createdAt: Date | null
-          }[]
+          tools: Tool[]
           nextCursor: string | undefined
         }
       | undefined
@@ -229,177 +202,24 @@ function ToolsPage() {
       </div>
 
       <div className="rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={
-                    tools.length > 0 && selectedToolIds.length === tools.length
-                  }
-                  onCheckedChange={handleToggleAll}
-                />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Runs</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Checkbox checked={false} disabled />
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-muted-foreground">Loading...</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                      Loading
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">-</TableCell>
-                  <TableCell className="text-muted-foreground text-right">
-                    -
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon-sm" disabled>
-                      <MoreHorizontalIcon className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : tools.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center">
-                  <p className="text-muted-foreground">No tools found</p>
-                  <Link
-                    href="/dashboard/admin/tools/add"
-                    className="mt-2 inline-block"
-                  >
-                    <Button variant="outline" size="sm">
-                      Create your first tool
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ) : (
-              tools.map((tool) => (
-                <TableRow key={tool.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedToolIds.includes(tool.id)}
-                      onCheckedChange={() => handleToggleTool(tool.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/dashboard/admin/tools/edit/${tool.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {tool.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        tool.status === "active"
-                          ? `bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
-                          : tool.status === "draft"
-                            ? `bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
-                            : `bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
-                      }`}
-                    >
-                      {tool.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDateOnly(tool.createdAt) || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-right">
-                    -
-                  </TableCell>
-                  <TableCell>
-                    <Menu>
-                      <MenuTrigger
-                        render={
-                          <Button variant="ghost" size="icon-sm">
-                            <MoreHorizontalIcon className="size-4" />
-                          </Button>
-                        }
-                      />
-                      <MenuPopup>
-                        <MenuGroup>
-                          <MenuItem
-                            render={
-                              <Link
-                                href={`/dashboard/admin/tools/edit/${tool.id}`}
-                              >
-                                <PencilIcon className="size-4" />
-                                Edit
-                              </Link>
-                            }
-                          />
-                          <MenuItem
-                            onSelect={() =>
-                              duplicateToolMutation.mutate(tool.id)
-                            }
-                            disabled={duplicateToolMutation.isPending}
-                          >
-                            <CopyIcon className="size-4" />
-                            {duplicateToolMutation.isPending
-                              ? "Duplicating..."
-                              : "Duplicate"}
-                          </MenuItem>
-                          <MenuItem
-                            onSelect={() =>
-                              handleDeleteClick({
-                                id: tool.id,
-                                name: tool.name,
-                              })
-                            }
-                            variant="destructive"
-                          >
-                            <Trash2Icon className="size-4" />
-                            Delete
-                          </MenuItem>
-                        </MenuGroup>
-                      </MenuPopup>
-                    </Menu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <ToolsTable
+          tools={tools}
+          isLoading={isLoading}
+          selectedToolIds={selectedToolIds}
+          onToggleAll={handleToggleAll}
+          onToggleTool={handleToggleTool}
+          onDelete={handleDeleteClick}
+          duplicateMutation={duplicateToolMutation}
+        />
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogBackdrop />
-        <AlertDialogPopup>
-          <AlertDialogTitle>Delete Tool</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete "{selectedTool?.name}"? This action
-            cannot be undone.
-          </AlertDialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
-            <AlertDialogClose>
-              <Button variant="outline">Cancel</Button>
-            </AlertDialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteToolMutation.isPending}
-            >
-              {deleteToolMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        </AlertDialogPopup>
-      </AlertDialog>
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        toolName={selectedTool?.name}
+        onConfirm={handleConfirmDelete}
+        deleteMutation={deleteToolMutation}
+      />
     </div>
   )
 }

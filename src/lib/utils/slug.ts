@@ -2,7 +2,7 @@ import { transliterate as tr } from "transliteration"
 
 import { db } from "@/lib/db"
 
-export function slugify(text: string) {
+function slugify(text: string) {
   return tr(text)
     .toString()
     .normalize("NFKD")
@@ -11,35 +11,6 @@ export function slugify(text: string) {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "")
-    .replace(/_/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/-$/g, "")
-}
-
-export function slugifyUsername(text: string) {
-  return tr(text)
-    .toString()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "")
-    .replace(/[^\w-]+/g, "")
-    .replace(/-/g, "")
-    .replace(/_/g, "")
-    .replace(/-+/g, "-")
-    .replace(/-$/g, "")
-}
-
-export function slugifyFile(text: string) {
-  return tr(text)
-    .toString()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w.-]+/g, "")
     .replace(/_/g, "-")
     .replace(/-+/g, "-")
     .replace(/-$/g, "")

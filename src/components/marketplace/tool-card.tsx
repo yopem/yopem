@@ -19,13 +19,15 @@ export interface ToolCardProps {
   reviewCount?: number
 }
 
+const EMPTY_CATEGORIES: { id: string; name: string; slug: string }[] = []
+
 const ToolCard = ({
   slug,
   name,
   description,
   excerpt,
   costPerRun,
-  categories = [],
+  categories = EMPTY_CATEGORIES,
   thumbnail,
   averageRating,
   reviewCount,

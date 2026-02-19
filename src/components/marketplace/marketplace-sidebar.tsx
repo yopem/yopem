@@ -24,11 +24,14 @@ const PRICE_FILTERS = [
   { value: "paid", label: "Paid" },
 ]
 
+const EMPTY_CATEGORIES: string[] = []
+const EMPTY_TAGS: string[] = []
+
 const MarketplaceSidebar = ({
   categories,
   tags,
-  selectedCategories = [],
-  selectedTags = [],
+  selectedCategories = EMPTY_CATEGORIES,
+  selectedTags = EMPTY_TAGS,
   selectedPriceFilter = "all",
   onCategoriesChange,
   onTagsChange,

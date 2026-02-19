@@ -2,50 +2,22 @@
 
 import {
   BarChartIcon,
-  BotIcon,
   DollarSignIcon,
-  EyeIcon,
-  EyeOffIcon,
   KeyIcon,
-  MoreVerticalIcon,
   PlusCircleIcon,
 } from "lucide-react"
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useReducer,
-  useState,
-  type ReactNode,
-} from "react"
+import { useCallback, useEffect, useReducer, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
+import AddProviderDialog from "@/components/admin/settings/add-provider-dialog"
+import AssetUploadSettings from "@/components/admin/settings/asset-upload-settings"
+import DeleteProviderDialog from "@/components/admin/settings/delete-provider-dialog"
+import EditProviderDialog from "@/components/admin/settings/edit-provider-dialog"
+import ProviderCard from "@/components/admin/settings/provider-card"
+import ProviderCardSkeleton from "@/components/admin/settings/provider-card-skeleton"
 import StatsCard from "@/components/admin/stats-card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { toastManager } from "@/components/ui/toast"
 import {
   useAddApiKey,
@@ -58,109 +30,6 @@ import { queryApi } from "@/lib/orpc/query"
 import type { AddApiKeyInput, ApiKeyConfig } from "@/lib/schemas/api-keys"
 import { formatDateTime } from "@/lib/utils/format-date"
 import { logger } from "@/lib/utils/logger"
-
-const providerIcons: Record<string, ReactNode> = {
-  openai: <BotIcon className="text-background" />,
-  openrouter: <KeyIcon className="text-background" />,
-}
-
-const providerNames: Record<string, string> = {
-  openai: "OpenAI",
-  openrouter: "OpenRouter",
-}
-
-const ProviderCard = memo(
-  ({
-    apiKey,
-    isVisible,
-    onToggleVisibility,
-    onEdit,
-    onDelete,
-    formatDateTime,
-  }: {
-    apiKey: ApiKeyConfig
-    isVisible: boolean
-    onToggleVisibility: (keyId: string) => void
-    onEdit: (provider: ApiKeyConfig) => void
-    onDelete: (provider: ApiKeyConfig) => void
-    formatDateTime: (date: Date | string | null | undefined) => string
-  }) => {
-    return (
-      <Card>
-        <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-foreground flex size-10 items-center justify-center rounded-md [&>svg]:size-6">
-              {providerIcons[apiKey.provider]}
-            </div>
-            <div>
-              <h3 className="text-foreground font-medium">{apiKey.name}</h3>
-              <p className="text-muted-foreground text-xs">
-                {apiKey.description ?? providerNames[apiKey.provider]}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={apiKey.status === "active" ? "default" : "secondary"}
-              className="capitalize"
-            >
-              {apiKey.status}
-            </Badge>
-            <Menu>
-              <MenuTrigger
-                render={
-                  <Button size="icon-xs" variant="ghost">
-                    <MoreVerticalIcon className="size-4" />
-                  </Button>
-                }
-              />
-              <MenuPopup align="end">
-                <MenuItem onClick={() => onEdit(apiKey)}>Edit</MenuItem>
-                <MenuItem
-                  onClick={() => onDelete(apiKey)}
-                  className="text-destructive"
-                >
-                  Delete
-                </MenuItem>
-              </MenuPopup>
-            </Menu>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6 p-6">
-          <div className="space-y-2">
-            <Label>Secret Key</Label>
-            <div className="flex gap-2">
-              <Input
-                type={isVisible ? "text" : "password"}
-                value={apiKey.apiKey}
-                readOnly
-                className="font-mono text-sm"
-              />
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => onToggleVisibility(apiKey.id)}
-              >
-                {isVisible ? (
-                  <EyeOffIcon className="size-4" />
-                ) : (
-                  <EyeIcon className="size-4" />
-                )}
-              </Button>
-            </div>
-            {apiKey.lastUsed && (
-              <p className="text-muted-foreground text-xs">
-                Last used: {formatDateTime(apiKey.lastUsed)}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  },
-)
-
-ProviderCard.displayName = "ProviderCard"
 
 type ModalState =
   | { type: "closed" }
@@ -187,6 +56,62 @@ function modalReducer(_state: ModalState, action: ModalAction): ModalState {
   }
 }
 
+interface AssetSettingsState {
+  maxUploadSize: number
+  isLoading: boolean
+}
+
+type AssetSettingsAction =
+  | { type: "SET_MAX_UPLOAD_SIZE"; value: number }
+  | { type: "SET_LOADED"; maxUploadSizeMB: number }
+  | { type: "SET_LOADING_DONE" }
+
+function assetSettingsReducer(
+  state: AssetSettingsState,
+  action: AssetSettingsAction,
+): AssetSettingsState {
+  switch (action.type) {
+    case "SET_MAX_UPLOAD_SIZE":
+      return { ...state, maxUploadSize: action.value }
+    case "SET_LOADED":
+      return { maxUploadSize: action.maxUploadSizeMB, isLoading: false }
+    case "SET_LOADING_DONE":
+      return { ...state, isLoading: false }
+  }
+}
+
+interface ProviderFormState {
+  formData: AddApiKeyInput
+  editingProvider: ApiKeyConfig | null
+}
+
+type ProviderFormAction =
+  | { type: "SET_FORM_DATA"; formData: AddApiKeyInput }
+  | { type: "SET_EDITING_PROVIDER"; provider: ApiKeyConfig | null }
+  | { type: "RESET_FORM_DATA" }
+
+const defaultFormData: AddApiKeyInput = {
+  provider: "openai",
+  name: "",
+  description: "",
+  apiKey: "",
+  status: "active",
+}
+
+function providerFormReducer(
+  state: ProviderFormState,
+  action: ProviderFormAction,
+): ProviderFormState {
+  switch (action.type) {
+    case "SET_FORM_DATA":
+      return { ...state, formData: action.formData }
+    case "SET_EDITING_PROVIDER":
+      return { ...state, editingProvider: action.provider }
+    case "RESET_FORM_DATA":
+      return { ...state, formData: defaultFormData }
+  }
+}
+
 export default function AdminSettingsPage() {
   const breadcrumbItems = [
     { label: "Settings", href: "/dashboard/admin/setting" },
@@ -195,13 +120,14 @@ export default function AdminSettingsPage() {
 
   const [modalState, dispatch] = useReducer(modalReducer, { type: "closed" })
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set())
-  const [formData, setFormData] = useState<AddApiKeyInput>({
-    provider: "openai",
-    name: "",
-    description: "",
-    apiKey: "",
-    status: "active",
+  const [providerForm, providerFormDispatch] = useReducer(providerFormReducer, {
+    formData: defaultFormData,
+    editingProvider: null,
   })
+  const [assetSettings, assetSettingsDispatch] = useReducer(
+    assetSettingsReducer,
+    { maxUploadSize: 50, isLoading: true },
+  )
 
   const { data: apiKeys, isLoading: keysLoading } = useApiKeys()
   const { data: stats, isLoading: statsLoading } = useApiKeyStats()
@@ -209,16 +135,16 @@ export default function AdminSettingsPage() {
   const updateMutation = useUpdateApiKey()
   const deleteMutation = useDeleteApiKey()
 
-  const [maxUploadSize, setMaxUploadSize] = useState<number>(50)
-  const [isAssetSettingsLoading, setIsAssetSettingsLoading] = useState(true)
-
   useEffect(() => {
     let cancelled = false
     const fetchAssetSettings = async () => {
       try {
         const result = await queryApi.admin.getAssetSettings.call()
         if (!cancelled) {
-          setMaxUploadSize(result.maxUploadSizeMB)
+          assetSettingsDispatch({
+            type: "SET_LOADED",
+            maxUploadSizeMB: result.maxUploadSizeMB,
+          })
         }
       } catch (error) {
         if (!cancelled) {
@@ -226,7 +152,7 @@ export default function AdminSettingsPage() {
         }
       }
       if (!cancelled) {
-        setIsAssetSettingsLoading(false)
+        assetSettingsDispatch({ type: "SET_LOADING_DONE" })
       }
     }
     void fetchAssetSettings()
@@ -238,7 +164,7 @@ export default function AdminSettingsPage() {
   const updateAssetSettings = useCallback(async () => {
     try {
       await queryApi.admin.updateAssetSettings.call({
-        maxUploadSizeMB: maxUploadSize,
+        maxUploadSizeMB: assetSettings.maxUploadSize,
       })
       toastManager.add({
         title: "Asset settings updated",
@@ -251,41 +177,36 @@ export default function AdminSettingsPage() {
         type: "error",
       })
     }
-  }, [maxUploadSize])
+  }, [assetSettings.maxUploadSize])
 
   const handleAddProvider = useCallback(() => {
     void (async () => {
       try {
-        await addMutation.mutateAsync(formData)
+        await addMutation.mutateAsync(providerForm.formData)
         toastManager.add({
           title: "Provider added successfully",
           type: "success",
         })
         dispatch({ type: "CLOSE" })
-        setFormData({
-          provider: "openai",
-          name: "",
-          description: "",
-          apiKey: "",
-          status: "active",
-        })
+        providerFormDispatch({ type: "RESET_FORM_DATA" })
       } catch (error) {
         toastManager.add({ title: "Failed to add provider", type: "error" })
         logger.error(`Error adding provider: ${String(error)}`)
       }
     })()
-  }, [addMutation, formData])
+  }, [addMutation, providerForm.formData])
 
   const handleUpdateProvider = useCallback(() => {
-    if (modalState.type !== "editing") return
+    const ep = providerForm.editingProvider
+    if (!ep) return
     void (async () => {
       try {
         await updateMutation.mutateAsync({
-          id: modalState.provider.id,
-          name: modalState.provider.name,
-          description: modalState.provider.description,
-          status: modalState.provider.status,
-          provider: modalState.provider.provider,
+          id: ep.id,
+          name: ep.name,
+          description: ep.description,
+          status: ep.status,
+          provider: ep.provider,
         })
         toastManager.add({
           title: "Provider updated successfully",
@@ -297,7 +218,7 @@ export default function AdminSettingsPage() {
         logger.error(`Error updating provider: ${String(error)}`)
       }
     })()
-  }, [updateMutation, modalState])
+  }, [updateMutation, providerForm.editingProvider])
 
   const handleDeleteProvider = useCallback(() => {
     if (modalState.type !== "deleting") return
@@ -330,17 +251,15 @@ export default function AdminSettingsPage() {
 
   const openEditModal = useCallback(
     (provider: ApiKeyConfig) => {
+      providerFormDispatch({ type: "SET_EDITING_PROVIDER", provider })
       dispatch({ type: "OPEN_EDIT", provider })
     },
-    [dispatch],
+    [providerFormDispatch],
   )
 
-  const openDeleteModal = useCallback(
-    (provider: ApiKeyConfig) => {
-      dispatch({ type: "OPEN_DELETE", provider })
-    },
-    [dispatch],
-  )
+  const openDeleteModal = useCallback((provider: ApiKeyConfig) => {
+    dispatch({ type: "OPEN_DELETE", provider })
+  }, [])
 
   return (
     <div className="flex h-full flex-col">
@@ -415,34 +334,7 @@ export default function AdminSettingsPage() {
             <Shimmer loading={keysLoading}>
               {keysLoading
                 ? Array.from({ length: 2 }).map((_, i) => (
-                    <Card key={i}>
-                      <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-foreground flex size-10 items-center justify-center rounded-md">
-                            <KeyIcon className="text-background size-6" />
-                          </div>
-                          <div>
-                            <h3 className="text-foreground font-medium">
-                              Loading...
-                            </h3>
-                            <p className="text-muted-foreground text-xs">
-                              Loading provider...
-                            </p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="space-y-2">
-                          <Label>Secret Key</Label>
-                          <Input
-                            type="password"
-                            value="loading..."
-                            readOnly
-                            className="font-mono text-sm"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ProviderCardSkeleton key={i} />
                   ))
                 : apiKeys?.map((key) => (
                     <ProviderCard
@@ -465,274 +357,50 @@ export default function AdminSettingsPage() {
               <span className="text-sm font-medium">Add New Provider</span>
             </button>
 
-            <div className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-foreground text-lg font-bold">
-                  Asset Upload Settings
-                </h2>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="max-upload-size">
-                        Maximum Upload Size (MB)
-                      </Label>
-                      <Input
-                        id="max-upload-size"
-                        type="number"
-                        min={1}
-                        max={500}
-                        value={maxUploadSize}
-                        onChange={(e) =>
-                          setMaxUploadSize(Number(e.target.value))
-                        }
-                      />
-                      <p className="text-muted-foreground text-xs">
-                        Set the maximum file size allowed for uploads (1-500 MB)
-                      </p>
-                    </div>
-                    <Button
-                      onClick={updateAssetSettings}
-                      disabled={isAssetSettingsLoading}
-                    >
-                      Save Settings
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AssetUploadSettings
+              maxUploadSize={assetSettings.maxUploadSize}
+              isLoading={assetSettings.isLoading}
+              onMaxUploadSizeChange={(value) =>
+                assetSettingsDispatch({ type: "SET_MAX_UPLOAD_SIZE", value })
+              }
+              onSave={updateAssetSettings}
+            />
           </div>
         </div>
       </div>
 
-      <Dialog
+      <AddProviderDialog
         open={modalState.type === "adding"}
+        formData={providerForm.formData}
+        isPending={addMutation.isPending}
         onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Provider</DialogTitle>
-            <DialogDescription>
-              Add a new AI provider API key to your account
-            </DialogDescription>
-          </DialogHeader>
-          <DialogPanel>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="provider">Provider</Label>
-                <Select
-                  value={formData.provider}
-                  onValueChange={(value) => {
-                    if (value)
-                      setFormData({
-                        ...formData,
-                        provider: value,
-                      })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="openai">OpenAI</SelectItem>
-                    <SelectItem value="openrouter">OpenRouter</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="e.g., Production OpenAI"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="e.g., Used for GPT-4 and Embeddings"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  value={formData.apiKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, apiKey: e.target.value })
-                  }
-                  placeholder="sk-proj-..."
-                />
-              </div>
-            </div>
-          </DialogPanel>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => dispatch({ type: "CLOSE" })}
-              disabled={addMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddProvider}
-              disabled={
-                addMutation.isPending || !formData.name || !formData.apiKey
-              }
-            >
-              {addMutation.isPending ? "Adding..." : "Add Provider"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onFormDataChange={(formData) =>
+          providerFormDispatch({ type: "SET_FORM_DATA", formData })
+        }
+        onSubmit={handleAddProvider}
+        onCancel={() => dispatch({ type: "CLOSE" })}
+      />
 
-      <Dialog
+      <EditProviderDialog
         open={modalState.type === "editing"}
+        provider={providerForm.editingProvider}
+        isPending={updateMutation.isPending}
         onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Provider</DialogTitle>
-            <DialogDescription>
-              Update provider settings and configuration
-            </DialogDescription>
-          </DialogHeader>
-          {modalState.type === "editing" && (
-            <DialogPanel>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-name">Name</Label>
-                  <Input
-                    id="edit-name"
-                    value={modalState.provider.name}
-                    onChange={(e) =>
-                      dispatch({
-                        type: "OPEN_EDIT",
-                        provider: {
-                          ...modalState.provider,
-                          name: e.target.value,
-                        },
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-description">
-                    Description (Optional)
-                  </Label>
-                  <Textarea
-                    id="edit-description"
-                    value={modalState.provider.description ?? ""}
-                    onChange={(e) =>
-                      dispatch({
-                        type: "OPEN_EDIT",
-                        provider: {
-                          ...modalState.provider,
-                          description: e.target.value,
-                        },
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select
-                    value={modalState.provider.status}
-                    onValueChange={(value) => {
-                      if (value) {
-                        dispatch({
-                          type: "OPEN_EDIT",
-                          provider: {
-                            ...modalState.provider,
-                            status: value,
-                          },
-                        })
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </DialogPanel>
-          )}
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => dispatch({ type: "CLOSE" })}
-              disabled={updateMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateProvider}
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onProviderChange={(provider) =>
+          providerFormDispatch({ type: "SET_EDITING_PROVIDER", provider })
+        }
+        onSubmit={handleUpdateProvider}
+        onCancel={() => dispatch({ type: "CLOSE" })}
+      />
 
-      <Dialog
+      <DeleteProviderDialog
         open={modalState.type === "deleting"}
+        provider={modalState.type === "deleting" ? modalState.provider : null}
+        isPending={deleteMutation.isPending}
         onOpenChange={(open) => !open && dispatch({ type: "CLOSE" })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Provider</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this provider? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogPanel>
-            {modalState.type === "deleting" && (
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-foreground font-medium">
-                  {modalState.provider.name}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {modalState.provider.description ??
-                    providerNames[modalState.provider.provider]}
-                </p>
-              </div>
-            )}
-          </DialogPanel>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => dispatch({ type: "CLOSE" })}
-              disabled={deleteMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteProvider}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Provider"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onSubmit={handleDeleteProvider}
+        onCancel={() => dispatch({ type: "CLOSE" })}
+      />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import type { appRouter } from "@/lib/api/root"
 import { env } from "@/lib/env"
 import { logger } from "@/lib/utils/logger"
 
-export const getBaseUrl = () => {
+const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin
   if (process.env["APP_ENV"] === "development") {
     return "http://localhost:3000"

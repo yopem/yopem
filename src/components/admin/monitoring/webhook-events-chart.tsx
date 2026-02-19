@@ -1,17 +1,41 @@
 "use client"
 
-import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+import dynamic from "next/dynamic"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
+  { ssr: false },
+)
+const LineChart = dynamic(
+  () => import("recharts").then((m) => ({ default: m.LineChart })),
+  { ssr: false },
+)
+const CartesianGrid = dynamic(
+  () => import("recharts").then((m) => ({ default: m.CartesianGrid })),
+  { ssr: false },
+)
+const XAxis = dynamic(
+  () => import("recharts").then((m) => ({ default: m.XAxis })),
+  { ssr: false },
+)
+const YAxis = dynamic(
+  () => import("recharts").then((m) => ({ default: m.YAxis })),
+  { ssr: false },
+)
+const Tooltip = dynamic(
+  () => import("recharts").then((m) => ({ default: m.Tooltip })),
+  { ssr: false },
+)
+const Legend = dynamic(
+  () => import("recharts").then((m) => ({ default: m.Legend })),
+  { ssr: false },
+)
+const Line = dynamic(
+  () => import("recharts").then((m) => ({ default: m.Line })),
+  { ssr: false },
+)
 
 interface DataPoint {
   date: string

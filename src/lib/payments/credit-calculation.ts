@@ -6,7 +6,7 @@
  * Number of credits per dollar
  * Ratio: $10 → 100 credits
  */
-export const CREDITS_PER_DOLLAR = 10
+const CREDITS_PER_DOLLAR = 10
 
 /**
  * Minimum top-up amount in dollars
@@ -64,14 +64,4 @@ export function validateTopupAmount(amount: number): {
   }
 
   return { isValid: true }
-}
-
-/**
- * Format an amount in dollars to display with credits
- * @param amountInDollars - The amount in dollars
- * @returns Formatted string like "$10 = 100 credits"
- */
-export function formatAmountWithCredits(amountInDollars: number): string {
-  const credits = calculateCreditsFromAmount(amountInDollars)
-  return `$${amountInDollars.toFixed(2)} = ${credits} credits`
 }
