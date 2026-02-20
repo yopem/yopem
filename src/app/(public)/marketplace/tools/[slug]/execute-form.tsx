@@ -1,11 +1,15 @@
 "use client"
 
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { AlertTriangleIcon, CopyIcon, PlayIcon } from "lucide-react"
-import { useState } from "react"
+import { AlertTriangleIcon, CopyIcon, LockIcon, PlayIcon } from "lucide-react"
+import { useRef, useState } from "react"
 
+import ToolInputField, {
+  type ToolInputVariable,
+} from "@/components/admin/tools/tool-input-field"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { queryApi } from "@/lib/orpc/query"
 
@@ -18,28 +22,43 @@ interface ExecutionResult {
 interface ToolExecuteFormProps {
   toolId: string
   costPerRun: string | null
+  inputVariable?: ToolInputVariable[] | null
+  isAuthenticated: boolean
 }
 
 export default function ToolExecuteForm({
   toolId,
   costPerRun,
+  inputVariable,
+  isAuthenticated,
 }: ToolExecuteFormProps) {
-  const [inputValue, setInputValue] = useState("")
+  const hasVariables = inputVariable && inputVariable.length > 0
+
+  // Dynamic inputs keyed by variable name (used when inputVariable is provided)
+  const [inputs, setInputs] = useState<Record<string, string>>({})
+  // Fallback single input (used when inputVariable is null/empty)
+  const [fallbackInput, setFallbackInput] = useState("")
+
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const fileReaderRef = useRef<FileReader | null>(null)
 
   const cost = Number(costPerRun ?? 0)
 
   const { data: creditsData } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
+    enabled: isAuthenticated,
   }) as { data: { balance: string } | undefined | null }
 
   const balance = Number(creditsData?.balance ?? 0)
   const hasInsufficientCredits = cost > 0 && balance < cost
 
   const executeMutation = useMutation({
-    mutationFn: async (inputs: Record<string, unknown>) => {
-      const result = await queryApi.tools.execute.call({ toolId, inputs })
+    mutationFn: async (payload: Record<string, unknown>) => {
+      const result = await queryApi.tools.execute.call({
+        toolId,
+        inputs: payload,
+      })
       return result as ExecutionResult
     },
     onSuccess: (data) => {
@@ -55,11 +74,24 @@ export default function ToolExecuteForm({
   const handleExecute = () => {
     setError(null)
     setOutput(null)
-    if (!inputValue.trim()) {
-      setError("Please provide an input")
-      return
+
+    if (hasVariables) {
+      executeMutation.mutate(inputs)
+    } else {
+      if (!fallbackInput.trim()) {
+        setError("Please provide an input")
+        return
+      }
+      executeMutation.mutate({ input: fallbackInput })
     }
-    executeMutation.mutate({ input: inputValue })
+  }
+
+  const handleInputChange = (variableName: string, newValue: string) => {
+    setInputs((prev) => ({ ...prev, [variableName]: newValue }))
+  }
+
+  const handleClearError = (_variableName: string) => {
+    // no per-field errors in this form
   }
 
   const handleCopy = async () => {
@@ -79,18 +111,36 @@ export default function ToolExecuteForm({
         <CardTitle className="text-lg">Run tool</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-          <label htmlFor="input" className="text-sm font-medium">
-            Input
-          </label>
-          <Textarea
-            id="input"
-            placeholder="Enter your input..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="mt-1.5 min-h-[100px]"
-          />
-        </div>
+        {hasVariables ? (
+          <div className="flex flex-col gap-4">
+            {inputVariable.map((field) => (
+              <Field key={field.variableName}>
+                <FieldLabel>{field.variableName}</FieldLabel>
+                <ToolInputField
+                  field={field}
+                  value={inputs[field.variableName] ?? ""}
+                  error={undefined}
+                  fileReaderRef={fileReaderRef}
+                  onChange={handleInputChange}
+                  onClearError={handleClearError}
+                />
+              </Field>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <label htmlFor="input" className="text-sm font-medium">
+              Input
+            </label>
+            <Textarea
+              id="input"
+              placeholder="Enter your input..."
+              value={fallbackInput}
+              onChange={(e) => setFallbackInput(e.target.value)}
+              className="mt-1.5 min-h-[100px]"
+            />
+          </div>
+        )}
 
         {cost > 0 && (
           <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
@@ -123,18 +173,27 @@ export default function ToolExecuteForm({
           </div>
         )}
 
-        <Button
-          onClick={handleExecute}
-          disabled={executeMutation.isPending || hasInsufficientCredits}
-          className="w-full"
-        >
-          <PlayIcon className="mr-2 size-4" />
-          {executeMutation.isPending
-            ? "Running..."
-            : cost > 0
-              ? `Run (${cost} credits)`
-              : "Run"}
-        </Button>
+        {!isAuthenticated ? (
+          <div className="flex flex-col items-center gap-2 rounded-md border border-dashed p-4 text-center">
+            <LockIcon className="text-muted-foreground size-5" />
+            <p className="text-muted-foreground text-sm">
+              Sign in to run this tool
+            </p>
+          </div>
+        ) : (
+          <Button
+            onClick={handleExecute}
+            disabled={executeMutation.isPending || hasInsufficientCredits}
+            className="w-full"
+          >
+            <PlayIcon className="mr-2 size-4" />
+            {executeMutation.isPending
+              ? "Running..."
+              : cost > 0
+                ? `Run (${cost} credits)`
+                : "Run"}
+          </Button>
+        )}
 
         {error && (
           <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">

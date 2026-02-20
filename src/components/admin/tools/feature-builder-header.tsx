@@ -23,6 +23,7 @@ interface FeatureBuilderHeaderProps {
   onSaveDraft?: () => void
   onPublish?: () => void
   isSaving?: boolean
+  isLoading?: boolean
 }
 
 const FeatureBuilderHeader = ({
@@ -33,6 +34,7 @@ const FeatureBuilderHeader = ({
   onSaveDraft,
   onPublish,
   isSaving = false,
+  isLoading = false,
 }: FeatureBuilderHeaderProps) => {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-8">
@@ -69,7 +71,12 @@ const FeatureBuilderHeader = ({
         )}
       </div>
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={onPreviewRun}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPreviewRun}
+          disabled={isLoading}
+        >
           <PlayIcon className="size-4" />
           <span>Preview</span>
         </Button>

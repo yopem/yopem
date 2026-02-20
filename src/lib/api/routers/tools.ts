@@ -1,7 +1,13 @@
+import { ORPCError } from "@orpc/server"
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { executeAITool } from "@/lib/ai/executor"
+import {
+  ContextLengthError,
+  InvalidKeyError,
+  RateLimitError,
+} from "@/lib/ai/providers/base"
 import {
   adminProcedure,
   protectedProcedure,
@@ -22,9 +28,10 @@ import {
   updateToolSchema,
   userCreditsTable,
 } from "@/lib/db/schema"
-import { apiKeyEncryptionSecret } from "@/lib/env/server"
 import { checkAndTriggerAutoTopup } from "@/lib/payments/auto-topup"
 import type { ApiKeyConfig } from "@/lib/schemas/api-keys"
+
+const API_KEYS_SETTING_KEY = "api_keys"
 import { decryptApiKey } from "@/lib/utils/crypto"
 import { createCustomId } from "@/lib/utils/custom-id"
 import { generateUniqueToolSlug } from "@/lib/utils/slug"
@@ -34,7 +41,7 @@ export const toolsRouter = {
     .input(
       z
         .object({
-          limit: z.number().min(1).max(100).default(20),
+          limit: z.number().min(1).max(1000).default(20),
           cursor: z.string().optional(),
           search: z.string().optional(),
           categoryIds: z.array(z.string()).optional(),
@@ -391,7 +398,7 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const cacheKey = `settings:${apiKeyEncryptionSecret}`
+      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
       const [toolResult, cachedApiKeys, userCreditsResult] = await Promise.all([
         context.db
           .select()
@@ -406,17 +413,18 @@ export const toolsRouter = {
 
       const [tool] = toolResult
       if (tool === undefined) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       if (tool.status !== "active") {
-        throw new Error("Tool is not available")
+        throw new ORPCError("BAD_REQUEST", { message: "Tool is not available" })
       }
 
       if (tool.apiKeyId === null) {
-        throw new Error(
-          "Tool is not configured with an API key. Please update the tool configuration.",
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "Tool is not configured with an API key. Please update the tool configuration.",
+        })
       }
 
       let apiKeys = cachedApiKeys
@@ -424,12 +432,13 @@ export const toolsRouter = {
         const [adminSettings] = await context.db
           .select()
           .from(adminSettingsTable)
-          .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
+          .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
 
         if (!adminSettings?.settingValue) {
-          throw new Error(
-            "No API keys configured. Please add an API key in settings.",
-          )
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message:
+              "No API keys configured. Please add an API key in settings.",
+          })
         }
         apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       }
@@ -437,15 +446,17 @@ export const toolsRouter = {
       const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
 
       if (!selectedKey) {
-        throw new Error(
-          "The API key configured for this tool no longer exists. Please update the tool configuration.",
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "The API key configured for this tool no longer exists. Please update the tool configuration.",
+        })
       }
 
       if (selectedKey.status !== "active") {
-        throw new Error(
-          "The API key configured for this tool is inactive. Please activate it in settings or select a different key.",
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "The API key configured for this tool is inactive. Please activate it in settings or select a different key.",
+        })
       }
 
       let [userCredits] = userCreditsResult
@@ -464,7 +475,7 @@ export const toolsRouter = {
 
       const cost = Number(tool.costPerRun ?? 0)
       if (Number(userCredits.balance) < cost) {
-        throw new Error("Insufficient credits")
+        throw new ORPCError("BAD_REQUEST", { message: "Insufficient credits" })
       }
 
       const runId = createCustomId()
@@ -478,7 +489,9 @@ export const toolsRouter = {
       } | null
 
       if (toolConfig === null) {
-        throw new Error("Tool configuration is missing")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Tool configuration is missing",
+        })
       }
 
       let output: string
@@ -506,7 +519,18 @@ export const toolsRouter = {
           cost: String(cost),
           completedAt: new Date(),
         })
-        throw new Error(`AI execution failed: ${errorMessage}`)
+        if (
+          error instanceof ContextLengthError ||
+          error instanceof InvalidKeyError ||
+          error instanceof RateLimitError
+        ) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: `AI execution failed: ${errorMessage}`,
+          })
+        }
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `AI execution failed: ${errorMessage}`,
+        })
       }
 
       const newRun = {
@@ -601,24 +625,32 @@ export const toolsRouter = {
         .map((v) => v.variableName)
 
       if (missingInputs.length > 0) {
-        throw new Error(`Missing required inputs: ${missingInputs.join(", ")}`)
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Missing required inputs: ${missingInputs.join(", ")}`,
+        })
       }
 
       if (!input.systemRole || input.systemRole.trim() === "") {
-        throw new Error("System role is required")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "System role is required",
+        })
       }
       if (
         !input.userInstructionTemplate ||
         input.userInstructionTemplate.trim() === ""
       ) {
-        throw new Error("User instruction template is required")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "User instruction template is required",
+        })
       }
 
       if (!input.apiKeyId) {
-        throw new Error("API key is required for preview execution")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "API key is required for preview execution",
+        })
       }
 
-      const cacheKey = `settings:${apiKeyEncryptionSecret}`
+      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
       const cachedApiKeys =
         await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
 
@@ -627,12 +659,13 @@ export const toolsRouter = {
         const [adminSettings] = await context.db
           .select()
           .from(adminSettingsTable)
-          .where(eq(adminSettingsTable.settingKey, apiKeyEncryptionSecret))
+          .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
 
         if (!adminSettings?.settingValue) {
-          throw new Error(
-            "No API keys configured. Please add an API key in settings.",
-          )
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message:
+              "No API keys configured. Please add an API key in settings.",
+          })
         }
         apiKeys = adminSettings.settingValue as ApiKeyConfig[]
       }
@@ -640,18 +673,18 @@ export const toolsRouter = {
       const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
 
       if (!selectedKey) {
-        throw new Error("Selected API key not found")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Selected API key not found",
+        })
       }
 
       if (selectedKey.status !== "active") {
-        throw new Error("Selected API key is inactive")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Selected API key is inactive",
+        })
       }
 
       const decryptedKey = decryptApiKey(selectedKey.apiKey)
-
-      if (!decryptedKey.startsWith("sk-")) {
-        throw new Error("Invalid OpenAI API key format")
-      }
 
       try {
         const result = await executeAITool({
@@ -669,10 +702,26 @@ export const toolsRouter = {
           cost: 0,
         }
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof ORPCError) {
           throw error
         }
-        throw new Error("AI execution failed with an unknown error")
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "AI execution failed with an unknown error"
+        if (
+          error instanceof ContextLengthError ||
+          error instanceof InvalidKeyError ||
+          error instanceof RateLimitError
+        ) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: `AI execution failed: ${errorMessage}`,
+          })
+        }
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `AI execution failed: ${errorMessage}`,
+          cause: error,
+        })
       }
     }),
 

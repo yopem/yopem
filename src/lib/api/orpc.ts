@@ -1,7 +1,7 @@
 import { ORPCError, os } from "@orpc/server"
 
 import { auth } from "@/lib/auth/session"
-import { createRedisCache } from "@/lib/cache/client"
+import { redisCache } from "@/lib/cache"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/utils/logger"
 
@@ -36,22 +36,28 @@ export async function createRPCContext(opts: {
     const refreshToken = requestCookies?.get("refresh_token")
 
     if (accessToken) {
-      const { authClient } = await import("@/lib/auth/client")
-      const { subjects } = await import("@/lib/auth/subjects")
+      try {
+        const { authClient } = await import("@/lib/auth/client")
+        const { subjects } = await import("@/lib/auth/subjects")
 
-      const verified = await authClient.verify(subjects, accessToken.value, {
-        refresh: refreshToken?.value,
-      })
+        const verified = await authClient.verify(subjects, accessToken.value, {
+          refresh: refreshToken?.value,
+        })
 
-      if (!verified.err) {
-        session = verified.subject.properties
+        if (!verified.err) {
+          session = verified.subject.properties
+        }
+      } catch (err) {
+        logger.error(
+          `[createRPCContext] token verification threw unexpectedly: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
+        )
       }
     }
   } else {
     session = await auth()
   }
 
-  const redis = createRedisCache()
+  const redis = redisCache
 
   return {
     headers: opts.headers,

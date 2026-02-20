@@ -133,6 +133,28 @@ function EditToolPage() {
       return
     }
 
+    if (!formData.apiKeyId) {
+      toastManager.add({
+        title: "Cannot preview",
+        description: "Please select an API key for this tool before previewing",
+        type: "error",
+      })
+      return
+    }
+
+    const toolConfig = formData.config as {
+      modelEngine?: string
+    } | null
+    if (!toolConfig?.modelEngine) {
+      toastManager.add({
+        title: "Cannot preview",
+        description:
+          "Please select a model engine for this tool before previewing",
+        type: "error",
+      })
+      return
+    }
+
     setCurrentInputVariables(
       formData.inputVariable.map((v) => ({
         variableName: v.variableName,
@@ -183,6 +205,7 @@ function EditToolPage() {
         onSaveDraft={handleSaveDraft}
         onPublish={handlePublish}
         isSaving={updateToolMutation.isPending}
+        isLoading={isLoading}
       />
 
       <Shimmer loading={isLoading}>

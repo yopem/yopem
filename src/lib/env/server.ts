@@ -10,7 +10,6 @@ export const redisKeyPrefix = env.REDIS_KEY_PREFIX
 export const polarAccessToken = env.POLAR_ACCESS_TOKEN
 export const polarWebhookSecret = env.POLAR_WEBHOOK_SECRET
 export const polarProductId = env.POLAR_PRODUCT_ID
-export const apiKeyEncryptionSecret = env.API_KEY_ENCRYPTION_SECRET
 
 export const authIssuer = env.AUTH_ISSUER
 

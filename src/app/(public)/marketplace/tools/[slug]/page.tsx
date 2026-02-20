@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { connection } from "next/server"
 import { cache, Suspense } from "react"
 
+import { type ToolInputVariable } from "@/components/admin/tools/tool-input-field"
 import Link from "@/components/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -112,7 +113,12 @@ async function ToolData({ slug }: { slug: string }) {
           </p>
         </div>
 
-        <ToolExecuteForm toolId={tool.id} costPerRun={tool.costPerRun} />
+        <ToolExecuteForm
+          toolId={tool.id}
+          costPerRun={tool.costPerRun}
+          inputVariable={tool.inputVariable as ToolInputVariable[] | null}
+          isAuthenticated={!!session}
+        />
 
         <ToolReviewsSection
           slug={slug}

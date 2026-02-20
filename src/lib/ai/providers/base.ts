@@ -55,6 +55,17 @@ export class InvalidKeyError extends AIProviderError {
   }
 }
 
+export class ContextLengthError extends AIProviderError {
+  constructor(provider: ApiKeyProvider, originalError?: unknown) {
+    super(
+      "Your input exceeds the context window of this model. Please adjust your input and try again.",
+      provider,
+      originalError,
+    )
+    this.name = "ContextLengthError"
+  }
+}
+
 export interface AIProvider {
   execute(request: ExecutionRequest): Promise<ExecutionResponse>
 }

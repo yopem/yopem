@@ -3,6 +3,7 @@ import { generateText } from "ai"
 
 import {
   AIProviderError,
+  ContextLengthError,
   InvalidKeyError,
   RateLimitError,
   type AIProvider,
@@ -24,13 +25,27 @@ export class OpenRouterProvider implements AIProvider {
     this.model = config.model
   }
 
+  private isReasoningModel(): boolean {
+    const m = this.model.toLowerCase()
+    return (
+      m.startsWith("o1") ||
+      m.startsWith("o3") ||
+      m.startsWith("o4") ||
+      m.includes("/o1") ||
+      m.includes("/o3") ||
+      m.includes("/o4")
+    )
+  }
+
   async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
     try {
       const result = await generateText({
         model: this.provider(this.model),
         system: request.systemRole,
         prompt: request.userInstruction,
-        temperature: request.temperature,
+        ...(this.isReasoningModel()
+          ? {}
+          : { temperature: request.temperature }),
       })
 
       return {
@@ -55,6 +70,14 @@ export class OpenRouterProvider implements AIProvider {
           errorMessage.includes("rate limit")
         ) {
           throw new RateLimitError("openrouter", error)
+        }
+        if (
+          errorMessage.includes("context_length_exceeded") ||
+          errorMessage.includes("context window") ||
+          errorMessage.includes("maximum context length") ||
+          errorMessage.includes("too many tokens")
+        ) {
+          throw new ContextLengthError("openrouter", error)
         }
         throw new AIProviderError(
           error.message ?? "OpenRouter API error",

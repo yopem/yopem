@@ -1,7 +1,7 @@
 import { Webhooks } from "@polar-sh/nextjs"
 import { eq } from "drizzle-orm"
 
-import { createRedisCache } from "@/lib/cache/client"
+import { redisCache } from "@/lib/cache"
 import { db } from "@/lib/db"
 import {
   polarCheckoutSessionsTable,
@@ -19,7 +19,7 @@ let redisInitialized = false
 
 async function ensureRedisInitialized() {
   if (!redisInitialized) {
-    const redis = await createRedisCache().getRedisClient()
+    const redis = await redisCache.getRedisClient()
     WebhookMonitor.setRedisClient(redis)
     redisInitialized = true
   }
