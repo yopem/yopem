@@ -1003,7 +1003,7 @@ export const adminRouter = {
         { date: string; requests: number }
       >()
 
-      for (let i = 0; i < days; i++) {
+      for (let i = 0; i <= days; i++) {
         const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
         const dateStr = date.toISOString().split("T")[0]
         dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })

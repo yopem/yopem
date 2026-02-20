@@ -16,6 +16,7 @@ import { Shimmer } from "shimmer-from-structure"
 
 import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
 import AdminPageHeader from "@/components/admin/admin-page-header"
+import AiRequestsChart from "@/components/admin/ai-requests-chart"
 import ActivityLogsList from "@/components/admin/monitoring/activity-logs-list"
 import TimeRangeToggle, {
   type TimeRange,
@@ -273,6 +274,18 @@ export default function MonitoringPage() {
             />
           </div>
         </Shimmer>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-foreground text-lg font-semibold">
+            AI Requests History
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Token usage and AI request volume over time
+          </p>
+        </div>
+        <AiRequestsChart totalRequests={systemMetrics?.aiRequests ?? 0} />
       </section>
 
       <section className="flex flex-col gap-4">
