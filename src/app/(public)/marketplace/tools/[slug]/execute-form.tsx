@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangleIcon, CopyIcon, LockIcon, PlayIcon } from "lucide-react"
 import { useRef, useState } from "react"
 
@@ -45,6 +45,8 @@ export default function ToolExecuteForm({
 
   const cost = Number(costPerRun ?? 0)
 
+  const queryClient = useQueryClient()
+
   const { data: creditsData } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
     enabled: isAuthenticated,
@@ -64,6 +66,9 @@ export default function ToolExecuteForm({
     onSuccess: (data) => {
       setOutput(data.output)
       setError(null)
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.user.getCredits.queryOptions().queryKey,
+      })
     },
     onError: (error: Error) => {
       setError(error.message)
