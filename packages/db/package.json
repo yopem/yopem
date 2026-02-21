@@ -1,0 +1,38 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./schema": {
+      "types": "./src/schema/index.ts",
+      "default": "./src/schema/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "bun run src/seed.ts"
+  },
+  "dependencies": {
+    "@repo/env": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "catalog:drizzle",
+    "drizzle-zod": "catalog:drizzle",
+    "pg": "catalog:drizzle",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:drizzle",
+    "@yopem/typescript-config": "catalog:",
+    "drizzle-kit": "catalog:drizzle",
+    "typescript": "catalog:"
+  }
+}

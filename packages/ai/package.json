@@ -1,0 +1,29 @@
+{
+  "name": "@repo/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./executor": {
+      "types": "./src/executor.ts",
+      "default": "./src/executor.ts"
+    },
+    "./providers": {
+      "types": "./src/providers/base.ts",
+      "default": "./src/providers/base.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "catalog:ai",
+    "@ai-sdk/openai-compatible": "catalog:ai",
+    "@repo/storage": "workspace:*",
+    "ai": "catalog:ai"
+  },
+  "devDependencies": {
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}

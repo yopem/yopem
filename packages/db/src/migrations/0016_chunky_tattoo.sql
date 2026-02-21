@@ -1,0 +1,1 @@
+ALTER TABLE "polar_payments" ADD COLUMN "refunded_amount" numeric(10, 2) DEFAULT '0.00' NOT NULL;

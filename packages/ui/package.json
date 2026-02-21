@@ -1,0 +1,141 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./lib/utils": {
+      "types": "./src/lib/utils.ts",
+      "default": "./src/lib/utils.ts"
+    },
+    "./alert-dialog": {
+      "types": "./src/components/alert-dialog.tsx",
+      "default": "./src/components/alert-dialog.tsx"
+    },
+    "./badge": {
+      "types": "./src/components/badge.tsx",
+      "default": "./src/components/badge.tsx"
+    },
+    "./button": {
+      "types": "./src/components/button.tsx",
+      "default": "./src/components/button.tsx"
+    },
+    "./card": {
+      "types": "./src/components/card.tsx",
+      "default": "./src/components/card.tsx"
+    },
+    "./checkbox": {
+      "types": "./src/components/checkbox.tsx",
+      "default": "./src/components/checkbox.tsx"
+    },
+    "./combobox": {
+      "types": "./src/components/combobox.tsx",
+      "default": "./src/components/combobox.tsx"
+    },
+    "./dialog": {
+      "types": "./src/components/dialog.tsx",
+      "default": "./src/components/dialog.tsx"
+    },
+    "./empty": {
+      "types": "./src/components/empty.tsx",
+      "default": "./src/components/empty.tsx"
+    },
+    "./field": {
+      "types": "./src/components/field.tsx",
+      "default": "./src/components/field.tsx"
+    },
+    "./input": {
+      "types": "./src/components/input.tsx",
+      "default": "./src/components/input.tsx"
+    },
+    "./label": {
+      "types": "./src/components/label.tsx",
+      "default": "./src/components/label.tsx"
+    },
+    "./menu": {
+      "types": "./src/components/menu.tsx",
+      "default": "./src/components/menu.tsx"
+    },
+    "./progress": {
+      "types": "./src/components/progress.tsx",
+      "default": "./src/components/progress.tsx"
+    },
+    "./scroll-area": {
+      "types": "./src/components/scroll-area.tsx",
+      "default": "./src/components/scroll-area.tsx"
+    },
+    "./select": {
+      "types": "./src/components/select.tsx",
+      "default": "./src/components/select.tsx"
+    },
+    "./separator": {
+      "types": "./src/components/separator.tsx",
+      "default": "./src/components/separator.tsx"
+    },
+    "./sheet": {
+      "types": "./src/components/sheet.tsx",
+      "default": "./src/components/sheet.tsx"
+    },
+    "./sidebar": {
+      "types": "./src/components/sidebar.tsx",
+      "default": "./src/components/sidebar.tsx"
+    },
+    "./skeleton": {
+      "types": "./src/components/skeleton.tsx",
+      "default": "./src/components/skeleton.tsx"
+    },
+    "./slider": {
+      "types": "./src/components/slider.tsx",
+      "default": "./src/components/slider.tsx"
+    },
+    "./switch": {
+      "types": "./src/components/switch.tsx",
+      "default": "./src/components/switch.tsx"
+    },
+    "./table": {
+      "types": "./src/components/table.tsx",
+      "default": "./src/components/table.tsx"
+    },
+    "./tabs": {
+      "types": "./src/components/tabs.tsx",
+      "default": "./src/components/tabs.tsx"
+    },
+    "./textarea": {
+      "types": "./src/components/textarea.tsx",
+      "default": "./src/components/textarea.tsx"
+    },
+    "./toast": {
+      "types": "./src/components/toast.tsx",
+      "default": "./src/components/toast.tsx"
+    },
+    "./toggle": {
+      "types": "./src/components/toggle.tsx",
+      "default": "./src/components/toggle.tsx"
+    },
+    "./tooltip": {
+      "types": "./src/components/tooltip.tsx",
+      "default": "./src/components/tooltip.tsx"
+    },
+    "./hooks/use-mobile": {
+      "types": "./src/hooks/use-mobile.ts",
+      "default": "./src/hooks/use-mobile.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.2.0",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@repo/payments",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./auto-topup": {
+      "types": "./src/auto-topup.ts",
+      "default": "./src/auto-topup.ts"
+    },
+    "./credit-calculation": {
+      "types": "./src/credit-calculation.ts",
+      "default": "./src/credit-calculation.ts"
+    },
+    "./grant-credits": {
+      "types": "./src/grant-credits.ts",
+      "default": "./src/grant-credits.ts"
+    },
+    "./refund-credits": {
+      "types": "./src/refund-credits.ts",
+      "default": "./src/refund-credits.ts"
+    },
+    "./webhook-metrics": {
+      "types": "./src/webhook-metrics.ts",
+      "default": "./src/webhook-metrics.ts"
+    },
+    "./webhook-monitor": {
+      "types": "./src/webhook-monitor.ts",
+      "default": "./src/webhook-monitor.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@polar-sh/sdk": "catalog:",
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "catalog:drizzle",
+    "ioredis": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}

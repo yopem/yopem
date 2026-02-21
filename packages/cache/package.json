@@ -1,0 +1,28 @@
+{
+  "name": "@repo/cache",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/env": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "ioredis": "catalog:"
+  },
+  "devDependencies": {
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}

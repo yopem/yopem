@@ -1,0 +1,62 @@
+{
+  "name": "@repo/utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./custom-id": {
+      "types": "./src/custom-id.ts",
+      "default": "./src/custom-id.ts"
+    },
+    "./format-date": {
+      "types": "./src/format-date.ts",
+      "default": "./src/format-date.ts"
+    },
+    "./crypto": {
+      "types": "./src/crypto.ts",
+      "default": "./src/crypto.ts"
+    },
+    "./slug": {
+      "types": "./src/slug.ts",
+      "default": "./src/slug.ts"
+    },
+    "./rate-limit": {
+      "types": "./src/rate-limit.ts",
+      "default": "./src/rate-limit.ts"
+    },
+    "./model-provider-validation": {
+      "types": "./src/model-provider-validation.ts",
+      "default": "./src/model-provider-validation.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/logger": "workspace:*",
+    "dayjs": "catalog:",
+    "nanoid": "catalog:",
+    "transliteration": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "ioredis": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@repo/db": {
+      "optional": true
+    },
+    "@repo/env": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    }
+  }
+}

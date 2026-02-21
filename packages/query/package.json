@@ -1,0 +1,38 @@
+{
+  "name": "@repo/query",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": {
+      "types": "./src/client.tsx",
+      "default": "./src/client.tsx"
+    },
+    "./hydration": {
+      "types": "./src/hydration.tsx",
+      "default": "./src/hydration.tsx"
+    },
+    "./provider": {
+      "types": "./src/provider.tsx",
+      "default": "./src/provider.tsx"
+    },
+    "./serializer": {
+      "types": "./src/serializer.tsx",
+      "default": "./src/serializer.tsx"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orpc/client": "catalog:orpc",
+    "@tanstack/react-query": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}

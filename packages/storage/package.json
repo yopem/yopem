@@ -1,0 +1,25 @@
+{
+  "name": "@repo/storage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/r2.ts",
+      "default": "./src/r2.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@repo/env": "workspace:*",
+    "nanoid": "catalog:",
+    "transliteration": "catalog:"
+  },
+  "devDependencies": {
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  }
+}
