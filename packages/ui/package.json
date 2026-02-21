@@ -119,6 +119,18 @@
     "./hooks/use-mobile": {
       "types": "./src/hooks/use-mobile.ts",
       "default": "./src/hooks/use-mobile.ts"
+    },
+    "./logo": {
+      "types": "./src/components/logo.tsx",
+      "default": "./src/components/logo.tsx"
+    },
+    "./theme-provider": {
+      "types": "./src/components/theme-provider.tsx",
+      "default": "./src/components/theme-provider.tsx"
+    },
+    "./theme-switcher": {
+      "types": "./src/components/theme-switcher.tsx",
+      "default": "./src/components/theme-switcher.tsx"
     }
   },
   "scripts": {
@@ -129,6 +141,7 @@
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
+    "next-themes": "catalog:",
     "react": "catalog:",
     "tailwind-merge": "catalog:"
   },
