@@ -1,6 +1,5 @@
 FROM oven/bun:alpine AS base
 RUN apk add --no-cache libc6-compat
-RUN apk update
 
 FROM base AS pruner
 WORKDIR /app

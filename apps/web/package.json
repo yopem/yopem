@@ -11,8 +11,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/client": "catalog:orpc",
-    "@orpc/tanstack-query": "catalog:orpc",
     "@polar-sh/nextjs": "catalog:",
     "@polar-sh/sdk": "catalog:",
     "@repo/api": "workspace:*",
@@ -27,15 +25,10 @@
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",
     "@tanstack/react-query": "catalog:",
-    "@tanstack/react-query-devtools": "catalog:",
-    "dayjs": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
-    "next-themes": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "superjson": "catalog:",
-    "zod": "catalog:"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
