@@ -47,6 +47,7 @@ export const env = createEnv({
 
     NEXT_PUBLIC_SITE_DESCRIPTION: z.string().min(1),
     NEXT_PUBLIC_SITE_DOMAIN: z.string().min(1),
+    NEXT_PUBLIC_ADMIN_URL: z.string().min(1).optional(),
     NEXT_PUBLIC_SITE_TAGLINE: z.string().min(1),
     NEXT_PUBLIC_SITE_TITLE: z.string().min(1),
     NEXT_PUBLIC_SITE_URL: z.string().min(1),
@@ -73,6 +74,7 @@ export const env = createEnv({
 
     NEXT_PUBLIC_SITE_DESCRIPTION: process.env["NEXT_PUBLIC_SITE_DESCRIPTION"],
     NEXT_PUBLIC_SITE_DOMAIN: process.env["NEXT_PUBLIC_SITE_DOMAIN"],
+    NEXT_PUBLIC_ADMIN_URL: process.env["NEXT_PUBLIC_ADMIN_URL"],
     NEXT_PUBLIC_SITE_TAGLINE: process.env["NEXT_PUBLIC_SITE_TAGLINE"],
     NEXT_PUBLIC_SITE_TITLE: process.env["NEXT_PUBLIC_SITE_TITLE"],
     NEXT_PUBLIC_SITE_URL: `${getProtocol()}${process.env["NEXT_PUBLIC_SITE_DOMAIN"]}`,

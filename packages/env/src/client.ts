@@ -13,6 +13,7 @@ export const logoOgHeight = env.NEXT_PUBLIC_LOGO_OG_HEIGHT
 
 export const siteDescription = env.NEXT_PUBLIC_SITE_DESCRIPTION
 export const siteDomain = env.NEXT_PUBLIC_SITE_DOMAIN
+export const adminUrl = env.NEXT_PUBLIC_ADMIN_URL
 export const siteTagline = env.NEXT_PUBLIC_SITE_TAGLINE
 export const siteTitle = env.NEXT_PUBLIC_SITE_TITLE
 export const siteUrl = env.NEXT_PUBLIC_SITE_URL
