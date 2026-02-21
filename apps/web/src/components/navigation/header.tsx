@@ -1,9 +1,10 @@
 import { login } from "@repo/auth/login"
 import { auth } from "@repo/auth/session"
+import { adminUrl } from "@repo/env/client"
 import { Button } from "@repo/ui/button"
+import Logo from "@repo/ui/logo"
 
 import Link from "@/components/link"
-import Logo from "@/components/logo"
 
 const Header = async () => {
   const session = await auth()
@@ -38,13 +39,13 @@ const Header = async () => {
               Dashboard
             </Link>
           )}
-          {session && session.role === "admin" && (
-            <Link
+          {session && session.role === "admin" && adminUrl && (
+            <a
               className="text-muted-foreground hover:text-foreground/80 transition-colors"
-              href="/dashboard/admin"
+              href={adminUrl}
             >
               Admin
-            </Link>
+            </a>
           )}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">

@@ -11,7 +11,7 @@ import { useRef, useState } from "react"
 
 import ToolInputField, {
   type ToolInputVariable,
-} from "@/components/admin/tools/tool-input-field"
+} from "@/components/tools/tool-input-field"
 
 interface ExecutionResult {
   runId: string

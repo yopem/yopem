@@ -6,9 +6,8 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@repo/ui/sidebar"
+import ThemeSwitcher from "@repo/ui/theme-switcher"
 import { type ReactNode } from "react"
-
-import ThemeSwitcher from "@/components/theme/theme-switcher"
 
 import UserSidebarFooter from "./user-sidebar-footer"
 import UserSidebarHeader from "./user-sidebar-header"

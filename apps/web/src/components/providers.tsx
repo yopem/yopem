@@ -1,10 +1,9 @@
 "use client"
 
 import { QueryProvider } from "@repo/query/provider"
+import ThemeProvider from "@repo/ui/theme-provider"
 import { AnchoredToastProvider, ToastProvider } from "@repo/ui/toast"
 import type { ReactNode } from "react"
-
-import ThemeProvider from "@/components/theme/theme-provider"
 
 const Providers = ({ children }: { children: ReactNode }) => {
   return (

@@ -10,8 +10,8 @@ import { notFound } from "next/navigation"
 import { connection } from "next/server"
 import { cache, Suspense } from "react"
 
-import { type ToolInputVariable } from "@/components/admin/tools/tool-input-field"
 import Link from "@/components/link"
+import { type ToolInputVariable } from "@/components/tools/tool-input-field"
 
 import ToolExecuteForm from "./execute-form"
 import ToolInfo from "./tool-info"
