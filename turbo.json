@@ -1,0 +1,69 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env"],
+  "globalEnv": [
+    "APP_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "REDIS_KEY_PREFIX",
+    "AUTH_ISSUER",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_SITE_DOMAIN",
+    "NEXT_PUBLIC_SITE_TITLE",
+    "NEXT_PUBLIC_SITE_DESCRIPTION",
+    "NEXT_PUBLIC_SITE_TAGLINE",
+    "NEXT_PUBLIC_SUPPORT_EMAIL",
+    "NEXT_PUBLIC_LOGO_URL",
+    "NEXT_PUBLIC_LOGO_OG_URL",
+    "NEXT_PUBLIC_LOGO_OG_WIDTH",
+    "NEXT_PUBLIC_LOGO_OG_HEIGHT",
+    "NEXT_PUBLIC_GA_MEASUREMENT_ID",
+    "NEXT_PUBLIC_UMAMI_TRACKING_ID",
+    "NEXT_PUBLIC_FACEBOOK_USERNAME",
+    "NEXT_PUBLIC_INSTAGRAM_USERNAME",
+    "NEXT_PUBLIC_TIKTOK_USERNAME",
+    "NEXT_PUBLIC_WHATSAPP_CHANNEL_USERNAME",
+    "NEXT_PUBLIC_X_USERNAME",
+    "NEXT_PUBLIC_YOUTUBE_USERNAME"
+  ],
+  "globalPassThroughEnv": [
+    "POLAR_ACCESS_TOKEN",
+    "POLAR_WEBHOOK_SECRET",
+    "POLAR_PRODUCT_ID",
+    "API_KEY_ENCRYPTION_SECRET",
+    "CF_ACCOUNT_ID",
+    "R2_ACCESS_KEY",
+    "R2_SECRET_KEY",
+    "R2_BUCKET",
+    "R2_DOMAIN",
+    "R2_REGION"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "persistent": true,
+      "cache": false
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "format:check": {},
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
