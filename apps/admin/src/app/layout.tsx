@@ -1,4 +1,4 @@
-import "@/styles/globals.css"
+import "@repo/ui/styles/globals.css"
 
 import { siteTitle } from "@repo/env/client"
 import { Skeleton } from "@repo/ui/skeleton"

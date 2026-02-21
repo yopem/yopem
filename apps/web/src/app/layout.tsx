@@ -1,4 +1,4 @@
-import "@/styles/globals.css"
+import "@repo/ui/styles/globals.css"
 
 import {
   logoOgHeight,
