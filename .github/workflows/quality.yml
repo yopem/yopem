@@ -19,6 +19,13 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
+      - name: Cache turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-lint-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-lint-${{ runner.os }}-
+
       - name: Run lint
         run: bun run lint
 
@@ -32,7 +39,7 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
-      - name: Run lint
+      - name: Run format check
         run: bun run format:check
 
   typecheck:
@@ -44,6 +51,13 @@ jobs:
 
       - name: Install
         uses: ./.github/composite-actions/install
+
+      - name: Cache turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-typecheck-${{ runner.os }}-
 
       - name: Run typecheck
         run: bun run typecheck

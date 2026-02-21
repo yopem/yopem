@@ -2,30 +2,62 @@ FROM oven/bun:alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN apk update
 
-# Install dependencies only when needed
+FROM base AS pruner
+WORKDIR /app
+RUN bun add -g turbo@^2
+COPY . .
+RUN turbo prune @repo/web --docker
+
 FROM base AS deps
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY --from=pruner /app/out/json/ .
 RUN bun install --frozen-lockfile
 
-# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN bun run build
+COPY --from=deps /app/ .
+COPY --from=pruner /app/out/full/ .
 
-# Production image, copy all the files and run the app
+ENV CI=true
+ENV NEXT_TELEMETRY_DISABLED=1
+
+ARG NEXT_PUBLIC_SITE_DOMAIN
+ARG NEXT_PUBLIC_SITE_TITLE
+ARG NEXT_PUBLIC_SITE_DESCRIPTION
+ARG NEXT_PUBLIC_SITE_TAGLINE
+ARG NEXT_PUBLIC_SUPPORT_EMAIL
+ARG NEXT_PUBLIC_LOGO_URL
+ARG NEXT_PUBLIC_LOGO_OG_URL
+ARG NEXT_PUBLIC_LOGO_OG_WIDTH
+ARG NEXT_PUBLIC_LOGO_OG_HEIGHT
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
+ARG NEXT_PUBLIC_UMAMI_TRACKING_ID
+ARG NEXT_PUBLIC_FACEBOOK_USERNAME
+ARG NEXT_PUBLIC_INSTAGRAM_USERNAME
+ARG NEXT_PUBLIC_TIKTOK_USERNAME
+ARG NEXT_PUBLIC_WHATSAPP_CHANNEL_USERNAME
+ARG NEXT_PUBLIC_X_USERNAME
+ARG NEXT_PUBLIC_YOUTUBE_USERNAME
+
+RUN bun x turbo run build --filter=@repo/web
+
 FROM base AS runner
 WORKDIR /app
 
-ENV APP_ENV production
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
+USER nextjs
 
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "apps/web/server.js"]
