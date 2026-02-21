@@ -1,0 +1,59 @@
+"use client"
+
+import { logger } from "@repo/logger"
+import { Button } from "@repo/ui/button"
+import { AlertTriangleIcon, RefreshCwIcon } from "lucide-react"
+import { useEffect } from "react"
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  useEffect(() => {
+    logger.error(`Global error: ${error}`)
+  }, [error])
+
+  return (
+    <html lang="en">
+      <body>
+        <div className="flex min-h-screen items-center justify-center px-4">
+          <div className="w-full max-w-md text-center">
+            <div className="mb-8">
+              <div className="bg-destructive/10 text-destructive mx-auto mb-6 flex size-16 items-center justify-center rounded-full">
+                <AlertTriangleIcon className="size-8" />
+              </div>
+              <h1 className="mb-4 text-3xl font-bold tracking-tight">
+                Something went wrong
+              </h1>
+              <p className="text-muted-foreground mb-2 text-sm">
+                An unexpected error occurred. We've been notified and are
+                working to fix it.
+              </p>
+              {error.digest && (
+                <p className="text-muted-foreground mt-4 font-mono text-xs">
+                  Error ID: {error.digest}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button onClick={() => reset()} size="lg">
+                <RefreshCwIcon className="size-4" />
+                Try again
+              </Button>
+              <Button
+                onClick={() => (window.location.href = "/")}
+                variant="outline"
+                size="lg"
+              >
+                Go home
+              </Button>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  )
+}
