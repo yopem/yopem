@@ -1,9 +1,13 @@
-# pre-commit:
-#   commands:
-#     quality:
-#       run: bun run fix && bun run check
+pre-commit:
+  commands:
+    quality:
+      run: bun run fix && bun run check
 
 pre-push:
   commands:
-    quality:
-      run: bun run check
+    lint:
+      run: bun x turbo run lint
+    typecheck:
+      run: bun x turbo run typecheck
+    format:
+      run: bun run format:check

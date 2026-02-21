@@ -174,9 +174,17 @@
   },
   "settings": {
     "better-tailwindcss": {
-      "entryPoint": "./src/styles/globals.css"
+      "entryPoint": "./apps/web/src/styles/globals.css"
     }
   },
+  "overrides": [
+    {
+      "files": ["packages/**/*.ts", "packages/**/*.tsx"],
+      "rules": {
+        "import/no-relative-parent-imports": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "**/node_modules",
     "**/.pnp",
