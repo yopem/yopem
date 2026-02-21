@@ -24,25 +24,13 @@ export class OpenAIProvider implements AIProvider {
     this.model = config.model
   }
 
-  private isReasoningModel(): boolean {
-    const m = this.model.toLowerCase()
-    return (
-      m.startsWith("o1") ||
-      m.startsWith("o3") ||
-      m.startsWith("o4") ||
-      m.startsWith("gpt-5")
-    )
-  }
-
   async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
     try {
       const result = await generateText({
         model: this.provider(this.model),
         system: request.systemRole,
         prompt: request.userInstruction,
-        ...(this.isReasoningModel()
-          ? {}
-          : { temperature: request.temperature }),
+        maxOutputTokens: request.maxOutputTokens,
       })
 
       return {

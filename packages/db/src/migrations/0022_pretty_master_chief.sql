@@ -1,0 +1,2 @@
+CREATE INDEX "idx_tool_runs_created_at" ON "tool_runs" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "idx_tool_runs_user_id_created_at" ON "tool_runs" USING btree ("user_id","created_at");

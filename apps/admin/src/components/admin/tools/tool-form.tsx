@@ -196,8 +196,6 @@ const ToolForm = ({
       <form.Subscribe
         selector={(state) => ({
           modelEngine: state.values.modelEngine,
-          temperature: state.values.temperature,
-          maxTokens: state.values.maxTokens,
           outputFormat: state.values.outputFormat,
           costPerRun: state.values.costPerRun,
           markup: state.values.markup,
@@ -210,8 +208,6 @@ const ToolForm = ({
       >
         {({
           modelEngine,
-          temperature,
-          maxTokens,
           outputFormat,
           costPerRun,
           markup,
@@ -224,8 +220,6 @@ const ToolForm = ({
           <ConfigurationPanel
             config={{
               modelEngine,
-              temperature,
-              maxTokens,
               outputFormat,
               costPerRun,
               markup,
@@ -242,10 +236,6 @@ const ToolForm = ({
             handlers={{
               onModelEngineChange: (value) =>
                 form.setFieldValue("modelEngine", value),
-              onTemperatureChange: (value) =>
-                form.setFieldValue("temperature", value),
-              onMaxTokensChange: (value) =>
-                form.setFieldValue("maxTokens", value),
               onOutputFormatChange: (value) =>
                 form.setFieldValue("outputFormat", value),
               onCostPerRunChange: (value) =>

@@ -82,8 +82,6 @@ function EditToolPage() {
         inputVariable: formData.inputVariable,
         config: formData.config as {
           modelEngine: string
-          temperature: number
-          maxTokens: number
         },
         outputFormat: formData.outputFormat ?? "plain",
         inputs,

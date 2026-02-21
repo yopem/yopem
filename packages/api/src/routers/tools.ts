@@ -480,8 +480,6 @@ export const toolsRouter = {
 
       const toolConfig = tool.config as {
         modelEngine: string
-        temperature: number
-        maxTokens: number
       } | null
 
       if (toolConfig === null) {
@@ -607,8 +605,6 @@ export const toolsRouter = {
         inputs: z.record(z.string(), z.string()),
         config: z.object({
           modelEngine: z.string(),
-          temperature: z.number(),
-          maxTokens: z.number(),
         }),
         outputFormat: z.enum(["plain", "json", "image", "video"]),
         apiKeyId: z.string(),

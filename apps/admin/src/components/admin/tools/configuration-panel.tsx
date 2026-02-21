@@ -14,14 +14,11 @@ import ApiKeySelector from "./api-key-selector"
 import CategorySelector, { type Category } from "./category-selector"
 import ModelSelect from "./model-select"
 import PricingSection from "./pricing-section"
-import RangeSlider from "./range-slider"
 import TagSelector, { type Tag } from "./tag-selector"
 import ThumbnailSelector from "./thumbnail-selector"
 
 interface ConfigValues {
   modelEngine: string
-  temperature: number
-  maxTokens: number
   outputFormat: "plain" | "json" | "image" | "video"
   costPerRun: number
   markup: number
@@ -38,8 +35,6 @@ interface ConfigValues {
 
 interface ConfigHandlers {
   onModelEngineChange: (value: string) => void
-  onTemperatureChange: (value: number) => void
-  onMaxTokensChange: (value: number) => void
   onOutputFormatChange: (value: "plain" | "json" | "image" | "video") => void
   onCostPerRunChange: (value: number) => void
   onMarkupChange: (value: number) => void
@@ -59,8 +54,6 @@ interface ConfigurationPanelProps {
 const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
   const {
     modelEngine,
-    temperature,
-    maxTokens,
     outputFormat,
     costPerRun,
     markup,
@@ -76,8 +69,6 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
 
   const {
     onModelEngineChange,
-    onTemperatureChange,
-    onMaxTokensChange,
     onOutputFormatChange,
     onCostPerRunChange,
     onMarkupChange,
@@ -142,26 +133,6 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
             options={modelOptions}
           />
         </div>
-
-        <RangeSlider
-          label="Temperature"
-          value={temperature}
-          min={0}
-          max={1}
-          step={0.1}
-          onChange={onTemperatureChange}
-          formatValue={(v) => v.toFixed(1)}
-        />
-
-        <RangeSlider
-          label="Max Tokens"
-          value={maxTokens}
-          min={256}
-          max={4096}
-          step={256}
-          onChange={onMaxTokensChange}
-          formatValue={(v) => v.toString()}
-        />
       </div>
 
       <div className="bg-border h-px w-full" />

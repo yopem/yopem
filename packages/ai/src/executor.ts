@@ -11,8 +11,6 @@ interface ExecuteAIToolParams {
   inputs: Record<string, unknown>
   config: {
     modelEngine: string
-    temperature: number
-    maxTokens: number
   }
   outputFormat: "plain" | "json" | "image" | "video"
   apiKey: string
@@ -53,6 +51,11 @@ export async function executeAITool(
     params.inputs,
   )
 
+  const maxOutputTokens = Math.min(
+    4096,
+    Math.max(512, Math.ceil((systemRole.length + userInstruction.length) / 4)),
+  )
+
   const provider = getProviderInstance(
     params.provider,
     params.apiKey,
@@ -63,8 +66,7 @@ export async function executeAITool(
     const response = await provider.execute({
       systemRole,
       userInstruction,
-      temperature: params.config.temperature,
-      maxTokens: params.config.maxTokens,
+      maxOutputTokens,
       outputFormat: params.outputFormat,
     })
 

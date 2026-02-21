@@ -198,8 +198,6 @@ async function seedTools() {
       markup: "0.2000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -231,8 +229,6 @@ async function seedTools() {
       markup: "0.2500",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.5,
-        maxTokens: 2048,
       },
       isPublic: true,
       apiKeyId: null,
@@ -264,8 +260,6 @@ async function seedTools() {
       markup: "0.2000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.3,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -302,8 +296,6 @@ async function seedTools() {
       markup: "0.2000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -345,8 +337,6 @@ async function seedTools() {
       markup: "0.2000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -378,8 +368,6 @@ async function seedTools() {
       markup: "0.3000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -411,8 +399,6 @@ async function seedTools() {
       markup: "0.3000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 2048,
       },
       isPublic: true,
       apiKeyId: null,
@@ -449,8 +435,6 @@ async function seedTools() {
       markup: "0.2500",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.5,
-        maxTokens: 1536,
       },
       isPublic: true,
       apiKeyId: null,
@@ -504,8 +488,6 @@ async function seedTools() {
       markup: "0.4000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.8,
-        maxTokens: 1024,
       },
       isPublic: true,
       apiKeyId: null,
@@ -552,8 +534,6 @@ async function seedTools() {
       markup: "0.5000",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 2048,
       },
       isPublic: true,
       categoryId: null,
@@ -620,8 +600,6 @@ async function seedTools() {
       markup: "0.3500",
       config: {
         modelEngine: "gpt-4-0613",
-        temperature: 0.7,
-        maxTokens: 3072,
       },
       isPublic: true,
       categoryId: null,

@@ -25,27 +25,13 @@ export class OpenRouterProvider implements AIProvider {
     this.model = config.model
   }
 
-  private isReasoningModel(): boolean {
-    const m = this.model.toLowerCase()
-    return (
-      m.startsWith("o1") ||
-      m.startsWith("o3") ||
-      m.startsWith("o4") ||
-      m.includes("/o1") ||
-      m.includes("/o3") ||
-      m.includes("/o4")
-    )
-  }
-
   async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
     try {
       const result = await generateText({
         model: this.provider(this.model),
         system: request.systemRole,
         prompt: request.userInstruction,
-        ...(this.isReasoningModel()
-          ? {}
-          : { temperature: request.temperature }),
+        maxOutputTokens: request.maxOutputTokens,
       })
 
       return {

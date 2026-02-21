@@ -278,8 +278,6 @@ const useToolForm = ({
       systemRole: "",
       userInstructionTemplate: "",
       modelEngine: "",
-      temperature: 0.7,
-      maxTokens: 2048,
       outputFormat: "plain" as "plain" | "json" | "image" | "video",
       costPerRun: mode === "create" ? 0 : 0.05,
       markup: 0.2,
@@ -309,8 +307,6 @@ const useToolForm = ({
         costPerRun: String(value.costPerRun),
         config: {
           modelEngine: value.modelEngine,
-          temperature: value.temperature,
-          maxTokens: value.maxTokens,
         },
         status: "draft" as const,
         apiKeyId: value.apiKeyId,
@@ -358,8 +354,6 @@ const useToolForm = ({
       costPerRun: String(formData.costPerRun),
       config: {
         modelEngine: formData.modelEngine,
-        temperature: formData.temperature,
-        maxTokens: formData.maxTokens,
       },
       status: "draft" as const,
       apiKeyId: formData.apiKeyId,
@@ -417,15 +411,9 @@ const useToolForm = ({
       if (initialData.config && typeof initialData.config === "object") {
         const config = initialData.config as {
           modelEngine?: string
-          temperature?: number
-          maxTokens?: number
         }
         if (config.modelEngine)
           form.setFieldValue("modelEngine", config.modelEngine)
-        if (config.temperature !== undefined)
-          form.setFieldValue("temperature", config.temperature)
-        if (config.maxTokens !== undefined)
-          form.setFieldValue("maxTokens", config.maxTokens)
       }
 
       if (initialData.outputFormat) {

@@ -3,8 +3,7 @@ export type ApiKeyProvider = "openai" | "openrouter"
 export interface ExecutionRequest {
   systemRole: string
   userInstruction: string
-  temperature: number
-  maxTokens: number
+  maxOutputTokens: number
   outputFormat: "plain" | "json" | "image" | "video"
 }
 
