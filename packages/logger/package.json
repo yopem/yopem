@@ -20,9 +20,12 @@
     "pino": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@yopem/typescript-config": "catalog:",
+    "@types/node": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
     "pino-pretty": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:tooling"
   }
 }

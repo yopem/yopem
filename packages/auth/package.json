@@ -43,9 +43,13 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "catalog:tooling",
     "@types/react": "catalog:",
-    "@yopem/typescript-config": "catalog:",
-    "typescript": "catalog:"
+    "@yopem/typescript-config": "catalog:tooling",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "typescript": "catalog:tooling"
   },
   "peerDependencies": {
     "next": "catalog:",

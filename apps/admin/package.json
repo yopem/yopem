@@ -35,14 +35,17 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
-    "@types/node": "catalog:",
+    "@types/node": "catalog:tooling",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@yopem/typescript-config": "catalog:",
+    "@yopem/typescript-config": "catalog:tooling",
     "babel-plugin-react-compiler": "catalog:",
     "dotenv-cli": "catalog:",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:tooling"
   }
 }

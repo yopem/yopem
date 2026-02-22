@@ -35,9 +35,13 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "catalog:tooling",
     "@types/pg": "catalog:drizzle",
-    "@yopem/typescript-config": "catalog:",
+    "@yopem/typescript-config": "catalog:tooling",
     "drizzle-kit": "catalog:drizzle",
-    "typescript": "catalog:"
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "typescript": "catalog:tooling"
   }
 }

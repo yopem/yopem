@@ -24,8 +24,12 @@
     "transliteration": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "catalog:tooling",
     "@types/sharp": "^0.31.1",
-    "@yopem/typescript-config": "catalog:",
-    "typescript": "catalog:"
+    "@yopem/typescript-config": "catalog:tooling",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "typescript": "catalog:tooling"
   }
 }

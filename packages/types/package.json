@@ -17,7 +17,11 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@yopem/typescript-config": "catalog:",
-    "typescript": "catalog:"
+    "@types/node": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "typescript": "catalog:tooling"
   }
 }

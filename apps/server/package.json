@@ -30,9 +30,12 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@yopem/typescript-config": "catalog:",
+    "@types/node": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
     "dotenv-cli": "catalog:",
-    "typescript": "catalog:"
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "typescript": "catalog:tooling"
   }
 }
