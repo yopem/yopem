@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { adminSettingsTable, assetsTable } from "@repo/db/schema"
-import { r2Domain } from "@repo/env/server"
+import { r2Domain } from "@repo/env/hono"
 import { getR2Storage } from "@repo/storage"
 import { and, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"

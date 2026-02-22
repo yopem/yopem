@@ -1,4 +1,4 @@
-import { appEnv, databaseUrl } from "@repo/env/server"
+import { appEnv, databaseUrl } from "@repo/env/hono"
 import { logger } from "@repo/logger"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"

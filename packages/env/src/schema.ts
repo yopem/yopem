@@ -56,6 +56,7 @@ export const honoServerSchema = {
   ...sharedSchema,
   ...serverSchema,
   NEXT_PUBLIC_API_URL: z.string().min(1),
+  NEXT_PUBLIC_SITE_DOMAIN: z.string().min(1).optional(),
   WEB_ORIGIN: z.string().min(1).optional(),
   ADMIN_ORIGIN: z.string().min(1).optional(),
   SERVER_PORT: z.coerce.number().default(4000),

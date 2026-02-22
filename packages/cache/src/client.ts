@@ -1,4 +1,4 @@
-import { redisKeyPrefix, redisUrl } from "@repo/env/server"
+import { redisKeyPrefix, redisUrl } from "@repo/env/hono"
 import { logger } from "@repo/logger"
 import type { Redis } from "ioredis"
 

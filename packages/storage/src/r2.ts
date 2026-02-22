@@ -10,7 +10,7 @@ import {
   r2Bucket,
   r2Domain,
   r2SecretKey,
-} from "@repo/env/server"
+} from "@repo/env/hono"
 import { logger } from "@repo/logger"
 import { nanoid } from "nanoid"
 import sharp from "sharp"

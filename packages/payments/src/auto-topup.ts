@@ -1,8 +1,12 @@
 import { Polar } from "@polar-sh/sdk"
 import { db } from "@repo/db"
 import { userCreditsTable, userSettingsTable } from "@repo/db/schema"
-import { siteDomain } from "@repo/env/client"
-import { appEnv, polarAccessToken, polarProductId } from "@repo/env/server"
+import {
+  appEnv,
+  polarAccessToken,
+  polarProductId,
+  siteDomain,
+} from "@repo/env/hono"
 import { logger } from "@repo/logger"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
