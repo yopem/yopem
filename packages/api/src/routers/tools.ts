@@ -228,7 +228,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.id, input.id))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all(
@@ -283,7 +283,7 @@ export const toolsRouter = {
       })
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const [categoriesResult, tagsResult, thumbnailResult, ratingResult] =
@@ -729,11 +729,15 @@ export const toolsRouter = {
           .where(eq(assetsTable.id, thumbnailId))
 
         if (!asset) {
-          throw new Error("Thumbnail asset not found")
+          throw new ORPCError("NOT_FOUND", {
+            message: "Thumbnail asset not found",
+          })
         }
 
         if (asset.type !== "images") {
-          throw new Error("Thumbnail must be an image asset")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Thumbnail must be an image asset",
+          })
         }
       }
 
@@ -744,7 +748,9 @@ export const toolsRouter = {
           .where(inArray(categoriesTable.id, categoryIds))
 
         if (existingCategories.length !== categoryIds.length) {
-          throw new Error("One or more category IDs are invalid")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "One or more category IDs are invalid",
+          })
         }
       }
 
@@ -755,7 +761,9 @@ export const toolsRouter = {
           .where(inArray(tagsTable.id, tagIds))
 
         if (existingTags.length !== tagIds.length) {
-          throw new Error("One or more tag IDs are invalid")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "One or more tag IDs are invalid",
+          })
         }
       }
 
@@ -793,7 +801,7 @@ export const toolsRouter = {
     .input(updateToolSchema)
     .handler(async ({ context, input }) => {
       if (!input.id) {
-        throw new Error("Tool ID is required")
+        throw new ORPCError("BAD_REQUEST", { message: "Tool ID is required" })
       }
       const { id, tagIds, categoryIds, thumbnailId, ...data } = input
 
@@ -804,11 +812,15 @@ export const toolsRouter = {
           .where(eq(assetsTable.id, thumbnailId))
 
         if (!asset) {
-          throw new Error("Thumbnail asset not found")
+          throw new ORPCError("NOT_FOUND", {
+            message: "Thumbnail asset not found",
+          })
         }
 
         if (asset.type !== "images") {
-          throw new Error("Thumbnail must be an image asset")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Thumbnail must be an image asset",
+          })
         }
       }
 
@@ -819,7 +831,9 @@ export const toolsRouter = {
           .where(inArray(categoriesTable.id, categoryIds))
 
         if (existingCategories.length !== categoryIds.length) {
-          throw new Error("One or more category IDs are invalid")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "One or more category IDs are invalid",
+          })
         }
       }
 
@@ -830,7 +844,9 @@ export const toolsRouter = {
           .where(inArray(tagsTable.id, tagIds))
 
         if (existingTags.length !== tagIds.length) {
-          throw new Error("One or more tag IDs are invalid")
+          throw new ORPCError("BAD_REQUEST", {
+            message: "One or more tag IDs are invalid",
+          })
         }
       }
 
@@ -905,7 +921,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.id, input.id))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const newId = createCustomId()
@@ -956,7 +972,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.slug, input.slug))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const reviews = await context.db
@@ -1007,7 +1023,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.slug, input.slug))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const [hasUsed] = await context.db
@@ -1022,9 +1038,9 @@ export const toolsRouter = {
         )
 
       if (Number(hasUsed?.count) === 0) {
-        throw new Error(
-          "You must use this tool at least once before reviewing it",
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message: "You must use this tool at least once before reviewing it",
+        })
       }
 
       const existingReview = await context.db
@@ -1082,11 +1098,13 @@ export const toolsRouter = {
         .where(eq(toolReviewsTable.id, input.reviewId))
 
       if (!review) {
-        throw new Error("Review not found")
+        throw new ORPCError("NOT_FOUND", { message: "Review not found" })
       }
 
       if (review.userId !== context.session.id) {
-        throw new Error("You can only update your own reviews")
+        throw new ORPCError("FORBIDDEN", {
+          message: "You can only update your own reviews",
+        })
       }
 
       await context.db
@@ -1110,7 +1128,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.slug, input.slug))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const [review] = await context.db
@@ -1135,7 +1153,7 @@ export const toolsRouter = {
         .where(eq(toolsTable.slug, input.slug))
 
       if (!tool) {
-        throw new Error("Tool not found")
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
       const [result] = await context.db

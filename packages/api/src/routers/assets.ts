@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server"
 import { adminSettingsTable, assetsTable } from "@repo/db/schema"
 import { r2Domain } from "@repo/env/server"
 import { getR2Storage } from "@repo/storage"
@@ -105,7 +106,9 @@ export const assetsRouter = {
       const maxSizeBytes = maxSizeMB * 1024 * 1024
 
       if (file.size > maxSizeBytes) {
-        throw new Error(`File size exceeds ${maxSizeMB}MB limit`)
+        throw new ORPCError("BAD_REQUEST", {
+          message: `File size exceeds ${maxSizeMB}MB limit`,
+        })
       }
 
       const arrayBuffer = await file.arrayBuffer()
@@ -142,7 +145,7 @@ export const assetsRouter = {
         .where(eq(assetsTable.id, input.id))
 
       if (!asset) {
-        throw new Error("Asset not found")
+        throw new ORPCError("NOT_FOUND", { message: "Asset not found" })
       }
 
       // Delete from R2

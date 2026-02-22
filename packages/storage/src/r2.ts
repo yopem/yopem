@@ -11,6 +11,7 @@ import {
   r2Domain,
   r2SecretKey,
 } from "@repo/env/server"
+import { logger } from "@repo/logger"
 import { nanoid } from "nanoid"
 import { transliterate as tr } from "transliteration"
 
@@ -63,13 +64,14 @@ class R2Storage {
 
   async uploadImage(buffer: Buffer, contentType: string): Promise<string> {
     if (buffer.length > MAX_IMAGE_SIZE) {
-      throw new Error(
-        `Image size exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
-      )
+      const message = `Image size exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`
+      logger.error(message)
+      throw new Error(message)
     }
 
     const extension = this.validateImageMagicBytes(buffer)
     if (!extension) {
+      logger.error("Invalid image file type")
       throw new Error("Invalid image file type")
     }
 
@@ -82,13 +84,14 @@ class R2Storage {
 
   async uploadVideo(buffer: Buffer, contentType: string): Promise<string> {
     if (buffer.length > MAX_VIDEO_SIZE) {
-      throw new Error(
-        `Video size exceeds maximum allowed size of ${MAX_VIDEO_SIZE / 1024 / 1024}MB`,
-      )
+      const message = `Video size exceeds maximum allowed size of ${MAX_VIDEO_SIZE / 1024 / 1024}MB`
+      logger.error(message)
+      throw new Error(message)
     }
 
     const extension = this.validateVideoMagicBytes(buffer)
     if (!extension) {
+      logger.error("Invalid video file type")
       throw new Error("Invalid video file type")
     }
 
@@ -165,9 +168,9 @@ class R2Storage {
         return this.uploadWithRetry(buffer, key, contentType, retryCount + 1)
       }
 
-      throw new Error(
-        `Failed to upload to R2 after retry: ${error instanceof Error ? error.message : "Unknown error"}`,
-      )
+      const message = `Failed to upload to R2 after retry: ${error instanceof Error ? error.message : "Unknown error"}`
+      logger.error(message)
+      throw new Error(message)
     }
   }
 
@@ -264,9 +267,9 @@ class R2Storage {
 
       await this.client.send(command)
     } catch (error) {
-      throw new Error(
-        `Failed to delete from R2: ${error instanceof Error ? error.message : "Unknown error"}`,
-      )
+      const message = `Failed to delete from R2: ${error instanceof Error ? error.message : "Unknown error"}`
+      logger.error(message)
+      throw new Error(message)
     }
   }
 }

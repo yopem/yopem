@@ -1,3 +1,4 @@
+import { logger } from "@repo/logger"
 import { getR2Storage } from "@repo/storage"
 
 import type { AIProvider, ExecutionResponse } from "./providers/base"
@@ -118,9 +119,9 @@ export async function executeAITool(
           usage: response.usage,
         }
       } catch (uploadError) {
-        throw new Error(
-          `Failed to upload ${params.outputFormat}: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`,
-        )
+        const message = `Failed to upload ${params.outputFormat}: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`
+        logger.error(message)
+        throw new Error(message)
       }
     }
 
@@ -129,6 +130,7 @@ export async function executeAITool(
     if (error instanceof Error) {
       throw error
     }
+    logger.error("Unknown error during AI execution")
     throw new Error("Unknown error during AI execution")
   }
 }

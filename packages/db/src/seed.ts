@@ -14,7 +14,8 @@ import {
 
 const databaseUrl = env.DATABASE_URL
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable is not set")
+  logger.error("DATABASE_URL environment variable is not set")
+  process.exit(1)
 }
 
 const db = drizzle(databaseUrl)

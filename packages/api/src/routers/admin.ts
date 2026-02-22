@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server"
 import {
   activityLogsTable,
   adminSettingsTable,
@@ -181,14 +182,14 @@ export const adminRouter = {
         .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
 
       if (!settings?.settingValue) {
-        throw new Error("No API keys found")
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
       const existingKeys = settings.settingValue as ApiKeyConfig[]
       const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
 
       if (keyIndex === -1) {
-        throw new Error("API key not found")
+        throw new ORPCError("NOT_FOUND", { message: "API key not found" })
       }
 
       const updatedKey: ApiKeyConfig = {
@@ -236,7 +237,7 @@ export const adminRouter = {
         .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
 
       if (!settings?.settingValue) {
-        throw new Error("No API keys found")
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
       const existingKeys = settings.settingValue as ApiKeyConfig[]

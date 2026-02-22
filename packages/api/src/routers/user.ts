@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -279,9 +280,9 @@ export const userRouter = {
       )
 
       if (isLimited) {
-        throw new Error(
-          `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+        })
       }
 
       const [settings] = await context.db
@@ -348,9 +349,9 @@ export const userRouter = {
       )
 
       if (isLimited) {
-        throw new Error(
-          `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+        })
       }
 
       const [settings] = await context.db
@@ -359,7 +360,7 @@ export const userRouter = {
         .where(eq(userSettingsTable.userId, context.session.id))
 
       if (!settings?.apiKeys) {
-        throw new Error("No API keys found")
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
       try {
@@ -367,7 +368,7 @@ export const userRouter = {
         const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
 
         if (keyIndex === -1) {
-          throw new Error("API key not found")
+          throw new ORPCError("NOT_FOUND", { message: "API key not found" })
         }
 
         const updatedKey: ApiKeyConfig = {
@@ -398,7 +399,9 @@ export const userRouter = {
         }
       } catch (error) {
         logger.error(`Error updating API key: ${String(error)}`)
-        throw new Error("Failed to update API key")
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to update API key",
+        })
       }
     }),
 
@@ -415,9 +418,9 @@ export const userRouter = {
       )
 
       if (isLimited) {
-        throw new Error(
-          `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+        })
       }
 
       const [settings] = await context.db
@@ -426,7 +429,7 @@ export const userRouter = {
         .where(eq(userSettingsTable.userId, context.session.id))
 
       if (!settings?.apiKeys) {
-        throw new Error("No API keys found")
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
       try {
@@ -434,7 +437,7 @@ export const userRouter = {
         const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
 
         if (updatedKeys.length === existingKeys.length) {
-          throw new Error("API key not found")
+          throw new ORPCError("NOT_FOUND", { message: "API key not found" })
         }
 
         await context.db
@@ -448,7 +451,9 @@ export const userRouter = {
         return { success: true, id: input.id }
       } catch (error) {
         logger.error(`Error deleting API key: ${String(error)}`)
-        throw new Error("Failed to delete API key")
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to delete API key",
+        })
       }
     }),
 
@@ -576,21 +581,22 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      // Validate that if enabled, both threshold and amount must be provided
       if (input.enabled && (!input.threshold || !input.amount)) {
-        throw new Error(
-          "Both threshold and amount are required when enabling auto-topup",
-        )
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "Both threshold and amount are required when enabling auto-topup",
+        })
       }
 
-      // Validate that threshold is less than amount
       if (
         input.enabled &&
         input.threshold &&
         input.amount &&
         input.threshold >= input.amount
       ) {
-        throw new Error("Threshold must be less than top-up amount")
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Threshold must be less than top-up amount",
+        })
       }
 
       const [credits] = await context.db
