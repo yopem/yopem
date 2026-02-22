@@ -38,7 +38,7 @@ export async function createRPCContext(opts: {
         })
 
         if (!verified.err) {
-          session = verified.subject.properties as SessionUser
+          session = verified.subject.properties
         }
       } catch (err) {
         logger.error(
@@ -48,7 +48,7 @@ export async function createRPCContext(opts: {
     }
   } else {
     const authResult = await auth()
-    session = authResult ? (authResult as SessionUser) : null
+    session = authResult ? authResult : null
   }
 
   const redis = redisCache
@@ -84,7 +84,7 @@ export const protectedProcedure = publicProcedure.use(({ context, next }) => {
 
   return next({
     context: {
-      session: context.session as SessionUser,
+      session: context.session,
     },
   })
 })

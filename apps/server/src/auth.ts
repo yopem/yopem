@@ -67,7 +67,7 @@ export const authMiddleware: MiddlewareHandler<SessionEnv> = async (
       setTokenCookies(c, verified.tokens.access, verified.tokens.refresh)
     }
 
-    c.set("session", verified.subject.properties as SessionUser)
+    c.set("session", verified.subject.properties)
   } catch (err) {
     logger.error(
       `Auth middleware error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,

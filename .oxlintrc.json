@@ -174,7 +174,9 @@
   },
   "settings": {
     "better-tailwindcss": {
-      "entryPoint": "./apps/web/src/styles/globals.css"
+      "entryPoint": "./apps/admin/src/styles/globals.css",
+      "entryPoint": "./apps/web/src/styles/globals.css",
+      "entryPoint": "./packages/ui/src/styles/globals.css"
     }
   },
   "overrides": [
