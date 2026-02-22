@@ -15,9 +15,9 @@
       "@polar-sh/sdk": "^0.22.0",
       "@t3-oss/env-nextjs": "^0.13.10",
       "@tailwindcss/postcss": "^4.1.18",
+      "@tanstack/react-form": "^1.28.3",
       "@tanstack/react-query": "^5.90.21",
       "@tanstack/react-query-devtools": "^5.91.3",
-      "@types/node": "^25.2.3",
       "@types/react": "19.2.14",
       "@types/react-dom": "19.2.3",
       "@yopem/typescript-config": "^0.2.1",
@@ -41,7 +41,6 @@
       "tailwind-merge": "^3.4.1",
       "tailwindcss": "^4.1.18",
       "transliteration": "^2.6.1",
-      "typescript": "5.9.3",
       "zod": "^4.3.6"
     },
     "catalogs": {
@@ -62,6 +61,14 @@
         "@orpc/experimental-pino": "^1.13.5",
         "@orpc/server": "^1.13.5",
         "@orpc/tanstack-query": "^1.13.5"
+      },
+      "tooling": {
+        "@types/node": "^25.2.3",
+        "@yopem/typescript-config": "^0.2.1",
+        "oxfmt": "^0.32.0",
+        "oxlint": "^1.47.0",
+        "oxlint-tsgolint": "^0.13.0",
+        "typescript": "5.9.3"
       }
     }
   },
@@ -82,17 +89,15 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.9",
-    "@types/node": "^25.2.3",
-    "@yopem/typescript-config": "^0.2.1",
+    "@types/node": "catalog:tooling",
+    "@yopem/typescript-config": "catalog:tooling",
     "dotenv-cli": "catalog:",
-    "eslint-plugin-better-tailwindcss": "^4.3.0",
-    "eslint-plugin-oxfmt": "^0.0.15",
     "lefthook": "^2.1.1",
-    "oxfmt": "^0.32.0",
-    "oxlint": "^1.47.0",
-    "oxlint-tsgolint": "^0.13.0",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
     "turbo": "^2.5.4",
-    "typescript": "5.9.3"
+    "typescript": "catalog:tooling"
   },
   "packageManager": "bun@1.3.9"
 }
