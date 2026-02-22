@@ -22,7 +22,8 @@
     "@repo/logger": "workspace:*",
     "@repo/payments": "workspace:*",
     "@repo/utils": "workspace:*",
-    "hono": "^4.7.11"
+    "hono": "^4.7.11",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "catalog:",
