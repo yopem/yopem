@@ -9,7 +9,7 @@
   "tabWidth": 2,
   "trailingComma": "all",
   "experimentalTailwindcss": {
-    "functions": ["cn", "cva"]
+    "functions": ["cn", "clsx", "cva"]
   },
   "experimentalSortImports": {
     "groups": [

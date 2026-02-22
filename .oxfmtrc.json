@@ -8,9 +8,6 @@
   "singleQuote": false,
   "tabWidth": 2,
   "trailingComma": "all",
-  "experimentalTailwindcss": {
-    "functions": ["cn", "cva"]
-  },
   "experimentalSortImports": {
     "groups": [
       ["side-effect"],

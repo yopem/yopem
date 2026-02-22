@@ -1,19 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "eslint",
-    "import",
-    "jsx-a11y",
-    "nextjs",
-    "nextjs",
-    "oxc",
-    "promise",
-    "react",
-    "react-perf",
-    "typescript",
-    "unicorn"
-  ],
-  "jsPlugins": ["eslint-plugin-oxfmt", "eslint-plugin-better-tailwindcss"],
+  "plugins": ["eslint", "import", "oxc", "promise", "typescript", "unicorn"],
+  "jsPlugins": ["eslint-plugin-oxfmt"],
   "categories": {
     "correctness": "off"
   },
@@ -21,17 +9,6 @@
     "builtin": true
   },
   "rules": {
-    "better-tailwindcss/enforce-canonical-classes": "error",
-    "better-tailwindcss/enforce-consistent-class-order": "off",
-    "better-tailwindcss/enforce-consistent-line-wrapping": "off",
-    "better-tailwindcss/enforce-shorthand-classes": "error",
-    "better-tailwindcss/no-conflicting-classes": "error",
-    "better-tailwindcss/no-deprecated-classes": "error",
-    "better-tailwindcss/no-duplicate-classes": "warn",
-    "better-tailwindcss/no-restricted-classes": "error",
-    "better-tailwindcss/no-unknown-classes": "off",
-    "better-tailwindcss/no-unnecessary-whitespace": "warn",
-    "nextjs/no-img-element": "error",
     "constructor-super": "off",
     "for-direction": "error",
     "getter-return": "off",
@@ -104,7 +81,6 @@
     "prefer-promise-reject-errors": "off",
     "prefer-rest-params": "error",
     "prefer-spread": "error",
-    "react/rules-of-hooks": "error",
     "require-await": "error",
     "require-yield": "error",
     "typescript/adjacent-overload-signatures": "error",
@@ -172,21 +148,6 @@
     "use-isnan": "error",
     "valid-typeof": "error"
   },
-  "settings": {
-    "better-tailwindcss": {
-      "entryPoint": "./apps/admin/src/styles/globals.css",
-      "entryPoint": "./apps/web/src/styles/globals.css",
-      "entryPoint": "./packages/ui/src/styles/globals.css"
-    }
-  },
-  "overrides": [
-    {
-      "files": ["packages/**/*.ts", "packages/**/*.tsx"],
-      "rules": {
-        "import/no-relative-parent-imports": "off"
-      }
-    }
-  ],
   "ignorePatterns": [
     "**/node_modules",
     "**/.pnp",
