@@ -1,4 +1,4 @@
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import type { Redis } from "ioredis"
 
 import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics"
@@ -73,7 +73,7 @@ export class WebhookMonitor {
         eventType,
         status: "failure",
         processingTimeMs,
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: formatError(error),
         metadata,
       })
 

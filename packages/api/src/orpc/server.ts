@@ -1,4 +1,4 @@
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { headers } from "next/headers"
 
 import { createORPCClientFromLink, createORPCLink } from "./shared"
@@ -22,7 +22,7 @@ const createServerFetchWithCookies = () => {
       }
     } catch (error) {
       logger.error(
-        `Could not access headers in server context: ${String(error)}`,
+        `Could not access headers in server context: ${formatError(error)}`,
       )
     }
 

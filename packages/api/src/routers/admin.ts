@@ -6,7 +6,7 @@ import {
   toolRunsTable,
   uptimeEventsTable,
 } from "@repo/db/schema"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { WebhookMetrics } from "@repo/payments/webhook-metrics"
 import { failure, success, type Result } from "@repo/types"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
@@ -119,7 +119,9 @@ export const adminRouter = {
           apiKey: maskApiKey(decrypted),
         }
       } catch (error) {
-        logger.error(`Failed to decrypt API key ${key.id}: ${String(error)}`)
+        logger.error(
+          `Failed to decrypt API key ${key.id}: ${formatError(error)}`,
+        )
         return {
           ...key,
           apiKey: "Error: Failed to decrypt",
@@ -392,7 +394,7 @@ export const adminRouter = {
           return { provider, models: [] as { id: string; name: string }[] }
         } catch (error) {
           logger.error(
-            `Failed to fetch models for ${provider}: ${String(error)}`,
+            `Failed to fetch models for ${provider}: ${formatError(error)}`,
           )
           return { provider, models: [] as { id: string; name: string }[] }
         }

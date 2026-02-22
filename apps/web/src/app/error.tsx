@@ -1,7 +1,7 @@
 "use client"
 
 import { appEnv } from "@repo/env/client"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { Button } from "@repo/ui/button"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
@@ -16,7 +16,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    logger.error(`Route error: ${error}`)
+    logger.error(`Route error: ${formatError(error)}`)
   }, [error])
 
   return (

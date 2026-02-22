@@ -2,7 +2,7 @@
 
 import { queryApi } from "@repo/api/orpc/query"
 import type { AddApiKeyInput, ApiKeyConfig } from "@repo/api/schemas/api-keys"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { toastManager } from "@repo/ui/toast"
 import { formatDateTime } from "@repo/utils/format-date"
 import {
@@ -148,7 +148,7 @@ export default function AdminSettingsPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          logger.error(`Failed to fetch asset settings: ${String(error)}`)
+          logger.error(`Failed to fetch asset settings: ${formatError(error)}`)
         }
       }
       if (!cancelled) {
@@ -171,7 +171,7 @@ export default function AdminSettingsPage() {
         type: "success",
       })
     } catch (error) {
-      logger.error(`Failed to update asset settings: ${String(error)}`)
+      logger.error(`Failed to update asset settings: ${formatError(error)}`)
       toastManager.add({
         title: "Failed to update asset settings",
         type: "error",
@@ -191,7 +191,7 @@ export default function AdminSettingsPage() {
         providerFormDispatch({ type: "RESET_FORM_DATA" })
       } catch (error) {
         toastManager.add({ title: "Failed to add provider", type: "error" })
-        logger.error(`Error adding provider: ${String(error)}`)
+        logger.error(`Error adding provider: ${formatError(error)}`)
       }
     })()
   }, [addMutation, providerForm.formData])
@@ -215,7 +215,7 @@ export default function AdminSettingsPage() {
         dispatch({ type: "CLOSE" })
       } catch (error) {
         toastManager.add({ title: "Failed to update provider", type: "error" })
-        logger.error(`Error updating provider: ${String(error)}`)
+        logger.error(`Error updating provider: ${formatError(error)}`)
       }
     })()
   }, [updateMutation, providerForm.editingProvider])
@@ -232,7 +232,7 @@ export default function AdminSettingsPage() {
         dispatch({ type: "CLOSE" })
       } catch (error) {
         toastManager.add({ title: "Failed to delete provider", type: "error" })
-        logger.error(`Error deleting provider: ${String(error)}`)
+        logger.error(`Error deleting provider: ${formatError(error)}`)
       }
     })()
   }, [deleteMutation, modalState])

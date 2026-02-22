@@ -1,5 +1,5 @@
 import { redisKeyPrefix, redisUrl } from "@repo/env/hono"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import type { Redis } from "ioredis"
 
 export function createRedisCache() {
@@ -28,7 +28,7 @@ export function createRedisCache() {
 
       return redis
     } catch (error) {
-      logger.error(`Failed to create Redis client: ${String(error)}`)
+      logger.error(`Failed to create Redis client: ${formatError(error)}`)
       return null
     }
   }
@@ -67,7 +67,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.setex(prefixedKey, ttlSeconds, serialized)
     } catch (error) {
-      logger.error(`Failed to set cache: ${String(error)}`)
+      logger.error(`Failed to set cache: ${formatError(error)}`)
     }
   }
 
@@ -87,7 +87,7 @@ export function createRedisCache() {
         return val
       })
     } catch (error) {
-      logger.error(`Failed to get cache: ${String(error)}`)
+      logger.error(`Failed to get cache: ${formatError(error)}`)
       return null
     }
   }
@@ -100,7 +100,7 @@ export function createRedisCache() {
       const prefixedKey = `${prefix}${key}`
       await client.del(prefixedKey)
     } catch (error) {
-      logger.error(`Failed to delete cache: ${String(error)}`)
+      logger.error(`Failed to delete cache: ${formatError(error)}`)
     }
   }
 
@@ -115,7 +115,7 @@ export function createRedisCache() {
         await client.del(...keys)
       }
     } catch (error) {
-      logger.error(`Failed to invalidate cache pattern: ${String(error)}`)
+      logger.error(`Failed to invalidate cache pattern: ${formatError(error)}`)
     }
   }
 
@@ -134,7 +134,7 @@ export function createRedisCache() {
         logger.info("Redis connection closed successfully")
         redis = null
       } catch (error) {
-        logger.error(`Failed to close Redis connection: ${String(error)}`)
+        logger.error(`Failed to close Redis connection: ${formatError(error)}`)
         if (redis) {
           redis.disconnect()
           redis = null

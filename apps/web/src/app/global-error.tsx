@@ -1,6 +1,6 @@
 "use client"
 
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { Button } from "@repo/ui/button"
 import { AlertTriangleIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
@@ -13,7 +13,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    logger.error(`Global error: ${error}`)
+    logger.error(`Global error: ${formatError(error)}`)
   }, [error])
 
   return (

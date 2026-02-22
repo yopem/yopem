@@ -1,4 +1,4 @@
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import type { Redis } from "ioredis"
 
 interface WebhookMetricsSummary {
@@ -29,9 +29,7 @@ export class WebhookMetrics {
       await this.redis.incr(counterKey)
       await this.redis.expire(counterKey, 60 * 60 * 24 * 30)
     } catch (error) {
-      logger.error(
-        `Failed to increment webhook counter: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      logger.error(`Failed to increment webhook counter: ${formatError(error)}`)
     }
   }
 
@@ -51,9 +49,7 @@ export class WebhookMetrics {
       await this.redis.expire(timeKey, 60 * 60 * 24 * 30)
       await this.redis.expire(countKey, 60 * 60 * 24 * 30)
     } catch (error) {
-      logger.error(
-        `Failed to track processing time: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      logger.error(`Failed to track processing time: ${formatError(error)}`)
     }
   }
 
@@ -68,9 +64,7 @@ export class WebhookMetrics {
       await this.redis.zremrangebyscore(timestampKey, 0, now - 60 * 60 * 1000)
       await this.redis.expire(timestampKey, 60 * 60 * 2)
     } catch (error) {
-      logger.error(
-        `Failed to track event timestamp: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      logger.error(`Failed to track event timestamp: ${formatError(error)}`)
     }
   }
 
@@ -112,9 +106,7 @@ export class WebhookMetrics {
         lastHourRate: lastHourCount,
       }
     } catch (error) {
-      logger.error(
-        `Failed to get metrics summary: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      logger.error(`Failed to get metrics summary: ${formatError(error)}`)
       return {
         totalProcessed: 0,
         successCount: 0,

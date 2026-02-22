@@ -5,7 +5,7 @@ import {
   polarCheckoutSessionsTable,
   polarPaymentEventsTable,
 } from "@repo/db/schema"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { calculateCreditsFromAmount } from "@repo/payments/credit-calculation"
 import { grantCredits } from "@repo/payments/grant-credits"
 import { refundCredits } from "@repo/payments/refund-credits"
@@ -130,7 +130,7 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
         )
       } catch (error) {
         logger.error(
-          `Error processing order paid webhook: orderId=${order.id}, error=${error instanceof Error ? error.message : String(error)}`,
+          `Error processing order paid webhook: orderId=${order.id}, error=${formatError(error)}`,
         )
         throw error
       }
@@ -190,7 +190,7 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
         )
       } catch (error) {
         logger.error(
-          `Error processing order refunded webhook: orderId=${order.id}, error=${error instanceof Error ? error.message : String(error)}`,
+          `Error processing order refunded webhook: orderId=${order.id}, error=${formatError(error)}`,
         )
         throw error
       }

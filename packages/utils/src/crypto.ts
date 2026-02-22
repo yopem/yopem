@@ -1,7 +1,7 @@
 import crypto from "crypto"
 
 import { env } from "@repo/env"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 
 function getEncryptionKey(): Buffer {
   const key = env.API_KEY_ENCRYPTION_SECRET
@@ -18,7 +18,7 @@ export function encryptApiKey(plaintext: string): string {
     const authTag = cipher.getAuthTag()
     return `${iv.toString("base64")}:${encrypted}:${authTag.toString("base64")}`
   } catch (error) {
-    logger.error(`Error encrypting API key: ${String(error)}`)
+    logger.error(`Error encrypting API key: ${formatError(error)}`)
     throw new Error("Failed to encrypt API key")
   }
 }
@@ -41,7 +41,7 @@ export function decryptApiKey(ciphertext: string): string {
     decrypted += decipher.final("utf8")
     return decrypted
   } catch (error) {
-    logger.error(`Error decrypting API key: ${String(error)}`)
+    logger.error(`Error decrypting API key: ${formatError(error)}`)
     throw new Error("Failed to decrypt API key")
   }
 }

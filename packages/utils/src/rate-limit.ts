@@ -1,4 +1,4 @@
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import type { Redis } from "ioredis"
 
 export async function checkRateLimit(
@@ -39,7 +39,7 @@ export async function checkRateLimit(
       remaining: maxRequests - count - 1,
     }
   } catch (error) {
-    logger.error(`Rate limit check failed: ${String(error)}`)
+    logger.error(`Rate limit check failed: ${formatError(error)}`)
     return {
       isLimited: false,
       remaining: maxRequests,

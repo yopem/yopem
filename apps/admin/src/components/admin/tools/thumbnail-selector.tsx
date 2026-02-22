@@ -1,7 +1,7 @@
 "use client"
 
 import { queryApi } from "@repo/api/orpc/query"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { Dialog, DialogPopup } from "@repo/ui/dialog"
 import { useCallback, useEffect, useReducer } from "react"
 
@@ -106,7 +106,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       })
       dispatch({ type: "SET_ASSETS", payload: result.assets as Asset[] })
     } catch (error) {
-      logger.error(`Failed to load assets: ${String(error)}`)
+      logger.error(`Failed to load assets: ${formatError(error)}`)
     }
     dispatch({ type: "SET_LOADING", payload: false })
   }, [])
@@ -119,7 +119,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: asset })
       }
     } catch (error) {
-      logger.error(`Failed to load thumbnail: ${String(error)}`)
+      logger.error(`Failed to load thumbnail: ${formatError(error)}`)
     }
   }, [])
 
@@ -175,7 +175,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         onChange(asset.id)
         dispatch({ type: "CLOSE_DIALOG" })
       } catch (error) {
-        logger.error(`Upload failed: ${String(error)}`)
+        logger.error(`Upload failed: ${formatError(error)}`)
       }
       dispatch({ type: "SET_UPLOADING", payload: false })
       if (event.target) {

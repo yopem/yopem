@@ -7,7 +7,7 @@ import {
   polarProductId,
   siteDomain,
 } from "@repo/env/hono"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
 
@@ -110,7 +110,7 @@ export async function checkAndTriggerAutoTopup(
     }
   } catch (error) {
     logger.error(
-      `Failed to trigger auto-topup: userId=${userId}, error=${error instanceof Error ? error.message : String(error)}`,
+      `Failed to trigger auto-topup: userId=${userId}, error=${formatError(error)}`,
     )
     return { triggered: false }
   }

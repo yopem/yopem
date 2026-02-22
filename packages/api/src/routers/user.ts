@@ -15,7 +15,7 @@ import {
   userCreditsTable,
   userSettingsTable,
 } from "@repo/db/schema"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import {
   MAX_TOPUP_AMOUNT,
   MIN_TOPUP_AMOUNT,
@@ -262,7 +262,7 @@ export const userRouter = {
         apiKey: maskApiKey(decryptApiKey(key.apiKey)),
       }))
     } catch (error) {
-      logger.error(`Error parsing API keys: ${String(error)}`)
+      logger.error(`Error parsing API keys: ${formatError(error)}`)
       return []
     }
   }),
@@ -308,7 +308,7 @@ export const userRouter = {
         try {
           existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         } catch (error) {
-          logger.error(`Error parsing existing API keys: ${String(error)}`)
+          logger.error(`Error parsing existing API keys: ${formatError(error)}`)
         }
       }
 
@@ -398,7 +398,7 @@ export const userRouter = {
           ),
         }
       } catch (error) {
-        logger.error(`Error updating API key: ${String(error)}`)
+        logger.error(`Error updating API key: ${formatError(error)}`)
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Failed to update API key",
         })
@@ -450,7 +450,7 @@ export const userRouter = {
 
         return { success: true, id: input.id }
       } catch (error) {
-        logger.error(`Error deleting API key: ${String(error)}`)
+        logger.error(`Error deleting API key: ${formatError(error)}`)
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Failed to delete API key",
         })
@@ -470,7 +470,7 @@ export const userRouter = {
         const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
         activeKeys = apiKeys.filter((key) => key.status === "active").length
       } catch (error) {
-        logger.error(`Error parsing API keys: ${String(error)}`)
+        logger.error(`Error parsing API keys: ${formatError(error)}`)
       }
     }
 

@@ -2,7 +2,7 @@ import { Polar } from "@polar-sh/sdk"
 import type { SessionUser } from "@repo/auth/types"
 import { db } from "@repo/db"
 import { polarCheckoutSessionsTable, userSettingsTable } from "@repo/db/schema"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { validateTopupAmount } from "@repo/payments/credit-calculation"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
@@ -87,7 +87,7 @@ checkoutRoute.get("/", async (c) => {
       }
     } catch (error) {
       logger.error(
-        `Failed to create/get Polar customer: userId=${session.id}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create/get Polar customer: userId=${session.id}, error=${formatError(error)}`,
       )
     }
 
@@ -119,13 +119,8 @@ checkoutRoute.get("/", async (c) => {
 
     return c.redirect(checkoutUrl, 303)
   } catch (error) {
-    logger.error(
-      `Checkout error: ${error instanceof Error ? error.message : String(error)}`,
-    )
-    return c.text(
-      `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`,
-      500,
-    )
+    logger.error(`Checkout error: ${formatError(error)}`)
+    return c.text(`Internal Server Error: ${formatError(error)}`, 500)
   }
 })
 

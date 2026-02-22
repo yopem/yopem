@@ -1,5 +1,5 @@
 import { env } from "@repo/env"
-import { logger } from "@repo/logger"
+import { formatError, logger } from "@repo/logger"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
@@ -63,7 +63,7 @@ async function clearExistingTools() {
     logger.info("✅ Cleared existing demo tools")
   } catch (error) {
     logger.warn(
-      `⚠️  No existing tools to clear or error occurred: ${String(error)}`,
+      `⚠️  No existing tools to clear or error occurred: ${formatError(error)}`,
     )
   }
 }
@@ -625,7 +625,7 @@ async function seedTools() {
       )
     })
   } catch (error) {
-    logger.error(`❌ Error seeding tools: ${String(error)}`)
+    logger.error(`❌ Error seeding tools: ${formatError(error)}`)
     throw error
   }
 }
@@ -636,6 +636,6 @@ seedTools()
     process.exit(0)
   })
   .catch((error) => {
-    logger.error(`\n💥 Seeding failed: ${error}`)
+    logger.error(`\n💥 Seeding failed: ${formatError(error)}`)
     process.exit(1)
   })
