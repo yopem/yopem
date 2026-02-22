@@ -1,17 +1,15 @@
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 import type { RouterClient } from "@orpc/server"
-import { env } from "@repo/env"
 import { logger } from "@repo/logger"
 
 import type { appRouter } from "../root"
 
 const getBaseUrl = () => {
-  if (typeof window !== "undefined") return window.location.origin
-  if (process.env["APP_ENV"] === "development") {
-    return "http://localhost:3000"
+  if (typeof window !== "undefined") {
+    return process.env["NEXT_PUBLIC_API_URL"] ?? ""
   }
-  return env.NEXT_PUBLIC_API_URL
+  return process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000"
 }
 
 export const createORPCLink = (
@@ -21,7 +19,7 @@ export const createORPCLink = (
   ) => Promise<Response>,
 ) => {
   return new RPCLink({
-    url: getBaseUrl() + "/api/orpc",
+    url: getBaseUrl() + "/rpc",
     fetch:
       customFetch ??
       ((input, init) => {

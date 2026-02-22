@@ -1,5 +1,6 @@
 import { ORPCError, os } from "@orpc/server"
 import { auth } from "@repo/auth/session"
+import type { SessionUser } from "@repo/auth/types"
 import { redisCache } from "@repo/cache"
 import { db } from "@repo/db"
 import { logger } from "@repo/logger"
@@ -7,32 +8,25 @@ import { logger } from "@repo/logger"
 export async function createRPCContext(opts: {
   headers: Headers
   request?: Request
+  session?: SessionUser | null
 }) {
-  const getCookiesFromRequest = () => {
-    if (opts.request) {
-      const cookieHeader = opts.request.headers.get("cookie") ?? ""
-      const cookies = new Map()
+  let session: SessionUser | null = null
 
-      cookieHeader.split(";").forEach((cookie) => {
-        const [name, value] = cookie.trim().split("=")
-        if (name && value) {
-          cookies.set(name, { name: name.trim(), value: value.trim() })
-        }
-      })
+  if (opts.session !== undefined) {
+    session = opts.session ?? null
+  } else if (opts.request) {
+    const cookieHeader = opts.request.headers.get("cookie") ?? ""
+    const cookies = new Map<string, { name: string; value: string }>()
 
-      return {
-        get: (name: string) => cookies.get(name) ?? null,
+    cookieHeader.split(";").forEach((cookie) => {
+      const [name, value] = cookie.trim().split("=")
+      if (name && value) {
+        cookies.set(name.trim(), { name: name.trim(), value: value.trim() })
       }
-    }
-    return null
-  }
+    })
 
-  let session = null
-
-  if (opts.request) {
-    const requestCookies = getCookiesFromRequest()
-    const accessToken = requestCookies?.get("access_token")
-    const refreshToken = requestCookies?.get("refresh_token")
+    const accessToken = cookies.get("access_token")
+    const refreshToken = cookies.get("refresh_token")
 
     if (accessToken) {
       try {
@@ -44,7 +38,7 @@ export async function createRPCContext(opts: {
         })
 
         if (!verified.err) {
-          session = verified.subject.properties
+          session = verified.subject.properties as SessionUser
         }
       } catch (err) {
         logger.error(
@@ -53,7 +47,8 @@ export async function createRPCContext(opts: {
       }
     }
   } else {
-    session = await auth()
+    const authResult = await auth()
+    session = authResult ? (authResult as SessionUser) : null
   }
 
   const redis = redisCache
@@ -89,7 +84,7 @@ export const protectedProcedure = publicProcedure.use(({ context, next }) => {
 
   return next({
     context: {
-      session: context.session,
+      session: context.session as SessionUser,
     },
   })
 })

@@ -1,5 +1,5 @@
 "use server"
-import { cookies as getCookies, headers as getHeaders } from "next/headers"
+import { cookies as getCookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { authClient } from "./client"
@@ -21,12 +21,7 @@ export async function login() {
     }
   }
 
-  const headers = await getHeaders()
-  const host = headers.get("host")
-  const protocol = host?.includes("localhost") ? "http" : "https"
-  const { url } = await authClient.authorize(
-    `${protocol}://${host}/api/auth/callback`,
-    "code",
-  )
+  const apiUrl = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000"
+  const { url } = await authClient.authorize(`${apiUrl}/auth/callback`, "code")
   redirect(url)
 }

@@ -1,48 +1,55 @@
 import { Polar } from "@polar-sh/sdk"
-import { auth } from "@repo/auth/session"
+import type { SessionUser } from "@repo/auth/types"
 import { db } from "@repo/db"
 import { polarCheckoutSessionsTable, userSettingsTable } from "@repo/db/schema"
-import { siteDomain } from "@repo/env/client"
-import { appEnv, polarAccessToken, polarProductId } from "@repo/env/server"
 import { logger } from "@repo/logger"
 import { validateTopupAmount } from "@repo/payments/credit-calculation"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
-import type { NextRequest } from "next/server"
+import { Hono } from "hono"
 
-export const GET = async (req: NextRequest) => {
+interface Env {
+  Variables: {
+    session: SessionUser | null
+  }
+}
+
+const appEnv = process.env["APP_ENV"] ?? "development"
+const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
+const polarProductId = process.env["POLAR_PRODUCT_ID"] ?? ""
+const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
+
+const polar = new Polar({
+  accessToken: polarAccessToken,
+  server: appEnv === "development" ? "sandbox" : "production",
+})
+
+const checkoutRoute = new Hono<Env>()
+
+checkoutRoute.get("/", async (c) => {
+  const session = c.get("session")
+
+  if (!session) {
+    return c.text("Unauthorized", 401)
+  }
+
+  const amount = c.req.query("amount")
+  const autoTopup = c.req.query("auto_topup") === "true"
+  const successUrl =
+    c.req.query("successUrl") ?? `${webOrigin}/dashboard/credits`
+
+  if (!amount) {
+    return c.text("Missing amount parameter", 400)
+  }
+
+  const amountNum = Number.parseFloat(amount)
+  const validation = validateTopupAmount(amountNum)
+
+  if (!validation.isValid) {
+    return c.text(validation.error ?? "Invalid amount", 400)
+  }
+
   try {
-    const session = await auth()
-
-    if (!session) {
-      return new Response("Unauthorized", { status: 401 })
-    }
-
-    const searchParams = req.nextUrl.searchParams
-    const amount = searchParams.get("amount")
-    const autoTopup = searchParams.get("auto_topup") === "true"
-    const successUrl =
-      searchParams.get("successUrl") ??
-      `https://${siteDomain}/dashboard/credits`
-
-    if (!amount) {
-      return new Response("Missing amount parameter", { status: 400 })
-    }
-
-    const amountNum = Number.parseFloat(amount)
-    const validation = validateTopupAmount(amountNum)
-
-    if (!validation.isValid) {
-      return new Response(validation.error, { status: 400 })
-    }
-
-    const serverConfig = appEnv === "development" ? "sandbox" : "production"
-
-    const polar = new Polar({
-      accessToken: polarAccessToken,
-      server: serverConfig,
-    })
-
     let polarCustomerId: string | null = null
 
     try {
@@ -99,7 +106,7 @@ export const GET = async (req: NextRequest) => {
 
     const checkoutUrl = checkout.url
     if (!checkoutUrl) {
-      return new Response("Checkout URL not available", { status: 500 })
+      return c.text("Checkout URL not available", 500)
     }
 
     await db.insert(polarCheckoutSessionsTable).values({
@@ -110,15 +117,16 @@ export const GET = async (req: NextRequest) => {
       amount: String(amountNum),
     })
 
-    return Response.redirect(checkoutUrl, 303)
+    return c.redirect(checkoutUrl, 303)
   } catch (error) {
     logger.error(
       `Checkout error: ${error instanceof Error ? error.message : String(error)}`,
     )
-
-    return new Response(
+    return c.text(
       `Internal Server Error: ${error instanceof Error ? error.message : String(error)}`,
-      { status: 500 },
+      500,
     )
   }
-}
+})
+
+export { checkoutRoute }

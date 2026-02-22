@@ -1,5 +1,5 @@
 import { logger } from "@repo/logger"
-import { cookies } from "next/headers"
+import { headers } from "next/headers"
 
 import { createORPCClientFromLink, createORPCLink } from "./shared"
 
@@ -11,8 +11,8 @@ const createServerFetchWithCookies = () => {
     const fetchInit = { ...init }
 
     try {
-      const cookieStore = await cookies()
-      const cookieHeader = cookieStore.toString()
+      const headerStore = await headers()
+      const cookieHeader = headerStore.get("cookie")
 
       if (cookieHeader) {
         fetchInit.headers = {
@@ -22,7 +22,7 @@ const createServerFetchWithCookies = () => {
       }
     } catch (error) {
       logger.error(
-        `Could not access cookies in server context: ${String(error)}`,
+        `Could not access headers in server context: ${String(error)}`,
       )
     }
 

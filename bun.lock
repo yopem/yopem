@@ -54,6 +54,30 @@
         "typescript": "catalog:",
       },
     },
+    "apps/server": {
+      "name": "@repo/server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@hono/node-server": "^1.14.1",
+        "@polar-sh/hono": "^0.5.3",
+        "@polar-sh/sdk": "catalog:",
+        "@repo/api": "workspace:*",
+        "@repo/auth": "workspace:*",
+        "@repo/cache": "workspace:*",
+        "@repo/db": "workspace:*",
+        "@repo/env": "workspace:*",
+        "@repo/logger": "workspace:*",
+        "@repo/payments": "workspace:*",
+        "@repo/utils": "workspace:*",
+        "hono": "^4.7.11",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "@yopem/typescript-config": "catalog:",
+        "dotenv-cli": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/web": {
       "name": "@repo/web",
       "version": "0.0.0",
@@ -568,6 +592,8 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
+    "@hono/node-server": ["@hono/node-server@1.19.9", "", { "peerDependencies": { "hono": "^4" } }, "sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw=="],
+
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
     "@humanfs/node": ["@humanfs/node@0.16.7", "", { "dependencies": { "@humanfs/core": "^0.19.1", "@humanwhocodes/retry": "^0.4.0" } }, "sha512-/zUx+yOsIrG4Y43Eh2peDeKCxlRt/gET6aHfaKpuq267qXdYDFViVHfMaLyygZOnl0kGWxFIgsBy8QFuTLUXEQ=="],
@@ -790,6 +816,8 @@
 
     "@polar-sh/adapter-utils": ["@polar-sh/adapter-utils@0.4.3", "", { "dependencies": { "@polar-sh/sdk": "^0.42.1" } }, "sha512-9xjOyaAVWRFaFZKkSdZr8J6i5LToUoFKeoczXCEu6+uxAhKmkjA3Qlc8otI4be1DSouWgrYB/VUGHOW7dIgCuQ=="],
 
+    "@polar-sh/hono": ["@polar-sh/hono@0.5.3", "", { "dependencies": { "@polar-sh/adapter-utils": "0.4.3", "@polar-sh/sdk": "^0.42.1" }, "peerDependencies": { "hono": "^4.6.16" } }, "sha512-8pH5wa/Vwt6Y9MQvNOE/IlGo8Jsu1aBd96gen8hCW+ussPWlpvC71Jpvh2darlSTFgEP/PI3p4pIEKUaXGp4Xg=="],
+
     "@polar-sh/nextjs": ["@polar-sh/nextjs@0.9.3", "", { "dependencies": { "@polar-sh/adapter-utils": "0.4.3", "@polar-sh/sdk": "^0.42.1" }, "peerDependencies": { "next": "^15.0.0 || ^16.0.0" } }, "sha512-3laah76J2qqt/dln/GFL5XaVFdwVaY5xsrMqIX2nNf/5/6frrodth88eGie0UOIhA6OUvmZMuKnW2tGaroMi5g=="],
 
     "@polar-sh/sdk": ["@polar-sh/sdk@0.22.2", "", { "dependencies": { "standardwebhooks": "^1.0.0" }, "peerDependencies": { "zod": ">= 3" } }, "sha512-B0H7IrhkEVUMoJxNJ840sPMAtTSWjbr+evOhy7jpxS+COjlWygJEDb9fIhxdjWE5m9Iwlk5LaHsgipxjkP+Vyw=="],
@@ -813,6 +841,8 @@
     "@repo/payments": ["@repo/payments@workspace:packages/payments"],
 
     "@repo/query": ["@repo/query@workspace:packages/query"],
+
+    "@repo/server": ["@repo/server@workspace:apps/server"],
 
     "@repo/storage": ["@repo/storage@workspace:packages/storage"],
 
@@ -1547,6 +1577,8 @@
     "@oslojs/jwt/@oslojs/encoding": ["@oslojs/encoding@0.4.1", "", {}, "sha512-hkjo6MuIK/kQR5CrGNdAPZhS01ZCXuWDRJ187zh6qqF2+yMHZpD9fAYpX8q2bOO6Ryhl3XpCT6kUX76N8hhm4Q=="],
 
     "@polar-sh/adapter-utils/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
+
+    "@polar-sh/hono/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
 
     "@polar-sh/nextjs/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
 

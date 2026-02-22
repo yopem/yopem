@@ -1,11 +1,10 @@
-import { Webhooks } from "@polar-sh/nextjs"
+import { Webhooks } from "@polar-sh/hono"
 import { redisCache } from "@repo/cache"
 import { db } from "@repo/db"
 import {
   polarCheckoutSessionsTable,
   polarPaymentEventsTable,
 } from "@repo/db/schema"
-import { polarWebhookSecret } from "@repo/env/server"
 import { logger } from "@repo/logger"
 import { calculateCreditsFromAmount } from "@repo/payments/credit-calculation"
 import { grantCredits } from "@repo/payments/grant-credits"
@@ -13,6 +12,9 @@ import { refundCredits } from "@repo/payments/refund-credits"
 import { WebhookMonitor } from "@repo/payments/webhook-monitor"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
+import { Hono } from "hono"
+
+const polarWebhookSecret = process.env["POLAR_WEBHOOK_SECRET"] ?? ""
 
 let redisInitialized = false
 
@@ -24,20 +26,22 @@ async function ensureRedisInitialized() {
   }
 }
 
-export interface PolarWebhookPayload {
-  data: {
-    id: string
-    customerId: string | null
-    productId: string | null
-    totalAmount: number
-    refundedAmount: number | null
-    currency: string
-    metadata: Record<string, unknown> | null
-    checkoutId: string | null
-  }
+interface PolarOrderData {
+  id: string
+  customerId: string | null
+  productId: string | null
+  totalAmount: number
+  refundedAmount: number | null
+  currency: string
+  metadata: Record<string, unknown> | null
+  checkoutId: string | null
 }
 
-export async function handlePolarOrderPaid(payload: PolarWebhookPayload) {
+interface PolarWebhookPayload {
+  data: PolarOrderData
+}
+
+async function handleOrderPaid(payload: PolarWebhookPayload) {
   await ensureRedisInitialized()
   const order = payload.data
 
@@ -134,7 +138,7 @@ export async function handlePolarOrderPaid(payload: PolarWebhookPayload) {
   )
 }
 
-export async function handlePolarOrderRefunded(payload: PolarWebhookPayload) {
+async function handleOrderRefunded(payload: PolarWebhookPayload) {
   await ensureRedisInitialized()
   const order = payload.data
 
@@ -194,8 +198,15 @@ export async function handlePolarOrderRefunded(payload: PolarWebhookPayload) {
   )
 }
 
-export const POST = Webhooks({
-  webhookSecret: polarWebhookSecret,
-  onOrderPaid: handlePolarOrderPaid,
-  onOrderRefunded: handlePolarOrderRefunded,
-})
+const webhooksRoute = new Hono()
+
+webhooksRoute.post(
+  "/polar",
+  Webhooks({
+    webhookSecret: polarWebhookSecret,
+    onOrderPaid: handleOrderPaid,
+    onOrderRefunded: handleOrderRefunded,
+  }),
+)
+
+export { webhooksRoute }

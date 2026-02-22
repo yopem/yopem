@@ -1,0 +1,33 @@
+{
+  "name": "@repo/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bunx --bun run with-env bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bunx --bun run with-env bun run dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "@polar-sh/hono": "^0.5.3",
+    "@polar-sh/sdk": "catalog:",
+    "@repo/api": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@repo/cache": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/payments": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "hono": "^4.7.11"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "dotenv-cli": "catalog:",
+    "typescript": "catalog:"
+  }
+}

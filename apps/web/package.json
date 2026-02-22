@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun run with-env next dev --turbopack",
+    "dev": "bunx --bun run with-env next dev --turbopack --port ${WEB_PORT:-3000}",
     "build": "bunx --bun run with-env next build",
     "start": "bunx --bun run with-env next start",
     "lint": "oxlint .",
@@ -12,15 +12,12 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@polar-sh/nextjs": "catalog:",
-    "@polar-sh/sdk": "catalog:",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
-    "@repo/payments": "workspace:*",
     "@repo/query": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",

@@ -15,6 +15,14 @@
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
+    },
+    "./hono": {
+      "types": "./src/hono.ts",
+      "default": "./src/hono.ts"
+    },
+    "./schema": {
+      "types": "./src/schema.ts",
+      "default": "./src/schema.ts"
     }
   },
   "scripts": {

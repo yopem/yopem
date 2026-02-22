@@ -23,6 +23,10 @@
     "./subjects": {
       "types": "./src/subjects.ts",
       "default": "./src/subjects.ts"
+    },
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
     }
   },
   "scripts": {
@@ -30,7 +34,6 @@
   },
   "dependencies": {
     "@openauthjs/openauth": "catalog:",
-    "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/utils": "workspace:*",
     "zod": "catalog:"

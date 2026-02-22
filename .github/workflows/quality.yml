@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [web, admin]
+        app: [web, admin, server]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4

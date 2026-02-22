@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun run with-env next dev --turbopack --port 3001",
+    "dev": "bunx --bun run with-env next dev --turbopack --port ${ADMIN_PORT:-3001}",
     "build": "bunx --bun run with-env next build",
     "start": "bunx --bun run with-env next start",
     "lint": "oxlint .",

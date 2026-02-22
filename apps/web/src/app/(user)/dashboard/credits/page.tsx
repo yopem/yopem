@@ -111,7 +111,8 @@ export default function CreditsPage() {
 
   const purchaseMutation = useMutation({
     mutationFn: (amount: number) => {
-      window.location.href = `/checkout?amount=${amount}&successUrl=${encodeURIComponent(window.location.href)}`
+      const apiUrl = process.env["NEXT_PUBLIC_API_URL"] ?? ""
+      window.location.href = `${apiUrl}/checkout?amount=${amount}&successUrl=${encodeURIComponent(window.location.href)}`
       return Promise.resolve()
     },
   })
