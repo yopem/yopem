@@ -16,9 +16,11 @@
     "@aws-sdk/client-s3": "catalog:",
     "@repo/env": "workspace:*",
     "nanoid": "catalog:",
+    "sharp": "^0.34.2",
     "transliteration": "catalog:"
   },
   "devDependencies": {
+    "@types/sharp": "^0.31.1",
     "@yopem/typescript-config": "catalog:",
     "typescript": "catalog:"
   }

@@ -13,6 +13,7 @@ import {
 } from "@repo/env/server"
 import { logger } from "@repo/logger"
 import { nanoid } from "nanoid"
+import sharp from "sharp"
 import { transliterate as tr } from "transliteration"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
@@ -62,7 +63,7 @@ class R2Storage {
     this.publicUrl = config.publicUrl
   }
 
-  async uploadImage(buffer: Buffer, contentType: string): Promise<string> {
+  async uploadImage(buffer: Buffer, _contentType: string): Promise<string> {
     if (buffer.length > MAX_IMAGE_SIZE) {
       const message = `Image size exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`
       logger.error(message)
@@ -75,9 +76,10 @@ class R2Storage {
       throw new Error("Invalid image file type")
     }
 
-    const key = this.generateUniqueKey("images", extension)
+    const processedBuffer = await this.processImage(buffer)
+    const key = this.generateUniqueKey("images", "webp")
 
-    await this.uploadWithRetry(buffer, key, contentType)
+    await this.uploadWithRetry(processedBuffer, key, "image/webp")
 
     return `${this.publicUrl}/${key}`
   }
@@ -145,6 +147,19 @@ class R2Storage {
   private matchesSignature(buffer: Buffer, signature: number[]): boolean {
     if (buffer.length < signature.length) return false
     return signature.every((byte, index) => buffer[index] === byte)
+  }
+
+  private async processImage(buffer: Buffer): Promise<Buffer> {
+    try {
+      return await sharp(buffer)
+        .resize({ width: 1920, withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer()
+    } catch (error) {
+      const message = `Failed to process image: ${error instanceof Error ? error.message : "Unknown error"}`
+      logger.error(message)
+      throw new Error(message)
+    }
   }
 
   private async uploadWithRetry(
@@ -237,14 +252,24 @@ class R2Storage {
     mimeType: string,
   ): Promise<{ url: string; type: AssetType; size: number; key: string }> {
     const type = this.classifyFileType(mimeType, originalFilename)
-    const extension = originalFilename.split(".").pop() ?? "bin"
+
+    let uploadBuffer = buffer
+    let uploadMimeType = mimeType
+    let extension = originalFilename.split(".").pop() ?? "bin"
+
+    if (type === "images") {
+      uploadBuffer = await this.processImage(buffer)
+      uploadMimeType = "image/webp"
+      extension = "webp"
+    }
+
     const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
     const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
     const uniqueId = nanoid(6)
     const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
     const key = `${type}/${filename}`
 
-    await this.uploadWithRetry(buffer, key, mimeType)
+    await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
 
     const publicUrlWithProtocol = this.publicUrl.startsWith("http")
       ? this.publicUrl
@@ -253,7 +278,7 @@ class R2Storage {
     return {
       url: `${publicUrlWithProtocol}/${key}`,
       type,
-      size: buffer.length,
+      size: uploadBuffer.length,
       key,
     }
   }
