@@ -8,6 +8,9 @@
     "build": "bun run with-env next build",
     "start": "bun run with-env next start",
     "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format:check": "oxfmt --check .",
+    "format:write": "oxfmt --write .",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

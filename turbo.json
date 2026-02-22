@@ -53,13 +53,17 @@
       "persistent": true,
       "cache": false
     },
-    "lint": {
-      "dependsOn": ["^lint"]
+    "lint": {},
+    "lint:fix": {
+      "cache": false
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
     "format:check": {},
+    "format:write": {
+      "cache": false
+    },
     "db:generate": {
       "cache": false
     },

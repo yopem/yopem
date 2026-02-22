@@ -26,6 +26,10 @@
     }
   },
   "scripts": {
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format:check": "oxfmt --check .",
+    "format:write": "oxfmt --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
