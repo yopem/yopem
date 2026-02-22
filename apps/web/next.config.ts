@@ -4,11 +4,14 @@ const config: NextConfig = {
   output: "standalone",
   experimental: {
     turbopackFileSystemCacheForDev: true,
+    serverSourceMaps: false,
+    preloadEntriesOnStart: false,
   },
   serverExternalPackages: ["pg", "ioredis"],
   reactCompiler: true,
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: false },
+  enablePrerenderSourceMaps: false,
   productionBrowserSourceMaps: false,
   transpilePackages: [
     "@repo/api",
