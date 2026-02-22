@@ -9,7 +9,7 @@ const GetStartedButton = ({ className }: { className?: string }) => {
         type="submit"
         size="lg"
         className={cn(
-          `h-12 px-8 text-base font-bold shadow-sm transition-transform hover:scale-105 active:scale-95`,
+          `h-11 rounded-full px-8 text-sm font-medium shadow-sm transition-transform hover:scale-105 active:scale-95`,
           className,
         )}
       >
