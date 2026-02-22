@@ -7,7 +7,6 @@
     "dev": "bun run with-env next dev --turbopack --port ${ADMIN_PORT:-3001}",
     "build": "bun run with-env next build",
     "start": "bun run with-env next start",
-    "lint": "oxlint .",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

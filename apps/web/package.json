@@ -12,6 +12,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@next/third-parties": "^16.1.6",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
@@ -23,6 +24,7 @@
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",
     "@tanstack/react-query": "catalog:",
+    "js.foresight": "^3.4.0",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",

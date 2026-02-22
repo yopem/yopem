@@ -69,7 +69,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "lint": "oxlint --type-aware .",
     "lint:fix": "oxlint --fix .",
     "format:check": "oxfmt --check .",
     "format:write": "oxfmt --write .",
