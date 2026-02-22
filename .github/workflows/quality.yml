@@ -39,6 +39,13 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
+      - name: Cache turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-format-check-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-format-check-${{ runner.os }}-
+
       - name: Run format check
         run: bun run format:check
 
@@ -61,45 +68,3 @@ jobs:
 
       - name: Run typecheck
         run: bun run typecheck
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Install
-        uses: ./.github/composite-actions/install
-
-      - name: Cache turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-build-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-build-${{ runner.os }}-
-
-      - name: Build all apps
-        run: bun run build
-
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [web, admin, server]
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build ${{ matrix.app }} image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/${{ matrix.app }}/Dockerfile
-          push: false
-          cache-from: type=gha,scope=${{ matrix.app }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
