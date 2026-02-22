@@ -71,32 +71,32 @@ const MarketplaceSidebar = ({
     selectedTags.length > 0
 
   return (
-    <nav className="w-full space-y-4" aria-label="Filters">
-      <div className="space-y-2">
+    <nav className="w-full space-y-6" aria-label="Filters">
+      <div className="space-y-4">
         <button
           onClick={() => toggleSection("price")}
           aria-expanded={expandedSections.price}
-          className="flex w-full items-center justify-between text-sm font-medium text-gray-900 dark:text-gray-100"
+          className="text-foreground flex w-full items-center justify-between text-xs font-semibold tracking-tight uppercase"
         >
-          <span>Price</span>
+          <span>Pricing</span>
         </button>
 
         {expandedSections.price && (
-          <div className="space-y-1" id="price-filter-section">
+          <div className="space-y-1.5" id="price-filter-section">
             {PRICE_FILTERS.map((filter) => {
               const isSelected = selectedPriceFilter === filter.value
               return (
                 <button
                   key={filter.value}
                   onClick={() => onPriceFilterChange(filter.value)}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm ${
+                  className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
                     isSelected
-                      ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                      : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <span>{filter.label}</span>
-                  {isSelected && <CheckIcon className="size-3.5" />}
+                  {isSelected && <CheckIcon className="size-4" />}
                 </button>
               )
             })}
@@ -104,33 +104,33 @@ const MarketplaceSidebar = ({
         )}
       </div>
 
-      <Separator />
+      <Separator className="bg-border/60" />
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         <button
           onClick={() => toggleSection("categories")}
           aria-expanded={expandedSections.categories}
-          className="flex w-full items-center justify-between text-sm font-medium text-gray-900 dark:text-gray-100"
+          className="text-foreground flex w-full items-center justify-between text-xs font-semibold tracking-tight uppercase"
         >
           <span>Categories</span>
         </button>
 
         {expandedSections.categories && (
-          <div className="space-y-1" id="category-filter-section">
+          <div className="space-y-1.5" id="category-filter-section">
             {categories.map((category) => {
               const isSelected = selectedCategories.includes(category.id)
               return (
                 <button
                   key={category.id}
                   onClick={() => toggleCategory(category.id)}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm ${
+                  className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
                     isSelected
-                      ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                      : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <span>{category.name}</span>
-                  {isSelected && <CheckIcon className="size-3.5" />}
+                  {isSelected && <CheckIcon className="size-4" />}
                 </button>
               )
             })}
@@ -138,34 +138,35 @@ const MarketplaceSidebar = ({
         )}
       </div>
 
-      {categories.length > 0 && tags.length > 0 && <Separator />}
+      {categories.length > 0 && tags.length > 0 && (
+        <Separator className="bg-border/60" />
+      )}
 
       {tags.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <button
             onClick={() => toggleSection("tags")}
             aria-expanded={expandedSections.tags}
-            className="flex w-full items-center justify-between text-sm font-medium text-gray-900 dark:text-gray-100"
+            className="text-foreground flex w-full items-center justify-between text-xs font-semibold tracking-tight uppercase"
           >
             <span>Tags</span>
           </button>
 
           {expandedSections.tags && (
-            <div className="space-y-1" id="tags-section">
+            <div className="flex flex-wrap gap-2" id="tags-section">
               {tags.map((tag) => {
                 const isSelected = selectedTags.includes(tag.id)
                 return (
                   <button
                     key={tag.id}
                     onClick={() => toggleTag(tag.id)}
-                    className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm ${
+                    className={`inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                       isSelected
-                        ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                        : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     <span>{tag.name}</span>
-                    {isSelected && <CheckIcon className="size-3.5" />}
                   </button>
                 )
               })}
@@ -175,21 +176,19 @@ const MarketplaceSidebar = ({
       )}
 
       {hasActiveFilters && (
-        <>
-          <Separator />
+        <div className="pt-2">
           <Button
             variant="ghost"
-            size="sm"
             onClick={() => {
               onCategoriesChange([])
               onPriceFilterChange("all")
               onTagsChange([])
             }}
-            className="w-full text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="text-muted-foreground hover:text-foreground w-full rounded-lg"
           >
-            Clear filters
+            Clear all filters
           </Button>
-        </>
+        </div>
       )}
     </nav>
   )

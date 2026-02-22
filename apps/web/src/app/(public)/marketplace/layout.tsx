@@ -10,5 +10,5 @@ export default function MarketplaceLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return <div className="bg-muted/30">{children}</div>
 }

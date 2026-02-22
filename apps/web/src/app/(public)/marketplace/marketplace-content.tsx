@@ -32,9 +32,9 @@ export default function MarketplaceContent({
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <div className="w-full shrink-0 lg:w-56">
-        <div className="sticky top-20">
+    <div className="flex flex-col gap-10 md:flex-row md:items-start lg:gap-14">
+      <div className="w-full shrink-0 md:w-64">
+        <div className="bg-card sticky top-24 space-y-8 rounded-2xl border p-6 shadow-sm">
           <MarketplaceSidebar
             categories={categories}
             tags={tags}

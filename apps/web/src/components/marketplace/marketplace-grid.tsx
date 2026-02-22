@@ -14,11 +14,14 @@ import type { ToolCardProps } from "./tool-card"
 const ToolCard = dynamic<ToolCardProps>(() => import("./tool-card"), {
   ssr: false,
   loading: () => (
-    <div className="rounded-lg border p-4">
-      <div className="space-y-3">
-        <div className="bg-muted h-5 w-2/3 rounded-sm" />
-        <div className="bg-muted h-4 w-full rounded-sm" />
-        <div className="bg-muted h-4 w-3/4 rounded-sm" />
+    <div className="bg-card rounded-2xl border p-6 shadow-sm">
+      <div className="space-y-4">
+        <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
+        <div className="space-y-2">
+          <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
+          <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
+          <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
+        </div>
       </div>
     </div>
   ),
@@ -99,48 +102,55 @@ const MarketplaceGrid = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex-1">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-md">
           <SearchBar onSearch={handleSearch} defaultValue={search} />
         </div>
-        <div className="text-muted-foreground text-sm">
+        <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
           {isLoading ? (
-            <div className="h-4 w-20 animate-pulse rounded-sm bg-gray-200 dark:bg-gray-700" />
+            <div className="bg-muted h-5 w-24 animate-pulse rounded-full" />
           ) : (
-            <span>
-              {tools.length} {tools.length === 1 ? "tool" : "tools"}
-            </span>
+            <div className="bg-muted/50 rounded-full px-3 py-1">
+              {tools.length} {tools.length === 1 ? "tool" : "tools"} available
+            </div>
           )}
         </div>
       </div>
 
       <Shimmer loading={isLoading}>
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-lg border p-4">
-                <div className="space-y-3">
-                  <div className="h-5 w-2/3 rounded-sm bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-4 w-full rounded-sm bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-4 w-3/4 rounded-sm bg-gray-200 dark:bg-gray-700" />
+              <div key={i} className="bg-card rounded-2xl border p-6 shadow-sm">
+                <div className="space-y-4">
+                  <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
+                  <div className="space-y-2">
+                    <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
+                    <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
+                    <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : tools.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <PackageIcon className="text-muted-foreground mb-4 size-10" />
-            <h3 className="mb-1 text-lg font-medium">No tools found</h3>
-            <p className="text-muted-foreground text-sm">
+          <div className="bg-card flex flex-col items-center justify-center rounded-3xl border border-dashed py-24 text-center">
+            <div className="bg-muted/50 mb-6 rounded-full p-6">
+              <PackageIcon className="text-muted-foreground size-12" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold tracking-tight">
+              No tools found
+            </h3>
+            <p className="text-muted-foreground max-w-sm text-base">
               {search
-                ? "Try adjusting your search terms or clear the search."
-                : "No tools are currently available."}
+                ? "Try adjusting your search terms or filter criteria."
+                : "No tools are currently available in this category."}
             </p>
           </div>
         ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-10">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {tools.map((tool) => (
                 <ToolCard
                   key={tool.id}
@@ -158,24 +168,26 @@ const MarketplaceGrid = ({
             </div>
 
             {hasNextPage ? (
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-4 pb-8">
                 <Button
                   variant="outline"
+                  size="lg"
+                  className="h-12 rounded-full px-8 font-medium"
                   onClick={handleLoadMore}
                   disabled={isFetchingNextPage}
                 >
                   {isFetchingNextPage ? (
                     <>
-                      <Loader2Icon className="mr-2 size-4 animate-spin" />
-                      Loading...
+                      <Loader2Icon className="mr-2 size-5 animate-spin" />
+                      Loading more tools...
                     </>
                   ) : (
-                    "Load more"
+                    "Load more tools"
                   )}
                 </Button>
               </div>
             ) : null}
-          </>
+          </div>
         )}
       </Shimmer>
     </div>

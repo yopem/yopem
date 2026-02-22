@@ -2,7 +2,7 @@
 
 import { queryApi } from "@repo/api/orpc/query"
 import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { Card, CardContent } from "@repo/ui/card"
 import { Field, FieldLabel } from "@repo/ui/field"
 import { Textarea } from "@repo/ui/textarea"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -111,16 +111,21 @@ export default function ToolExecuteForm({
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Run tool</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="bg-card overflow-hidden rounded-2xl border shadow-sm">
+      <div className="bg-primary/5 border-border/50 border-b px-6 py-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <PlayIcon className="text-primary size-4.5" />
+          Run this tool
+        </h2>
+      </div>
+      <CardContent className="space-y-6 p-6">
         {hasVariables ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {inputVariable.map((field) => (
-              <Field key={field.variableName}>
-                <FieldLabel>{field.variableName}</FieldLabel>
+              <Field key={field.variableName} className="space-y-2">
+                <FieldLabel className="text-sm font-medium">
+                  {field.variableName}
+                </FieldLabel>
                 <ToolInputField
                   field={field}
                   value={inputs[field.variableName] ?? ""}
@@ -133,8 +138,11 @@ export default function ToolExecuteForm({
             ))}
           </div>
         ) : (
-          <div>
-            <label htmlFor="input" className="text-sm font-medium">
+          <div className="space-y-2">
+            <label
+              htmlFor="input"
+              className="text-foreground text-sm font-medium"
+            >
               Input
             </label>
             <Textarea
@@ -142,27 +150,27 @@ export default function ToolExecuteForm({
               placeholder="Enter your input..."
               value={fallbackInput}
               onChange={(e) => setFallbackInput(e.target.value)}
-              className="mt-1.5 min-h-[100px]"
+              className="min-h-[120px] resize-y rounded-xl"
             />
           </div>
         )}
 
         {cost > 0 && (
-          <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+          <div className="bg-muted/40 border-border/50 space-y-2 rounded-xl border p-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Cost:</span>
-              <span className="font-medium">{cost} credits</span>
+              <span className="text-muted-foreground">Execution cost</span>
+              <span className="text-foreground font-semibold">
+                {cost} credits
+              </span>
             </div>
             {creditsData && (
-              <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Balance:
-                </span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Your balance</span>
                 <span
                   className={
                     hasInsufficientCredits
-                      ? "font-medium text-red-600"
-                      : "font-medium"
+                      ? "text-destructive font-semibold"
+                      : "text-foreground font-semibold"
                   }
                 >
                   {balance} credits
@@ -170,68 +178,85 @@ export default function ToolExecuteForm({
               </div>
             )}
             {hasInsufficientCredits && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+              <div className="text-destructive bg-destructive/10 mt-3 flex items-center gap-2 rounded-lg p-2.5 text-sm font-medium">
                 <AlertTriangleIcon className="size-4" />
-                Insufficient credits
+                Insufficient credits to run this tool
               </div>
             )}
           </div>
         )}
 
         {!isAuthenticated ? (
-          <div className="flex flex-col items-center gap-2 rounded-md border border-dashed p-4 text-center">
-            <LockIcon className="text-muted-foreground size-5" />
+          <div className="border-border bg-muted/20 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
+            <div className="bg-muted/50 rounded-full p-3">
+              <LockIcon className="text-muted-foreground size-5" />
+            </div>
+            <p className="text-foreground font-medium">
+              Authentication required
+            </p>
             <p className="text-muted-foreground text-sm">
-              Sign in to run this tool
+              Sign in to execute this tool and view results
             </p>
           </div>
         ) : (
           <Button
+            size="lg"
             onClick={handleExecute}
             disabled={executeMutation.isPending || hasInsufficientCredits}
-            className="w-full"
+            className="h-12 w-full rounded-xl text-base font-medium"
           >
-            <PlayIcon className="mr-2 size-4" />
-            {executeMutation.isPending
-              ? "Running..."
-              : cost > 0
-                ? `Run (${cost} credits)`
-                : "Run"}
+            {executeMutation.isPending ? (
+              <>
+                <div className="border-background/30 border-t-background mr-2 size-4 animate-spin rounded-full border-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <PlayIcon className="mr-2 size-4.5" />
+                {cost > 0 ? `Run tool (${cost} credits)` : "Run tool"}
+              </>
+            )}
           </Button>
         )}
 
         {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-            {error}
+          <div className="bg-destructive/10 text-destructive flex items-start gap-3 rounded-xl p-4 text-sm font-medium">
+            <AlertTriangleIcon className="mt-0.5 size-5 shrink-0" />
+            <p>{error}</p>
           </div>
         )}
 
         {output && (
-          <div className="rounded-md border p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium">Output</span>
-              <div className="flex gap-1">
+          <div className="border-border/80 bg-muted/20 overflow-hidden rounded-xl border">
+            <div className="bg-muted/40 border-border/80 flex items-center justify-between border-b px-4 py-2.5">
+              <span className="text-sm font-semibold tracking-tight">
+                Result Output
+              </span>
+              <div className="flex gap-1.5">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
-                  className="h-7 px-2"
+                  className="hover:bg-muted/60 h-8 rounded-md px-2.5 text-xs"
                 >
-                  <CopyIcon className="size-3.5" />
+                  <CopyIcon className="mr-1.5 size-3.5" />
+                  Copy
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClear}
-                  className="h-7 px-2"
+                  className="hover:bg-muted/60 h-8 rounded-md px-2.5 text-xs"
                 >
                   Clear
                 </Button>
               </div>
             </div>
-            <pre className="max-h-[200px] overflow-auto text-sm whitespace-pre-wrap">
-              {output}
-            </pre>
+            <div className="p-4">
+              <pre className="max-h-[300px] overflow-auto font-mono text-sm/relaxed whitespace-pre-wrap">
+                {output}
+              </pre>
+            </div>
           </div>
         )}
       </CardContent>

@@ -96,23 +96,30 @@ async function ToolData({ slug }: { slug: string }) {
   const session = await auth()
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-      <div className="space-y-4">
+    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="space-y-8">
         <div>
-          <div className="mb-2 flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs">
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Badge
+              variant="secondary"
+              className="rounded-md px-2.5 py-0.5 text-[10px] font-medium tracking-wider uppercase"
+            >
               {tool.status}
             </Badge>
             {tool.categories.slice(0, 2).map((category) => (
-              <Badge key={category.id} variant="outline" className="text-xs">
+              <Badge
+                key={category.id}
+                variant="outline"
+                className="border-border/50 bg-card rounded-md px-2.5 py-0.5 text-[10px] font-medium tracking-wider uppercase"
+              >
                 {category.name}
               </Badge>
             ))}
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+          <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
             {tool.name}
           </h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground mt-3 max-w-[600px] text-base/relaxed">
             {tool.description ?? "No description available"}
           </p>
         </div>
@@ -131,14 +138,14 @@ async function ToolData({ slug }: { slug: string }) {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="h-fit space-y-6 lg:sticky lg:top-24">
         <ToolInfo tool={tool} />
 
         <Suspense
           fallback={
-            <Card>
-              <CardContent className="p-4">
-                <Skeleton className="h-14 w-full" />
+            <Card className="bg-card rounded-2xl border shadow-sm">
+              <CardContent className="p-5">
+                <Skeleton className="h-14 w-full rounded-xl" />
               </CardContent>
             </Card>
           }
@@ -158,25 +165,29 @@ export default async function ToolDetailPage({
   const { slug } = await params
 
   return (
-    <div className="container mx-auto max-w-5xl py-6">
+    <div className="container mx-auto max-w-6xl px-4 py-8 md:py-12">
       <Link
         href="/marketplace"
-        className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center text-sm"
+        className="text-muted-foreground hover:text-foreground mb-8 inline-flex items-center text-sm font-medium transition-colors"
       >
-        <ArrowLeftIcon className="mr-1.5 size-4" />
-        Back
+        <ArrowLeftIcon className="mr-2 size-4" />
+        Back to Marketplace
       </Link>
 
       <Suspense
         fallback={
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-            <div className="space-y-4">
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-48 w-full" />
+          <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-32 rounded-md" />
+                <Skeleton className="h-10 w-3/4 rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+              </div>
+              <Skeleton className="h-[400px] w-full rounded-2xl" />
             </div>
-            <div className="space-y-4">
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-14 w-full" />
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full rounded-2xl" />
+              <Skeleton className="h-24 w-full rounded-2xl" />
             </div>
           </div>
         }

@@ -40,23 +40,30 @@ const ToolReviewsSection = ({
   }
 
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Reviews</CardTitle>
+    <Card className="bg-card rounded-2xl border shadow-sm">
+      <CardHeader className="border-border/50 border-b px-6 pt-6 pb-4">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          Reviews
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 p-6">
         {isAuthenticated ? (
-          <ToolRatingInput slug={slug} onSuccess={handleReviewSubmit} />
+          <div className="bg-muted/30 border-border/50 rounded-xl border p-5">
+            <h3 className="mb-4 text-sm font-medium">Write a review</h3>
+            <ToolRatingInput slug={slug} onSuccess={handleReviewSubmit} />
+          </div>
         ) : (
-          <div className="py-4 text-center">
-            <p className="text-muted-foreground mb-4">
-              Please login to leave a review
+          <div className="bg-muted/30 border-border/50 flex flex-col items-center justify-center rounded-xl border py-8 text-center">
+            <p className="text-muted-foreground mb-4 text-sm">
+              Please log in to leave a review for this tool.
             </p>
             <LoginButton />
           </div>
         )}
 
-        <ToolReviewsList reviews={reviews} />
+        <div className="pt-2">
+          <ToolReviewsList reviews={reviews} />
+        </div>
       </CardContent>
     </Card>
   )
