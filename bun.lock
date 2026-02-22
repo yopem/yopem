@@ -82,15 +82,12 @@
       "name": "@repo/web",
       "version": "0.0.0",
       "dependencies": {
-        "@polar-sh/nextjs": "catalog:",
-        "@polar-sh/sdk": "catalog:",
         "@repo/api": "workspace:*",
         "@repo/auth": "workspace:*",
         "@repo/cache": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
-        "@repo/payments": "workspace:*",
         "@repo/query": "workspace:*",
         "@repo/types": "workspace:*",
         "@repo/ui": "workspace:*",
@@ -161,7 +158,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@openauthjs/openauth": "catalog:",
-        "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/utils": "workspace:*",
         "zod": "catalog:",
@@ -817,8 +813,6 @@
     "@polar-sh/adapter-utils": ["@polar-sh/adapter-utils@0.4.3", "", { "dependencies": { "@polar-sh/sdk": "^0.42.1" } }, "sha512-9xjOyaAVWRFaFZKkSdZr8J6i5LToUoFKeoczXCEu6+uxAhKmkjA3Qlc8otI4be1DSouWgrYB/VUGHOW7dIgCuQ=="],
 
     "@polar-sh/hono": ["@polar-sh/hono@0.5.3", "", { "dependencies": { "@polar-sh/adapter-utils": "0.4.3", "@polar-sh/sdk": "^0.42.1" }, "peerDependencies": { "hono": "^4.6.16" } }, "sha512-8pH5wa/Vwt6Y9MQvNOE/IlGo8Jsu1aBd96gen8hCW+ussPWlpvC71Jpvh2darlSTFgEP/PI3p4pIEKUaXGp4Xg=="],
-
-    "@polar-sh/nextjs": ["@polar-sh/nextjs@0.9.3", "", { "dependencies": { "@polar-sh/adapter-utils": "0.4.3", "@polar-sh/sdk": "^0.42.1" }, "peerDependencies": { "next": "^15.0.0 || ^16.0.0" } }, "sha512-3laah76J2qqt/dln/GFL5XaVFdwVaY5xsrMqIX2nNf/5/6frrodth88eGie0UOIhA6OUvmZMuKnW2tGaroMi5g=="],
 
     "@polar-sh/sdk": ["@polar-sh/sdk@0.22.2", "", { "dependencies": { "standardwebhooks": "^1.0.0" }, "peerDependencies": { "zod": ">= 3" } }, "sha512-B0H7IrhkEVUMoJxNJ840sPMAtTSWjbr+evOhy7jpxS+COjlWygJEDb9fIhxdjWE5m9Iwlk5LaHsgipxjkP+Vyw=="],
 
@@ -1579,8 +1573,6 @@
     "@polar-sh/adapter-utils/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
 
     "@polar-sh/hono/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
-
-    "@polar-sh/nextjs/@polar-sh/sdk": ["@polar-sh/sdk@0.42.5", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-GzC3/ElCtMO55+KeXwFTANlydZzw5qI3DU/F9vAFIsUKuegSmh+Xu03KCL+ct9/imJOvLUQucYhUSsNKqo2j2Q=="],
 
     "@tailwindcss/oxide-wasm32-wasi/@emnapi/core": ["@emnapi/core@1.8.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" }, "bundled": true }, "sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg=="],
 

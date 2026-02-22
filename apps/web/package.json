@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun run with-env next dev --turbopack --port ${WEB_PORT:-3000}",
-    "build": "bunx --bun run with-env next build",
-    "start": "bunx --bun run with-env next start",
+    "dev": "bun run with-env next dev --turbopack --port ${WEB_PORT:-3000}",
+    "build": "bun run with-env next build",
+    "start": "bun run with-env next start",
     "lint": "oxlint .",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"

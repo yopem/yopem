@@ -74,5 +74,3 @@ serve(
     pinoLogger.info(`Hono server listening on port ${port}`)
   },
 )
-
-export default app

@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun run with-env bun --watch src/index.ts",
+    "dev": "bun run with-env bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "start": "bunx --bun run with-env bun run dist/index.js",
+    "start": "bun run with-env bun run dist/index.js",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
