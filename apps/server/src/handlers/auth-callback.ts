@@ -1,13 +1,18 @@
 import { logger } from "@repo/logger"
 import { Hono } from "hono"
+import { getCookie, deleteCookie } from "hono/cookie"
 
 import { authClient, setTokenCookies } from "@/auth"
 
 const appEnv = process.env["APP_ENV"] ?? "development"
-const webOrigin =
+const allowedOrigins =
   appEnv === "development"
-    ? "http://localhost:3000"
-    : (process.env["WEB_ORIGIN"] ?? "")
+    ? ["http://localhost:3000", "http://localhost:3001"]
+    : [
+        process.env["WEB_ORIGIN"] ?? "",
+        process.env["ADMIN_ORIGIN"] ?? "",
+      ].filter(Boolean)
+const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
 const serverOrigin =
   appEnv === "development"
     ? "http://localhost:4000"
@@ -35,7 +40,14 @@ authCallbackRoute.get("/callback", async (c) => {
 
     setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
 
-    const targetUrl = `${webOrigin}${redirectPath}`
+    const loginOrigin = getCookie(c, "login_origin")
+    const origin =
+      loginOrigin && allowedOrigins.includes(loginOrigin)
+        ? loginOrigin
+        : defaultOrigin
+    deleteCookie(c, "login_origin", { path: "/" })
+
+    const targetUrl = `${origin}${redirectPath}`
     return c.redirect(targetUrl, 302)
   } catch (err) {
     logger.error(
