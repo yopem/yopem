@@ -48,6 +48,14 @@ export default async function DashboardLayout({
       icon: <ActivityIcon className="size-4.5" />,
       label: "Monitoring",
       href: "/monitoring",
+      subItems: [
+        { label: "Overview", href: "/monitoring/overview" },
+        { label: "AI Requests", href: "/monitoring/ai-requests" },
+        { label: "API Usage", href: "/monitoring/api-usage" },
+        { label: "Webhooks", href: "/monitoring/webhooks" },
+        { label: "Uptime", href: "/monitoring/uptime" },
+        { label: "Activity Logs", href: "/monitoring/activity" },
+      ],
     },
     {
       icon: <SettingsIcon className="size-4.5" />,

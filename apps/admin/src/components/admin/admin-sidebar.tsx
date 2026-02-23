@@ -14,11 +14,16 @@ import UserSidebarFooter from "@/components/user/user-sidebar-footer"
 import AdminSidebarHeader from "./admin-sidebar-header"
 import AdminSidebarNav from "./admin-sidebar-nav"
 
+interface NavSubItem {
+  label: string
+  href: string
+}
+
 interface NavItem {
   icon: ReactNode
   label: string
   href: string
-  active?: boolean
+  subItems?: NavSubItem[]
 }
 
 interface User {

@@ -5,11 +5,16 @@ import { type ReactNode } from "react"
 
 import AdminSidebar from "./admin-sidebar"
 
+interface NavSubItem {
+  label: string
+  href: string
+}
+
 interface NavItem {
   icon: ReactNode
   label: string
   href: string
-  active?: boolean
+  subItems?: NavSubItem[]
 }
 
 interface User {
