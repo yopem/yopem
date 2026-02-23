@@ -25,11 +25,12 @@
     "@repo/utils": "workspace:*",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
+    "js.foresight": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shimmer-from-structure": "^2.3.1",
+    "shimmer-from-structure": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

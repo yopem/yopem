@@ -38,8 +38,7 @@
     "@repo/payments": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
-    "hono": "^4.7.11",
-    "sharp": "^0.34.5"
+    "hono": "^4.7.11"
   },
   "devDependencies": {
     "@types/node": "catalog:tooling",

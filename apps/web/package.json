@@ -27,11 +27,12 @@
     "@repo/utils": "workspace:*",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "js.foresight": "^3.4.0",
+    "js.foresight": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "shimmer-from-structure": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
