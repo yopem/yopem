@@ -27,6 +27,7 @@
     "@types/node": "catalog:tooling",
     "@types/sharp": "^0.31.1",
     "@yopem/typescript-config": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
     "oxlint-tsgolint": "catalog:tooling",

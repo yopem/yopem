@@ -10,13 +10,13 @@
   "trailingComma": "all",
   "experimentalSortImports": {
     "groups": [
-      ["side-effect"],
-      ["builtin"],
-      ["external", "type-external"],
-      ["internal", "type-internal"],
-      ["parent", "type-parent"],
-      ["sibling", "type-sibling"],
-      ["index", "type-index"]
+      "type-import",
+      ["value-builtin", "value-external"],
+      "type-internal",
+      "value-internal",
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
+      "unknown"
     ]
   },
   "experimentalSortPackageJson": true,

@@ -41,6 +41,8 @@
     "@yopem/typescript-config": "catalog:tooling",
     "babel-plugin-react-compiler": "catalog:",
     "dotenv-cli": "catalog:",
+    "eslint-plugin-better-tailwindcss": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
     "oxlint-tsgolint": "catalog:tooling",

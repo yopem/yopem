@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/node": "catalog:tooling",
     "@yopem/typescript-config": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
     "dotenv-cli": "catalog:",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",

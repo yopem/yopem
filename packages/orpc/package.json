@@ -58,6 +58,7 @@
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:",
     "@yopem/typescript-config": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
     "oxlint-tsgolint": "catalog:tooling",

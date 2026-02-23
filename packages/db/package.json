@@ -66,6 +66,7 @@
     "@types/node": "catalog:tooling",
     "@types/pg": "catalog:drizzle",
     "@yopem/typescript-config": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
     "drizzle-kit": "catalog:drizzle",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",

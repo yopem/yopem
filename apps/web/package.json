@@ -40,6 +40,8 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@yopem/typescript-config": "catalog:tooling",
+    "eslint-plugin-oxfmt": "catalog:tooling",
+    "eslint-plugin-better-tailwindcss": "catalog:tooling",
     "babel-plugin-react-compiler": "catalog:",
     "dotenv-cli": "catalog:",
     "oxfmt": "catalog:tooling",
