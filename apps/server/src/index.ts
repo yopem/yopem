@@ -5,11 +5,11 @@ import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
 import { authMiddleware } from "./auth"
-import { authCallbackRoute } from "./routes/auth-callback"
-import { checkoutRoute } from "./routes/checkout"
-import { portalRoute } from "./routes/portal"
-import { rpcRoute } from "./routes/rpc"
-import { webhooksRoute } from "./routes/webhooks"
+import { authCallbackRoute } from "./handlers/auth-callback"
+import { checkoutRoute } from "./handlers/checkout"
+import { portalRoute } from "./handlers/portal"
+import { rpcRoute } from "./handlers/rpc"
+import { webhooksRoute } from "./handlers/webhooks"
 
 const app = new Hono()
 
