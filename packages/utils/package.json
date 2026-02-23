@@ -16,10 +16,6 @@
       "types": "./src/crypto.ts",
       "default": "./src/crypto.ts"
     },
-    "./rate-limit": {
-      "types": "./src/rate-limit.ts",
-      "default": "./src/rate-limit.ts"
-    },
     "./model-provider-validation": {
       "types": "./src/model-provider-validation.ts",
       "default": "./src/model-provider-validation.ts"
@@ -27,6 +23,10 @@
     "./api-keys-schema": {
       "types": "./src/api-keys-schema.ts",
       "default": "./src/api-keys-schema.ts"
+    },
+    "./result": {
+      "types": "./src/result.ts",
+      "default": "./src/result.ts"
     }
   },
   "scripts": {
@@ -53,14 +53,10 @@
     "typescript": "catalog:tooling"
   },
   "peerDependencies": {
-    "@repo/env": "workspace:*",
-    "ioredis": "catalog:"
+    "@repo/env": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@repo/env": {
-      "optional": true
-    },
-    "ioredis": {
       "optional": true
     }
   }

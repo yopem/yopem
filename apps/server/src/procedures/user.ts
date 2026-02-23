@@ -6,6 +6,7 @@ import {
   MIN_TOPUP_AMOUNT,
 } from "@repo/payments/credit-calculation"
 import { adminProcedure, protectedProcedure } from "@repo/server/orpc"
+import { checkRateLimit, RATE_LIMITS } from "@repo/server/rate-limit"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -15,7 +16,6 @@ import {
 } from "@repo/utils/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
-import { checkRateLimit, RATE_LIMITS } from "@repo/utils/rate-limit"
 import { z } from "zod"
 
 export const userRouter = {

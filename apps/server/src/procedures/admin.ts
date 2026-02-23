@@ -3,7 +3,6 @@ import * as adminService from "@repo/db/services/admin"
 import { formatError, logger } from "@repo/logger"
 import { WebhookMetrics } from "@repo/payments/webhook-metrics"
 import { adminProcedure } from "@repo/server/orpc"
-import { failure, success, type Result } from "@repo/types"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
@@ -12,6 +11,7 @@ import {
 } from "@repo/utils/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
+import { failure, success, type Result } from "@repo/utils/result"
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"

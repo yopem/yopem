@@ -11,6 +11,10 @@
     "./orpc": {
       "types": "./src/orpc.ts",
       "default": "./src/orpc.ts"
+    },
+    "./rate-limit": {
+      "types": "./src/rate-limit.ts",
+      "default": "./src/rate-limit.ts"
     }
   },
   "scripts": {
