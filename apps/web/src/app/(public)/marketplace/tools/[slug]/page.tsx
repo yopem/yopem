@@ -1,6 +1,6 @@
-import { serverApi } from "@repo/api/orpc/server"
 import { auth } from "@repo/auth/session"
 import { siteTitle } from "@repo/env/client"
+import { serverApi } from "@repo/orpc/server"
 import { Badge } from "@repo/ui/badge"
 import { Card, CardContent } from "@repo/ui/card"
 import { Skeleton } from "@repo/ui/skeleton"

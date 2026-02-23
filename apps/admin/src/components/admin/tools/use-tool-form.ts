@@ -1,9 +1,9 @@
 "use client"
 
-import { queryApi } from "@repo/api/orpc/query"
-import type { ApiKeyConfig } from "@repo/api/schemas/api-keys"
 import { insertToolSchema, type SelectTool } from "@repo/db/schema"
+import { queryApi } from "@repo/orpc/query"
 import { toastManager } from "@repo/ui/toast"
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import {
   getProviderMismatchMessage,
   validateModelProviderMatch,

@@ -1,9 +1,8 @@
 import { insertTagSchema, tagsTable } from "@repo/db/schema"
+import { adminProcedure, publicProcedure } from "@repo/server/orpc"
 import { generateUniqueTagSlug } from "@repo/utils/slug"
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
-
-import { adminProcedure, publicProcedure } from "../orpc"
 
 export const tagsRouter = {
   list: publicProcedure.handler(async ({ context }) => {

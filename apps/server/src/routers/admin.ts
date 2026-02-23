@@ -8,19 +8,18 @@ import {
 } from "@repo/db/schema"
 import { formatError, logger } from "@repo/logger"
 import { WebhookMetrics } from "@repo/payments/webhook-metrics"
+import { adminProcedure } from "@repo/server/orpc"
 import { failure, success, type Result } from "@repo/types"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
-import { createCustomId } from "@repo/utils/custom-id"
-import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
-import { z } from "zod"
-
-import { adminProcedure } from "../orpc"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "../schemas/api-keys"
+} from "@repo/utils/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
+import { createCustomId } from "@repo/utils/custom-id"
+import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
+import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

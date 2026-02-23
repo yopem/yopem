@@ -1,6 +1,6 @@
 "use client"
 
-import type { clientApi } from "@repo/api/orpc/client"
+import type { clientApi } from "@repo/orpc/client"
 import { useState } from "react"
 
 import MarketplaceGrid from "@/components/marketplace/marketplace-grid"

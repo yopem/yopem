@@ -1,6 +1,6 @@
 "use client"
 
-import { clientApi } from "@repo/api/orpc/client"
+import { clientApi } from "@repo/orpc/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { useState } from "react"
 

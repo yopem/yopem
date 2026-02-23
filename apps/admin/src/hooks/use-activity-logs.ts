@@ -1,4 +1,4 @@
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import { useQuery } from "@tanstack/react-query"
 
 interface UseActivityLogsOptions {

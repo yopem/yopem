@@ -1,6 +1,6 @@
 "use client"
 
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 

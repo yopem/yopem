@@ -1,6 +1,6 @@
 "use client"
 
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { useQuery } from "@tanstack/react-query"

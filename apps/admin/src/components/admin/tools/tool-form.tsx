@@ -1,11 +1,11 @@
 "use client"
 
-import type { ApiKeyConfig } from "@repo/api/schemas/api-keys"
 import type { SelectTool } from "@repo/db/schema"
 import { Field, FieldLabel } from "@repo/ui/field"
 import { Input } from "@repo/ui/input"
 import { Separator } from "@repo/ui/separator"
 import { Textarea } from "@repo/ui/textarea"
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import { useImperativeHandle, type Ref } from "react"
 
 import ConfigurationPanel from "./configuration-panel"

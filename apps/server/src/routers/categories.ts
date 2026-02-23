@@ -1,9 +1,8 @@
 import { categoriesTable, insertCategorySchema } from "@repo/db/schema"
+import { adminProcedure, publicProcedure } from "@repo/server/orpc"
 import { generateUniqueCategorySlug } from "@repo/utils/slug"
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
-
-import { adminProcedure, publicProcedure } from "../orpc"
 
 export const categoriesRouter = {
   list: publicProcedure.handler(async ({ context }) => {

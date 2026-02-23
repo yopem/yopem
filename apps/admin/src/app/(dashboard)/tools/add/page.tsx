@@ -1,6 +1,6 @@
 "use client"
 
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import { Separator } from "@repo/ui/separator"
 import { toastManager } from "@repo/ui/toast"
 import { useMutation } from "@tanstack/react-query"

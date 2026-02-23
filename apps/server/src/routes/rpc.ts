@@ -1,9 +1,9 @@
 import { LoggingHandlerPlugin } from "@orpc/experimental-pino"
 import { RPCHandler } from "@orpc/server/fetch"
-import { appRouter } from "@repo/api"
-import { createRPCContext } from "@repo/api/orpc"
 import type { SessionUser } from "@repo/auth/types"
 import { logger } from "@repo/logger"
+import { createRPCContext } from "@repo/server/orpc"
+import { appRouter } from "@repo/server/router"
 import { Hono } from "hono"
 
 interface Env {

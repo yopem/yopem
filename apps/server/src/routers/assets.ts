@@ -1,11 +1,10 @@
 import { ORPCError } from "@orpc/server"
 import { adminSettingsTable, assetsTable } from "@repo/db/schema"
 import { r2Domain } from "@repo/env/hono"
+import { adminProcedure, publicProcedure } from "@repo/server/orpc"
 import { getR2Storage } from "@repo/storage"
 import { and, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
-
-import { adminProcedure, publicProcedure } from "../orpc"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

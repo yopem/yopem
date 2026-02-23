@@ -27,6 +27,10 @@
     "./model-provider-validation": {
       "types": "./src/model-provider-validation.ts",
       "default": "./src/model-provider-validation.ts"
+    },
+    "./api-keys-schema": {
+      "types": "./src/api-keys-schema.ts",
+      "default": "./src/api-keys-schema.ts"
     }
   },
   "scripts": {
@@ -40,7 +44,8 @@
     "@repo/logger": "workspace:*",
     "dayjs": "catalog:",
     "nanoid": "catalog:",
-    "transliteration": "catalog:"
+    "transliteration": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:tooling",

@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./router": {
+      "types": "./src/root.ts",
+      "default": "./src/root.ts"
+    },
+    "./orpc": {
+      "types": "./src/orpc.ts",
+      "default": "./src/orpc.ts"
+    }
+  },
   "scripts": {
     "dev": "bun run with-env bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
@@ -16,15 +26,17 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "@orpc/experimental-pino": "catalog:orpc",
     "@polar-sh/hono": "^0.5.3",
     "@polar-sh/sdk": "catalog:",
-    "@repo/api": "workspace:*",
+    "@repo/ai": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/payments": "workspace:*",
+    "@repo/storage": "workspace:*",
     "@repo/utils": "workspace:*",
     "hono": "^4.7.11",
     "sharp": "^0.34.5"

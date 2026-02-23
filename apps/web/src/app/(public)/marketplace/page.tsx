@@ -1,4 +1,4 @@
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import { Skeleton } from "@repo/ui/skeleton"
 import type { Metadata } from "next"
 import { connection } from "next/server"

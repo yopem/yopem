@@ -1,7 +1,7 @@
 "use client"
 
-import { clientApi } from "@repo/api/orpc/client"
 import { logger } from "@repo/logger"
+import { clientApi } from "@repo/orpc/client"
 import { Button } from "@repo/ui/button"
 import { Textarea } from "@repo/ui/textarea"
 import { toastManager } from "@repo/ui/toast"

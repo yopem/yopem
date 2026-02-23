@@ -1,6 +1,5 @@
 "use client"
 
-import type { AddApiKeyInput } from "@repo/api/schemas/api-keys"
 import { Button } from "@repo/ui/button"
 import {
   Dialog,
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "@repo/ui/select"
 import { Textarea } from "@repo/ui/textarea"
+import type { AddApiKeyInput } from "@repo/utils/api-keys-schema"
 
 interface AddProviderDialogProps {
   open: boolean

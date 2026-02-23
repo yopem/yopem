@@ -21,16 +21,19 @@ import {
   userCreditsTable,
 } from "@repo/db/schema"
 import { checkAndTriggerAutoTopup } from "@repo/payments/auto-topup"
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
-import { z } from "zod"
-
-import { adminProcedure, protectedProcedure, publicProcedure } from "../orpc"
-import type { ApiKeyConfig } from "../schemas/api-keys"
-
-const API_KEYS_SETTING_KEY = "api_keys"
+import {
+  adminProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "@repo/server/orpc"
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import { decryptApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
 import { generateUniqueToolSlug } from "@repo/utils/slug"
+import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
+import { z } from "zod"
+
+const API_KEYS_SETTING_KEY = "api_keys"
 
 export const toolsRouter = {
   list: publicProcedure

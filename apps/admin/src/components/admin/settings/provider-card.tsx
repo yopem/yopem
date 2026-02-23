@@ -1,12 +1,12 @@
 "use client"
 
-import type { ApiKeyConfig } from "@repo/api/schemas/api-keys"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader } from "@repo/ui/card"
 import { Input } from "@repo/ui/input"
 import { Label } from "@repo/ui/label"
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@repo/ui/menu"
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import {
   BotIcon,
   EyeIcon,

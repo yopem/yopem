@@ -1,12 +1,5 @@
 import { ORPCError } from "@orpc/server"
 import {
-  addApiKeyInputSchema,
-  apiKeyConfigSchema,
-  deleteApiKeyInputSchema,
-  updateApiKeyInputSchema,
-  type ApiKeyConfig,
-} from "@repo/api/schemas/api-keys"
-import {
   creditTransactionsTable,
   polarCheckoutSessionsTable,
   polarPaymentsTable,
@@ -20,13 +13,19 @@ import {
   MAX_TOPUP_AMOUNT,
   MIN_TOPUP_AMOUNT,
 } from "@repo/payments/credit-calculation"
+import { adminProcedure, protectedProcedure } from "@repo/server/orpc"
+import {
+  addApiKeyInputSchema,
+  apiKeyConfigSchema,
+  deleteApiKeyInputSchema,
+  updateApiKeyInputSchema,
+  type ApiKeyConfig,
+} from "@repo/utils/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
 import { checkRateLimit, RATE_LIMITS } from "@repo/utils/rate-limit"
 import { desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
-
-import { adminProcedure, protectedProcedure } from "../orpc"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {

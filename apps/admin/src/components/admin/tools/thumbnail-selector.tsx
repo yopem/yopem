@@ -1,7 +1,7 @@
 "use client"
 
-import { queryApi } from "@repo/api/orpc/query"
 import { formatError, logger } from "@repo/logger"
+import { queryApi } from "@repo/orpc/query"
 import { Dialog, DialogPopup } from "@repo/ui/dialog"
 import { useCallback, useEffect, useReducer } from "react"
 

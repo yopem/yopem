@@ -1,9 +1,9 @@
-import { queryApi } from "@repo/api/orpc/query"
+import { queryApi } from "@repo/orpc/query"
 import type {
   AddApiKeyInput,
   DeleteApiKeyInput,
   UpdateApiKeyInput,
-} from "@repo/api/schemas/api-keys"
+} from "@repo/utils/api-keys-schema"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export function useApiKeys() {

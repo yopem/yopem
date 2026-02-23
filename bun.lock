@@ -21,11 +21,11 @@
       "name": "@repo/admin",
       "version": "0.0.0",
       "dependencies": {
-        "@repo/api": "workspace:*",
         "@repo/auth": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
+        "@repo/orpc": "workspace:*",
         "@repo/query": "workspace:*",
         "@repo/types": "workspace:*",
         "@repo/ui": "workspace:*",
@@ -60,15 +60,17 @@
       "version": "0.0.0",
       "dependencies": {
         "@hono/node-server": "^1.14.1",
+        "@orpc/experimental-pino": "catalog:orpc",
         "@polar-sh/hono": "^0.5.3",
         "@polar-sh/sdk": "catalog:",
-        "@repo/api": "workspace:*",
+        "@repo/ai": "workspace:*",
         "@repo/auth": "workspace:*",
         "@repo/cache": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/payments": "workspace:*",
+        "@repo/storage": "workspace:*",
         "@repo/utils": "workspace:*",
         "hono": "^4.7.11",
         "sharp": "^0.34.5",
@@ -88,12 +90,12 @@
       "version": "0.0.0",
       "dependencies": {
         "@next/third-parties": "^16.1.6",
-        "@repo/api": "workspace:*",
         "@repo/auth": "workspace:*",
         "@repo/cache": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
+        "@repo/orpc": "workspace:*",
         "@repo/query": "workspace:*",
         "@repo/types": "workspace:*",
         "@repo/ui": "workspace:*",
@@ -133,38 +135,6 @@
       },
       "devDependencies": {
         "@types/node": "catalog:tooling",
-        "@yopem/typescript-config": "catalog:tooling",
-        "oxfmt": "catalog:tooling",
-        "oxlint": "catalog:tooling",
-        "oxlint-tsgolint": "catalog:tooling",
-        "typescript": "catalog:tooling",
-      },
-    },
-    "packages/api": {
-      "name": "@repo/api",
-      "version": "0.0.0",
-      "dependencies": {
-        "@orpc/client": "catalog:orpc",
-        "@orpc/experimental-pino": "catalog:orpc",
-        "@orpc/server": "catalog:orpc",
-        "@orpc/tanstack-query": "catalog:orpc",
-        "@repo/ai": "workspace:*",
-        "@repo/auth": "workspace:*",
-        "@repo/cache": "workspace:*",
-        "@repo/db": "workspace:*",
-        "@repo/env": "workspace:*",
-        "@repo/logger": "workspace:*",
-        "@repo/payments": "workspace:*",
-        "@repo/storage": "workspace:*",
-        "@repo/types": "workspace:*",
-        "@repo/utils": "workspace:*",
-        "drizzle-orm": "catalog:drizzle",
-        "next": "catalog:",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:tooling",
-        "@types/react": "catalog:",
         "@yopem/typescript-config": "catalog:tooling",
         "oxfmt": "catalog:tooling",
         "oxlint": "catalog:tooling",
@@ -265,6 +235,27 @@
         "oxlint": "catalog:tooling",
         "oxlint-tsgolint": "catalog:tooling",
         "pino-pretty": "catalog:",
+        "typescript": "catalog:tooling",
+      },
+    },
+    "packages/orpc": {
+      "name": "@repo/orpc",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orpc/client": "catalog:orpc",
+        "@orpc/server": "catalog:orpc",
+        "@orpc/tanstack-query": "catalog:orpc",
+        "@repo/logger": "workspace:*",
+        "next": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:tooling",
+        "@types/react": "catalog:",
+        "@yopem/typescript-config": "catalog:tooling",
+        "oxfmt": "catalog:tooling",
+        "oxlint": "catalog:tooling",
+        "oxlint-tsgolint": "catalog:tooling",
         "typescript": "catalog:tooling",
       },
     },
@@ -371,6 +362,7 @@
         "dayjs": "catalog:",
         "nanoid": "catalog:",
         "transliteration": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@types/node": "catalog:tooling",
@@ -862,8 +854,6 @@
 
     "@repo/ai": ["@repo/ai@workspace:packages/ai"],
 
-    "@repo/api": ["@repo/api@workspace:packages/api"],
-
     "@repo/auth": ["@repo/auth@workspace:packages/auth"],
 
     "@repo/cache": ["@repo/cache@workspace:packages/cache"],
@@ -873,6 +863,8 @@
     "@repo/env": ["@repo/env@workspace:packages/env"],
 
     "@repo/logger": ["@repo/logger@workspace:packages/logger"],
+
+    "@repo/orpc": ["@repo/orpc@workspace:packages/orpc"],
 
     "@repo/payments": ["@repo/payments@workspace:packages/payments"],
 
