@@ -7,7 +7,11 @@ import {
   listAssets,
 } from "@repo/db/services/assets"
 import { r2Domain } from "@repo/env/hono"
-import { adminProcedure, publicProcedure } from "@repo/server/orpc"
+import {
+  adminProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "@repo/server/orpc"
 import { getR2Storage } from "@repo/storage"
 import { z } from "zod"
 
@@ -28,7 +32,7 @@ const deleteAssetInputSchema = z.object({
 })
 
 export const assetsRouter = {
-  list: publicProcedure
+  list: protectedProcedure
     .input(listAssetsInputSchema.optional())
     .handler(({ input }) => {
       return listAssets({

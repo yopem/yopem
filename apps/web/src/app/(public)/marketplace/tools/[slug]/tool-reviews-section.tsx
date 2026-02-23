@@ -13,7 +13,6 @@ interface Review {
   rating: number
   reviewText: string | null
   createdAt: Date | null
-  userId: string
   userName: string | null
 }
 

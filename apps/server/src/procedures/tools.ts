@@ -51,6 +51,42 @@ import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 
+const publicToolFields = [
+  "id",
+  "slug",
+  "name",
+  "description",
+  "excerpt",
+  "isPublic",
+  "costPerRun",
+  "markup",
+  "status",
+  "reviewStatus",
+  "categories",
+  "tags",
+  "thumbnail",
+  "averageRating",
+  "reviewCount",
+  "outputFormat",
+  "inputVariable",
+  "createdAt",
+  "updatedAt",
+] as const
+
+type PublicToolField = (typeof publicToolFields)[number]
+
+function projectPublicTool<T extends Record<string, unknown>>(
+  tool: T,
+): Pick<T, Extract<keyof T, PublicToolField>> {
+  const result = {} as Pick<T, Extract<keyof T, PublicToolField>>
+  for (const key of publicToolFields) {
+    if (key in tool) {
+      ;(result as Record<string, unknown>)[key] = tool[key]
+    }
+  }
+  return result
+}
+
 export const toolsRouter = {
   list: publicProcedure
     .input(
@@ -79,13 +115,25 @@ export const toolsRouter = {
         throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
-      return tool
+      return projectPublicTool(tool)
     }),
 
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
     .handler(async ({ input }) => {
       const tool = await getToolBySlug(input.slug)
+
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
+      }
+
+      return projectPublicTool(tool)
+    }),
+
+  adminGetById: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input }) => {
+      const tool = await getToolById(input.id)
 
       if (!tool) {
         throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
@@ -526,7 +574,13 @@ export const toolsRouter = {
         throw new ORPCError("NOT_FOUND", { message: "Tool not found" })
       }
 
-      return getToolReviews(tool.id)
+      const result = await getToolReviews(tool.id)
+      return {
+        ...result,
+        reviews: result.reviews.map(
+          ({ userId: _userId, ...publicReview }) => publicReview,
+        ),
+      }
     }),
 
   submitReview: protectedProcedure

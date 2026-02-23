@@ -103,7 +103,7 @@ checkoutRoute.get("/", async (c) => {
     return c.redirect(checkoutUrl, 303)
   } catch (error) {
     logger.error(`Checkout error: ${formatError(error)}`)
-    return c.text(`Internal Server Error: ${formatError(error)}`, 500)
+    return c.text("Internal Server Error", 500)
   }
 })
 

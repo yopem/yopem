@@ -41,7 +41,7 @@ function EditToolPage() {
   } = useQuery({
     queryKey: ["tools", toolId],
     queryFn: async () => {
-      return await queryApi.tools.getById.call({ id: toolId })
+      return await queryApi.tools.adminGetById.call({ id: toolId })
     },
   })
 

@@ -29,7 +29,7 @@ const handler = new RPCHandler(appRouter, {
   plugins: [
     new LoggingHandlerPlugin({
       logger,
-      logRequestResponse: true,
+      logRequestResponse: process.env["APP_ENV"] !== "production",
       logRequestAbort: true,
     }),
   ],

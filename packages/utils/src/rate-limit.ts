@@ -7,10 +7,14 @@ export async function checkRateLimit(
   key: string,
   maxRequests: number,
   windowMs: number,
+  options?: { failClosed?: boolean },
 ): Promise<{ isLimited: boolean; remaining: number }> {
   const redis = await getRedisClient()
 
   if (!redis) {
+    if (options?.failClosed) {
+      return { isLimited: true, remaining: 0 }
+    }
     return {
       isLimited: false,
       remaining: maxRequests,
@@ -41,6 +45,9 @@ export async function checkRateLimit(
     }
   } catch (error) {
     logger.error(`Rate limit check failed: ${formatError(error)}`)
+    if (options?.failClosed) {
+      return { isLimited: true, remaining: 0 }
+    }
     return {
       isLimited: false,
       remaining: maxRequests,

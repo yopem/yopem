@@ -13,6 +13,14 @@ import { WebhookMonitor } from "@repo/payments/webhook-monitor"
 import { createCustomId } from "@repo/utils/custom-id"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
+import { z } from "zod"
+
+const webhookOrderMetadataSchema = z.object({
+  userId: z.string().min(1),
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  auto_topup: z.string().optional(),
+  userName: z.string().optional(),
+})
 
 const polarWebhookSecret = process.env["POLAR_WEBHOOK_SECRET"] ?? ""
 
@@ -57,41 +65,25 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
           payload: JSON.stringify(payload),
         })
 
+        const metadataParse = webhookOrderMetadataSchema.safeParse(
+          order.metadata,
+        )
+        if (!metadataParse.success) {
+          logger.error(
+            { orderId: order.id, error: metadataParse.error.format() },
+            "Invalid webhook order metadata",
+          )
+          return
+        }
+
         const productId = order.productId ?? ""
-        const userIdFromMetadata = order.metadata?.["userId"]
-        const userId =
-          typeof userIdFromMetadata === "string"
-            ? userIdFromMetadata
-            : (order.customerId ?? "")
-
-        const userNameFromMetadata = order.metadata?.["userName"]
-        const userName =
-          typeof userNameFromMetadata === "string"
-            ? userNameFromMetadata
-            : undefined
-
-        if (!userId) {
-          logger.error(
-            `No userId found in order metadata or customerId: orderId=${order.id}`,
-          )
-          return
-        }
-
-        const amountFromMetadata = order.metadata?.["amount"]
-        if (!amountFromMetadata || typeof amountFromMetadata !== "string") {
-          logger.error(
-            `Missing or invalid amount in metadata: orderId=${order.id}`,
-          )
-          return
-        }
+        const {
+          userId,
+          amount: amountFromMetadata,
+          userName,
+        } = metadataParse.data
 
         const amountInDollars = Number.parseFloat(amountFromMetadata)
-        if (Number.isNaN(amountInDollars)) {
-          logger.error(
-            `Invalid amount in metadata: orderId=${order.id}, amount=${amountFromMetadata}`,
-          )
-          return
-        }
 
         const creditsGranted = calculateCreditsFromAmount(amountInDollars)
 

@@ -19,10 +19,13 @@ export async function createRPCContext(opts: {
     const cookieHeader = opts.request.headers.get("cookie") ?? ""
     const cookies = new Map<string, { name: string; value: string }>()
 
-    cookieHeader.split(";").forEach((cookie) => {
-      const [name, value] = cookie.trim().split("=")
-      if (name && value) {
-        cookies.set(name.trim(), { name: name.trim(), value: value.trim() })
+    cookieHeader.split(";").forEach((part) => {
+      const eqIdx = part.indexOf("=")
+      if (eqIdx === -1) return
+      const name = part.slice(0, eqIdx).trim()
+      const value = part.slice(eqIdx + 1)
+      if (name) {
+        cookies.set(name, { name, value })
       }
     })
 
