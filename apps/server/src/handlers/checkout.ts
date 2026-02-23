@@ -1,11 +1,12 @@
 import { Polar } from "@polar-sh/sdk"
 import type { SessionUser } from "@repo/auth/types"
-import { db } from "@repo/db"
-import { polarCheckoutSessionsTable, userSettingsTable } from "@repo/db/schema"
+import {
+  getUserSettings,
+  insertCheckoutSession,
+  upsertPolarCustomer,
+} from "@repo/db/services/user"
 import { formatError, logger } from "@repo/logger"
 import { validateTopupAmount } from "@repo/payments/credit-calculation"
-import { createCustomId } from "@repo/utils/custom-id"
-import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 
 interface Env {
@@ -53,11 +54,7 @@ checkoutRoute.get("/", async (c) => {
     let polarCustomerId: string | null = null
 
     try {
-      const [userSettings] = await db
-        .select()
-        .from(userSettingsTable)
-        .where(eq(userSettingsTable.userId, session.id))
-        .limit(1)
+      const userSettings = await getUserSettings(session.id)
 
       if (userSettings?.polarCustomerId) {
         polarCustomerId = userSettings.polarCustomerId
@@ -68,22 +65,7 @@ checkoutRoute.get("/", async (c) => {
         })
 
         polarCustomerId = customer.id
-
-        if (userSettings) {
-          await db
-            .update(userSettingsTable)
-            .set({
-              polarCustomerId,
-              updatedAt: new Date(),
-            })
-            .where(eq(userSettingsTable.userId, session.id))
-        } else {
-          await db.insert(userSettingsTable).values({
-            id: createCustomId(),
-            userId: session.id,
-            polarCustomerId,
-          })
-        }
+        await upsertPolarCustomer(session.id, polarCustomerId)
       }
     } catch (error) {
       logger.error(
@@ -109,7 +91,7 @@ checkoutRoute.get("/", async (c) => {
       return c.text("Checkout URL not available", 500)
     }
 
-    await db.insert(polarCheckoutSessionsTable).values({
+    await insertCheckoutSession({
       userId: session.id,
       checkoutId: checkout.id,
       productId: polarProductId,

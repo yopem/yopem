@@ -1,11 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import {
-  activityLogsTable,
-  adminSettingsTable,
-  polarPaymentsTable,
-  toolRunsTable,
-  uptimeEventsTable,
-} from "@repo/db/schema"
+import * as adminService from "@repo/db/services/admin"
 import { formatError, logger } from "@repo/logger"
 import { WebhookMetrics } from "@repo/payments/webhook-metrics"
 import { adminProcedure } from "@repo/server/orpc"
@@ -18,7 +12,6 @@ import {
 } from "@repo/utils/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
-import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"
@@ -98,10 +91,7 @@ export const adminRouter = {
       }))
     }
 
-    const [settings] = await context.db
-      .select()
-      .from(adminSettingsTable)
-      .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
     if (!settings?.settingValue) {
       return []
@@ -132,10 +122,7 @@ export const adminRouter = {
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const [settings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
       const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
 
@@ -153,20 +140,7 @@ export const adminRouter = {
 
       const updatedKeys = [...existingKeys, newKey]
 
-      if (settings) {
-        await context.db
-          .update(adminSettingsTable)
-          .set({
-            settingValue: updatedKeys,
-            updatedAt: new Date(),
-          })
-          .where(eq(adminSettingsTable.id, settings.id))
-      } else {
-        await context.db.insert(adminSettingsTable).values({
-          settingKey: API_KEYS_SETTING_KEY,
-          settingValue: updatedKeys,
-        })
-      }
+      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
       await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
@@ -177,10 +151,7 @@ export const adminRouter = {
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const [settings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
       if (!settings?.settingValue) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -215,13 +186,7 @@ export const adminRouter = {
       const updatedKeys = [...existingKeys]
       updatedKeys[keyIndex] = updatedKey
 
-      await context.db
-        .update(adminSettingsTable)
-        .set({
-          settingValue: updatedKeys,
-          updatedAt: new Date(),
-        })
-        .where(eq(adminSettingsTable.id, settings.id))
+      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
       await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
@@ -232,10 +197,7 @@ export const adminRouter = {
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const [settings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
       if (!settings?.settingValue) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -244,13 +206,7 @@ export const adminRouter = {
       const existingKeys = settings.settingValue as ApiKeyConfig[]
       const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
 
-      await context.db
-        .update(adminSettingsTable)
-        .set({
-          settingValue: updatedKeys,
-          updatedAt: new Date(),
-        })
-        .where(eq(adminSettingsTable.id, settings.id))
+      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
 
       await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
       await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
@@ -274,52 +230,20 @@ export const adminRouter = {
         return cached
       }
 
-      const now = new Date()
-      const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const startOfPreviousMonth = new Date(
-        now.getFullYear(),
-        now.getMonth() - 1,
-        1,
-      )
-      const endOfPreviousMonth = startOfCurrentMonth
-
-      const [settings] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+      const [settings, rawStats] = await Promise.all([
+        adminService.getSetting(API_KEYS_SETTING_KEY),
+        adminService.getApiKeyStats(),
+      ])
 
       const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
       const activeKeys = apiKeys.filter((key) => key.status === "active").length
 
-      const [totalRequestsResult] = await context.db
-        .select({
-          count: sql<number>`COUNT(*)`,
-        })
-        .from(toolRunsTable)
-
-      const totalRequests = Number(totalRequestsResult?.count ?? 0)
-
-      const [currentMonthResult] = await context.db
-        .select({
-          count: sql<number>`COUNT(*)`,
-          cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
-        })
-        .from(toolRunsTable)
-        .where(sql`${toolRunsTable.createdAt} >= ${startOfCurrentMonth}`)
-
-      const requestsThisMonth = Number(currentMonthResult?.count ?? 0)
-      const monthlyCost = Number(currentMonthResult?.cost ?? 0)
-
-      const [previousMonthResult] = await context.db
-        .select({
-          cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
-        })
-        .from(toolRunsTable)
-        .where(
-          sql`${toolRunsTable.createdAt} >= ${startOfPreviousMonth} AND ${toolRunsTable.createdAt} < ${endOfPreviousMonth}`,
-        )
-
-      const previousMonthCost = Number(previousMonthResult?.cost ?? 0)
+      const {
+        totalRequests,
+        requestsThisMonth,
+        monthlyCost,
+        previousMonthCost,
+      } = rawStats
 
       let costChange = "N/A"
       if (previousMonthCost > 0) {
@@ -347,10 +271,7 @@ export const adminRouter = {
     }),
 
   getAvailableModels: adminProcedure.handler(async ({ context }) => {
-    const [settings] = await context.db
-      .select()
-      .from(adminSettingsTable)
-      .where(eq(adminSettingsTable.settingKey, API_KEYS_SETTING_KEY))
+    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
     if (!settings?.settingValue) {
       return []
@@ -418,10 +339,7 @@ export const adminRouter = {
       return { maxUploadSizeMB: cached }
     }
 
-    const [settings] = await context.db
-      .select()
-      .from(adminSettingsTable)
-      .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+    const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
 
     const maxUploadSizeMB =
       settings && typeof settings.settingValue === "number"
@@ -436,25 +354,10 @@ export const adminRouter = {
   updateAssetSettings: adminProcedure
     .input(z.object({ maxUploadSizeMB: z.number().min(1).max(500) }))
     .handler(async ({ context, input }) => {
-      const [existing] = await context.db
-        .select()
-        .from(adminSettingsTable)
-        .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
-
-      if (existing) {
-        await context.db
-          .update(adminSettingsTable)
-          .set({
-            settingValue: input.maxUploadSizeMB,
-            updatedAt: new Date(),
-          })
-          .where(eq(adminSettingsTable.id, existing.id))
-      } else {
-        await context.db.insert(adminSettingsTable).values({
-          settingKey: ASSETS_MAX_SIZE_KEY,
-          settingValue: input.maxUploadSizeMB,
-        })
-      }
+      await adminService.upsertSetting(
+        ASSETS_MAX_SIZE_KEY,
+        input.maxUploadSizeMB,
+      )
 
       await context.redis.deleteCache(`settings:${ASSETS_MAX_SIZE_KEY}`)
 
@@ -628,19 +531,7 @@ export const adminRouter = {
         return cached
       }
 
-      const recentPayments = await context.db
-        .select({
-          userId: polarPaymentsTable.userId,
-          userName: polarPaymentsTable.userName,
-          amount: polarPaymentsTable.amount,
-          currency: polarPaymentsTable.currency,
-          creditsGranted: polarPaymentsTable.creditsGranted,
-          createdAt: polarPaymentsTable.createdAt,
-        })
-        .from(polarPaymentsTable)
-        .where(eq(polarPaymentsTable.status, "succeeded"))
-        .orderBy(sql`${polarPaymentsTable.createdAt} DESC`)
-        .limit(10)
+      const recentPayments = await adminService.getActivityFeed(10)
 
       const activities = recentPayments.map((payment) => {
         const userIdentifier =
@@ -670,41 +561,18 @@ export const adminRouter = {
         return cached
       }
 
-      const now = new Date()
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
-      const [downtimeStats] = await context.db
-        .select({
-          totalDowntime: sql<number>`COALESCE(SUM(${uptimeEventsTable.durationSeconds}), 0)`,
-          count: sql<number>`COUNT(*)`,
-        })
-        .from(uptimeEventsTable)
-        .where(
-          and(
-            gte(uptimeEventsTable.startedAt, thirtyDaysAgo),
-            sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-          ),
-        )
-
-      const [lastDowntime] = await context.db
-        .select({
-          startedAt: uptimeEventsTable.startedAt,
-        })
-        .from(uptimeEventsTable)
-        .where(sql`${uptimeEventsTable.endedAt} IS NOT NULL`)
-        .orderBy(desc(uptimeEventsTable.startedAt))
-        .limit(1)
+      const rawMetrics = await adminService.getUptimeMetrics()
 
       const totalSeconds = 30 * 24 * 60 * 60
-      const downtimeSeconds = Number(downtimeStats?.totalDowntime ?? 0)
+      const downtimeSeconds = rawMetrics.totalDowntime
       const uptimePercentage =
         ((totalSeconds - downtimeSeconds) / totalSeconds) * 100
 
       const metrics = {
         uptimePercentage: Math.round(uptimePercentage * 10) / 10,
         totalDuration: totalSeconds - downtimeSeconds,
-        lastDowntime: lastDowntime?.startedAt ?? null,
-        downtimeCount: Number(downtimeStats?.count ?? 0),
+        lastDowntime: rawMetrics.lastDowntime,
+        downtimeCount: rawMetrics.downtimeCount,
       }
 
       await context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
@@ -739,45 +607,17 @@ export const adminRouter = {
         return cached
       }
 
-      const limit = input.limit
-
-      const query = context.db
-        .select()
-        .from(activityLogsTable)
-        .where(
-          and(
-            input.eventType
-              ? eq(activityLogsTable.eventType, input.eventType)
-              : sql`true`,
-            input.severity
-              ? eq(activityLogsTable.severity, input.severity)
-              : sql`true`,
-            input.startDate
-              ? gte(activityLogsTable.timestamp, input.startDate)
-              : sql`true`,
-            input.endDate
-              ? lte(activityLogsTable.timestamp, input.endDate)
-              : sql`true`,
-            input.cursor ? lt(activityLogsTable.id, input.cursor) : sql`true`,
-          ),
-        )
-        .orderBy(desc(activityLogsTable.timestamp))
-        .limit(limit + 1)
-
-      const logs = await query
-
-      let nextCursor: string | undefined
-      if (logs.length > limit) {
-        const nextItem = logs.pop()
-        nextCursor = nextItem?.id
-      }
-
-      const [totalCountResult] = await context.db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(activityLogsTable)
+      const rawResult = await adminService.getActivityLogs({
+        limit: input.limit,
+        cursor: input.cursor,
+        eventType: input.eventType,
+        severity: input.severity,
+        startDate: input.startDate,
+        endDate: input.endDate,
+      })
 
       const result = {
-        logs: logs.map((log) => ({
+        logs: rawResult.logs.map((log) => ({
           id: log.id,
           timestamp: log.timestamp,
           eventType: log.eventType,
@@ -785,8 +625,8 @@ export const adminRouter = {
           description: log.description,
           metadata: log.metadata as Record<string, unknown> | null,
         })),
-        nextCursor,
-        totalCount: Number(totalCountResult?.count ?? 0),
+        nextCursor: rawResult.nextCursor,
+        totalCount: rawResult.totalCount,
       }
 
       await context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
@@ -831,20 +671,11 @@ export const adminRouter = {
         })
       }
 
-      const downtimeEvents = await context.db
-        .select({
-          startedAt: uptimeEventsTable.startedAt,
-          endedAt: uptimeEventsTable.endedAt,
-          durationSeconds: uptimeEventsTable.durationSeconds,
-        })
-        .from(uptimeEventsTable)
-        .where(
-          and(
-            gte(uptimeEventsTable.startedAt, startDate),
-            lte(uptimeEventsTable.startedAt, now),
-            sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-          ),
-        )
+      const downtimeEvents = await adminService.getUptimeHistory({
+        days,
+        startDate,
+        now,
+      })
 
       for (const event of downtimeEvents) {
         const dateStr = event.startedAt.toISOString().split("T")[0]
@@ -885,67 +716,23 @@ export const adminRouter = {
         return cached
       }
 
-      const now = new Date()
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+      const rawMetrics = await adminService.getSystemMetrics()
 
-      const [revenueResult] = await context.db
-        .select({
-          current: sql<number>`COALESCE(SUM(CASE WHEN ${polarPaymentsTable.createdAt} >= ${thirtyDaysAgo} THEN CAST(${polarPaymentsTable.amount} AS DECIMAL) ELSE 0 END), 0)`,
-          previous: sql<number>`COALESCE(SUM(CASE WHEN ${polarPaymentsTable.createdAt} >= ${sixtyDaysAgo} AND ${polarPaymentsTable.createdAt} < ${thirtyDaysAgo} THEN CAST(${polarPaymentsTable.amount} AS DECIMAL) ELSE 0 END), 0)`,
-        })
-        .from(polarPaymentsTable)
-        .where(eq(polarPaymentsTable.status, "succeeded"))
-
-      const currentRevenue = Number(revenueResult?.current ?? 0)
-      const previousRevenue = Number(revenueResult?.previous ?? 0)
-
-      const revenueChange = calculateTrend(currentRevenue, previousRevenue)
-
-      const [activeUsersResult] = await context.db
-        .select({
-          current: sql<number>`COUNT(DISTINCT CASE WHEN ${toolRunsTable.createdAt} >= ${thirtyDaysAgo} THEN ${toolRunsTable.userId} END)`,
-          previous: sql<number>`COUNT(DISTINCT CASE WHEN ${toolRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${toolRunsTable.createdAt} < ${thirtyDaysAgo} THEN ${toolRunsTable.userId} END)`,
-        })
-        .from(toolRunsTable)
-
-      const currentActiveUsers = Number(activeUsersResult?.current ?? 0)
-      const previousActiveUsers = Number(activeUsersResult?.previous ?? 0)
-
+      const revenueChange = calculateTrend(
+        rawMetrics.revenue.current,
+        rawMetrics.revenue.previous,
+      )
       const activeUsersChange = calculateTrend(
-        currentActiveUsers,
-        previousActiveUsers,
+        rawMetrics.activeUsers.current,
+        rawMetrics.activeUsers.previous,
       )
-
-      const [aiRequestsResult] = await context.db
-        .select({
-          current: sql<number>`COUNT(CASE WHEN ${toolRunsTable.createdAt} >= ${thirtyDaysAgo} AND ${toolRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
-          previous: sql<number>`COUNT(CASE WHEN ${toolRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${toolRunsTable.createdAt} < ${thirtyDaysAgo} AND ${toolRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
-        })
-        .from(toolRunsTable)
-
-      const currentAiRequests = Number(aiRequestsResult?.current ?? 0)
-      const previousAiRequests = Number(aiRequestsResult?.previous ?? 0)
-
       const aiRequestsChange = calculateTrend(
-        currentAiRequests,
-        previousAiRequests,
+        rawMetrics.aiRequests.current,
+        rawMetrics.aiRequests.previous,
       )
-
-      const [uptimeStats] = await context.db
-        .select({
-          totalDowntime: sql<number>`COALESCE(SUM(${uptimeEventsTable.durationSeconds}), 0)`,
-        })
-        .from(uptimeEventsTable)
-        .where(
-          and(
-            gte(uptimeEventsTable.startedAt, thirtyDaysAgo),
-            sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-          ),
-        )
 
       const totalSeconds = 30 * 24 * 60 * 60
-      const downtimeSeconds = Number(uptimeStats?.totalDowntime ?? 0)
+      const downtimeSeconds = rawMetrics.downtimeSeconds
       const uptimePercentage =
         ((totalSeconds - downtimeSeconds) / totalSeconds) * 100
       const uptimeChange =
@@ -954,11 +741,11 @@ export const adminRouter = {
           : "+0.0%"
 
       const metrics = {
-        revenue: currentRevenue,
+        revenue: rawMetrics.revenue.current,
         revenueChange,
-        activeUsers: currentActiveUsers,
+        activeUsers: rawMetrics.activeUsers.current,
         activeUsersChange,
-        aiRequests: currentAiRequests,
+        aiRequests: rawMetrics.aiRequests.current,
         aiRequestsChange,
         systemUptime: `${uptimePercentage.toFixed(1)}%`,
         systemUptimeChange: uptimeChange,
@@ -1010,17 +797,7 @@ export const adminRouter = {
         dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })
       }
 
-      const runs = await context.db
-        .select({
-          createdAt: toolRunsTable.createdAt,
-        })
-        .from(toolRunsTable)
-        .where(
-          and(
-            gte(toolRunsTable.createdAt, startDate),
-            sql`${toolRunsTable.status} IN ('completed', 'failed')`,
-          ),
-        )
+      const runs = await adminService.getAiRequestsHistory({ startDate })
 
       for (const run of runs) {
         if (run.createdAt) {

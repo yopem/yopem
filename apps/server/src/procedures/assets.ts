@@ -1,9 +1,14 @@
 import { ORPCError } from "@orpc/server"
-import { adminSettingsTable, assetsTable } from "@repo/db/schema"
+import {
+  deleteAsset,
+  getAdminUploadSizeSetting,
+  getAssetById,
+  insertAsset,
+  listAssets,
+} from "@repo/db/services/assets"
 import { r2Domain } from "@repo/env/hono"
 import { adminProcedure, publicProcedure } from "@repo/server/orpc"
 import { getR2Storage } from "@repo/storage"
-import { and, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 const MAX_UPLOAD_SIZE_MB = 50
@@ -25,32 +30,12 @@ const deleteAssetInputSchema = z.object({
 export const assetsRouter = {
   list: publicProcedure
     .input(listAssetsInputSchema.optional())
-    .handler(async ({ context, input }) => {
-      const limit = input?.limit ?? 20
-      const conditions = []
-
-      if (input?.type) {
-        conditions.push(eq(assetsTable.type, input.type))
-      }
-
-      if (input?.cursor) {
-        conditions.push(sql`${assetsTable.id} < ${input.cursor}`)
-      }
-
-      const assets = await context.db
-        .select()
-        .from(assetsTable)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(assetsTable.createdAt))
-        .limit(limit + 1)
-
-      let nextCursor: string | undefined = undefined
-      if (assets.length > limit) {
-        const nextItem = assets.pop()
-        nextCursor = nextItem?.id
-      }
-
-      return { assets, nextCursor }
+    .handler(({ input }) => {
+      return listAssets({
+        limit: input?.limit ?? 20,
+        cursor: input?.cursor,
+        type: input?.type,
+      })
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
@@ -64,10 +49,7 @@ export const assetsRouter = {
       }
     }
 
-    const [settings] = await context.db
-      .select()
-      .from(adminSettingsTable)
-      .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+    const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
 
     const maxSizeMB =
       settings && typeof settings.settingValue === "number"
@@ -89,10 +71,7 @@ export const assetsRouter = {
       let maxSizeMB = await context.redis.getCache<number>(cacheKey)
 
       if (maxSizeMB === null) {
-        const [settings] = await context.db
-          .select()
-          .from(adminSettingsTable)
-          .where(eq(adminSettingsTable.settingKey, ASSETS_MAX_SIZE_KEY))
+        const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
 
         maxSizeMB =
           settings && typeof settings.settingValue === "number"
@@ -120,40 +99,29 @@ export const assetsRouter = {
         file.type || "application/octet-stream",
       )
 
-      const [asset] = await context.db
-        .insert(assetsTable)
-        .values({
-          filename: key.split("/").pop()!,
-          originalName: file.name,
-          type,
-          size,
-          url,
-        })
-        .returning()
-
-      return asset
+      return insertAsset({
+        filename: key.split("/").pop()!,
+        originalName: file.name,
+        type,
+        size,
+        url,
+      })
     }),
 
   delete: adminProcedure
     .input(deleteAssetInputSchema)
-    .handler(async ({ context, input }) => {
-      // Get asset from database
-      const [asset] = await context.db
-        .select()
-        .from(assetsTable)
-        .where(eq(assetsTable.id, input.id))
+    .handler(async ({ input }) => {
+      const asset = await getAssetById(input.id)
 
       if (!asset) {
         throw new ORPCError("NOT_FOUND", { message: "Asset not found" })
       }
 
-      // Delete from R2
       const r2 = getR2Storage()
       const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
       await r2.deleteFile(key)
 
-      // Delete from database
-      await context.db.delete(assetsTable).where(eq(assetsTable.id, input.id))
+      await deleteAsset(input.id)
 
       return { success: true }
     }),

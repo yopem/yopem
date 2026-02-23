@@ -1,13 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import {
-  creditTransactionsTable,
-  polarCheckoutSessionsTable,
-  polarPaymentsTable,
-  toolRunsTable,
-  toolsTable,
-  userCreditsTable,
-  userSettingsTable,
-} from "@repo/db/schema"
+import * as userService from "@repo/db/services/user"
 import { formatError, logger } from "@repo/logger"
 import {
   MAX_TOPUP_AMOUNT,
@@ -24,7 +16,6 @@ import {
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
 import { checkRateLimit, RATE_LIMITS } from "@repo/utils/rate-limit"
-import { desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 export const userRouter = {
@@ -53,27 +44,8 @@ export const userRouter = {
       }
     }),
 
-  getStats: protectedProcedure.handler(async ({ context }) => {
-    const [credits] = await context.db
-      .select({
-        balance: userCreditsTable.balance,
-        totalUsed: userCreditsTable.totalUsed,
-        totalPurchased: userCreditsTable.totalPurchased,
-      })
-      .from(userCreditsTable)
-      .where(eq(userCreditsTable.userId, context.session.id))
-
-    const runs = await context.db
-      .select({ count: sql<number>`count(*)` })
-      .from(toolRunsTable)
-      .where(eq(toolRunsTable.userId, context.session.id))
-
-    return {
-      balance: credits ? credits.balance : "0",
-      totalUsed: credits ? credits.totalUsed : "0",
-      totalPurchased: credits ? credits.totalPurchased : "0",
-      totalRuns: Number(runs[0] ? runs[0].count : 0),
-    }
+  getStats: protectedProcedure.handler(({ context }) => {
+    return userService.getUserStats(context.session.id)
   }),
 
   getRuns: protectedProcedure
@@ -85,40 +57,15 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(async ({ context, input }) => {
-      const limit = input?.limit ?? 20
-
-      const runs = await context.db
-        .select({
-          id: toolRunsTable.id,
-          toolId: toolRunsTable.toolId,
-          status: toolRunsTable.status,
-          cost: toolRunsTable.cost,
-          createdAt: toolRunsTable.createdAt,
-          toolName: toolsTable.name,
-        })
-        .from(toolRunsTable)
-        .leftJoin(toolsTable, eq(toolRunsTable.toolId, toolsTable.id))
-        .where(eq(toolRunsTable.userId, context.session.id))
-        .orderBy(desc(toolRunsTable.createdAt))
-        .limit(limit + 1)
-
-      let nextCursor: string | undefined = undefined
-      if (runs.length > limit) {
-        const nextItem = runs.pop()
-        nextCursor = nextItem?.id
-      }
-
-      return { runs, nextCursor }
+    .handler(({ context, input }) => {
+      return userService.getUserRuns(context.session.id, {
+        limit: input?.limit ?? 20,
+        cursor: input?.cursor,
+      })
     }),
 
-  getCredits: protectedProcedure.handler(async ({ context }) => {
-    const [credits] = await context.db
-      .select()
-      .from(userCreditsTable)
-      .where(eq(userCreditsTable.userId, context.session.id))
-
-    return credits ? credits : null
+  getCredits: protectedProcedure.handler(({ context }) => {
+    return userService.getUserCredits(context.session.id)
   }),
 
   getTransactions: protectedProcedure
@@ -129,23 +76,10 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(async ({ context, input }) => {
-      const limit = input?.limit ?? 20
-
-      const transactions = await context.db
-        .select({
-          id: creditTransactionsTable.id,
-          amount: creditTransactionsTable.amount,
-          type: creditTransactionsTable.type,
-          description: creditTransactionsTable.description,
-          createdAt: creditTransactionsTable.createdAt,
-        })
-        .from(creditTransactionsTable)
-        .where(eq(creditTransactionsTable.userId, context.session.id))
-        .orderBy(desc(creditTransactionsTable.createdAt))
-        .limit(limit)
-
-      return transactions
+    .handler(({ context, input }) => {
+      return userService.getUserTransactions(context.session.id, {
+        limit: input?.limit ?? 20,
+      })
     }),
 
   getPurchases: protectedProcedure
@@ -156,47 +90,14 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(async ({ context, input }) => {
-      const limit = input?.limit ?? 20
-
-      const purchases = await context.db
-        .select({
-          id: polarPaymentsTable.id,
-          polarPaymentId: polarPaymentsTable.polarPaymentId,
-          amount: polarPaymentsTable.amount,
-          currency: polarPaymentsTable.currency,
-          status: polarPaymentsTable.status,
-          productId: polarPaymentsTable.productId,
-          creditsGranted: polarPaymentsTable.creditsGranted,
-          refundedAmount: polarPaymentsTable.refundedAmount,
-          createdAt: polarPaymentsTable.createdAt,
-          updatedAt: polarPaymentsTable.updatedAt,
-        })
-        .from(polarPaymentsTable)
-        .where(eq(polarPaymentsTable.userId, context.session.id))
-        .orderBy(desc(polarPaymentsTable.createdAt))
-        .limit(limit)
-
-      return purchases
+    .handler(({ context, input }) => {
+      return userService.getPaymentHistory(context.session.id, {
+        limit: input?.limit ?? 20,
+      })
     }),
 
-  getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
-    const checkouts = await context.db
-      .select({
-        id: polarCheckoutSessionsTable.id,
-        checkoutId: polarCheckoutSessionsTable.checkoutId,
-        productId: polarCheckoutSessionsTable.productId,
-        checkoutUrl: polarCheckoutSessionsTable.checkoutUrl,
-        amount: polarCheckoutSessionsTable.amount,
-        status: polarCheckoutSessionsTable.status,
-        createdAt: polarCheckoutSessionsTable.createdAt,
-      })
-      .from(polarCheckoutSessionsTable)
-      .where(eq(polarCheckoutSessionsTable.userId, context.session.id))
-      .orderBy(desc(polarCheckoutSessionsTable.createdAt))
-      .limit(10)
-
-    return checkouts
+  getPendingCheckouts: protectedProcedure.handler(({ context }) => {
+    return userService.getPendingCheckouts(context.session.id)
   }),
 
   addCredits: protectedProcedure
@@ -206,48 +107,12 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      let [credits] = await context.db
-        .select()
-        .from(userCreditsTable)
-        .where(eq(userCreditsTable.userId, context.session.id))
-
-      if (credits) {
-        await context.db
-          .update(userCreditsTable)
-          .set({
-            balance: sql`${userCreditsTable.balance} + ${input.amount}`,
-            totalPurchased: sql`${userCreditsTable.totalPurchased} + ${input.amount}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(userCreditsTable.userId, context.session.id))
-      } else {
-        const newCredits = {
-          id: createCustomId(),
-          userId: context.session.id,
-          balance: String(input.amount),
-          totalPurchased: String(input.amount),
-          totalUsed: "0",
-        }
-        await context.db.insert(userCreditsTable).values(newCredits)
-        credits = newCredits as typeof credits
-      }
-
-      await context.db.insert(creditTransactionsTable).values({
-        id: createCustomId(),
-        userId: context.session.id,
-        amount: String(input.amount),
-        type: "purchase",
-        description: `Purchased ${input.amount} credits`,
-      })
-
+      await userService.addCredits(context.session.id, input.amount)
       return { success: true, amount: input.amount }
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const [settings] = await context.db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userId, context.session.id))
+    const settings = await userService.getUserSettings(context.session.id)
 
     if (!settings?.apiKeys) {
       return []
@@ -284,10 +149,7 @@ export const userRouter = {
         })
       }
 
-      const [settings] = await context.db
-        .select()
-        .from(userSettingsTable)
-        .where(eq(userSettingsTable.userId, context.session.id))
+      const settings = await userService.getUserSettings(context.session.id)
 
       const newKey: ApiKeyConfig = {
         id: createCustomId(),
@@ -313,21 +175,9 @@ export const userRouter = {
 
       const updatedKeys = [...existingKeys, newKey]
 
-      if (settings) {
-        await context.db
-          .update(userSettingsTable)
-          .set({
-            apiKeys: updatedKeys,
-            updatedAt: new Date(),
-          })
-          .where(eq(userSettingsTable.userId, context.session.id))
-      } else {
-        await context.db.insert(userSettingsTable).values({
-          id: createCustomId(),
-          userId: context.session.id,
-          apiKeys: updatedKeys,
-        })
-      }
+      await userService.upsertUserSettings(context.session.id, {
+        apiKeys: updatedKeys,
+      })
 
       return {
         ...newKey,
@@ -353,10 +203,7 @@ export const userRouter = {
         })
       }
 
-      const [settings] = await context.db
-        .select()
-        .from(userSettingsTable)
-        .where(eq(userSettingsTable.userId, context.session.id))
+      const settings = await userService.getUserSettings(context.session.id)
 
       if (!settings?.apiKeys) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -382,13 +229,9 @@ export const userRouter = {
         const updatedKeys = [...existingKeys]
         updatedKeys[keyIndex] = updatedKey
 
-        await context.db
-          .update(userSettingsTable)
-          .set({
-            apiKeys: updatedKeys,
-            updatedAt: new Date(),
-          })
-          .where(eq(userSettingsTable.userId, context.session.id))
+        await userService.upsertUserSettings(context.session.id, {
+          apiKeys: updatedKeys,
+        })
 
         return {
           ...updatedKey,
@@ -422,10 +265,7 @@ export const userRouter = {
         })
       }
 
-      const [settings] = await context.db
-        .select()
-        .from(userSettingsTable)
-        .where(eq(userSettingsTable.userId, context.session.id))
+      const settings = await userService.getUserSettings(context.session.id)
 
       if (!settings?.apiKeys) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -439,13 +279,9 @@ export const userRouter = {
           throw new ORPCError("NOT_FOUND", { message: "API key not found" })
         }
 
-        await context.db
-          .update(userSettingsTable)
-          .set({
-            apiKeys: updatedKeys,
-            updatedAt: new Date(),
-          })
-          .where(eq(userSettingsTable.userId, context.session.id))
+        await userService.upsertUserSettings(context.session.id, {
+          apiKeys: updatedKeys,
+        })
 
         return { success: true, id: input.id }
       } catch (error) {
@@ -457,10 +293,7 @@ export const userRouter = {
     }),
 
   getApiKeyStats: adminProcedure.handler(async ({ context }) => {
-    const [settings] = await context.db
-      .select()
-      .from(userSettingsTable)
-      .where(eq(userSettingsTable.userId, context.session.id))
+    const settings = await userService.getUserSettings(context.session.id)
 
     let activeKeys = 0
 
@@ -473,78 +306,11 @@ export const userRouter = {
       }
     }
 
-    const now = new Date()
-    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const startOfPreviousMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-    )
-    const endOfPreviousMonth = startOfCurrentMonth
-
-    const [totalRequestsResult] = await context.db
-      .select({
-        count: sql<number>`COUNT(*)`,
-      })
-      .from(toolRunsTable)
-      .where(eq(toolRunsTable.userId, context.session.id))
-
-    const totalRequests = Number(totalRequestsResult?.count ?? 0)
-
-    const [currentMonthResult] = await context.db
-      .select({
-        count: sql<number>`COUNT(*)`,
-        cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
-      })
-      .from(toolRunsTable)
-      .where(
-        sql`${toolRunsTable.userId} = ${context.session.id} AND ${toolRunsTable.createdAt} >= ${startOfCurrentMonth}`,
-      )
-
-    const requestsThisMonth = Number(currentMonthResult?.count ?? 0)
-    const monthlyCost = Number(currentMonthResult?.cost ?? 0)
-
-    const [previousMonthResult] = await context.db
-      .select({
-        cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
-      })
-      .from(toolRunsTable)
-      .where(
-        sql`${toolRunsTable.userId} = ${context.session.id} AND ${toolRunsTable.createdAt} >= ${startOfPreviousMonth} AND ${toolRunsTable.createdAt} < ${endOfPreviousMonth}`,
-      )
-
-    const previousMonthCost = Number(previousMonthResult?.cost ?? 0)
-
-    let costChange = "0%"
-    if (previousMonthCost > 0) {
-      const changePercent =
-        ((monthlyCost - previousMonthCost) / previousMonthCost) * 100
-      costChange =
-        changePercent >= 0
-          ? `+${changePercent.toFixed(1)}%`
-          : `${changePercent.toFixed(1)}%`
-    } else if (monthlyCost > 0) {
-      costChange = "+100%"
-    }
-
-    return {
-      totalRequests,
-      activeKeys,
-      monthlyCost,
-      requestsThisMonth,
-      costChange,
-    }
+    return { activeKeys }
   }),
 
   getAutoTopupSettings: protectedProcedure.handler(async ({ context }) => {
-    const [credits] = await context.db
-      .select({
-        autoTopupEnabled: userCreditsTable.autoTopupEnabled,
-        autoTopupThreshold: userCreditsTable.autoTopupThreshold,
-        autoTopupAmount: userCreditsTable.autoTopupAmount,
-      })
-      .from(userCreditsTable)
-      .where(eq(userCreditsTable.userId, context.session.id))
+    const credits = await userService.getUserCredits(context.session.id)
 
     return credits
       ? {
@@ -598,36 +364,11 @@ export const userRouter = {
         })
       }
 
-      const [credits] = await context.db
-        .select()
-        .from(userCreditsTable)
-        .where(eq(userCreditsTable.userId, context.session.id))
-
-      if (credits) {
-        await context.db
-          .update(userCreditsTable)
-          .set({
-            autoTopupEnabled: input.enabled,
-            autoTopupThreshold: input.threshold
-              ? String(input.threshold)
-              : null,
-            autoTopupAmount: input.amount ? String(input.amount) : null,
-            updatedAt: new Date(),
-          })
-          .where(eq(userCreditsTable.userId, context.session.id))
-      } else {
-        // Create credits record if it doesn't exist
-        await context.db.insert(userCreditsTable).values({
-          id: createCustomId(),
-          userId: context.session.id,
-          balance: "0",
-          totalPurchased: "0",
-          totalUsed: "0",
-          autoTopupEnabled: input.enabled,
-          autoTopupThreshold: input.threshold ? String(input.threshold) : null,
-          autoTopupAmount: input.amount ? String(input.amount) : null,
-        })
-      }
+      await userService.updateAutoTopup(context.session.id, {
+        enabled: input.enabled,
+        threshold: input.threshold,
+        amount: input.amount,
+      })
 
       return {
         success: true,

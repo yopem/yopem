@@ -16,10 +16,6 @@
       "types": "./src/crypto.ts",
       "default": "./src/crypto.ts"
     },
-    "./slug": {
-      "types": "./src/slug.ts",
-      "default": "./src/slug.ts"
-    },
     "./rate-limit": {
       "types": "./src/rate-limit.ts",
       "default": "./src/rate-limit.ts"
@@ -56,14 +52,10 @@
     "typescript": "catalog:tooling"
   },
   "peerDependencies": {
-    "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
     "ioredis": "catalog:"
   },
   "peerDependenciesMeta": {
-    "@repo/db": {
-      "optional": true
-    },
     "@repo/env": {
       "optional": true
     },

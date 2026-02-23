@@ -1,14 +1,26 @@
 "use client"
 
-import type { SelectCategory, SelectTag } from "@repo/db/schema"
 import { Button } from "@repo/ui/button"
 import { Separator } from "@repo/ui/separator"
 import { Check as CheckIcon } from "lucide-react"
 import { useState } from "react"
 
+interface CategoryItem {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+}
+
+interface TagItem {
+  id: string
+  name: string
+  slug: string
+}
+
 interface MarketplaceSidebarProps {
-  categories: SelectCategory[]
-  tags: SelectTag[]
+  categories: CategoryItem[]
+  tags: TagItem[]
   selectedCategories?: string[]
   selectedTags?: string[]
   selectedPriceFilter?: string

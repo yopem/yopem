@@ -1,5 +1,8 @@
-import { db } from "@repo/db"
+import { and, eq, ne } from "drizzle-orm"
 import { transliterate as tr } from "transliteration"
+
+import { db } from "../index"
+import { categoriesTable, tagsTable, toolsTable } from "../schema"
 
 function slugify(text: string) {
   return tr(text)
@@ -21,11 +24,13 @@ export const generateUniqueToolSlug = async (text: string): Promise<string> => {
   let suffix = 1
 
   while (true) {
-    const existingTool = await db.query.toolsTable.findFirst({
-      where: (tool, { eq }) => eq(tool.slug, uniqueSlug),
-    })
+    const existing = await db
+      .select({ id: toolsTable.id })
+      .from(toolsTable)
+      .where(eq(toolsTable.slug, uniqueSlug))
+      .limit(1)
 
-    if (!existingTool) break
+    if (existing.length === 0) break
 
     suffix++
     uniqueSlug = `${slug}-${suffix}`
@@ -43,14 +48,20 @@ export const generateUniqueCategorySlug = async (
   let suffix = 1
 
   while (true) {
-    const existingCategory = await db.query.categoriesTable.findFirst({
-      where: (category, { eq, and, ne }) =>
+    const existing = await db
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .where(
         excludeId
-          ? and(eq(category.slug, uniqueSlug), ne(category.id, excludeId))
-          : eq(category.slug, uniqueSlug),
-    })
+          ? and(
+              eq(categoriesTable.slug, uniqueSlug),
+              ne(categoriesTable.id, excludeId),
+            )
+          : eq(categoriesTable.slug, uniqueSlug),
+      )
+      .limit(1)
 
-    if (!existingCategory) break
+    if (existing.length === 0) break
 
     suffix++
     uniqueSlug = `${slug}-${suffix}`
@@ -68,14 +79,17 @@ export const generateUniqueTagSlug = async (
   let suffix = 1
 
   while (true) {
-    const existingTag = await db.query.tagsTable.findFirst({
-      where: (tag, { eq, and, ne }) =>
+    const existing = await db
+      .select({ id: tagsTable.id })
+      .from(tagsTable)
+      .where(
         excludeId
-          ? and(eq(tag.slug, uniqueSlug), ne(tag.id, excludeId))
-          : eq(tag.slug, uniqueSlug),
-    })
+          ? and(eq(tagsTable.slug, uniqueSlug), ne(tagsTable.id, excludeId))
+          : eq(tagsTable.slug, uniqueSlug),
+      )
+      .limit(1)
 
-    if (!existingTag) break
+    if (existing.length === 0) break
 
     suffix++
     uniqueSlug = `${slug}-${suffix}`

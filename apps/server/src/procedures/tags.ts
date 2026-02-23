@@ -1,21 +1,16 @@
-import { insertTagSchema, tagsTable } from "@repo/db/schema"
+import { insertTagSchema } from "@repo/db/schema"
+import {
+  createTag,
+  deleteTag,
+  listTags,
+  updateTag,
+} from "@repo/db/services/tags"
 import { adminProcedure, publicProcedure } from "@repo/server/orpc"
-import { generateUniqueTagSlug } from "@repo/utils/slug"
-import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 export const tagsRouter = {
-  list: publicProcedure.handler(async ({ context }) => {
-    const tags = await context.db
-      .select({
-        id: tagsTable.id,
-        name: tagsTable.name,
-        slug: tagsTable.slug,
-      })
-      .from(tagsTable)
-      .orderBy(asc(tagsTable.name))
-
-    return tags
+  list: publicProcedure.handler(() => {
+    return listTags()
   }),
 
   create: adminProcedure
@@ -24,18 +19,8 @@ export const tagsRouter = {
         name: z.string().min(1, "Tag name is required").trim(),
       }),
     )
-    .handler(async ({ context, input }) => {
-      const slug = await generateUniqueTagSlug(input.name)
-
-      const [tag] = await context.db
-        .insert(tagsTable)
-        .values({
-          name: input.name,
-          slug,
-        })
-        .returning()
-
-      return tag
+    .handler(({ input }) => {
+      return createTag({ name: input.name })
     }),
 
   update: adminProcedure
@@ -45,25 +30,17 @@ export const tagsRouter = {
         name: z.string().min(1, "Tag name is required").trim(),
       }),
     )
-    .handler(async ({ context, input }) => {
-      const slug = await generateUniqueTagSlug(input.name, input.id)
-
-      const [tag] = await context.db
-        .update(tagsTable)
-        .set({
-          name: input.name,
-          slug,
-        })
-        .where(eq(tagsTable.id, input.id))
-        .returning()
-
-      return tag
+    .handler(({ input }) => {
+      return updateTag({
+        id: input.id,
+        name: input.name,
+      })
     }),
 
   delete: adminProcedure
     .input(z.object({ id: z.string() }))
-    .handler(async ({ context, input }) => {
-      await context.db.delete(tagsTable).where(eq(tagsTable.id, input.id))
+    .handler(async ({ input }) => {
+      await deleteTag(input.id)
 
       return { success: true }
     }),

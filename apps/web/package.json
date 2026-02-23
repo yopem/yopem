@@ -16,12 +16,12 @@
   },
   "dependencies": {
     "@next/third-parties": "^16.1.6",
-    "@repo/orpc": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/orpc": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",

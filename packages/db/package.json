@@ -11,6 +11,34 @@
     "./schema": {
       "types": "./src/schema/index.ts",
       "default": "./src/schema/index.ts"
+    },
+    "./services/slug": {
+      "types": "./src/services/slug.ts",
+      "default": "./src/services/slug.ts"
+    },
+    "./services/tools": {
+      "types": "./src/services/tools.ts",
+      "default": "./src/services/tools.ts"
+    },
+    "./services/tags": {
+      "types": "./src/services/tags.ts",
+      "default": "./src/services/tags.ts"
+    },
+    "./services/categories": {
+      "types": "./src/services/categories.ts",
+      "default": "./src/services/categories.ts"
+    },
+    "./services/assets": {
+      "types": "./src/services/assets.ts",
+      "default": "./src/services/assets.ts"
+    },
+    "./services/user": {
+      "types": "./src/services/user.ts",
+      "default": "./src/services/user.ts"
+    },
+    "./services/admin": {
+      "types": "./src/services/admin.ts",
+      "default": "./src/services/admin.ts"
     }
   },
   "scripts": {
