@@ -45,6 +45,7 @@ tsconfig.tsbuildinfo
 next-env.d.ts
 
 # ai
+docs/
 .opencode/
 openspec/
 opencode.jsonc
