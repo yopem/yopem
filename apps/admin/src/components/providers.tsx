@@ -1,6 +1,6 @@
 "use client"
 
-import { QueryProvider } from "@repo/query/provider"
+import { QueryProvider } from "@repo/orpc/provider"
 import ThemeProvider from "@repo/ui/theme-provider"
 import { AnchoredToastProvider, ToastProvider } from "@repo/ui/toast"
 import type { ReactNode } from "react"

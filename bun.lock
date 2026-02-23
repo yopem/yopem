@@ -26,7 +26,6 @@
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/orpc": "workspace:*",
-        "@repo/query": "workspace:*",
         "@repo/types": "workspace:*",
         "@repo/ui": "workspace:*",
         "@repo/utils": "workspace:*",
@@ -96,7 +95,6 @@
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/orpc": "workspace:*",
-        "@repo/query": "workspace:*",
         "@repo/types": "workspace:*",
         "@repo/ui": "workspace:*",
         "@repo/utils": "workspace:*",
@@ -246,7 +244,9 @@
         "@orpc/server": "catalog:orpc",
         "@orpc/tanstack-query": "catalog:orpc",
         "@repo/logger": "workspace:*",
+        "@tanstack/react-query": "catalog:",
         "next": "catalog:",
+        "react": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -273,24 +273,6 @@
       },
       "devDependencies": {
         "@types/node": "catalog:tooling",
-        "@yopem/typescript-config": "catalog:tooling",
-        "oxfmt": "catalog:tooling",
-        "oxlint": "catalog:tooling",
-        "oxlint-tsgolint": "catalog:tooling",
-        "typescript": "catalog:tooling",
-      },
-    },
-    "packages/query": {
-      "name": "@repo/query",
-      "version": "0.0.0",
-      "dependencies": {
-        "@orpc/client": "catalog:orpc",
-        "@tanstack/react-query": "catalog:",
-        "react": "catalog:",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:tooling",
-        "@types/react": "catalog:",
         "@yopem/typescript-config": "catalog:tooling",
         "oxfmt": "catalog:tooling",
         "oxlint": "catalog:tooling",
@@ -867,8 +849,6 @@
     "@repo/orpc": ["@repo/orpc@workspace:packages/orpc"],
 
     "@repo/payments": ["@repo/payments@workspace:packages/payments"],
-
-    "@repo/query": ["@repo/query@workspace:packages/query"],
 
     "@repo/server": ["@repo/server@workspace:apps/server"],
 

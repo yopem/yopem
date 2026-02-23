@@ -19,6 +19,22 @@
     "./server": {
       "types": "./src/server.ts",
       "default": "./src/server.ts"
+    },
+    "./serializer": {
+      "types": "./src/serializer.tsx",
+      "default": "./src/serializer.tsx"
+    },
+    "./query-client": {
+      "types": "./src/query-client.tsx",
+      "default": "./src/query-client.tsx"
+    },
+    "./provider": {
+      "types": "./src/provider.tsx",
+      "default": "./src/provider.tsx"
+    },
+    "./hydration": {
+      "types": "./src/hydration.tsx",
+      "default": "./src/hydration.tsx"
     }
   },
   "scripts": {
@@ -33,7 +49,9 @@
     "@orpc/server": "catalog:orpc",
     "@orpc/tanstack-query": "catalog:orpc",
     "@repo/logger": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "next": "catalog:",
+    "react": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

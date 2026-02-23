@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query"
 import { cache, type ReactNode } from "react"
 
-import { createQueryClient } from "./client"
+import { createQueryClient } from "./query-client"
 
 export const getQueryClient = cache(createQueryClient)
 
