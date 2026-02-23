@@ -1,7 +1,8 @@
 "use client"
 
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@repo/ui/sidebar"
 import type { ReactNode } from "react"
+
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@repo/ui/sidebar"
 
 import UserSidebar from "./user-sidebar"
 

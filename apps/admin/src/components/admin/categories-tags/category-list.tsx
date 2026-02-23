@@ -1,7 +1,8 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
 import type { UseMutationResult } from "@tanstack/react-query"
+
+import { Button } from "@repo/ui/button"
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 

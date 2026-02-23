@@ -1,3 +1,5 @@
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
+
 import { ORPCError } from "@orpc/server"
 import { executeAITool } from "@repo/ai/executor"
 import {
@@ -43,7 +45,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@repo/server/orpc"
-import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import { decryptApiKey } from "@repo/utils/crypto"
 import { createCustomId } from "@repo/utils/custom-id"
 import { z } from "zod"

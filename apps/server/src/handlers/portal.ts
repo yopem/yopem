@@ -1,5 +1,6 @@
-import { Polar } from "@polar-sh/sdk"
 import type { SessionUser } from "@repo/auth/types"
+
+import { Polar } from "@polar-sh/sdk"
 import { logger } from "@repo/logger"
 import { Hono } from "hono"
 

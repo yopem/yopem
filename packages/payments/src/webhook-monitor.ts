@@ -1,5 +1,6 @@
-import { formatError, logger } from "@repo/logger"
 import type { Redis } from "ioredis"
+
+import { formatError, logger } from "@repo/logger"
 
 import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics"
 

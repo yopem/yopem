@@ -1,5 +1,7 @@
 "use client"
 
+import type { UseMutationResult } from "@tanstack/react-query"
+
 import {
   AlertDialog,
   AlertDialogBackdrop,
@@ -9,7 +11,6 @@ import {
   AlertDialogTitle,
 } from "@repo/ui/alert-dialog"
 import { Button } from "@repo/ui/button"
-import type { UseMutationResult } from "@tanstack/react-query"
 
 interface DeleteDialogProps {
   open: boolean

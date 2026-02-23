@@ -1,5 +1,6 @@
-import { Skeleton } from "@repo/ui/skeleton"
 import type { Metadata } from "next"
+
+import { Skeleton } from "@repo/ui/skeleton"
 import { Suspense } from "react"
 
 import CTA from "@/components/landing/cta"

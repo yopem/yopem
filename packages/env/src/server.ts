@@ -1,5 +1,4 @@
 import "server-only"
-
 import { env } from "./index"
 
 export const appEnv = env.APP_ENV

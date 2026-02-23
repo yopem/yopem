@@ -1,8 +1,9 @@
+import type { RouterClient } from "@orpc/server"
+import type { appRouter } from "@repo/server/router"
+
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
-import type { RouterClient } from "@orpc/server"
 import { logger } from "@repo/logger"
-import type { appRouter } from "@repo/server/router"
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {

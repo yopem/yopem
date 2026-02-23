@@ -1,6 +1,7 @@
+import type { SessionUser } from "@repo/auth/types"
+
 import { LoggingHandlerPlugin } from "@orpc/experimental-pino"
 import { RPCHandler } from "@orpc/server/fetch"
-import type { SessionUser } from "@repo/auth/types"
 import { logger } from "@repo/logger"
 import { createRPCContext } from "@repo/server/orpc"
 import { appRouter } from "@repo/server/router"

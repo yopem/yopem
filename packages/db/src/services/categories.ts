@@ -2,7 +2,6 @@ import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "../index"
 import { categoriesTable } from "../schema"
-
 import { generateUniqueCategorySlug } from "./slug"
 
 export const listCategories = () => {

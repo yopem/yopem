@@ -1,6 +1,9 @@
 import { createCustomId } from "@repo/utils/custom-id"
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 
+import type { InsertToolVersion } from "../schema/tool-versions"
+import type { InsertTool } from "../schema/tools"
+
 import { db } from "../index"
 import {
   assetsTable,
@@ -13,9 +16,6 @@ import {
   toolVersionsTable,
   toolsTable,
 } from "../schema"
-import type { InsertToolVersion } from "../schema/tool-versions"
-import type { InsertTool } from "../schema/tools"
-
 import { generateUniqueToolSlug } from "./slug"
 
 export const listTools = async (input?: {

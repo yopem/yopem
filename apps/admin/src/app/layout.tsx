@@ -1,5 +1,4 @@
 import "@repo/ui/styles/globals.css"
-
 import { siteTitle } from "@repo/env/client"
 import { Skeleton } from "@repo/ui/skeleton"
 import { type Metadata } from "next"

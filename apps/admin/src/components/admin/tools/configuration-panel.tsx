@@ -1,5 +1,7 @@
 "use client"
 
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
+
 import { Label } from "@repo/ui/label"
 import {
   Select,
@@ -8,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/select"
-import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 
 import ApiKeySelector from "./api-key-selector"
 import CategorySelector, { type Category } from "./category-selector"

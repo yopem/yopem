@@ -1,6 +1,8 @@
 import { createCustomId } from "@repo/utils/custom-id"
 import { desc, eq, sql } from "drizzle-orm"
 
+import type { InsertUserSettings } from "../schema/user-settings"
+
 import { db } from "../index"
 import {
   creditTransactionsTable,
@@ -11,7 +13,6 @@ import {
   userCreditsTable,
   userSettingsTable,
 } from "../schema"
-import type { InsertUserSettings } from "../schema/user-settings"
 
 export const getUserStats = async (userId: string) => {
   const [credits] = await db

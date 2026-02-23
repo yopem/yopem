@@ -1,5 +1,7 @@
 "use client"
 
+import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
+
 import { Button } from "@repo/ui/button"
 import {
   Dialog,
@@ -10,7 +12,6 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@repo/ui/dialog"
-import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
 
 import { providerNames } from "./provider-card"
 

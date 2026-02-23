@@ -1,7 +1,6 @@
-import crypto from "crypto"
-
 import { env } from "@repo/env"
 import { formatError, logger } from "@repo/logger"
+import crypto from "crypto"
 
 function getEncryptionKey(): Buffer {
   const key = env.API_KEY_ENCRYPTION_SECRET

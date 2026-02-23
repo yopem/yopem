@@ -1,8 +1,9 @@
+import type { SessionUser } from "@repo/auth/types"
+import type { Context, MiddlewareHandler } from "hono"
+
 import { authClient } from "@repo/auth/client"
 import { subjects } from "@repo/auth/subjects"
-import type { SessionUser } from "@repo/auth/types"
 import { logger } from "@repo/logger"
-import type { Context, MiddlewareHandler } from "hono"
 import { getCookie, setCookie } from "hono/cookie"
 
 export type { SessionUser }

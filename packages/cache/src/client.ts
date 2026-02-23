@@ -1,6 +1,7 @@
+import type { Redis } from "ioredis"
+
 import { redisKeyPrefix, redisUrl } from "@repo/env/hono"
 import { formatError, logger } from "@repo/logger"
-import type { Redis } from "ioredis"
 
 export function createRedisCache() {
   let redis: Redis | null = null

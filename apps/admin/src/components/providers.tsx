@@ -1,9 +1,10 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 import { QueryProvider } from "@repo/orpc/provider"
 import ThemeProvider from "@repo/ui/theme-provider"
 import { AnchoredToastProvider, ToastProvider } from "@repo/ui/toast"
-import type { ReactNode } from "react"
 
 const Providers = ({ children }: { children: ReactNode }) => {
   return (

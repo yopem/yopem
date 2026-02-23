@@ -1,6 +1,7 @@
+import type { Metadata } from "next"
+
 import { queryApi } from "@repo/orpc/query"
 import { Skeleton } from "@repo/ui/skeleton"
-import type { Metadata } from "next"
 import { connection } from "next/server"
 import { Suspense } from "react"
 

@@ -1,6 +1,7 @@
+import type { SessionUser } from "@repo/auth/types"
+
 import { ORPCError, os } from "@orpc/server"
 import { auth } from "@repo/auth/session"
-import type { SessionUser } from "@repo/auth/types"
 import { redisCache } from "@repo/cache"
 import { db } from "@repo/db"
 import { logger } from "@repo/logger"

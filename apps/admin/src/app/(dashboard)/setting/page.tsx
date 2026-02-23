@@ -1,9 +1,10 @@
 "use client"
 
+import type { AddApiKeyInput, ApiKeyConfig } from "@repo/utils/api-keys-schema"
+
 import { formatError, logger } from "@repo/logger"
 import { queryApi } from "@repo/orpc/query"
 import { toastManager } from "@repo/ui/toast"
-import type { AddApiKeyInput, ApiKeyConfig } from "@repo/utils/api-keys-schema"
 import { formatDateTime } from "@repo/utils/format-date"
 import {
   BarChartIcon,

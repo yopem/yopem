@@ -2,7 +2,6 @@ import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "../index"
 import { tagsTable } from "../schema"
-
 import { generateUniqueTagSlug } from "./slug"
 
 export const listTags = () => {
