@@ -1,4 +1,4 @@
-import "@repo/ui/styles/globals.css"
+import "@repo/ui/style.css"
 import {
   logoOgHeight,
   logoOgUrl,

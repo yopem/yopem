@@ -1,8 +1,7 @@
 "use client"
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
-
-import { cn } from "../lib/cn"
+import { cn } from "@repo/ui"
 
 type TabsVariant = "default" | "underline"
 

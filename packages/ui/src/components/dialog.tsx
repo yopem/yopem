@@ -1,9 +1,9 @@
 "use client"
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { cn } from "@repo/ui"
 import { XIcon } from "lucide-react"
 
-import { cn } from "../lib/cn"
 import { Button } from "./button"
 import { ScrollArea } from "./scroll-area"
 

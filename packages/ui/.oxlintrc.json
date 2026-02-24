@@ -173,7 +173,7 @@
   },
   "settings": {
     "better-tailwindcss": {
-      "entryPoint": "./src/styles/globals.css"
+      "entryPoint": "./style.css"
     }
   },
   "ignorePatterns": [

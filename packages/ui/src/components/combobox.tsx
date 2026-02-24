@@ -1,10 +1,10 @@
 "use client"
 
 import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox"
+import { cn } from "@repo/ui"
 import { ChevronsUpDownIcon, XIcon } from "lucide-react"
 import * as React from "react"
 
-import { cn } from "../lib/cn"
 import { Input } from "./input"
 import { ScrollArea } from "./scroll-area"
 

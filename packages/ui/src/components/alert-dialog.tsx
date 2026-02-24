@@ -1,8 +1,7 @@
 "use client"
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
-
-import { cn } from "../lib/cn"
+import { cn } from "@repo/ui"
 
 const AlertDialogCreateHandle = AlertDialogPrimitive.createHandle
 

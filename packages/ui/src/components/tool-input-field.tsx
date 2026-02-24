@@ -24,7 +24,7 @@ export interface ToolInputFieldProps {
   field: ToolInputVariable
   value: string
   error: string | undefined
-  fileReaderRef: React.MutableRefObject<FileReader | null>
+  fileReaderRef: React.RefObject<FileReader | null>
   onChange: (variableName: string, newValue: string) => void
   onClearError: (variableName: string) => void
 }

@@ -3,9 +3,8 @@
 import type * as React from "react"
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { cn } from "@repo/ui"
 import { ChevronRightIcon } from "lucide-react"
-
-import { cn } from "../lib/cn"
 
 const MenuCreateHandle = MenuPrimitive.createHandle
 

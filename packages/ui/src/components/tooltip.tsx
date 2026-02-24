@@ -1,8 +1,7 @@
 "use client"
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
-
-import { cn } from "../lib/cn"
+import { cn } from "@repo/ui"
 
 const TooltipCreateHandle = TooltipPrimitive.createHandle
 

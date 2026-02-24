@@ -1,13 +1,12 @@
 "use client"
 
 import { Select as SelectPrimitive } from "@base-ui/react/select"
+import { cn } from "@repo/ui"
 import {
   ChevronDownIcon,
   ChevronsUpDownIcon,
   ChevronUpIcon,
 } from "lucide-react"
-
-import { cn } from "../lib/cn"
 
 const Select = SelectPrimitive.Root
 
