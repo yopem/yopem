@@ -39,7 +39,7 @@ const config: NextConfig = {
     "@repo/query",
     "@repo/types",
     "@repo/ui",
-    "@repo/utils",
+    "@repo/shared",
   ],
   compiler: {
     // oxlint_disable-next-line eslint-plugin-unicorn/no-useless-spread

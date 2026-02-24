@@ -1,11 +1,10 @@
 "use client"
 
 import { Card } from "@repo/ui/card"
+import Link from "@/components/link"
 import { Image as ImageIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
-
-import Link from "@/components/link"
 
 export interface ToolCardProps {
   slug: string

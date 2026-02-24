@@ -26,8 +26,8 @@
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/orpc": "workspace:*",
+        "@repo/shared": "workspace:*",
         "@repo/ui": "workspace:*",
-        "@repo/utils": "workspace:*",
         "@tanstack/react-form": "catalog:",
         "@tanstack/react-query": "catalog:",
         "js.foresight": "catalog:",
@@ -71,8 +71,8 @@
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/payments": "workspace:*",
+        "@repo/shared": "workspace:*",
         "@repo/storage": "workspace:*",
-        "@repo/utils": "workspace:*",
         "hono": "^4.7.11",
       },
       "devDependencies": {
@@ -97,8 +97,8 @@
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
         "@repo/orpc": "workspace:*",
+        "@repo/shared": "workspace:*",
         "@repo/ui": "workspace:*",
-        "@repo/utils": "workspace:*",
         "@tanstack/react-form": "catalog:",
         "@tanstack/react-query": "catalog:",
         "js.foresight": "catalog:",
@@ -151,7 +151,7 @@
       "dependencies": {
         "@openauthjs/openauth": "catalog:",
         "@repo/logger": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/shared": "workspace:*",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -193,7 +193,7 @@
       "dependencies": {
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/shared": "workspace:*",
         "drizzle-orm": "catalog:drizzle",
         "drizzle-zod": "catalog:drizzle",
         "pg": "catalog:drizzle",
@@ -278,7 +278,7 @@
         "@repo/db": "workspace:*",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
-        "@repo/utils": "workspace:*",
+        "@repo/shared": "workspace:*",
         "drizzle-orm": "catalog:drizzle",
         "ioredis": "catalog:",
       },
@@ -291,6 +291,32 @@
         "oxlint-tsgolint": "catalog:tooling",
         "typescript": "catalog:tooling",
       },
+    },
+    "packages/shared": {
+      "name": "@repo/shared",
+      "version": "0.0.0",
+      "dependencies": {
+        "@repo/logger": "workspace:*",
+        "dayjs": "catalog:",
+        "nanoid": "catalog:",
+        "transliteration": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:tooling",
+        "@yopem/typescript-config": "catalog:tooling",
+        "eslint-plugin-oxfmt": "catalog:tooling",
+        "oxfmt": "catalog:tooling",
+        "oxlint": "catalog:tooling",
+        "oxlint-tsgolint": "catalog:tooling",
+        "typescript": "catalog:tooling",
+      },
+      "peerDependencies": {
+        "@repo/env": "workspace:*",
+      },
+      "optionalPeers": [
+        "@repo/env",
+      ],
     },
     "packages/storage": {
       "name": "@repo/storage",
@@ -318,9 +344,14 @@
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "^1.2.0",
+        "@repo/auth": "workspace:*",
+        "@repo/logger": "workspace:*",
+        "@repo/orpc": "workspace:*",
         "class-variance-authority": "catalog:",
         "clsx": "catalog:",
+        "js.foresight": "catalog:",
         "lucide-react": "catalog:",
+        "next": "catalog:",
         "next-themes": "catalog:",
         "react": "catalog:",
         "recharts": "^3.7.0",
@@ -338,32 +369,6 @@
         "oxlint-tsgolint": "catalog:tooling",
         "typescript": "catalog:tooling",
       },
-    },
-    "packages/utils": {
-      "name": "@repo/utils",
-      "version": "0.0.0",
-      "dependencies": {
-        "@repo/logger": "workspace:*",
-        "dayjs": "catalog:",
-        "nanoid": "catalog:",
-        "transliteration": "catalog:",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@types/node": "catalog:tooling",
-        "@yopem/typescript-config": "catalog:tooling",
-        "eslint-plugin-oxfmt": "catalog:tooling",
-        "oxfmt": "catalog:tooling",
-        "oxlint": "catalog:tooling",
-        "oxlint-tsgolint": "catalog:tooling",
-        "typescript": "catalog:tooling",
-      },
-      "peerDependencies": {
-        "@repo/env": "workspace:*",
-      },
-      "optionalPeers": [
-        "@repo/env",
-      ],
     },
   },
   "catalog": {
@@ -879,11 +884,11 @@
 
     "@repo/server": ["@repo/server@workspace:apps/server"],
 
+    "@repo/shared": ["@repo/shared@workspace:packages/shared"],
+
     "@repo/storage": ["@repo/storage@workspace:packages/storage"],
 
     "@repo/ui": ["@repo/ui@workspace:packages/ui"],
-
-    "@repo/utils": ["@repo/utils@workspace:packages/utils"],
 
     "@repo/web": ["@repo/web@workspace:apps/web"],
 

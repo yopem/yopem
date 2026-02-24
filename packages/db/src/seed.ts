@@ -1,6 +1,6 @@
 import { env } from "@repo/env"
 import { formatError, logger } from "@repo/logger"
-import { createCustomId } from "@repo/utils/custom-id"
+import { createCustomId } from "@repo/shared/custom-id"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 

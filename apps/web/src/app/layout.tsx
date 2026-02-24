@@ -9,13 +9,13 @@ import {
   siteUrl,
   xUsername,
 } from "@repo/env/client"
+import Providers from "@repo/ui/providers"
 import { Skeleton } from "@repo/ui/skeleton"
 import { type Metadata } from "next"
 import localFont from "next/font/local"
 import { Suspense, type ReactNode } from "react"
 
-import Providers from "@/components/providers"
-import Scripts from "@/components/scripts"
+import Scripts from "@/components/analytics-scripts"
 
 export const metadata: Metadata = {
   title: {
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
   },
 }
 
-export function generateViewport() {
+export const generateViewport = () => {
   return {
     themeColor: [
       { media: "(prefers-color-scheme: light)", color: "#ffffff" },
@@ -115,9 +115,7 @@ const adwaitaMono = localFont({
   variable: "--font-adwaita-mono",
 })
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: ReactNode }>) {
+const RootLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
     <html
       lang="en"
@@ -142,3 +140,5 @@ export default function RootLayout({
     </html>
   )
 }
+
+export default RootLayout

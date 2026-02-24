@@ -6,18 +6,18 @@ import dynamic from "next/dynamic"
 import { useEffect, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
+import StatsCard from "@/components/dashboard/stats-card"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 import TimeRangeToggle, {
   type TimeRange,
-} from "@/components/admin/monitoring/time-range-toggle"
+} from "@/components/monitoring/time-range-toggle"
 import WebhookFilterToggle, {
   type EventType,
-} from "@/components/admin/monitoring/webhook-filter-toggle"
-import StatsCard from "@/components/admin/stats-card"
+} from "@/components/monitoring/webhook-filter-toggle"
 
 const WebhookEventsChart = dynamic(
-  () => import("@/components/admin/monitoring/webhook-events-chart"),
+  () => import("@/components/monitoring/webhook-events-chart"),
   {
     ssr: false,
     loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,
@@ -25,7 +25,7 @@ const WebhookEventsChart = dynamic(
 )
 
 const WebhookProcessingChart = dynamic(
-  () => import("@/components/admin/monitoring/webhook-processing-chart"),
+  () => import("@/components/monitoring/webhook-processing-chart"),
   {
     ssr: false,
     loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,

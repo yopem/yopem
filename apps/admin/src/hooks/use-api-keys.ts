@@ -2,7 +2,7 @@ import type {
   AddApiKeyInput,
   DeleteApiKeyInput,
   UpdateApiKeyInput,
-} from "@repo/utils/api-keys-schema"
+} from "@repo/shared/api-keys-schema"
 
 import { queryApi } from "@repo/orpc/query"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"

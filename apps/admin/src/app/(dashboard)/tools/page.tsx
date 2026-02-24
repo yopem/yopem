@@ -2,15 +2,15 @@
 
 import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
+import Link from "@repo/ui/link"
 import { toastManager } from "@repo/ui/toast"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { PlusIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useState } from "react"
 
-import DeleteDialog from "@/components/admin/tools/delete-dialog"
-import ToolsTable from "@/components/admin/tools/tools-table"
-import Link from "@/components/link"
+import DeleteDialog from "@/components/tools/delete-dialog"
+import ToolsTable from "@/components/tools/tools-table"
 
 interface Tool {
   id: string

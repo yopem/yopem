@@ -1,8 +1,8 @@
 "use client"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import AiRequestsChart from "@/components/admin/ai-requests-chart"
+import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useSystemMetrics } from "@/hooks/use-system-metrics"
 
 const breadcrumbItems = [

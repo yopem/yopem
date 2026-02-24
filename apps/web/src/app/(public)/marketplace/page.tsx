@@ -12,10 +12,12 @@ export const metadata: Metadata = {
   description: "Explore and use AI-powered tools to automate your workflows",
 }
 
-export default async function MarketplacePage() {
+const MarketplacePage = async () => {
   await connection()
-  const categories = await queryApi.tools.getCategories.call({})
-  const tags = await queryApi.tools.getTags.call({})
+  const [categories, tags] = await Promise.all([
+    queryApi.tools.getCategories.call({}),
+    queryApi.tools.getTags.call({}),
+  ])
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
@@ -37,3 +39,5 @@ export default async function MarketplacePage() {
     </div>
   )
 }
+
+export default MarketplacePage

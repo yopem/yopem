@@ -1,4 +1,4 @@
-import { createCustomId } from "@repo/utils/custom-id"
+import { createCustomId } from "@repo/shared/custom-id"
 import { decimal, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 

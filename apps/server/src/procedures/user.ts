@@ -13,9 +13,9 @@ import {
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "@repo/utils/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
-import { createCustomId } from "@repo/utils/custom-id"
+} from "@repo/shared/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/shared/crypto"
+import { createCustomId } from "@repo/shared/custom-id"
 import { z } from "zod"
 
 export const userRouter = {

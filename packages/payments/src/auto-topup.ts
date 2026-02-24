@@ -8,7 +8,7 @@ import {
   siteDomain,
 } from "@repo/env/hono"
 import { formatError, logger } from "@repo/logger"
-import { createCustomId } from "@repo/utils/custom-id"
+import { createCustomId } from "@repo/shared/custom-id"
 import { eq } from "drizzle-orm"
 
 export async function checkAndTriggerAutoTopup(

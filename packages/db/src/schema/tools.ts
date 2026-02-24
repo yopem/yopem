@@ -1,4 +1,4 @@
-import { createCustomId } from "@repo/utils/custom-id"
+import { createCustomId } from "@repo/shared/custom-id"
 import {
   boolean,
   decimal,

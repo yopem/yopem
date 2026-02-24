@@ -1,6 +1,6 @@
 import { login } from "@repo/auth/login"
 import { Button } from "@repo/ui/button"
-import { cn } from "@repo/ui/lib/utils"
+import { cn } from "@repo/ui/lib/cn"
 
 const GetStartedButton = ({ className }: { className?: string }) => {
   return (

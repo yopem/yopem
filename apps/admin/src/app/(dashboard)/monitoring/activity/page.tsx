@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { BadgeCheckIcon, KeyIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
-import ActivityFeedItem from "@/components/admin/activity-feed-item"
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
+import ActivityFeedItem from "@/components/dashboard/activity-feed-item"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useActivityFeed } from "@/hooks/use-activity-feed"
 
 const breadcrumbItems = [

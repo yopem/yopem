@@ -3,9 +3,9 @@
 import { BarChartIcon, DollarSignIcon, KeyIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import StatsCard from "@/components/admin/stats-card"
+import StatsCard from "@/components/dashboard/stats-card"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useApiKeyStats } from "@/hooks/use-api-keys"
 
 const breadcrumbItems = [

@@ -1,4 +1,4 @@
-import type { ApiKeyConfig } from "@repo/utils/api-keys-schema"
+import type { ApiKeyConfig } from "@repo/shared/api-keys-schema"
 
 import { ORPCError } from "@orpc/server"
 import { executeAITool } from "@repo/ai/executor"
@@ -45,8 +45,8 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@repo/server/orpc"
-import { decryptApiKey } from "@repo/utils/crypto"
-import { createCustomId } from "@repo/utils/custom-id"
+import { decryptApiKey } from "@repo/shared/crypto"
+import { createCustomId } from "@repo/shared/custom-id"
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"

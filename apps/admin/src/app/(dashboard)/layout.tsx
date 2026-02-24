@@ -10,7 +10,7 @@ import {
 import { redirect } from "next/navigation"
 import { type ReactNode } from "react"
 
-import AdminLayout from "@/components/admin/admin-layout"
+import AdminLayout from "@/components/layout/admin-layout"
 
 export default async function DashboardLayout({
   children,

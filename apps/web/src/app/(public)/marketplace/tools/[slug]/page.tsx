@@ -3,15 +3,14 @@ import { siteTitle } from "@repo/env/client"
 import { serverApi } from "@repo/orpc/server"
 import { Badge } from "@repo/ui/badge"
 import { Card, CardContent } from "@repo/ui/card"
+import Link from "@/components/link"
 import { Skeleton } from "@repo/ui/skeleton"
+import { type ToolInputVariable } from "@repo/ui/tool-input-field"
 import { ArrowLeftIcon } from "lucide-react"
 import { type Metadata } from "next"
 import { notFound } from "next/navigation"
 import { connection } from "next/server"
 import { cache, Suspense } from "react"
-
-import Link from "@/components/link"
-import { type ToolInputVariable } from "@/components/tools/tool-input-field"
 
 import ToolExecuteForm from "./execute-form"
 import ToolInfo from "./tool-info"
@@ -127,7 +126,7 @@ async function ToolData({ slug }: { slug: string }) {
         <ToolExecuteForm
           toolId={tool.id}
           costPerRun={tool.costPerRun}
-          inputVariable={tool.inputVariable as ToolInputVariable[] | null}
+          inputVariable={tool.inputVariable as ToolInputVariable[]}
           isAuthenticated={!!session}
         />
 

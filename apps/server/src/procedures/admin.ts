@@ -8,10 +8,10 @@ import {
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "@repo/utils/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/utils/crypto"
-import { createCustomId } from "@repo/utils/custom-id"
-import { failure, success, type Result } from "@repo/utils/result"
+} from "@repo/shared/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/shared/crypto"
+import { createCustomId } from "@repo/shared/custom-id"
+import { failure, success, type Result } from "@repo/shared/result"
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"

@@ -1,11 +1,11 @@
 "use client"
 
-import type { AddApiKeyInput, ApiKeyConfig } from "@repo/utils/api-keys-schema"
+import type { AddApiKeyInput, ApiKeyConfig } from "@repo/shared/api-keys-schema"
 
 import { formatError, logger } from "@repo/logger"
 import { queryApi } from "@repo/orpc/query"
+import { formatDateTime } from "@repo/shared/format-date"
 import { toastManager } from "@repo/ui/toast"
-import { formatDateTime } from "@repo/utils/format-date"
 import {
   BarChartIcon,
   DollarSignIcon,
@@ -15,15 +15,15 @@ import {
 import { useCallback, useEffect, useReducer, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import AddProviderDialog from "@/components/admin/settings/add-provider-dialog"
-import AssetUploadSettings from "@/components/admin/settings/asset-upload-settings"
-import DeleteProviderDialog from "@/components/admin/settings/delete-provider-dialog"
-import EditProviderDialog from "@/components/admin/settings/edit-provider-dialog"
-import ProviderCard from "@/components/admin/settings/provider-card"
-import ProviderCardSkeleton from "@/components/admin/settings/provider-card-skeleton"
-import StatsCard from "@/components/admin/stats-card"
+import StatsCard from "@/components/dashboard/stats-card"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
+import AddProviderDialog from "@/components/settings/add-provider-dialog"
+import AssetUploadSettings from "@/components/settings/asset-upload-settings"
+import DeleteProviderDialog from "@/components/settings/delete-provider-dialog"
+import EditProviderDialog from "@/components/settings/edit-provider-dialog"
+import ProviderCard from "@/components/settings/provider-card"
+import ProviderCardSkeleton from "@/components/settings/provider-card-skeleton"
 import {
   useAddApiKey,
   useApiKeys,
@@ -113,7 +113,7 @@ function providerFormReducer(
   }
 }
 
-export default function AdminSettingsPage() {
+const AdminSettingsPage = () => {
   const breadcrumbItems = [
     { label: "Settings", href: "/setting" },
     { label: "API Configuration" },
@@ -405,3 +405,5 @@ export default function AdminSettingsPage() {
     </div>
   )
 }
+
+export default AdminSettingsPage

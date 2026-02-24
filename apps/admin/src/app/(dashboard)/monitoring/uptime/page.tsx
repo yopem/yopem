@@ -2,12 +2,12 @@
 
 import dynamic from "next/dynamic"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import UptimeStats from "@/components/admin/monitoring/uptime-stats"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
+import UptimeStats from "@/components/monitoring/uptime-stats"
 
 const UptimeChart = dynamic(
-  () => import("@/components/admin/monitoring/uptime-chart"),
+  () => import("@/components/monitoring/uptime-chart"),
   {
     ssr: false,
     loading: () => <div className="bg-muted h-72 animate-pulse rounded-md" />,

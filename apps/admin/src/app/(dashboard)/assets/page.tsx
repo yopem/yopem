@@ -6,14 +6,14 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import dynamic from "next/dynamic"
 import { Suspense, useCallback, useState } from "react"
 
-import { AssetCard, type Asset } from "@/components/admin/assets/asset-card"
-import { TypeFilter } from "@/components/admin/assets/type-filter"
-import { UploadDropzone } from "@/components/admin/assets/upload-dropzone"
-import { UploadProgress } from "@/components/admin/assets/upload-progress"
+import { AssetCard, type Asset } from "@/components/assets/asset-card"
+import { TypeFilter } from "@/components/assets/type-filter"
+import { UploadDropzone } from "@/components/assets/upload-dropzone"
+import { UploadProgress } from "@/components/assets/upload-progress"
 
 const AssetPreviewDialog = dynamic(
   () =>
-    import("@/components/admin/assets/asset-preview-dialog").then(
+    import("@/components/assets/asset-preview-dialog").then(
       (mod) => mod.AssetPreviewDialog,
     ),
   { ssr: false },
@@ -21,7 +21,7 @@ const AssetPreviewDialog = dynamic(
 
 const DeleteAssetDialog = dynamic(
   () =>
-    import("@/components/admin/assets/delete-asset-dialog").then(
+    import("@/components/assets/delete-asset-dialog").then(
       (mod) => mod.DeleteAssetDialog,
     ),
   { ssr: false },
@@ -29,7 +29,7 @@ const DeleteAssetDialog = dynamic(
 
 const AssetSkeleton = dynamic(
   () =>
-    import("@/components/admin/assets/asset-skeleton").then(
+    import("@/components/assets/asset-skeleton").then(
       (mod) => mod.AssetSkeleton,
     ),
   { ssr: false },

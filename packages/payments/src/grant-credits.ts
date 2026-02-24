@@ -5,7 +5,7 @@ import {
   userCreditsTable,
 } from "@repo/db/schema"
 import { logger } from "@repo/logger"
-import { createCustomId } from "@repo/utils/custom-id"
+import { createCustomId } from "@repo/shared/custom-id"
 import { eq, sql } from "drizzle-orm"
 
 interface GrantCreditsParams {

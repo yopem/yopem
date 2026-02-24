@@ -1,3 +1,4 @@
+import Link from "@repo/ui/link"
 import {
   ActivityIcon,
   BarChartIcon,
@@ -7,9 +8,8 @@ import {
   ZapIcon,
 } from "lucide-react"
 
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import Link from "@/components/link"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 
 const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Monitoring" }]
 

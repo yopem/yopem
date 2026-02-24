@@ -56,7 +56,7 @@
   "dependencies": {
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
-    "@repo/utils": "workspace:*",
+    "@repo/shared": "workspace:*",
     "drizzle-orm": "catalog:drizzle",
     "drizzle-zod": "catalog:drizzle",
     "pg": "catalog:drizzle",

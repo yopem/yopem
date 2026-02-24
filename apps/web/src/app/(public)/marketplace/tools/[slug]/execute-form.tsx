@@ -5,13 +5,12 @@ import { Button } from "@repo/ui/button"
 import { Card, CardContent } from "@repo/ui/card"
 import { Field, FieldLabel } from "@repo/ui/field"
 import { Textarea } from "@repo/ui/textarea"
+import ToolInputField, {
+  type ToolInputVariable,
+} from "@repo/ui/tool-input-field"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangleIcon, CopyIcon, LockIcon, PlayIcon } from "lucide-react"
 import { useRef, useState } from "react"
-
-import ToolInputField, {
-  type ToolInputVariable,
-} from "@/components/tools/tool-input-field"
 
 interface ExecutionResult {
   runId: string

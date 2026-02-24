@@ -8,13 +8,13 @@ import { useParams } from "next/navigation"
 import { useCallback, useRef, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
-import FeatureBuilderHeader from "@/components/admin/tools/feature-builder-header"
-import FeatureBuilderTabs from "@/components/admin/tools/feature-builder-tabs"
+import FeatureBuilderHeader from "@/components/tools/feature-builder-header"
+import FeatureBuilderTabs from "@/components/tools/feature-builder-tabs"
 import ToolForm, {
   type ToolFormData,
   type ToolFormRef,
-} from "@/components/admin/tools/tool-form"
-import ToolPreviewSheet from "@/components/admin/tools/tool-preview-sheet"
+} from "@/components/tools/tool-form"
+import ToolPreviewSheet from "@/components/tools/tool-preview-sheet"
 import { useApiKeys } from "@/hooks/use-api-keys"
 
 function EditToolPage() {

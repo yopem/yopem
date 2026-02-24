@@ -1,9 +1,11 @@
 "use client"
 
 import { queryApi } from "@repo/orpc/query"
+import { formatDateTime } from "@repo/shared/format-date"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import Link from "@/components/link"
 import {
   Table,
   TableBody,
@@ -12,11 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/ui/table"
-import { formatDateTime } from "@repo/utils/format-date"
 import { useQuery } from "@tanstack/react-query"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
-
-import Link from "@/components/link"
 
 const getStatusIcon = (status: string) => {
   switch (status) {

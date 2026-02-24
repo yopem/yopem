@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "AI-powered tools to automate your workflows",
 }
 
-export default function HomePage() {
+const HomePage = () => {
   return (
     <>
       <Suspense fallback={<Skeleton className="h-16 w-full" />}>
@@ -33,3 +33,5 @@ export default function HomePage() {
     </>
   )
 }
+
+export default HomePage

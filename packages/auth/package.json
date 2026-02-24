@@ -39,7 +39,7 @@
   "dependencies": {
     "@openauthjs/openauth": "catalog:",
     "@repo/logger": "workspace:*",
-    "@repo/utils": "workspace:*",
+    "@repo/shared": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

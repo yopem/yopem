@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@repo/ui/button"
+import Link from "@repo/ui/link"
 import {
   BadgeCheckIcon,
   DollarSignIcon,
@@ -12,12 +13,11 @@ import {
 } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
-import ActivityFeed from "@/components/admin/activity-feed"
-import AdminBreadcrumb from "@/components/admin/admin-breadcrumb"
-import AdminPageHeader from "@/components/admin/admin-page-header"
-import AiRequestsChart from "@/components/admin/ai-requests-chart"
-import StatsCard from "@/components/admin/stats-card"
-import Link from "@/components/link"
+import ActivityFeed from "@/components/dashboard/activity-feed"
+import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
+import StatsCard from "@/components/dashboard/stats-card"
+import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
+import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useActivityFeed } from "@/hooks/use-activity-feed"
 import { useSystemMetrics } from "@/hooks/use-system-metrics"
 

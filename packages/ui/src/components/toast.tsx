@@ -9,7 +9,7 @@ import {
   TriangleAlertIcon,
 } from "lucide-react"
 
-import { cn } from "../lib/utils"
+import { cn } from "../lib/cn"
 import { buttonVariants } from "./button"
 
 const toastManager = Toast.createToastManager()
