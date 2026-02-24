@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@repo/ui/button"
-import Link from "@repo/ui/link"
 import {
   BadgeCheckIcon,
   DollarSignIcon,
@@ -18,6 +17,7 @@ import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
+import Link from "@/components/link"
 import { useActivityFeed } from "@/hooks/use-activity-feed"
 import { useSystemMetrics } from "@/hooks/use-system-metrics"
 

@@ -2,8 +2,9 @@ import { login } from "@repo/auth/login"
 import { auth } from "@repo/auth/session"
 import { adminUrl } from "@repo/env/client"
 import { Button } from "@repo/ui/button"
-import Link from "@/components/link"
 import Logo from "@repo/ui/logo"
+
+import Link from "@/components/link"
 
 const Header = async () => {
   const session = await auth()

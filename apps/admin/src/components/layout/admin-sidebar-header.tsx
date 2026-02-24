@@ -1,5 +1,6 @@
-import Link from "@repo/ui/link"
 import Logo from "@repo/ui/logo"
+
+import Link from "@/components/link"
 
 interface AdminSidebarHeaderProps {
   title: string

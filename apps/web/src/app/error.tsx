@@ -3,9 +3,10 @@
 import { appEnv } from "@repo/env/client"
 import { formatError, logger } from "@repo/logger"
 import { Button } from "@repo/ui/button"
-import Link from "@/components/link"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
+
+import Link from "@/components/link"
 
 export default function Error({
   error,

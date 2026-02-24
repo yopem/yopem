@@ -4,10 +4,11 @@ import { queryApi } from "@repo/orpc/query"
 import { formatDateOnly } from "@repo/shared/format-date"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
-import Link from "@/components/link"
 import { useQuery } from "@tanstack/react-query"
 import { CreditCardIcon, DollarSignIcon, PlayIcon } from "lucide-react"
 import { memo } from "react"
+
+import Link from "@/components/link"
 
 const StatCard = memo(
   ({

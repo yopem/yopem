@@ -121,21 +121,9 @@
       "types": "./src/hooks/use-mobile.ts",
       "default": "./src/hooks/use-mobile.ts"
     },
-    "./hooks/use-foresight": {
-      "types": "./src/hooks/use-foresight.ts",
-      "default": "./src/hooks/use-foresight.ts"
-    },
-    "./link": {
-      "types": "./src/components/link.tsx",
-      "default": "./src/components/link.tsx"
-    },
     "./logo": {
       "types": "./src/components/logo.tsx",
       "default": "./src/components/logo.tsx"
-    },
-    "./providers": {
-      "types": "./src/components/providers.tsx",
-      "default": "./src/components/providers.tsx"
     },
     "./theme-provider": {
       "types": "./src/components/theme-provider.tsx",
@@ -148,10 +136,6 @@
     "./tool-input-field": {
       "types": "./src/components/tool-input-field.tsx",
       "default": "./src/components/tool-input-field.tsx"
-    },
-    "./user-sidebar-footer": {
-      "types": "./src/components/user-sidebar-footer.tsx",
-      "default": "./src/components/user-sidebar-footer.tsx"
     }
   },
   "scripts": {

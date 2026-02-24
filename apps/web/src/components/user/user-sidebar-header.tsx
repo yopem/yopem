@@ -1,5 +1,6 @@
-import Link from "@/components/link"
 import Logo from "@repo/ui/logo"
+
+import Link from "@/components/link"
 
 interface UserSidebarHeaderProps {
   title: string

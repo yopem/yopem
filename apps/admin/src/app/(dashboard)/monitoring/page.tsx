@@ -1,4 +1,3 @@
-import Link from "@repo/ui/link"
 import {
   ActivityIcon,
   BarChartIcon,
@@ -10,6 +9,7 @@ import {
 
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
+import Link from "@/components/link"
 
 const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Monitoring" }]
 

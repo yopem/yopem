@@ -5,7 +5,6 @@ import { formatDateTime } from "@repo/shared/format-date"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
-import Link from "@/components/link"
 import {
   Table,
   TableBody,
@@ -16,6 +15,8 @@ import {
 } from "@repo/ui/table"
 import { useQuery } from "@tanstack/react-query"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
+
+import Link from "@/components/link"
 
 const getStatusIcon = (status: string) => {
   switch (status) {

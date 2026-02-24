@@ -1,6 +1,7 @@
 import { Card } from "@repo/ui/card"
-import Link from "@repo/ui/link"
 import { type ReactNode } from "react"
+
+import Link from "@/components/link"
 
 import ActivityFeedItem from "./activity-feed-item"
 

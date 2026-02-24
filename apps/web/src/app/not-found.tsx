@@ -1,8 +1,9 @@
 "use client"
 
 import { Button } from "@repo/ui/button"
-import Link from "@/components/link"
 import { HomeIcon } from "lucide-react"
+
+import Link from "@/components/link"
 
 export default function NotFound() {
   return (

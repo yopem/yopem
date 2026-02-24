@@ -1,9 +1,10 @@
 "use client"
 
-import Link from "@repo/ui/link"
 import { ChevronRightIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { type ReactNode, useState } from "react"
+
+import Link from "@/components/link"
 
 interface NavSubItem {
   label: string

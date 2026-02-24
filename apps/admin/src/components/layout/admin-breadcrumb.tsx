@@ -1,4 +1,4 @@
-import Link from "@repo/ui/link"
+import Link from "@/components/link"
 
 interface BreadcrumbItem {
   label: string

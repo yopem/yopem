@@ -1,10 +1,11 @@
 import "@repo/ui/styles/globals.css"
 import { siteTitle } from "@repo/env/client"
-import Providers from "@repo/ui/providers"
 import { Skeleton } from "@repo/ui/skeleton"
 import { type Metadata } from "next"
 import localFont from "next/font/local"
 import { Suspense, type ReactNode } from "react"
+
+import Providers from "@/components/providers"
 
 export const metadata: Metadata = {
   title: {

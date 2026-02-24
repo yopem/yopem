@@ -1,7 +1,8 @@
 "use client"
-import Link from "@/components/link"
 import Logo from "@repo/ui/logo"
 import ThemeSwitcher from "@repo/ui/theme-switcher"
+
+import Link from "@/components/link"
 
 const Footer = () => {
   return (
