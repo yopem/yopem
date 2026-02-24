@@ -96,7 +96,8 @@
     "fix": "turbo run lint:fix format:write",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
-    "db:studio": "turbo run db:studio"
+    "db:studio": "turbo run db:studio",
+    "ui-add": "cd packages/ui && bun x shadcn@latest add"
   },
   "devDependencies": {
     "@types/bun": "^1.3.9",
