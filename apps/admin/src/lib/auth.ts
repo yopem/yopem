@@ -1,9 +1,8 @@
-import { redirect } from "@tanstack/react-router"
-import { createServerFn } from "@tanstack/react-start"
-
 import { authClient } from "@repo/auth/client"
 import { subjects } from "@repo/auth/subjects"
 import { logger } from "@repo/logger"
+import { redirect } from "@tanstack/react-router"
+import { createServerFn } from "@tanstack/react-start"
 
 const getServerUtils = async () => {
   const { getCookie, setCookie, deleteCookie, getRequestHeaders } =
@@ -82,19 +81,14 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
   })
 
   const apiUrl = process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
-  const { url } = await authClient.authorize(
-    `${apiUrl}/auth/callback`,
-    "code",
-  )
+  const { url } = await authClient.authorize(`${apiUrl}/auth/callback`, "code")
   throw redirect({ href: url })
 })
 
-export const logoutFn = createServerFn({ method: "POST" }).handler(
-  async () => {
-    const { deleteCookie } = await getServerUtils()
+export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { deleteCookie } = await getServerUtils()
 
-    deleteCookie("access_token")
-    deleteCookie("refresh_token")
-    throw redirect({ to: "/auth/login" })
-  },
-)
+  deleteCookie("access_token")
+  deleteCookie("refresh_token")
+  throw redirect({ to: "/auth/login" })
+})
