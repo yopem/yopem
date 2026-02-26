@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run with-env next dev --turbopack --port ${WEB_PORT:-3000}",
-    "build": "bun run with-env next build",
-    "start": "bun run with-env next start",
+    "dev": "bun run with-env vite dev",
+    "build": "bun run with-env vite build",
+    "start": "bun run with-env node .output/server/index.mjs",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "format:check": "oxfmt --check .",
@@ -15,7 +15,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@next/third-parties": "^16.1.6",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/db": "workspace:*",
@@ -26,28 +25,31 @@
     "@repo/ui": "workspace:*",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "@unpic/react": "catalog:",
     "js.foresight": "catalog:",
     "lucide-react": "catalog:",
-    "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "shimmer-from-structure": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "@yopem/typescript-config": "catalog:tooling",
-    "babel-plugin-react-compiler": "catalog:",
     "dotenv-cli": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:tooling",
     "eslint-plugin-oxfmt": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
     "oxlint-tsgolint": "catalog:tooling",
-    "postcss": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:tooling"
+    "typescript": "catalog:tooling",
+    "vite": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
   }
 }

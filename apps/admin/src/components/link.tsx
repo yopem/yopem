@@ -1,42 +1,17 @@
-"use client"
-
+import { Link as RouterLink } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 
-import { type ForesightRegisterOptions } from "js.foresight"
-import NextLink, { type LinkProps } from "next/link"
-import { useRouter } from "next/navigation"
-
-import useForesight from "@/hooks/use-foresight"
-
-interface ForesightLinkProps
-  extends
-    Omit<LinkProps, "prefetch">,
-    Omit<ForesightRegisterOptions, "element" | "callback"> {
+interface LinkProps {
+  href: string
   children: ReactNode
   className?: string
 }
 
-const Link = ({ children, className, ...props }: ForesightLinkProps) => {
-  const router = useRouter()
-
-  const { elementRef } = useForesight<HTMLAnchorElement>({
-    callback: () => {
-      const href =
-        typeof props.href === "string"
-          ? props.href
-          : (props.href.pathname ?? "/")
-      router.prefetch(href)
-    },
-    hitSlop: props.hitSlop,
-    name: props.name,
-    meta: props.meta,
-    reactivateAfter: props.reactivateAfter,
-  })
-
+const Link = ({ href, children, className }: LinkProps) => {
   return (
-    <NextLink {...props} ref={elementRef} className={className}>
+    <RouterLink to={href} className={className}>
       {children}
-    </NextLink>
+    </RouterLink>
   )
 }
 

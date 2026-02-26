@@ -1,6 +1,5 @@
 "use client"
 
-import { logger } from "@repo/logger"
 
 import { Checkbox } from "./checkbox"
 import { Input } from "./input"
@@ -142,7 +141,7 @@ const ToolInputField = ({
                   handleChange(result)
                 }
                 reader.onerror = () => {
-                  logger.error("Failed to read image file")
+                  console.error("Failed to read image file")
                 }
                 reader.readAsDataURL(file)
               }
@@ -176,7 +175,7 @@ const ToolInputField = ({
                   handleChange(result)
                 }
                 reader.onerror = () => {
-                  logger.error("Failed to read video file")
+                  console.error("Failed to read video file")
                 }
                 reader.readAsDataURL(file)
               }

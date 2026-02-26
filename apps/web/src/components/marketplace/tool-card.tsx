@@ -1,11 +1,10 @@
 "use client"
 
 import { Card } from "@repo/ui/card"
+import { Link } from "@tanstack/react-router"
 import { Image as ImageIcon, StarIcon } from "lucide-react"
-import Image from "next/image"
+import { Image } from "@unpic/react"
 import { useState } from "react"
-
-import Link from "@/components/link"
 
 export interface ToolCardProps {
   slug: string
@@ -38,7 +37,8 @@ const ToolCard = ({
 
   return (
     <Link
-      href={`/marketplace/tools/${slug}`}
+      to="/marketplace/tools/$slug"
+      params={{ slug }}
       className="group block h-full outline-none"
     >
       <Card className="border-border bg-card flex h-full flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-gray-300 hover:shadow-md dark:hover:border-gray-700">
@@ -47,9 +47,8 @@ const ToolCard = ({
             <Image
               src={thumbnail.url}
               alt={`${name} thumbnail`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              layout="fullWidth"
+              className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
               onError={() => setImageError(true)}
             />
           ) : (

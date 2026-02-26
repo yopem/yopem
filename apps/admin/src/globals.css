@@ -1,0 +1,37 @@
+@font-face {
+  font-family: "Adwaita Sans";
+  src: url("/fonts/AdwaitaSans-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Adwaita Sans";
+  src: url("/fonts/AdwaitaSans-Italic.woff2") format("woff2");
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Adwaita Mono";
+  src: url("/fonts/AdwaitaMono-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Adwaita Mono";
+  src: url("/fonts/AdwaitaMono-Italic.woff2") format("woff2");
+  font-style: italic;
+  font-display: swap;
+}
+
+@theme inline {
+  --font-sans: "Adwaita Sans", sans-serif;
+  --font-mono: "Adwaita Mono", monospace;
+}
+
+:root {
+  --font-adwaita-sans: "Adwaita Sans", sans-serif;
+  --font-adwaita-mono: "Adwaita Mono", monospace;
+}

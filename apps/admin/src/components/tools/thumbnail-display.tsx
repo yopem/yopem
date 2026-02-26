@@ -1,8 +1,8 @@
 "use client"
 
+import { Image } from "@unpic/react"
 import { Button } from "@repo/ui/button"
 import { Image as ImageIcon, XIcon } from "lucide-react"
-import Image from "next/image"
 
 interface Asset {
   id: string
@@ -25,13 +25,12 @@ const ThumbnailDisplay = ({
   if (thumbnail) {
     return (
       <div className="relative flex flex-col gap-2">
-        <div className="relative aspect-video w-full overflow-hidden rounded-md border">
+          <div className="relative aspect-video w-full overflow-hidden rounded-md border">
           <Image
             src={thumbnail.url}
             alt={thumbnail.originalName}
-            fill
-            sizes="(max-width: 768px) 100vw, 300px"
-            className="object-cover"
+            layout="fullWidth"
+            className="absolute inset-0 size-full object-cover"
           />
         </div>
         <div className="flex gap-2">

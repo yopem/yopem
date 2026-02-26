@@ -1,6 +1,6 @@
 "use client"
 
-import { logout } from "@repo/auth/logout"
+import { logoutFn } from "@/lib/auth"
 import {
   Menu,
   MenuItem,
@@ -8,9 +8,8 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@repo/ui/menu"
+import { Image } from "@unpic/react"
 import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
-import Image from "next/image"
-import { unstable_rethrow } from "next/navigation"
 import { useState } from "react"
 
 interface User {
@@ -30,9 +29,8 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
     if (isLoggingOut) return
     setIsLoggingOut(true)
     try {
-      await logout()
+      await logoutFn()
     } catch (error) {
-      unstable_rethrow(error)
       setIsLoggingOut(false)
       throw error
     }
@@ -52,9 +50,10 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
                 <Image
                   src={user.avatar}
                   alt={user.name}
-                  className="size-8 rounded-full object-cover"
+                  layout="fixed"
                   width={32}
                   height={32}
+                  className="size-8 rounded-full object-cover"
                 />
               ) : (
                 user.name

@@ -43,5 +43,5 @@ export const r2Bucket = parsed.data.R2_BUCKET
 export const r2Domain = parsed.data.R2_DOMAIN
 export const r2Region = parsed.data.R2_REGION
 
-export const siteDomain = parsed.data.NEXT_PUBLIC_SITE_DOMAIN
-export const apiUrl = parsed.data.NEXT_PUBLIC_API_URL
+export const siteDomain = parsed.data.PUBLIC_SITE_DOMAIN
+export const apiUrl = parsed.data.PUBLIC_API_URL

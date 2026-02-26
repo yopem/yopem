@@ -9,8 +9,8 @@ import {
   DialogPanel,
   DialogPopup,
 } from "@repo/ui/dialog"
+import { Image } from "@unpic/react"
 import { ImageIcon, XIcon } from "lucide-react"
-import Image from "next/image"
 
 import type { Asset } from "./asset-card"
 
@@ -46,15 +46,13 @@ export function AssetPreviewDialog({
               </p>
             </DialogHeader>
             <DialogPanel>
-              {isImage ? (
+                {isImage ? (
                 <div className="relative max-h-[70vh] w-full">
                   <Image
                     src={asset.url}
                     alt={asset.originalName}
-                    width={1200}
-                    height={800}
-                    className="object-contain"
-                    priority
+                    layout="fullWidth"
+                    className="max-h-[70vh] w-full object-contain"
                   />
                 </div>
               ) : (

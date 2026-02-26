@@ -58,6 +58,7 @@
     "@repo/logger": "workspace:*",
     "@repo/shared": "workspace:*",
     "drizzle-orm": "catalog:drizzle",
+    "transliteration": "catalog:",
     "drizzle-zod": "catalog:drizzle",
     "pg": "catalog:drizzle",
     "zod": "catalog:"

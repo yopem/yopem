@@ -18,11 +18,10 @@ COPY --from=deps /app/ .
 COPY --from=pruner /app/out/full/ .
 
 ENV CI=true
-ENV NEXT_TELEMETRY_DISABLED=1
 
-ARG NEXT_PUBLIC_SITE_TITLE
-ARG NEXT_PUBLIC_ADMIN_URL
-ARG NEXT_PUBLIC_API_URL
+ARG PUBLIC_SITE_TITLE
+ARG PUBLIC_ADMIN_URL
+ARG PUBLIC_API_URL
 
 RUN bun x turbo run build --filter=@repo/admin
 
@@ -30,19 +29,17 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 appuser
 
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/public ./apps/admin/public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=builder --chown=appuser:appgroup /app/apps/admin/.output ./.output
+COPY --from=builder --chown=appuser:appgroup /app/apps/admin/public ./public
 
-USER nextjs
+USER appuser
 
 EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "apps/admin/server.js"]
+CMD ["node", ".output/server/index.mjs"]

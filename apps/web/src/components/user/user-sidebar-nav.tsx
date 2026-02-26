@@ -1,9 +1,7 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { Link, useLocation } from "@tanstack/react-router"
 import { type ReactNode } from "react"
-
-import Link from "@/components/link"
 
 interface NavItem {
   icon: ReactNode
@@ -16,16 +14,16 @@ interface UserSidebarNavProps {
 }
 
 const UserSidebarNav = ({ items }: UserSidebarNavProps) => {
-  const pathname = usePathname()
+  const location = useLocation()
 
   return (
     <nav className="flex flex-col gap-1.5">
       {items.map((item) => {
-        const isActive = pathname === item.href
+        const isActive = location.pathname === item.href
         return (
           <Link
             key={item.href}
-            href={item.href}
+            to={item.href}
             className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
               isActive
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"

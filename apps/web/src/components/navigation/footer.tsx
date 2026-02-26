@@ -1,8 +1,7 @@
 "use client"
 import Logo from "@repo/ui/logo"
 import ThemeSwitcher from "@repo/ui/theme-switcher"
-
-import Link from "@/components/link"
+import { Link } from "@tanstack/react-router"
 
 const Footer = () => {
   return (
@@ -12,11 +11,11 @@ const Footer = () => {
           <div className="flex-1">
             <div className="mb-4 flex items-center gap-2">
               <div className="bg-card flex size-6 items-center justify-center overflow-hidden rounded-sm">
-                <Link href="/">
+                <Link to="/">
                   <Logo className="size-full p-0.5" />
                 </Link>
               </div>
-              <Link href="/">
+              <Link to="/">
                 <h3 className="text-foreground text-lg font-bold">Yopem</h3>
               </Link>
             </div>
@@ -56,12 +55,12 @@ const Footer = () => {
         <div className="text-muted-foreground flex flex-col items-center justify-between gap-4 border-t pt-8 text-sm md:flex-row">
           <p>© {new Date().getFullYear()} Yopem. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link className="hover:text-foreground" href="/privacy">
+            <a className="hover:text-foreground" href="/privacy">
               Privacy
-            </Link>
-            <Link className="hover:text-foreground" href="/terms">
+            </a>
+            <a className="hover:text-foreground" href="/terms">
               Terms
-            </Link>
+            </a>
           </div>
         </div>
       </div>

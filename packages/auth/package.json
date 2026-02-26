@@ -8,18 +8,6 @@
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
-    "./session": {
-      "types": "./src/session.ts",
-      "default": "./src/session.ts"
-    },
-    "./login": {
-      "types": "./src/login.ts",
-      "default": "./src/login.ts"
-    },
-    "./logout": {
-      "types": "./src/logout.ts",
-      "default": "./src/logout.ts"
-    },
     "./subjects": {
       "types": "./src/subjects.ts",
       "default": "./src/subjects.ts"
@@ -38,8 +26,6 @@
   },
   "dependencies": {
     "@openauthjs/openauth": "catalog:",
-    "@repo/logger": "workspace:*",
-    "@repo/shared": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -53,13 +39,9 @@
     "typescript": "catalog:tooling"
   },
   "peerDependencies": {
-    "next": "catalog:",
     "react": "catalog:"
   },
   "peerDependenciesMeta": {
-    "next": {
-      "optional": false
-    },
     "react": {
       "optional": false
     }

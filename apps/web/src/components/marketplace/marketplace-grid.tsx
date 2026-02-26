@@ -4,28 +4,25 @@ import { clientApi } from "@repo/orpc/client"
 import { Button } from "@repo/ui/button"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
-import dynamic from "next/dynamic"
+import { lazy, Suspense } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import SearchBar from "@/components/marketplace/search-bar"
 
-import type { ToolCardProps } from "./tool-card"
+const ToolCard = lazy(() => import("./tool-card"))
 
-const ToolCard = dynamic<ToolCardProps>(() => import("./tool-card"), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-card rounded-2xl border p-6 shadow-sm">
-      <div className="space-y-4">
-        <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
-        <div className="space-y-2">
-          <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
-          <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
-          <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
-        </div>
+const ToolCardSkeleton = () => (
+  <div className="bg-card rounded-2xl border p-6 shadow-sm">
+    <div className="space-y-4">
+      <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
+      <div className="space-y-2">
+        <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
+        <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
+        <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
       </div>
     </div>
-  ),
-})
+  </div>
+)
 
 interface MarketplaceGridProps {
   initialTools?: Awaited<ReturnType<typeof clientApi.tools.list>>["tools"]
@@ -152,18 +149,19 @@ const MarketplaceGrid = ({
           <div className="space-y-10">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {tools.map((tool) => (
-                <ToolCard
-                  key={tool.id}
-                  slug={tool.slug}
-                  name={tool.name}
-                  description={tool.description}
-                  excerpt={tool.excerpt}
-                  costPerRun={tool.costPerRun}
-                  categories={tool.categories}
-                  thumbnail={tool.thumbnail}
-                  averageRating={tool.averageRating}
-                  reviewCount={tool.reviewCount}
-                />
+                <Suspense key={tool.id} fallback={<ToolCardSkeleton />}>
+                  <ToolCard
+                    slug={tool.slug}
+                    name={tool.name}
+                    description={tool.description}
+                    excerpt={tool.excerpt}
+                    costPerRun={tool.costPerRun}
+                    categories={tool.categories}
+                    thumbnail={tool.thumbnail}
+                    averageRating={tool.averageRating}
+                    reviewCount={tool.reviewCount}
+                  />
+                </Suspense>
               ))}
             </div>
 

@@ -23,6 +23,7 @@
   "dependencies": {
     "@ai-sdk/openai": "catalog:ai",
     "@ai-sdk/openai-compatible": "catalog:ai",
+    "@repo/logger": "workspace:*",
     "@repo/storage": "workspace:*",
     "ai": "catalog:ai"
   },

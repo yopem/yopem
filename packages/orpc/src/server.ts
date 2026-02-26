@@ -1,5 +1,4 @@
 import { formatError, logger } from "@repo/logger"
-import { headers } from "next/headers"
 
 import { createORPCClientFromLink, createORPCLink } from "./shared"
 
@@ -11,8 +10,11 @@ const createServerFetchWithCookies = () => {
     const fetchInit = { ...init }
 
     try {
-      const headerStore = await headers()
-      const cookieHeader = headerStore.get("cookie")
+      const { getRequestHeaders } = await import(
+        "@tanstack/react-start/server"
+      )
+      const allHeaders = getRequestHeaders()
+      const cookieHeader = allHeaders.get("cookie")
 
       if (cookieHeader) {
         fetchInit.headers = {

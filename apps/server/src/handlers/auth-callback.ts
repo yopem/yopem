@@ -16,7 +16,7 @@ const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
 const serverOrigin =
   appEnv === "development"
     ? "http://localhost:4000"
-    : (process.env["NEXT_PUBLIC_API_URL"] ?? "")
+    : (process.env["PUBLIC_API_URL"] ?? "")
 
 export const authCallbackRoute = new Hono()
 

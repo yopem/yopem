@@ -1,6 +1,5 @@
 import Logo from "@repo/ui/logo"
-
-import Link from "@/components/link"
+import { Link } from "@tanstack/react-router"
 
 interface UserSidebarHeaderProps {
   title: string
@@ -11,12 +10,12 @@ const UserSidebarHeader = ({ title, subtitle }: UserSidebarHeaderProps) => {
   return (
     <div className="flex items-center gap-3">
       <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
-        <Link href="/">
+        <Link to="/">
           <Logo className="size-5" />
         </Link>
       </div>
       <div className="flex flex-col">
-        <Link href="/">
+        <Link to="/">
           <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">
             {title}
           </h1>

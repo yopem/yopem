@@ -1,18 +1,30 @@
-import { GoogleAnalytics } from "@next/third-parties/google"
 import { gaMeasurementId, umamiTrackingId } from "@repo/env/client"
-import Script from "next/script"
 
-const Scripts = () => {
+const AnalyticsScripts = () => {
   return (
     <>
-      <Script
-        src="https://analytics.yopem.com/script.js"
-        data-website-id={umamiTrackingId}
-        strategy="afterInteractive"
-      />
-      <GoogleAnalytics gaId={gaMeasurementId} />
+      {umamiTrackingId && (
+        <script
+          defer
+          src="https://analytics.yopem.com/script.js"
+          data-website-id={umamiTrackingId}
+        />
+      )}
+      {gaMeasurementId && (
+        <>
+          <script
+            defer
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+          />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaMeasurementId}')`,
+            }}
+          />
+        </>
+      )}
     </>
   )
 }
 
-export default Scripts
+export default AnalyticsScripts

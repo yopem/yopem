@@ -7,9 +7,9 @@ import { logger } from "@repo/logger"
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {
-    return process.env["NEXT_PUBLIC_API_URL"] ?? ""
+    return process.env["PUBLIC_API_URL"] ?? ""
   }
-  return process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000"
+  return process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
 }
 
 export const createORPCLink = (

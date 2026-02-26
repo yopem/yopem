@@ -4,8 +4,8 @@ import { formatDateOnly } from "@repo/shared/format-date"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader } from "@repo/ui/card"
+import { Image } from "@unpic/react"
 import { ImageIcon, Trash2Icon } from "lucide-react"
-import Image from "next/image"
 import { memo } from "react"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
@@ -47,10 +47,8 @@ function AssetCardComponent({ asset, onPreview, onDelete }: AssetCardProps) {
           <Image
             src={asset.url}
             alt={asset.originalName}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
-            className="object-cover"
-            loading="lazy"
+            layout="fullWidth"
+            className="absolute inset-0 size-full object-cover"
           />
         ) : (
           <div className="bg-muted flex size-full items-center justify-center">

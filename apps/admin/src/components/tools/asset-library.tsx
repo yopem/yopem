@@ -1,8 +1,8 @@
 "use client"
 
+import { Image } from "@unpic/react"
 import { Button } from "@repo/ui/button"
 import { Image as ImageIcon, Upload as UploadIcon } from "lucide-react"
-import Image from "next/image"
 
 interface Asset {
   id: string
@@ -102,9 +102,8 @@ const AssetLibrary = ({
               <Image
                 src={asset.url}
                 alt={asset.originalName}
-                fill
-                sizes="(max-width: 768px) 50vw, 150px"
-                className="bg-muted object-contain p-2"
+                layout="fullWidth"
+                className="absolute inset-0 size-full bg-muted object-contain p-2"
               />
             </div>
           ))}

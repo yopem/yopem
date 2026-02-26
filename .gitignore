@@ -23,6 +23,7 @@ coverage
 
 # Build Outputs
 .next/
+.output/
 out/
 build
 dist
@@ -43,6 +44,7 @@ PLAN.md
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 next-env.d.ts
+routeTree.gen.ts
 
 # ai
 docs/

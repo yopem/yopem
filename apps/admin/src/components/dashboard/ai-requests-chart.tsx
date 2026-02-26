@@ -4,37 +4,19 @@ import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
 import { Card, CardContent, CardHeader } from "@repo/ui/card"
 import { useQuery } from "@tanstack/react-query"
-import dynamic from "next/dynamic"
-import { useState } from "react"
+import { useState, lazy, Suspense } from "react"
 
-const ResponsiveContainer = dynamic(
-  () => import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
-  { ssr: false },
+const ResponsiveContainer = lazy(() =>
+  import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
 )
-const LineChart = dynamic(
-  () => import("recharts").then((m) => ({ default: m.LineChart })),
-  { ssr: false },
+const LineChart = lazy(() => import("recharts").then((m) => ({ default: m.LineChart })))
+const CartesianGrid = lazy(() =>
+  import("recharts").then((m) => ({ default: m.CartesianGrid })),
 )
-const CartesianGrid = dynamic(
-  () => import("recharts").then((m) => ({ default: m.CartesianGrid })),
-  { ssr: false },
-)
-const XAxis = dynamic(
-  () => import("recharts").then((m) => ({ default: m.XAxis })),
-  { ssr: false },
-)
-const YAxis = dynamic(
-  () => import("recharts").then((m) => ({ default: m.YAxis })),
-  { ssr: false },
-)
-const Tooltip = dynamic(
-  () => import("recharts").then((m) => ({ default: m.Tooltip })),
-  { ssr: false },
-)
-const Line = dynamic(
-  () => import("recharts").then((m) => ({ default: m.Line })),
-  { ssr: false },
-)
+const XAxis = lazy(() => import("recharts").then((m) => ({ default: m.XAxis })))
+const YAxis = lazy(() => import("recharts").then((m) => ({ default: m.YAxis })))
+const Tooltip = lazy(() => import("recharts").then((m) => ({ default: m.Tooltip })))
+const Line = lazy(() => import("recharts").then((m) => ({ default: m.Line })))
 
 interface AiRequestsChartProps {
   totalRequests: number
@@ -84,33 +66,35 @@ const AiRequestsChart = ({ totalRequests }: AiRequestsChartProps) => {
         {isLoading ? (
           <div className="bg-muted h-64 animate-pulse rounded-md" />
         ) : (
-          <ResponsiveContainer width="100%" height={256}>
-            <LineChart data={data?.dataPoints ?? []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })
-                }
-              />
-              <YAxis />
-              <Tooltip
-                labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                formatter={(value) => [String(value ?? ""), "AI Requests"]}
-              />
-              <Line
-                type="monotone"
-                dataKey="requests"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={false}
-                name="AI Requests"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="bg-muted h-64 animate-pulse rounded-md" />}>
+            <ResponsiveContainer width="100%" height={256}>
+              <LineChart data={data?.dataPoints ?? []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  }
+                />
+                <YAxis />
+                <Tooltip
+                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  formatter={(value) => [String(value ?? ""), "AI Requests"]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="requests"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={false}
+                  name="AI Requests"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Suspense>
         )}
       </CardContent>
     </Card>

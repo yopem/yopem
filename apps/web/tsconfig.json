@@ -5,12 +5,13 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "target": "esnext",
-    "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", ".next"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", ".output"]
 }

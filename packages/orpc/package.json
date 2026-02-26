@@ -50,11 +50,12 @@
     "@orpc/tanstack-query": "catalog:orpc",
     "@repo/logger": "workspace:*",
     "@tanstack/react-query": "catalog:",
-    "next": "catalog:",
+    "@tanstack/react-start": "catalog:",
     "react": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/server": "workspace:*",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:",
     "@yopem/typescript-config": "catalog:tooling",

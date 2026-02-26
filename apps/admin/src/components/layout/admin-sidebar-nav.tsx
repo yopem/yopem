@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRightIcon } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { useLocation } from "@tanstack/react-router"
 import { type ReactNode, useState } from "react"
 
 import Link from "@/components/link"
@@ -23,7 +23,7 @@ interface AdminSidebarNavProps {
 }
 
 const AdminSidebarNav = ({ items }: AdminSidebarNavProps) => {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
 
   const isItemActive = (href: string) =>
     href === "/"

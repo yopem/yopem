@@ -1,10 +1,16 @@
-import { login } from "@repo/auth/login"
+"use client"
+
 import { Button } from "@repo/ui/button"
 
+import { loginFn } from "@/lib/auth"
+
 const LoginButton = () => {
+  const handleLogin = async () => {
+    await loginFn()
+  }
+
   return (
-    <form action={login}>
-      <Button type="submit">
+    <Button onClick={handleLogin}>
         <svg
           className="mr-2"
           aria-hidden="true"
@@ -44,7 +50,6 @@ const LoginButton = () => {
         </svg>
         Login with Google
       </Button>
-    </form>
   )
 }
 
