@@ -49,7 +49,6 @@
       "outputs": [".output/**", "dist/**"]
     },
     "dev": {
-      "dependsOn": ["^dev"],
       "persistent": true,
       "cache": false
     },
