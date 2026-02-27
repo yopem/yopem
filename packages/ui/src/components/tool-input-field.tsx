@@ -140,6 +140,7 @@ const ToolInputField = ({
                   handleChange(result)
                 }
                 reader.onerror = () => {
+                  // oxlint-disable-next-line no-console
                   console.error("Failed to read image file")
                 }
                 reader.readAsDataURL(file)
@@ -174,6 +175,7 @@ const ToolInputField = ({
                   handleChange(result)
                 }
                 reader.onerror = () => {
+                  // oxlint-disable-next-line no-console
                   console.error("Failed to read video file")
                 }
                 reader.readAsDataURL(file)

@@ -199,9 +199,9 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="bg-muted h-5 w-32 animate-pulse rounded" />
-        <div className="bg-muted h-4 w-24 animate-pulse rounded" />
-        <div className="bg-muted h-7 w-40 animate-pulse rounded" />
+        <div className="bg-muted h-5 w-32 animate-pulse rounded-sm" />
+        <div className="bg-muted h-4 w-24 animate-pulse rounded-sm" />
+        <div className="bg-muted h-7 w-40 animate-pulse rounded-sm" />
         <div className="bg-muted h-[120px] w-full animate-pulse rounded-lg" />
         <div className="bg-muted h-9 w-full animate-pulse rounded-lg" />
       </div>

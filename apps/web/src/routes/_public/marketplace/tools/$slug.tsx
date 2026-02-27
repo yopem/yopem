@@ -97,7 +97,7 @@ function ToolDetailPage() {
                 </Badge>
               </div>
 
-              <p className="text-muted-foreground text-base leading-relaxed">
+              <p className="text-muted-foreground text-base/relaxed">
                 {tool.description ?? "No description available"}
               </p>
 
