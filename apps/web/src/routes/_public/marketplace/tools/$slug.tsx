@@ -1,5 +1,5 @@
 import { siteTitle } from "@repo/env/client"
-import { serverApi } from "@repo/orpc/server"
+import { queryApi } from "@repo/orpc/query"
 import { Badge } from "@repo/ui/badge"
 import { Separator } from "@repo/ui/separator"
 import { Skeleton } from "@repo/ui/skeleton"
@@ -16,8 +16,8 @@ import UserCredits from "@/components/marketplace/user-credits"
 export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
   loader: async ({ params }) => {
     const [tool, reviewsData] = await Promise.all([
-      serverApi.tools.getBySlug({ slug: params.slug }),
-      serverApi.tools.getReviews({ slug: params.slug }),
+      queryApi.tools.getBySlug.call({ slug: params.slug }),
+      queryApi.tools.getReviews.call({ slug: params.slug }),
     ])
     return {
       tool,
@@ -79,7 +79,7 @@ function ToolDetailPage() {
       </div>
 
       <div className="flex flex-col gap-y-10 lg:flex-row lg:gap-x-12">
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-y-4 sm:flex-row sm:items-start sm:gap-x-6">
             <div className="bg-muted border-border flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-20">
               <span className="text-foreground text-3xl font-semibold">
@@ -164,9 +164,7 @@ function ToolDetailPage() {
           reviews={reviewsData.reviews}
           isAuthenticated={isAuthenticated}
           currentUserName={
-            session
-              ? (session.username ?? session.name ?? null)
-              : null
+            session ? (session.username ?? session.name ?? null) : null
           }
         />
       </section>
