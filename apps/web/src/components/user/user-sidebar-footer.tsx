@@ -1,6 +1,5 @@
 "use client"
 
-import { logoutFn } from "@/lib/auth"
 import {
   Menu,
   MenuItem,
@@ -9,9 +8,11 @@ import {
   MenuTrigger,
 } from "@repo/ui/menu"
 import { Link } from "@tanstack/react-router"
-import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { Image } from "@unpic/react"
+import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
+
+import { logoutFn } from "@/lib/auth"
 
 interface User {
   name: string

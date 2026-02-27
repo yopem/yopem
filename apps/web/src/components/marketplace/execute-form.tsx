@@ -2,7 +2,6 @@
 
 import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
-import { Card, CardContent } from "@repo/ui/card"
 import { Field, FieldLabel } from "@repo/ui/field"
 import { Textarea } from "@repo/ui/textarea"
 import ToolInputField, {
@@ -110,19 +109,13 @@ export default function ToolExecuteForm({
   }
 
   return (
-    <Card className="bg-card overflow-hidden rounded-2xl border shadow-sm">
-      <div className="bg-primary/5 border-border/50 border-b px-6 py-4">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <PlayIcon className="text-primary size-4.5" />
-          Run this tool
-        </h2>
-      </div>
-      <CardContent className="space-y-6 p-6">
+    <div className="border-border bg-card overflow-hidden rounded-xl border shadow-sm">
+      <div className="space-y-6 p-5 sm:p-6">
         {hasVariables ? (
-          <div className="flex flex-col gap-5">
+          <div className="grid gap-5">
             {inputVariable.map((field) => (
               <Field key={field.variableName} className="space-y-2">
-                <FieldLabel className="text-sm font-medium">
+                <FieldLabel className="text-foreground text-sm font-medium">
                   {field.variableName}
                 </FieldLabel>
                 <ToolInputField
@@ -142,34 +135,34 @@ export default function ToolExecuteForm({
               htmlFor="input"
               className="text-foreground text-sm font-medium"
             >
-              Input
+              Input Data
             </label>
             <Textarea
               id="input"
-              placeholder="Enter your input..."
+              placeholder="Enter your input data here..."
               value={fallbackInput}
               onChange={(e) => setFallbackInput(e.target.value)}
-              className="min-h-[120px] resize-y rounded-xl"
+              className="min-h-[160px] resize-y"
             />
           </div>
         )}
 
         {cost > 0 && (
-          <div className="bg-muted/40 border-border/50 space-y-2 rounded-xl border p-4">
+          <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Execution cost</span>
-              <span className="text-foreground font-semibold">
+              <span className="text-foreground font-medium">
                 {cost} credits
               </span>
             </div>
             {creditsData && (
-              <div className="flex items-center justify-between text-sm">
+              <div className="mt-1 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Your balance</span>
                 <span
                   className={
                     hasInsufficientCredits
-                      ? "text-destructive font-semibold"
-                      : "text-foreground font-semibold"
+                      ? "text-destructive font-medium"
+                      : "text-foreground font-medium"
                   }
                 >
                   {balance} credits
@@ -177,88 +170,89 @@ export default function ToolExecuteForm({
               </div>
             )}
             {hasInsufficientCredits && (
-              <div className="text-destructive bg-destructive/10 mt-3 flex items-center gap-2 rounded-lg p-2.5 text-sm font-medium">
+              <div className="text-destructive mt-3 flex items-center gap-2 text-sm">
                 <AlertTriangleIcon className="size-4" />
-                Insufficient credits to run this tool
+                <span>Insufficient credits to run this tool</span>
               </div>
             )}
           </div>
         )}
 
-        {!isAuthenticated ? (
-          <div className="border-border bg-muted/20 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
-            <div className="bg-muted/50 rounded-full p-3">
-              <LockIcon className="text-muted-foreground size-5" />
+        <div className="pt-2">
+          {!isAuthenticated ? (
+            <div className="border-border bg-muted/30 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center">
+              <div className="bg-background border-border/50 rounded-full border p-3 shadow-xs">
+                <LockIcon className="text-muted-foreground size-5" />
+              </div>
+              <div>
+                <p className="text-foreground font-medium">
+                  Authentication required
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Sign in to execute this tool and view results
+                </p>
+              </div>
             </div>
-            <p className="text-foreground font-medium">
-              Authentication required
-            </p>
-            <p className="text-muted-foreground text-sm">
-              Sign in to execute this tool and view results
-            </p>
-          </div>
-        ) : (
-          <Button
-            size="lg"
-            onClick={handleExecute}
-            disabled={executeMutation.isPending || hasInsufficientCredits}
-            className="h-12 w-full rounded-xl text-base font-medium"
-          >
-            {executeMutation.isPending ? (
-              <>
-                <div className="border-background/30 border-t-background mr-2 size-4 animate-spin rounded-full border-2" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <PlayIcon className="mr-2 size-4.5" />
-                {cost > 0 ? `Run tool (${cost} credits)` : "Run tool"}
-              </>
-            )}
-          </Button>
-        )}
+          ) : (
+            <Button
+              onClick={handleExecute}
+              disabled={executeMutation.isPending || hasInsufficientCredits}
+              className="w-full"
+            >
+              {executeMutation.isPending ? (
+                <>
+                  <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <PlayIcon className="mr-2 size-4" />
+                  {cost > 0 ? `Run tool (${cost} credits)` : "Run tool"}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
 
         {error && (
-          <div className="bg-destructive/10 text-destructive flex items-start gap-3 rounded-xl p-4 text-sm font-medium">
-            <AlertTriangleIcon className="mt-0.5 size-5 shrink-0" />
+          <div className="bg-destructive/10 text-destructive border-destructive/20 flex items-start gap-3 rounded-lg border p-4 text-sm">
+            <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" />
             <p>{error}</p>
           </div>
         )}
 
         {output && (
-          <div className="border-border/80 bg-muted/20 overflow-hidden rounded-xl border">
-            <div className="bg-muted/40 border-border/80 flex items-center justify-between border-b px-4 py-2.5">
-              <span className="text-sm font-semibold tracking-tight">
-                Result Output
-              </span>
-              <div className="flex gap-1.5">
+          <div className="mt-8 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-foreground font-medium">Result Output</h3>
+              <div className="flex gap-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={handleCopy}
-                  className="hover:bg-muted/60 h-8 rounded-md px-2.5 text-xs"
+                  className="h-8 px-3 text-xs"
                 >
                   <CopyIcon className="mr-1.5 size-3.5" />
                   Copy
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={handleClear}
-                  className="hover:bg-muted/60 h-8 rounded-md px-2.5 text-xs"
+                  className="h-8 px-3 text-xs"
                 >
                   Clear
                 </Button>
               </div>
             </div>
-            <div className="p-4">
-              <pre className="max-h-[300px] overflow-auto font-mono text-sm/relaxed whitespace-pre-wrap">
+            <div className="border-border bg-muted/30 rounded-lg border">
+              <pre className="max-h-[400px] overflow-auto p-4 font-mono text-sm whitespace-pre-wrap">
                 {output}
               </pre>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

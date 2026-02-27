@@ -1,11 +1,9 @@
 "use client"
 
 import { clientApi } from "@repo/orpc/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { useState } from "react"
 
 import LoginButton from "@/components/auth/login-button"
-import ToolRatingInput from "@/components/marketplace/tool-rating-input"
 import ToolReviewsList from "@/components/marketplace/tool-reviews-list"
 
 interface Review {
@@ -20,52 +18,66 @@ interface ToolReviewsSectionProps {
   slug: string
   reviews: Review[]
   isAuthenticated: boolean
+  currentUserName?: string | null
 }
 
 const ToolReviewsSection = ({
   slug,
   reviews: initialReviews,
   isAuthenticated,
+  currentUserName,
 }: ToolReviewsSectionProps) => {
   const [reviews, setReviews] = useState(initialReviews)
+  const [editorOpen, setEditorOpen] = useState(false)
+
+  const hasExistingReview =
+    currentUserName != null &&
+    reviews.some((r) => r.userName === currentUserName)
 
   const handleReviewSubmit = async () => {
     try {
       const data = await clientApi.tools.getReviews({ slug })
       setReviews(data.reviews)
+      setEditorOpen(false)
     } catch {
-      // Silently fail - user can refresh to see new review
+      // ignore
     }
   }
 
   return (
-    <Card className="bg-card rounded-2xl border shadow-sm">
-      <CardHeader className="border-border/50 border-b px-6 pt-6 pb-4">
-        <CardTitle className="text-xl font-semibold tracking-tight">
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-foreground text-xl font-semibold tracking-tight">
           Reviews
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 p-6">
-        {isAuthenticated ? (
-          <div className="bg-muted/30 border-border/50 rounded-xl border p-5">
-            <h3 className="mb-4 text-sm font-medium">Write a review</h3>
-            <ToolRatingInput slug={slug} onSuccess={handleReviewSubmit} />
-          </div>
-        ) : (
-          <div className="bg-muted/30 border-border/50 flex flex-col items-center justify-center rounded-xl border py-8 text-center">
-            <p className="text-muted-foreground mb-4 text-sm">
-              Please log in to leave a review for this tool.
-            </p>
-            <LoginButton />
-          </div>
-        )}
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          See what others are saying about this tool.
+        </p>
+      </div>
 
-        <div className="pt-2">
-          <ToolReviewsList reviews={reviews} />
+      <ToolReviewsList
+        reviews={reviews}
+        currentUserName={currentUserName ?? null}
+        isAuthenticated={isAuthenticated}
+        editorOpen={editorOpen}
+        onEditorOpen={() => setEditorOpen(true)}
+        onEditorClose={() => setEditorOpen(false)}
+        hasExistingReview={hasExistingReview}
+        slug={slug}
+        onEditorSuccess={handleReviewSubmit}
+      />
+
+      {!isAuthenticated && (
+        <div className="border-border bg-muted/30 flex flex-col items-center justify-center rounded-lg border px-4 py-8 text-center sm:flex-row sm:gap-4 sm:py-5 sm:text-left">
+          <p className="text-muted-foreground mb-4 text-sm sm:mb-0 sm:flex-1">
+            Sign in to leave a review for this tool.
+          </p>
+          <LoginButton />
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 }
 
 export default ToolReviewsSection
+

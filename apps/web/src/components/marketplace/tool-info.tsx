@@ -1,6 +1,4 @@
 import { Badge } from "@repo/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
-import { Separator } from "@repo/ui/separator"
 import {
   CalendarIcon,
   FolderIcon,
@@ -36,107 +34,82 @@ const ToolInfo = ({ tool }: ToolInfoProps) => {
   const hasReviews = tool.reviewCount && tool.reviewCount > 0
 
   return (
-    <Card className="bg-card rounded-2xl border shadow-sm">
-      <CardHeader className="border-border/50 border-b px-6 pt-6 pb-4">
-        <CardTitle className="text-base font-semibold">
-          About this tool
-        </CardTitle>
-      </CardHeader>
+    <div className="border-border bg-card rounded-lg border p-5 shadow-sm">
+      <h3 className="text-foreground mb-4 text-sm font-semibold tracking-tight">
+        App Details
+      </h3>
 
-      <CardContent className="space-y-6 p-6">
+      <div className="space-y-4">
         {hasReviews && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <StarIcon
-                  key={i}
-                  className={`size-4 ${
-                    i < Math.round(tool.averageRating ?? 0)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-muted dark:text-muted-foreground/30"
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-1.5 text-sm">
-              <span className="text-foreground font-semibold">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Rating</span>
+            <div className="flex items-center gap-1.5">
+              <StarIcon className="size-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-foreground font-medium">
                 {tool.averageRating?.toFixed(1)}
               </span>
               <span className="text-muted-foreground">
-                ({tool.reviewCount}{" "}
-                {tool.reviewCount === 1 ? "review" : "reviews"})
+                ({tool.reviewCount})
               </span>
             </div>
           </div>
         )}
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="text-muted-foreground flex items-center gap-2.5">
-              <CreditCardIcon className="size-4.5" />
-              <span>Cost per run</span>
-            </div>
-            <span className="text-foreground font-medium">
-              {cost > 0 ? `${cost} credits` : "Free"}
-            </span>
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-muted-foreground flex items-center gap-2">
+            <CreditCardIcon className="size-4" />
+            <span>Cost per run</span>
           </div>
+          <span className="text-foreground font-medium">
+            {cost > 0 ? `${cost} credits` : "Free"}
+          </span>
+        </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="text-muted-foreground flex items-center gap-2.5">
-              <CalendarIcon className="size-4.5" />
-              <span>Added</span>
-            </div>
-            <span className="text-foreground font-medium">{formattedDate}</span>
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-muted-foreground flex items-center gap-2">
+            <CalendarIcon className="size-4" />
+            <span>Added</span>
           </div>
+          <span className="text-foreground font-medium">{formattedDate}</span>
         </div>
 
         {tool.categories.length > 0 && (
-          <>
-            <Separator className="bg-border/60" />
-            <div className="space-y-3">
-              <div className="text-muted-foreground flex items-center gap-2.5 text-sm">
-                <FolderIcon className="size-4.5" />
-                <span className="text-foreground font-medium">Categories</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {tool.categories.map((category) => (
-                  <Badge
-                    key={category.id}
-                    variant="secondary"
-                    className="bg-secondary/50 hover:bg-secondary/80 rounded-md px-2.5 py-1 text-xs font-medium"
-                  >
-                    {category.name}
-                  </Badge>
-                ))}
-              </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="text-muted-foreground flex items-center gap-2">
+              <FolderIcon className="size-4" />
+              <span>Category</span>
             </div>
-          </>
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {tool.categories.slice(0, 1).map((category) => (
+                <span key={category.id} className="text-foreground font-medium">
+                  {category.name}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
+      </div>
 
-        {tool.tags.length > 0 && (
-          <>
-            <Separator className="bg-border/60" />
-            <div className="space-y-3">
-              <div className="text-muted-foreground flex items-center gap-2.5 text-sm">
-                <TagIcon className="size-4.5" />
-                <span className="text-foreground font-medium">Tags</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {tool.tags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant="outline"
-                    className="border-border/60 bg-card hover:bg-muted/50 rounded-md px-2.5 py-1 text-xs font-medium"
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+      {tool.tags.length > 0 && (
+        <div className="border-border/50 mt-5 space-y-3 border-t pt-5">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <TagIcon className="size-4" />
+            <span>Tags</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tool.tags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant="secondary"
+                className="bg-muted text-muted-foreground hover:bg-muted/80 rounded-md font-normal"
+              >
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

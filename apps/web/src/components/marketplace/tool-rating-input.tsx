@@ -198,17 +198,22 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
 
   if (isLoading) {
     return (
-      <div className="py-4 text-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="space-y-4">
+        <div className="bg-muted h-5 w-32 animate-pulse rounded" />
+        <div className="bg-muted h-4 w-24 animate-pulse rounded" />
+        <div className="bg-muted h-7 w-40 animate-pulse rounded" />
+        <div className="bg-muted h-[120px] w-full animate-pulse rounded-lg" />
+        <div className="bg-muted h-9 w-full animate-pulse rounded-lg" />
       </div>
     )
   }
 
   if (hasUsedTool === false) {
     return (
-      <div className="py-4 text-center">
-        <p className="text-muted-foreground">
-          You need to use this tool before you can review it
+      <div className="flex flex-col items-center gap-2 py-6 text-center">
+        <p className="text-foreground text-sm font-medium">Use required</p>
+        <p className="text-muted-foreground text-xs">
+          Run this tool at least once before leaving a review.
         </p>
       </div>
     )
@@ -216,11 +221,17 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
 
   return (
     <div className="space-y-4">
+      <h3 className="text-foreground text-base font-semibold">
+        {isEditing ? "Edit your review" : "Write a review"}
+      </h3>
       <div>
-        <label htmlFor="rating" className="text-sm font-medium">
+        <label
+          htmlFor="rating"
+          className="text-foreground mb-2 block text-sm font-medium"
+        >
           Your Rating
         </label>
-        <div id="rating" className="mt-2 flex gap-1">
+        <div id="rating" className="flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starValue = i + 1
             const isFilled = starValue <= (hoverRating || rating)
@@ -228,7 +239,7 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
               <button
                 key={starValue}
                 type="button"
-                className="transition-colors hover:scale-110"
+                className="transition-transform hover:scale-110 focus:outline-none"
                 onMouseEnter={() =>
                   dispatch({ type: "SET_HOVER_RATING", payload: starValue })
                 }
@@ -243,7 +254,7 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
                   className={`size-6 ${
                     isFilled
                       ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300 dark:text-gray-600"
+                      : "text-muted-foreground/30 dark:text-muted-foreground/20"
                   }`}
                 />
               </button>
@@ -253,31 +264,36 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
       </div>
 
       <div>
-        <label htmlFor="review-text" className="text-sm font-medium">
+        <label
+          htmlFor="review-text"
+          className="text-foreground mb-2 block text-sm font-medium"
+        >
           Review (optional)
         </label>
         <Textarea
           id="review-text"
-          className="mt-2"
+          className="min-h-[120px] resize-none"
           placeholder="Share your experience with this tool..."
           value={reviewText}
           onChange={(e) =>
             dispatch({ type: "SET_REVIEW_TEXT", payload: e.target.value })
           }
           maxLength={2000}
-          rows={3}
         />
-        <p className="text-muted-foreground mt-1 text-xs">
-          {reviewText.length}/2000 characters
-        </p>
+        <div className="mt-1.5 flex justify-end">
+          <p className="text-muted-foreground text-xs">
+            {reviewText.length}/2000
+          </p>
+        </div>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Button
         onClick={handleSubmit}
         disabled={isSubmitting || rating === 0}
         className="w-full"
+        size="lg"
       >
         {isSubmitting
           ? "Submitting..."

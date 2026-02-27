@@ -1,11 +1,11 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
-import { Shimmer } from "shimmer-from-structure"
 import {
   CreditCardIcon,
   LayoutDashboardIcon,
   PlayIcon,
   UserIcon,
 } from "lucide-react"
+import { Shimmer } from "shimmer-from-structure"
 
 import UserLayout from "@/components/user/user-layout"
 import { getSession } from "@/lib/auth"
