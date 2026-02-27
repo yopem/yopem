@@ -1,5 +1,6 @@
-import { Link as RouterLink } from "@tanstack/react-router"
 import type { ReactNode } from "react"
+
+import { Link as RouterLink } from "@tanstack/react-router"
 
 interface LinkProps {
   href: string

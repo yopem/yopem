@@ -1,8 +1,8 @@
-import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
+import tailwindCSS from "@tailwindcss/vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import react from "@vitejs/plugin-react"
-import tailwindCSS from "@tailwindcss/vite"
+import { defineConfig } from "vite"
+import tsconfigPaths from "vite-tsconfig-paths"
 
 const clientEnvDefines = Object.fromEntries(
   Object.entries(process.env)

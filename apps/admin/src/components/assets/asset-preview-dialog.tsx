@@ -46,7 +46,7 @@ export function AssetPreviewDialog({
               </p>
             </DialogHeader>
             <DialogPanel>
-                {isImage ? (
+              {isImage ? (
                 <div className="relative max-h-[70vh] w-full">
                   <Image
                     src={asset.url}

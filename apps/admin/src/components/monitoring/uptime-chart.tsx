@@ -9,13 +9,17 @@ import { useState, lazy, Suspense } from "react"
 const ResponsiveContainer = lazy(() =>
   import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
 )
-const LineChart = lazy(() => import("recharts").then((m) => ({ default: m.LineChart })))
+const LineChart = lazy(() =>
+  import("recharts").then((m) => ({ default: m.LineChart })),
+)
 const CartesianGrid = lazy(() =>
   import("recharts").then((m) => ({ default: m.CartesianGrid })),
 )
 const XAxis = lazy(() => import("recharts").then((m) => ({ default: m.XAxis })))
 const YAxis = lazy(() => import("recharts").then((m) => ({ default: m.YAxis })))
-const Tooltip = lazy(() => import("recharts").then((m) => ({ default: m.Tooltip })))
+const Tooltip = lazy(() =>
+  import("recharts").then((m) => ({ default: m.Tooltip })),
+)
 const Line = lazy(() => import("recharts").then((m) => ({ default: m.Line })))
 
 const UptimeChart = () => {
@@ -55,7 +59,11 @@ const UptimeChart = () => {
         {isLoading ? (
           <div className="bg-muted h-72 animate-pulse rounded-md" />
         ) : (
-          <Suspense fallback={<div className="bg-muted h-72 animate-pulse rounded-md" />}>
+          <Suspense
+            fallback={
+              <div className="bg-muted h-72 animate-pulse rounded-md" />
+            }
+          >
             <ResponsiveContainer width="100%" height={288}>
               <LineChart data={data?.dataPoints ?? []}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -68,9 +76,14 @@ const UptimeChart = () => {
                     })
                   }
                 />
-                <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                <YAxis
+                  domain={[0, 100]}
+                  tickFormatter={(value) => `${value}%`}
+                />
                 <Tooltip
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  labelFormatter={(value) =>
+                    new Date(value).toLocaleDateString()
+                  }
                   formatter={(value) => [
                     `${Number(value).toFixed(1)}%`,
                     "Uptime",

@@ -28,14 +28,15 @@ export const toolsTable = pgTable("tools", {
   config: jsonb("config"),
   systemRole: text("system_role"),
   userInstructionTemplate: text("user_instruction_template"),
-  inputVariable: jsonb("input_variable").$type<
-    {
-      variableName: string
-      description: string
-      type: string
-      options?: { label: string; value: string }[]
-    }[]
-  >(),
+  inputVariable:
+    jsonb("input_variable").$type<
+      {
+        variableName: string
+        description: string
+        type: string
+        options?: { label: string; value: string }[]
+      }[]
+    >(),
   outputFormat: text("output_format", { enum: toolOutputFormatEnum }).default(
     "plain",
   ),

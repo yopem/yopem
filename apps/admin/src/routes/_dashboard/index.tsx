@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
 import { Button } from "@repo/ui/button"
+import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import {
   BadgeCheckIcon,
@@ -19,8 +19,6 @@ import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useActivityFeed } from "@/hooks/use-activity-feed"
 import { useSystemMetrics } from "@/hooks/use-system-metrics"
-
-
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {

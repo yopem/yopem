@@ -1,3 +1,10 @@
+import { siteTitle } from "@repo/env/client"
+import { appEnv } from "@repo/env/client"
+
+import "@/globals.css"
+import "@repo/ui/style.css"
+import { formatError, logger } from "@repo/logger"
+import { Button } from "@repo/ui/button"
 import {
   HeadContent,
   Outlet,
@@ -5,19 +12,7 @@ import {
   createRootRoute,
 } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
-
-import "@/globals.css"
-import "@repo/ui/style.css"
-
-import { siteTitle } from "@repo/env/client"
-import { appEnv } from "@repo/env/client"
-import { formatError, logger } from "@repo/logger"
-import { Button } from "@repo/ui/button"
-import {
-  AlertCircleIcon,
-  HomeIcon,
-  RefreshCwIcon,
-} from "lucide-react"
+import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
 
 import Providers from "@/components/providers"
@@ -42,9 +37,7 @@ export const Route = createRootRoute({
       },
       { name: "color-scheme", content: "light dark" },
     ],
-    links: [
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-    ],
+    links: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
   }),
   component: RootComponent,
   errorComponent: ErrorComponent,
@@ -73,7 +66,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset?: () => void }) {
+function ErrorComponent({
+  error,
+  reset,
+}: {
+  error: Error
+  reset?: () => void
+}) {
   useEffect(() => {
     logger.error(`Route error: ${formatError(error)}`)
   }, [error])

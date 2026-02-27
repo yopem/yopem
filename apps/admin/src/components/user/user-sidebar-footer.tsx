@@ -1,6 +1,5 @@
 "use client"
 
-import { logoutFn } from "@/lib/auth"
 import {
   Menu,
   MenuItem,
@@ -11,6 +10,8 @@ import {
 import { Image } from "@unpic/react"
 import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
+
+import { logoutFn } from "@/lib/auth"
 
 interface User {
   name: string

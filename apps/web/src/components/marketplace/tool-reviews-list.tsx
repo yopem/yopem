@@ -1,6 +1,7 @@
-import ToolRatingInput from "@/components/marketplace/tool-rating-input"
 import { Button } from "@repo/ui/button"
 import { PencilIcon, StarIcon, XIcon } from "lucide-react"
+
+import ToolRatingInput from "@/components/marketplace/tool-rating-input"
 
 interface Review {
   id: string
@@ -107,7 +108,7 @@ const ToolReviewsList = ({
                         {review.userName ?? "Anonymous"}
                       </span>
                       {isOwnReview && (
-                        <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                        <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
                           Your review
                         </span>
                       )}

@@ -1,5 +1,4 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
-import { Shimmer } from "shimmer-from-structure"
 import {
   ActivityIcon,
   BotIcon,
@@ -8,6 +7,7 @@ import {
   SettingsIcon,
   TagsIcon,
 } from "lucide-react"
+import { Shimmer } from "shimmer-from-structure"
 
 import AdminLayout from "@/components/layout/admin-layout"
 import { getSession } from "@/lib/auth"

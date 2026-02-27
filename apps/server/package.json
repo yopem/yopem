@@ -43,8 +43,8 @@
     "@repo/payments": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/storage": "workspace:*",
-    "hono": "^4.7.11",
     "drizzle-orm": "catalog:drizzle",
+    "hono": "^4.7.11",
     "zod": "catalog:"
   },
   "devDependencies": {

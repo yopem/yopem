@@ -80,4 +80,3 @@ const ToolReviewsSection = ({
 }
 
 export default ToolReviewsSection
-

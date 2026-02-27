@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
 import { queryApi } from "@repo/orpc/query"
+import { createFileRoute } from "@tanstack/react-router"
 import { BarChartIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
 import { lazy, Suspense, useEffect, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
@@ -14,9 +14,13 @@ import WebhookFilterToggle, {
   type EventType,
 } from "@/components/monitoring/webhook-filter-toggle"
 
-const WebhookEventsChart = lazy(() => import("@/components/monitoring/webhook-events-chart"))
+const WebhookEventsChart = lazy(
+  () => import("@/components/monitoring/webhook-events-chart"),
+)
 
-const WebhookProcessingChart = lazy(() => import("@/components/monitoring/webhook-processing-chart"))
+const WebhookProcessingChart = lazy(
+  () => import("@/components/monitoring/webhook-processing-chart"),
+)
 
 interface MetricsData {
   dataPoints: {
@@ -106,7 +110,8 @@ const WebhooksPage = () => {
         if (!cancelled) {
           dispatch({
             type: "FETCH_ERROR",
-            payload: err instanceof Error ? err.message : "Failed to load metrics",
+            payload:
+              err instanceof Error ? err.message : "Failed to load metrics",
           })
         }
       }
@@ -187,10 +192,18 @@ const WebhooksPage = () => {
           </Shimmer>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Suspense fallback={<div className="bg-muted h-96 animate-pulse rounded-md" />}>
+            <Suspense
+              fallback={
+                <div className="bg-muted h-96 animate-pulse rounded-md" />
+              }
+            >
               <WebhookEventsChart data={webhookMetrics?.dataPoints ?? []} />
             </Suspense>
-            <Suspense fallback={<div className="bg-muted h-96 animate-pulse rounded-md" />}>
+            <Suspense
+              fallback={
+                <div className="bg-muted h-96 animate-pulse rounded-md" />
+              }
+            >
               <WebhookProcessingChart data={webhookMetrics?.dataPoints ?? []} />
             </Suspense>
           </div>

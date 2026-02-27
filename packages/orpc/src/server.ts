@@ -10,9 +10,7 @@ const createServerFetchWithCookies = () => {
     const fetchInit = { ...init }
 
     try {
-      const { getRequestHeaders } = await import(
-        "@tanstack/react-start/server"
-      )
+      const { getRequestHeaders } = await import("@tanstack/react-start/server")
       const allHeaders = getRequestHeaders()
       const cookieHeader = allHeaders.get("cookie")
 

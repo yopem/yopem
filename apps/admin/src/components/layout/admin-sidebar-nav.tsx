@@ -1,7 +1,7 @@
 "use client"
 
-import { ChevronRightIcon } from "lucide-react"
 import { useLocation } from "@tanstack/react-router"
+import { ChevronRightIcon } from "lucide-react"
 import { type ReactNode, useState } from "react"
 
 import Link from "@/components/link"

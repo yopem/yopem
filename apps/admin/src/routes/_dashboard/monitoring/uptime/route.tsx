@@ -25,7 +25,9 @@ const UptimePage = () => {
 
       <UptimeStats />
       <div className="mt-4">
-        <Suspense fallback={<div className="bg-muted h-96 animate-pulse rounded-md" />}>
+        <Suspense
+          fallback={<div className="bg-muted h-96 animate-pulse rounded-md" />}
+        >
           <UptimeChart />
         </Suspense>
       </div>
