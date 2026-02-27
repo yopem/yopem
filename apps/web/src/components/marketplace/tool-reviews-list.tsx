@@ -38,7 +38,7 @@ const ToolReviewsList = ({
     return (
       <div className="border-border bg-card rounded-lg border">
         <div
-          className={`px-4 py-4 sm:px-5 ${editorOpen ? "border-border border-b" : "flex min-h-[160px] flex-col items-center justify-center py-10 text-center"}`}
+          className={`p-4 sm:px-5 ${editorOpen ? "border-border border-b" : "flex min-h-[160px] flex-col items-center justify-center py-10 text-center"}`}
         >
           {editorOpen ? (
             <div className="flex items-center justify-between">
@@ -108,7 +108,7 @@ const ToolReviewsList = ({
                         {review.userName ?? "Anonymous"}
                       </span>
                       {isOwnReview && (
-                        <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                        <span className="bg-primary/10 text-primary rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
                           Your review
                         </span>
                       )}
@@ -162,7 +162,7 @@ const ToolReviewsList = ({
                     </div>
                   </div>
                   {review.reviewText && (
-                    <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+                    <p className="text-muted-foreground mt-1.5 text-sm/relaxed">
                       {review.reviewText}
                     </p>
                   )}
