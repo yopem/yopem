@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:tooling",
-    "@types/sharp": "^0.31.1",
+    "@types/sharp": "^0.32.0",
     "@yopem/typescript-config": "catalog:tooling",
     "eslint-plugin-oxfmt": "catalog:tooling",
     "oxfmt": "catalog:tooling",
