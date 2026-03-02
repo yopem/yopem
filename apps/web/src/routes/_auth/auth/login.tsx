@@ -1,8 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { redirect, createFileRoute } from "@tanstack/react-router"
 
 import LoginButton from "@/components/auth/login-button"
+import { getSession } from "@/lib/auth"
 
 export const Route = createFileRoute("/_auth/auth/login")({
+  beforeLoad: async () => {
+    const session = await getSession()
+    if (session) {
+      throw redirect({ to: "/dashboard" })
+    }
+  },
   component: LoginPage,
 })
 
