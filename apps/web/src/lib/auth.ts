@@ -40,7 +40,10 @@ export const getSession = createServerFn({ method: "GET" }).handler(
         secure: isProduction,
       }
       setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, { ...options, maxAge: 604800 })
+      setCookie("refresh_token", verified.tokens.refresh, {
+        ...options,
+        maxAge: 604800,
+      })
     }
 
     return verified.subject.properties
@@ -67,7 +70,10 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
         secure: isProduction,
       }
       setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, { ...options, maxAge: 604800 })
+      setCookie("refresh_token", verified.tokens.refresh, {
+        ...options,
+        maxAge: 604800,
+      })
       throw redirect({ to: "/" })
     }
   }
