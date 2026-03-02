@@ -31,14 +31,16 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     }
 
     if (verified.tokens) {
+      const isProduction = process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        maxAge: 34560000,
+        maxAge: 86400,
+        secure: isProduction,
       }
       setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, options)
+      setCookie("refresh_token", verified.tokens.refresh, { ...options, maxAge: 604800 })
     }
 
     return verified.subject.properties
@@ -56,14 +58,16 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
       refresh: refreshToken,
     })
     if (!verified.err && verified.tokens) {
+      const isProduction = process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        maxAge: 34560000,
+        maxAge: 86400,
+        secure: isProduction,
       }
       setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, options)
+      setCookie("refresh_token", verified.tokens.refresh, { ...options, maxAge: 604800 })
       throw redirect({ to: "/" })
     }
   }
