@@ -45,18 +45,12 @@ StatCard.displayName = "StatCard"
 function DashboardPage() {
   const { data: stats } = useQuery({
     ...queryApi.user.getStats.queryOptions(),
-    retry: false,
-    refetchOnWindowFocus: false,
   })
   const { data: credits } = useQuery({
     ...queryApi.user.getCredits.queryOptions(),
-    retry: false,
-    refetchOnWindowFocus: false,
   })
   const { data: runsData } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 5 } }),
-    retry: false,
-    refetchOnWindowFocus: false,
   })
 
   return (

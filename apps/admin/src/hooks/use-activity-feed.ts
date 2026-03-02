@@ -4,5 +4,6 @@ import { useQuery } from "@tanstack/react-query"
 export const useActivityFeed = () => {
   return useQuery({
     ...queryApi.admin.getActivityFeed.queryOptions(),
+    staleTime: 30 * 1000,
   })
 }
