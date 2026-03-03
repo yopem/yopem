@@ -1,33 +1,41 @@
 import { gaMeasurementId, umamiTrackingId } from "@repo/env/client"
+import { useEffect } from "react"
 
 const AnalyticsScripts = () => {
-  return (
-    <>
-      {umamiTrackingId && (
-        <script
-          defer
-          src="https://analytics.yopem.com/script.js"
-          data-website-id={umamiTrackingId}
-        />
-      )}
-      {gaMeasurementId && (
-        <>
-          <script
-            defer
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
-          />
-          <script
-            defer
-            nonce="GAD4-CONFIG"
-            type="text/javascript"
-            dangerouslySetInnerHTML={{
-              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaMeasurementId}')`,
-            }}
-          />
-        </>
-      )}
-    </>
-  )
+  useEffect(() => {
+    if (!gaMeasurementId) return
+
+    window.dataLayer = window.dataLayer || []
+    window.gtag = function gtag(...args: unknown[]) {
+      window.dataLayer.push(args)
+    }
+    window.gtag("js", new Date())
+    window.gtag("config", gaMeasurementId)
+
+    const script = document.createElement("script")
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`
+    script.async = true
+    document.head.appendChild(script)
+  }, [gaMeasurementId])
+
+  useEffect(() => {
+    if (!umamiTrackingId) return
+
+    const script = document.createElement("script")
+    script.src = "https://analytics.yopem.com/script.js"
+    script.setAttribute("data-website-id", umamiTrackingId)
+    script.defer = true
+    document.head.appendChild(script)
+  }, [umamiTrackingId])
+
+  return null
+}
+
+declare global {
+  interface Window {
+    dataLayer: unknown[]
+    gtag: (...args: unknown[]) => void
+  }
 }
 
 export default AnalyticsScripts
