@@ -57,21 +57,21 @@
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/shared": "workspace:*",
-    "drizzle-orm": "catalog:drizzle",
-    "drizzle-zod": "catalog:drizzle",
-    "pg": "catalog:drizzle",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "pg": "catalog:",
     "transliteration": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:tooling",
-    "@types/pg": "catalog:drizzle",
-    "@yopem/typescript-config": "catalog:tooling",
-    "drizzle-kit": "catalog:drizzle",
-    "eslint-plugin-oxfmt": "catalog:tooling",
-    "oxfmt": "catalog:tooling",
-    "oxlint": "catalog:tooling",
-    "oxlint-tsgolint": "catalog:tooling",
-    "typescript": "catalog:tooling"
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "drizzle-kit": "catalog:",
+    "eslint-plugin-oxfmt": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -42,16 +42,16 @@
     "@repo/env": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/shared": "workspace:*",
-    "drizzle-orm": "catalog:drizzle",
+    "drizzle-orm": "catalog:",
     "ioredis": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:tooling",
-    "@yopem/typescript-config": "catalog:tooling",
-    "eslint-plugin-oxfmt": "catalog:tooling",
-    "oxfmt": "catalog:tooling",
-    "oxlint": "catalog:tooling",
-    "oxlint-tsgolint": "catalog:tooling",
-    "typescript": "catalog:tooling"
+    "@types/node": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "eslint-plugin-oxfmt": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:"
   }
 }

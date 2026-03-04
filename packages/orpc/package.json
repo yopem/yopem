@@ -45,9 +45,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/client": "catalog:orpc",
-    "@orpc/server": "catalog:orpc",
-    "@orpc/tanstack-query": "catalog:orpc",
+    "@orpc/client": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
     "@repo/logger": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-start": "catalog:",
@@ -56,13 +56,13 @@
   },
   "devDependencies": {
     "@repo/server": "workspace:*",
-    "@types/node": "catalog:tooling",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "@yopem/typescript-config": "catalog:tooling",
-    "eslint-plugin-oxfmt": "catalog:tooling",
-    "oxfmt": "catalog:tooling",
-    "oxlint": "catalog:tooling",
-    "oxlint-tsgolint": "catalog:tooling",
-    "typescript": "catalog:tooling"
+    "@yopem/typescript-config": "catalog:",
+    "eslint-plugin-oxfmt": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
+    "typescript": "catalog:"
   }
 }
