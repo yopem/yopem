@@ -32,9 +32,7 @@ export default function ToolExecuteForm({
 }: ToolExecuteFormProps) {
   const hasVariables = inputVariable && inputVariable.length > 0
 
-  // Dynamic inputs keyed by variable name (used when inputVariable is provided)
   const [inputs, setInputs] = useState<Record<string, string>>({})
-  // Fallback single input (used when inputVariable is null/empty)
   const [fallbackInput, setFallbackInput] = useState("")
 
   const [output, setOutput] = useState<string | null>(null)
