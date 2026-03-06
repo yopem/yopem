@@ -1,11 +1,11 @@
 import { Button } from "@repo/ui/button"
 import { Link } from "@tanstack/react-router"
 
-import CTAButton from "@/components/navigation/cta-button"
-import { getSession } from "@/lib/auth"
+import type { SessionUser } from "@repo/auth/types"
 
-const CTA = async () => {
-  const session = await getSession()
+import CTAButton from "@/components/navigation/cta-button"
+
+const CTA = ({ session }: { session: SessionUser | false }) => {
 
   return (
     <section className="relative overflow-hidden py-32">

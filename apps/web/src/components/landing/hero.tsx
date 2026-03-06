@@ -2,11 +2,11 @@ import { Button } from "@repo/ui/button"
 import { Link } from "@tanstack/react-router"
 import { BarChart3Icon, BotIcon, ImageIcon, PlayCircleIcon } from "lucide-react"
 
-import CTAButton from "@/components/navigation/cta-button"
-import { getSession } from "@/lib/auth"
+import type { SessionUser } from "@repo/auth/types"
 
-const Hero = async () => {
-  const session = await getSession()
+import CTAButton from "@/components/navigation/cta-button"
+
+const Hero = ({ session }: { session: SessionUser | false }) => {
 
   return (
     <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden pt-16 pb-24">

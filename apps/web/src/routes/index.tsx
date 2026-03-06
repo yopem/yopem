@@ -32,10 +32,10 @@ function HomePage() {
     <>
       <Header session={session} />
       <main className="flex min-h-screen flex-col">
-        <Hero />
+        <Hero session={session} />
         <Features />
         <Pricing />
-        <CTA />
+        <CTA session={session} />
       </main>
       <Footer />
     </>
