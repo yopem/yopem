@@ -13,7 +13,7 @@
     "typescript",
     "unicorn"
   ],
-  "jsPlugins": ["eslint-plugin-oxfmt", "eslint-plugin-better-tailwindcss"],
+  "jsPlugins": ["eslint-plugin-better-tailwindcss"],
   "rules": {
     "better-tailwindcss/enforce-canonical-classes": "error",
     "better-tailwindcss/enforce-consistent-class-order": "off",

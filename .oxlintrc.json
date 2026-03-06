@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "import", "oxc", "promise", "typescript", "unicorn"],
-  "jsPlugins": ["eslint-plugin-oxfmt"],
   "categories": {
     "correctness": "off"
   },
@@ -76,7 +75,6 @@
     "no-useless-escape": "error",
     "no-var": "error",
     "no-with": "off",
-    "oxfmt/oxfmt": "error",
     "prefer-const": "error",
     "prefer-promise-reject-errors": "off",
     "prefer-rest-params": "error",

@@ -28,7 +28,6 @@
     "@types/node": "catalog:",
     "@types/sharp": "^0.31.1",
     "@yopem/typescript-config": "catalog:",
-    "eslint-plugin-oxfmt": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",

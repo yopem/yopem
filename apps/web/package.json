@@ -43,7 +43,6 @@
     "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
-    "eslint-plugin-oxfmt": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",

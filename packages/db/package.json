@@ -68,7 +68,6 @@
     "@types/pg": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "drizzle-kit": "catalog:",
-    "eslint-plugin-oxfmt": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
