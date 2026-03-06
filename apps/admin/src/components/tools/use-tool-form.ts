@@ -10,13 +10,11 @@ import {
 } from "@repo/shared/model-provider-validation"
 import { toastManager } from "@repo/ui/toast"
 import { useForm } from "@tanstack/react-form"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react"
 import { z } from "zod"
 
 import { useAvailableModels } from "@/hooks/use-available-models"
-import { useCategories } from "@/hooks/use-categories"
-import { useTags } from "@/hooks/use-tags"
 
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 
@@ -182,8 +180,21 @@ const useToolForm = ({
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
   const { data: availableModelsData } = useAvailableModels()
-  const { data: categoriesData } = useCategories()
-  const { data: tagsData } = useTags()
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      return await queryApi.categories.list.call()
+    },
+  })
+
+  const { data: tagsData } = useQuery({
+    queryKey: ["tags"],
+    queryFn: async () => {
+      return await queryApi.tags.list.call()
+    },
+  })
+
   const [dialogsState, dialogsDispatch] = useReducer(
     dialogsReducer,
     dialogsInitialState,

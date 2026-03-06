@@ -1,7 +1,7 @@
 import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
 import { toastManager } from "@repo/ui/toast"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { Suspense, useReducer } from "react"
@@ -11,8 +11,6 @@ import CategoryDialog from "@/components/categories-tags/category-dialog"
 import CategoryList from "@/components/categories-tags/category-list"
 import TagDialog from "@/components/categories-tags/tag-dialog"
 import TagList from "@/components/categories-tags/tag-list"
-import { useCategories } from "@/hooks/use-categories"
-import { useTags } from "@/hooks/use-tags"
 
 interface CategoryDialogState {
   open: boolean
@@ -134,10 +132,23 @@ function reducer(state: State, action: Action): State {
 }
 
 const CategoriesTagsContent = () => {
-  const queryClient = useQueryClient()
-  const { data: categories, isLoading: isLoadingCategories } = useCategories()
-  const { data: tags, isLoading: isLoadingTags } = useTags()
   const [state, dispatch] = useReducer(reducer, initialState)
+
+  const queryClient = useQueryClient()
+
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      return await queryApi.categories.list.call()
+    },
+  })
+
+  const { data: tags, isLoading: isLoadingTags } = useQuery({
+    queryKey: ["tags"],
+    queryFn: async () => {
+      return await queryApi.tags.list.call()
+    },
+  })
 
   const createCategoryMutation = useMutation({
     mutationFn: async () => {
