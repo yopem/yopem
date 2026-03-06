@@ -28,7 +28,6 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "@unpic/react": "catalog:",
-    "js.foresight": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
