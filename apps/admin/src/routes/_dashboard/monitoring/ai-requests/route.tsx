@@ -1,9 +1,10 @@
+import { queryApi } from "@repo/orpc/query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import { useSystemMetrics } from "@/hooks/use-system-metrics"
 
 const breadcrumbItems = [
   { label: "Home", href: "/" },
@@ -12,7 +13,10 @@ const breadcrumbItems = [
 ]
 
 const AiRequestsPage = () => {
-  const { data: systemMetrics } = useSystemMetrics()
+  const { data: systemMetrics } = useQuery({
+    ...queryApi.admin.getSystemMetrics.queryOptions(),
+    staleTime: 30 * 1000,
+  })
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

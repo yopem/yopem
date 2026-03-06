@@ -1,3 +1,5 @@
+import { queryApi } from "@repo/orpc/query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { DollarSignIcon, ServerIcon, UsersIcon, ZapIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
@@ -5,7 +7,6 @@ import { Shimmer } from "shimmer-from-structure"
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import { useSystemMetrics } from "@/hooks/use-system-metrics"
 
 const breadcrumbItems = [
   { label: "Home", href: "/" },
@@ -31,7 +32,10 @@ const formatCurrency = (amount: number): string => {
 }
 
 const OverviewPage = () => {
-  const { data: systemMetrics, isLoading: systemLoading } = useSystemMetrics()
+  const { data: systemMetrics, isLoading: systemLoading } = useQuery({
+    ...queryApi.admin.getSystemMetrics.queryOptions(),
+    staleTime: 30 * 1000,
+  })
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

@@ -1,4 +1,6 @@
+import { queryApi } from "@repo/orpc/query"
 import { Button } from "@repo/ui/button"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import {
@@ -18,7 +20,6 @@ import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
 import { useActivityFeed } from "@/hooks/use-activity-feed"
-import { useSystemMetrics } from "@/hooks/use-system-metrics"
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
@@ -40,7 +41,11 @@ const formatCurrency = (amount: number): string => {
 const AdminDashboardPage = () => {
   const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
 
-  const { data: metrics, isLoading: metricsLoading } = useSystemMetrics()
+  const { data: metrics, isLoading: metricsLoading } = useQuery({
+    ...queryApi.admin.getSystemMetrics.queryOptions(),
+    staleTime: 30 * 1000,
+  })
+
   const { data: activityFeed, isLoading: activityLoading } = useActivityFeed()
 
   const activityItems =
