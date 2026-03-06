@@ -13,9 +13,8 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@repo/ui/menu"
+import ThemeSwitcher from "@repo/ui/theme-switcher"
 import { Link } from "@tanstack/react-router"
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
-import { useTheme } from "next-themes"
 
 import { loginFn, logoutFn } from "@/lib/auth"
 
@@ -36,8 +35,6 @@ const getInitials = (name: string | null, email: string) => {
 }
 
 const Header = ({ session }: HeaderProps) => {
-  const { theme, setTheme } = useTheme()
-
   const handleLogin = async () => {
     await loginFn()
   }
@@ -123,31 +120,8 @@ const Header = ({ session }: HeaderProps) => {
                     Logout
                   </MenuItem>
                   <MenuSeparator />
-                  <div className="flex items-center justify-center gap-1 px-2 py-1">
-                    <button
-                      type="button"
-                      aria-label="Light theme"
-                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "light" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-                      onClick={() => setTheme("light")}
-                    >
-                      <SunIcon className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Dark theme"
-                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "dark" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-                      onClick={() => setTheme("dark")}
-                    >
-                      <MoonIcon className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="System theme"
-                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "system" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-                      onClick={() => setTheme("system")}
-                    >
-                      <MonitorIcon className="size-4" />
-                    </button>
+                  <div className="flex justify-center px-2 py-1">
+                    <ThemeSwitcher />
                   </div>
                 </MenuPopup>
               </Menu>
