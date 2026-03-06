@@ -5,7 +5,6 @@
     "eslint",
     "import",
     "jsx-a11y",
-    "nextjs",
     "oxc",
     "promise",
     "react",
@@ -25,7 +24,6 @@
     "better-tailwindcss/no-restricted-classes": "error",
     "better-tailwindcss/no-unknown-classes": "off",
     "better-tailwindcss/no-unnecessary-whitespace": "warn",
-    "nextjs/no-img-element": "error",
     "react/rules-of-hooks": "error"
   },
   "settings": {
