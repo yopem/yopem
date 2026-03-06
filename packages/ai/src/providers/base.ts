@@ -1,5 +1,6 @@
-import { TaggedError } from "better-result"
 import type { Result } from "better-result"
+
+import { TaggedError } from "better-result"
 
 export type ApiKeyProvider = "openai" | "openrouter"
 

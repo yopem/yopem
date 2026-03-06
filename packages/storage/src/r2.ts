@@ -4,7 +4,6 @@ import {
   S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3"
-import { Result, TaggedError } from "better-result"
 import {
   cfAccountId,
   r2AccessKey,
@@ -12,6 +11,7 @@ import {
   r2Domain,
   r2SecretKey,
 } from "@repo/env/hono"
+import { Result, TaggedError } from "better-result"
 import { nanoid } from "nanoid"
 import sharp from "sharp"
 import { transliterate as tr } from "transliteration"
@@ -107,12 +107,14 @@ class R2Storage {
       )
     }
 
-    return Result.gen(async function* (this: R2Storage) {
-      const processed = yield* await this.processImage(buffer)
-      const key = this.generateUniqueKey("images", "webp")
-      yield* await this.uploadWithRetry(processed, key, "image/webp")
-      return Result.ok(`${this.publicUrl}/${key}`)
-    }.bind(this))
+    return Result.gen(
+      async function* (this: R2Storage) {
+        const processed = yield* await this.processImage(buffer)
+        const key = this.generateUniqueKey("images", "webp")
+        yield* await this.uploadWithRetry(processed, key, "image/webp")
+        return Result.ok(`${this.publicUrl}/${key}`)
+      }.bind(this),
+    )
   }
 
   uploadVideo(
@@ -138,11 +140,13 @@ class R2Storage {
       )
     }
 
-    return Result.gen(async function* (this: R2Storage) {
-      const key = this.generateUniqueKey("videos", extension)
-      yield* await this.uploadWithRetry(buffer, key, contentType)
-      return Result.ok(`${this.publicUrl}/${key}`)
-    }.bind(this))
+    return Result.gen(
+      async function* (this: R2Storage) {
+        const key = this.generateUniqueKey("videos", extension)
+        yield* await this.uploadWithRetry(buffer, key, contentType)
+        return Result.ok(`${this.publicUrl}/${key}`)
+      }.bind(this),
+    )
   }
 
   private generateUniqueKey(
@@ -309,38 +313,40 @@ class R2Storage {
       StorageUploadError
     >
   > {
-    return Result.gen(async function* (this: R2Storage) {
-      const type = this.classifyFileType(mimeType, originalFilename)
+    return Result.gen(
+      async function* (this: R2Storage) {
+        const type = this.classifyFileType(mimeType, originalFilename)
 
-      let uploadBuffer = buffer
-      let uploadMimeType = mimeType
-      let extension = originalFilename.split(".").pop() ?? "bin"
+        let uploadBuffer = buffer
+        let uploadMimeType = mimeType
+        let extension = originalFilename.split(".").pop() ?? "bin"
 
-      if (type === "images") {
-        uploadBuffer = yield* await this.processImage(buffer)
-        uploadMimeType = "image/webp"
-        extension = "webp"
-      }
+        if (type === "images") {
+          uploadBuffer = yield* await this.processImage(buffer)
+          uploadMimeType = "image/webp"
+          extension = "webp"
+        }
 
-      const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
-      const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
-      const uniqueId = nanoid(6)
-      const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
-      const key = `${type}/${filename}`
+        const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
+        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
+        const uniqueId = nanoid(6)
+        const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
+        const key = `${type}/${filename}`
 
-      yield* await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
+        yield* await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
 
-      const publicUrlWithProtocol = this.publicUrl.startsWith("http")
-        ? this.publicUrl
-        : `https://${this.publicUrl}`
+        const publicUrlWithProtocol = this.publicUrl.startsWith("http")
+          ? this.publicUrl
+          : `https://${this.publicUrl}`
 
-      return Result.ok({
-        url: `${publicUrlWithProtocol}/${key}`,
-        type,
-        size: uploadBuffer.length,
-        key,
-      })
-    }.bind(this))
+        return Result.ok({
+          url: `${publicUrlWithProtocol}/${key}`,
+          type,
+          size: uploadBuffer.length,
+          key,
+        })
+      }.bind(this),
+    )
   }
 
   deleteFile(key: string): Promise<Result<void, StorageDeleteError>> {
