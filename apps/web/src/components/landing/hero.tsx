@@ -1,9 +1,13 @@
 import { Button } from "@repo/ui/button"
+import { Link } from "@tanstack/react-router"
 import { BarChart3Icon, BotIcon, ImageIcon, PlayCircleIcon } from "lucide-react"
 
-import GetStartedButton from "@/components/navigation/get-started-button"
+import CTAButton from "@/components/navigation/cta-button"
+import { getSession } from "@/lib/auth"
 
-const Hero = () => {
+const Hero = async () => {
+  const session = await getSession()
+
   return (
     <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden pt-16 pb-24">
       <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-20" />
@@ -18,7 +22,13 @@ const Hero = () => {
           smarter.
         </p>
         <div className="flex w-full flex-wrap items-center justify-center gap-4">
-          <GetStartedButton className="h-11 rounded-full px-8 text-sm font-medium shadow-sm" />
+          {session ? (
+            <Button
+              render={<Link to="/marketplace">Browse marketplace</Link>}
+            />
+          ) : (
+            <CTAButton className="h-11 rounded-full px-8 text-sm font-medium shadow-sm" />
+          )}
           <Button
             size="lg"
             variant="outline"

@@ -1,6 +1,12 @@
-import GetStartedButton from "@/components/navigation/get-started-button"
+import { Button } from "@repo/ui/button"
+import { Link } from "@tanstack/react-router"
 
-const CTA = () => {
+import CTAButton from "@/components/navigation/cta-button"
+import { getSession } from "@/lib/auth"
+
+const CTA = async () => {
+  const session = await getSession()
+
   return (
     <section className="relative overflow-hidden py-32">
       <div className="bg-background absolute inset-0" />
@@ -15,7 +21,13 @@ const CTA = () => {
             Start building with unified access to all major AI tools.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <GetStartedButton className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-full px-8 font-medium shadow-sm sm:w-auto" />
+            {session ? (
+              <Button
+                render={<Link to="/marketplace">Browser marketplace</Link>}
+              />
+            ) : (
+              <CTAButton className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-full px-8 font-medium shadow-sm sm:w-auto" />
+            )}
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { Button } from "@repo/ui/button"
 
 import { loginFn } from "@/lib/auth"
 
-const GetStartedButton = ({ className }: { className?: string }) => {
+const CTAButton = ({ className }: { className?: string }) => {
   const handleLogin = async () => {
     await loginFn()
   }
@@ -24,4 +24,4 @@ const GetStartedButton = ({ className }: { className?: string }) => {
   )
 }
 
-export default GetStartedButton
+export default CTAButton

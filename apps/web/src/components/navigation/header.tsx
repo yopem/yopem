@@ -54,14 +54,6 @@ const Header = ({ session }: HeaderProps) => {
             </h2>
           </Link>
         </div>
-        <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
-          <Link
-            className="text-muted-foreground hover:text-foreground/80 transition-colors"
-            to="/marketplace"
-          >
-            Marketplace
-          </Link>
-        </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
             {session ? (
