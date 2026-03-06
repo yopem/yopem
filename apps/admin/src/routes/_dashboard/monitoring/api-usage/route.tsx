@@ -1,3 +1,5 @@
+import { queryApi } from "@repo/orpc/query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { BarChartIcon, DollarSignIcon, KeyIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
@@ -5,7 +7,6 @@ import { Shimmer } from "shimmer-from-structure"
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import { useApiKeyStats } from "@/hooks/use-api-keys"
 
 const breadcrumbItems = [
   { label: "Home", href: "/" },
@@ -14,7 +15,9 @@ const breadcrumbItems = [
 ]
 
 const ApiUsagePage = () => {
-  const { data: apiKeyStats, isLoading: apiKeyLoading } = useApiKeyStats()
+  const { data: apiKeyStats, isLoading: apiKeyLoading } = useQuery({
+    ...queryApi.admin.getApiKeyStats.queryOptions(),
+  })
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

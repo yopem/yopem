@@ -1,9 +1,15 @@
-import type { AddApiKeyInput, ApiKeyConfig } from "@repo/shared/api-keys-schema"
+import type {
+  AddApiKeyInput,
+  ApiKeyConfig,
+  DeleteApiKeyInput,
+  UpdateApiKeyInput,
+} from "@repo/shared/api-keys-schema"
 
 import { formatError, logger } from "@repo/logger"
 import { queryApi } from "@repo/orpc/query"
 import { formatDateTime } from "@repo/shared/format-date"
 import { toastManager } from "@repo/ui/toast"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import {
   BarChartIcon,
@@ -23,13 +29,6 @@ import DeleteProviderDialog from "@/components/settings/delete-provider-dialog"
 import EditProviderDialog from "@/components/settings/edit-provider-dialog"
 import ProviderCard from "@/components/settings/provider-card"
 import ProviderCardSkeleton from "@/components/settings/provider-card-skeleton"
-import {
-  useAddApiKey,
-  useApiKeys,
-  useApiKeyStats,
-  useDeleteApiKey,
-  useUpdateApiKey,
-} from "@/hooks/use-api-keys"
 
 type ModalState =
   | { type: "closed" }
@@ -129,11 +128,57 @@ const AdminSettingsPage = () => {
     { maxUploadSize: 50, isLoading: true },
   )
 
-  const { data: apiKeys, isLoading: keysLoading } = useApiKeys()
-  const { data: stats, isLoading: statsLoading } = useApiKeyStats()
-  const addMutation = useAddApiKey()
-  const updateMutation = useUpdateApiKey()
-  const deleteMutation = useDeleteApiKey()
+  const queryClient = useQueryClient()
+
+  const { data: apiKeys, isLoading: keysLoading } = useQuery({
+    ...queryApi.admin.getApiKeys.queryOptions(),
+  })
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    ...queryApi.admin.getApiKeyStats.queryOptions(),
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (input: AddApiKeyInput) => {
+      return queryApi.admin.addApiKey.call(input)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeys.queryKey(),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeyStats.queryKey(),
+      })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (input: UpdateApiKeyInput) => {
+      return queryApi.admin.updateApiKey.call(input)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeys.queryKey(),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeyStats.queryKey(),
+      })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (input: DeleteApiKeyInput) => {
+      return queryApi.admin.deleteApiKey.call(input)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeys.queryKey(),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.admin.getApiKeyStats.queryKey(),
+      })
+    },
+  })
 
   useEffect(() => {
     let cancelled = false

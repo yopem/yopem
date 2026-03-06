@@ -13,11 +13,14 @@ import ToolForm, {
   type ToolFormRef,
 } from "@/components/tools/tool-form"
 import ToolPreviewSheet from "@/components/tools/tool-preview-sheet"
-import { useApiKeys } from "@/hooks/use-api-keys"
 
 const EditToolPage = () => {
   const { toolId } = Route.useParams()
-  const { data: apiKeys } = useApiKeys()
+
+  const { data: apiKeys } = useQuery({
+    ...queryApi.admin.getApiKeys.queryOptions(),
+  })
+
   const formRef = useRef<ToolFormRef>(null)
   const [activeTab, setActiveTab] = useState("builder")
   const [previewSheetOpen, setPreviewSheetOpen] = useState(false)

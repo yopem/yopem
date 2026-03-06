@@ -1,7 +1,7 @@
 import { queryApi } from "@repo/orpc/query"
 import { Separator } from "@repo/ui/separator"
 import { toastManager } from "@repo/ui/toast"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 
@@ -12,11 +12,14 @@ import ToolForm, {
   type ToolFormRef,
 } from "@/components/tools/tool-form"
 import ToolPreviewSheet from "@/components/tools/tool-preview-sheet"
-import { useApiKeys } from "@/hooks/use-api-keys"
 
 const AddToolPage = () => {
   const navigate = useNavigate()
-  const { data: apiKeys } = useApiKeys()
+
+  const { data: apiKeys } = useQuery({
+    ...queryApi.admin.getApiKeys.queryOptions(),
+  })
+
   const formRef = useRef<ToolFormRef>(null)
   const [activeTab, setActiveTab] = useState("builder")
   const [previewSheetOpen, setPreviewSheetOpen] = useState(false)
