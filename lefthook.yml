@@ -1,7 +1,11 @@
 pre-commit:
   commands:
-    quality:
-      run: bun run fix
+    lint:
+      run: bun x turbo run lint
+    typecheck:
+      run: bun x turbo run typecheck
+    format:
+      run: bun run format:check
 
 pre-push:
   commands:
