@@ -61,22 +61,6 @@ const Header = ({ session }: HeaderProps) => {
           >
             Marketplace
           </Link>
-          {session && (
-            <Link
-              className="text-muted-foreground hover:text-foreground/80 transition-colors"
-              to="/dashboard"
-            >
-              Dashboard
-            </Link>
-          )}
-          {session && session.role === "admin" && adminUrl && (
-            <a
-              className="text-muted-foreground hover:text-foreground/80 transition-colors"
-              href={adminUrl}
-            >
-              Admin
-            </a>
-          )}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
@@ -113,6 +97,9 @@ const Header = ({ session }: HeaderProps) => {
                   <MenuItem render={<Link to="/dashboard/profile" />}>
                     Settings
                   </MenuItem>
+                  {session.role === "admin" && (
+                    <MenuItem render={<a href={adminUrl}>Admin</a>} />
+                  )}
                   <MenuItem
                     className="text-destructive"
                     onClick={() => logoutFn()}
