@@ -42,18 +42,16 @@ const Header = ({ session }: HeaderProps) => {
   return (
     <div className="bg-card/80 supports-backdrop-filter:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur-sm">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4">
-        <div className="mr-8 flex items-center gap-2">
-          <div className="bg-card text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded-sm">
-            <Link to="/">
+        <Link to="/">
+          <div className="hover:bg-accent mr-8 flex items-center gap-1 rounded-sm p-2">
+            <div className="text-card-foreground flex size-6 items-center justify-center overflow-hidden rounded-sm">
               <Logo className="size-full p-0.5" />
-            </Link>
-          </div>
-          <Link to="/">
+            </div>
             <h2 className="text-foreground text-lg/tight font-bold tracking-tight">
               Yopem
             </h2>
-          </Link>
-        </div>
+          </div>
+        </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
             {session ? (
