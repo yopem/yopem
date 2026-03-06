@@ -23,5 +23,12 @@
     ]
   },
   "experimentalSortPackageJson": true,
-  "ignorePatterns": ["node_modules", ".next/", "dist", "build", "migrations/"]
+  "ignorePatterns": [
+    "node_modules",
+    ".next/",
+    "dist",
+    "build",
+    "migrations/",
+    "routeTree.gen.ts"
+  ]
 }

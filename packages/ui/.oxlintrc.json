@@ -25,6 +25,7 @@
     "better-tailwindcss/no-restricted-classes": "error",
     "better-tailwindcss/no-unknown-classes": "off",
     "better-tailwindcss/no-unnecessary-whitespace": "warn",
+    "import/no-relative-parent-imports": "off",
     "nextjs/no-img-element": "error",
     "react/rules-of-hooks": "error"
   },
