@@ -1,6 +1,8 @@
 "use client"
 
+import { queryApi } from "@repo/orpc/query"
 import { formatDateTime } from "@repo/shared/format-date"
+import { useQuery } from "@tanstack/react-query"
 import {
   ServerIcon,
   ClockIcon,
@@ -10,10 +12,12 @@ import {
 import { Shimmer } from "shimmer-from-structure"
 
 import StatsCard from "@/components/dashboard/stats-card"
-import { useUptimeMetrics } from "@/hooks/use-uptime"
 
 const UptimeStats = () => {
-  const { data, isLoading } = useUptimeMetrics()
+  const { data, isLoading } = useQuery({
+    ...queryApi.admin.getUptimeMetrics.queryOptions(),
+    refetchInterval: 30000,
+  })
 
   const formatDuration = (seconds: number) => {
     const days = Math.floor(seconds / (24 * 60 * 60))
