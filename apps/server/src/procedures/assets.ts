@@ -13,6 +13,7 @@ import {
   publicProcedure,
 } from "@repo/server/orpc"
 import { getR2Storage } from "@repo/storage"
+import { Result } from "better-result"
 import { z } from "zod"
 
 const MAX_UPLOAD_SIZE_MB = 50
@@ -97,12 +98,19 @@ export const assetsRouter = {
       const buffer = Buffer.from(arrayBuffer)
 
       const r2 = getR2Storage()
-      const { url, type, size, key } = await r2.uploadAsset(
+      const uploadResult = await r2.uploadAsset(
         buffer,
         file.name,
         file.type || "application/octet-stream",
       )
 
+      if (Result.isError(uploadResult)) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `Failed to upload asset: ${uploadResult.error.message}`,
+        })
+      }
+
+      const { url, type, size, key } = uploadResult.value
       return insertAsset({
         filename: key.split("/").pop()!,
         originalName: file.name,

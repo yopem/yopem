@@ -47,6 +47,7 @@ import {
 } from "@repo/server/orpc"
 import { decryptApiKey } from "@repo/shared/crypto"
 import { createCustomId } from "@repo/shared/custom-id"
+import { Result } from "better-result"
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"
@@ -221,8 +222,15 @@ export const toolsRouter = {
       }
 
       const runId = createCustomId()
-      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+      const decryptResult = decryptApiKey(selectedKey.apiKey)
 
+      if (Result.isError(decryptResult)) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to decrypt API key",
+        })
+      }
+
+      const decryptedKey = decryptResult.value
       const toolConfig = tool.config as { modelEngine: string } | null
 
       if (toolConfig === null) {
@@ -231,21 +239,19 @@ export const toolsRouter = {
         })
       }
 
-      let output: string
-      try {
-        const result = await executeAITool({
-          systemRole: tool.systemRole ?? "",
-          userInstructionTemplate: tool.userInstructionTemplate ?? "",
-          inputs: input.inputs,
-          config: toolConfig,
-          outputFormat: tool.outputFormat ?? "plain",
-          apiKey: decryptedKey,
-          provider: selectedKey.provider,
-        })
-        output = result.output
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error"
+      const execResult = await executeAITool({
+        systemRole: tool.systemRole ?? "",
+        userInstructionTemplate: tool.userInstructionTemplate ?? "",
+        inputs: input.inputs,
+        config: toolConfig,
+        outputFormat: tool.outputFormat ?? "plain",
+        apiKey: decryptedKey,
+        provider: selectedKey.provider,
+      })
+
+      if (Result.isError(execResult)) {
+        const error = execResult.error
+        const errorMessage = error.message
         await insertToolRun({
           id: runId,
           toolId: input.toolId,
@@ -257,9 +263,9 @@ export const toolsRouter = {
           completedAt: new Date(),
         })
         if (
-          error instanceof ContextLengthError ||
-          error instanceof InvalidKeyError ||
-          error instanceof RateLimitError
+          ContextLengthError.is(error) ||
+          InvalidKeyError.is(error) ||
+          RateLimitError.is(error)
         ) {
           throw new ORPCError("BAD_REQUEST", {
             message: `AI execution failed: ${errorMessage}`,
@@ -269,6 +275,8 @@ export const toolsRouter = {
           message: `AI execution failed: ${errorMessage}`,
         })
       }
+
+      const output = execResult.value.output
 
       await insertToolRun({
         id: runId,
@@ -398,35 +406,33 @@ export const toolsRouter = {
         })
       }
 
-      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+      const decryptResult = decryptApiKey(selectedKey.apiKey)
 
-      try {
-        const result = await executeAITool({
-          systemRole: input.systemRole,
-          userInstructionTemplate: input.userInstructionTemplate,
-          inputs: input.inputs,
-          config: input.config,
-          outputFormat: input.outputFormat,
-          apiKey: decryptedKey,
-          provider: selectedKey.provider,
+      if (Result.isError(decryptResult)) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to decrypt API key",
         })
+      }
 
-        return {
-          output: result.output,
-          cost: 0,
-        }
-      } catch (error) {
-        if (error instanceof ORPCError) {
-          throw error
-        }
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "AI execution failed with an unknown error"
+      const decryptedKey = decryptResult.value
+
+      const execResult = await executeAITool({
+        systemRole: input.systemRole,
+        userInstructionTemplate: input.userInstructionTemplate,
+        inputs: input.inputs,
+        config: input.config,
+        outputFormat: input.outputFormat,
+        apiKey: decryptedKey,
+        provider: selectedKey.provider,
+      })
+
+      if (Result.isError(execResult)) {
+        const error = execResult.error
+        const errorMessage = error.message
         if (
-          error instanceof ContextLengthError ||
-          error instanceof InvalidKeyError ||
-          error instanceof RateLimitError
+          ContextLengthError.is(error) ||
+          InvalidKeyError.is(error) ||
+          RateLimitError.is(error)
         ) {
           throw new ORPCError("BAD_REQUEST", {
             message: `AI execution failed: ${errorMessage}`,
@@ -436,6 +442,11 @@ export const toolsRouter = {
           message: `AI execution failed: ${errorMessage}`,
           cause: error,
         })
+      }
+
+      return {
+        output: execResult.value.output,
+        cost: 0,
       }
     }),
 

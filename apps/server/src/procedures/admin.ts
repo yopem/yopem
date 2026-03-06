@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import * as adminService from "@repo/db/services/admin"
-import { formatError, logger } from "@repo/logger"
+import { logger } from "@repo/logger"
 import { WebhookMetrics } from "@repo/payments/webhook-metrics"
 import { adminProcedure } from "@repo/server/orpc"
 import {
@@ -11,7 +11,14 @@ import {
 } from "@repo/shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/shared/crypto"
 import { createCustomId } from "@repo/shared/custom-id"
-import { failure, success, type Result } from "@repo/shared/result"
+import { Result, TaggedError } from "better-result"
+
+class ModelFetchError extends TaggedError("ModelFetchError")<{
+  provider: string
+  message: string
+  cause?: unknown
+}>() {}
+
 import { z } from "zod"
 
 const API_KEYS_SETTING_KEY = "api_keys"
@@ -87,7 +94,10 @@ export const adminRouter = {
     if (cached) {
       return cached.map((key) => ({
         ...key,
-        apiKey: maskApiKey(decryptApiKey(key.apiKey)),
+        apiKey: decryptApiKey(key.apiKey).match({
+          ok: (v) => maskApiKey(v),
+          err: () => "Error: Failed to decrypt",
+        }),
       }))
     }
 
@@ -101,20 +111,15 @@ export const adminRouter = {
     await context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
 
     return apiKeys.map((key) => {
-      try {
-        const decrypted = decryptApiKey(key.apiKey)
-        return {
-          ...key,
-          apiKey: maskApiKey(decrypted),
-        }
-      } catch (error) {
-        logger.error(
-          `Failed to decrypt API key ${key.id}: ${formatError(error)}`,
-        )
-        return {
-          ...key,
-          apiKey: "Error: Failed to decrypt",
-        }
+      return {
+        ...key,
+        apiKey: decryptApiKey(key.apiKey).match({
+          ok: (v) => maskApiKey(v),
+          err: (e) => {
+            logger.error(`Failed to decrypt API key ${key.id}: ${e.message}`)
+            return "Error: Failed to decrypt"
+          },
+        }),
       }
     })
   }),
@@ -126,12 +131,19 @@ export const adminRouter = {
 
       const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
 
+      const encryptResult = encryptApiKey(input.apiKey)
+      if (Result.isError(encryptResult)) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to encrypt API key",
+        })
+      }
+
       const newKey: ApiKeyConfig = {
         id: createCustomId(),
         provider: input.provider,
         name: input.name,
         description: input.description,
-        apiKey: encryptApiKey(input.apiKey),
+        apiKey: encryptResult.value,
         status: input.status ?? "active",
         restrictions: input.restrictions,
         createdAt: new Date().toISOString(),
@@ -164,24 +176,32 @@ export const adminRouter = {
         throw new ORPCError("NOT_FOUND", { message: "API key not found" })
       }
 
-      const updatedKey: ApiKeyConfig = {
-        ...existingKeys[keyIndex],
-        ...(input.provider && { provider: input.provider }),
-        ...(input.name && { name: input.name }),
-        ...(input.description !== undefined && {
-          description: input.description,
-        }),
-        ...(input.apiKey && {
-          apiKey: encryptApiKey(
-            input.apiKey ?? decryptApiKey(existingKeys[keyIndex].apiKey),
-          ),
-        }),
-        ...(input.status && { status: input.status }),
-        ...(input.restrictions !== undefined && {
-          restrictions: input.restrictions,
-        }),
-        updatedAt: new Date().toISOString(),
-      }
+      const updatedKey: ApiKeyConfig = (() => {
+        let newApiKey: string | undefined
+        if (input.apiKey) {
+          const encryptResult = encryptApiKey(input.apiKey)
+          if (Result.isError(encryptResult)) {
+            throw new ORPCError("INTERNAL_SERVER_ERROR", {
+              message: "Failed to encrypt API key",
+            })
+          }
+          newApiKey = encryptResult.value
+        }
+        return {
+          ...existingKeys[keyIndex],
+          ...(input.provider && { provider: input.provider }),
+          ...(input.name && { name: input.name }),
+          ...(input.description !== undefined && {
+            description: input.description,
+          }),
+          ...(newApiKey && { apiKey: newApiKey }),
+          ...(input.status && { status: input.status }),
+          ...(input.restrictions !== undefined && {
+            restrictions: input.restrictions,
+          }),
+          updatedAt: new Date().toISOString(),
+        }
+      })()
 
       const updatedKeys = [...existingKeys]
       updatedKeys[keyIndex] = updatedKey
@@ -298,25 +318,28 @@ export const adminRouter = {
           return { provider, models: cached }
         }
 
-        try {
-          const decryptedKey = decryptApiKey(key.apiKey)
-          const result = await fetchModelsForProvider(
-            provider as ApiKeyConfig["provider"],
-            decryptedKey,
-          )
-          if (result.success) {
-            await context.redis.setCache(cacheKey, result.data, MODEL_CACHE_TTL)
-            return { provider, models: result.data }
-          }
+        const decryptResult = decryptApiKey(key.apiKey)
+        if (Result.isError(decryptResult)) {
+          logger.error(`Failed to decrypt API key for ${provider}`)
+          return { provider, models: [] as { id: string; name: string }[] }
+        }
+        const result = await fetchModelsForProvider(
+          provider as ApiKeyConfig["provider"],
+          decryptResult.value,
+        )
+        if (Result.isOk(result)) {
+          void context.redis.setCache(cacheKey, result.value, MODEL_CACHE_TTL)
+        } else {
           logger.error(
             `Failed to fetch models for ${provider}: ${result.error.message}`,
           )
-          return { provider, models: [] as { id: string; name: string }[] }
-        } catch (error) {
-          logger.error(
-            `Failed to fetch models for ${provider}: ${formatError(error)}`,
-          )
-          return { provider, models: [] as { id: string; name: string }[] }
+        }
+        return {
+          provider,
+          models: result.match({
+            ok: (models) => models,
+            err: () => [] as { id: string; name: string }[],
+          }),
         }
       }),
     )
@@ -831,76 +854,79 @@ function calculateTrend(current: number, previous: number): string {
 async function fetchModelsForProvider(
   provider: ApiKeyConfig["provider"],
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
+): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
   switch (provider) {
     case "openai":
       return await fetchOpenAIModels(apiKey)
     case "openrouter":
       return await fetchOpenRouterModels(apiKey)
     default:
-      return success([])
+      return Result.ok([])
   }
 }
 
-async function fetchOpenAIModels(
+function fetchOpenAIModels(
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
-  try {
-    const response = await fetch("https://api.openai.com/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!response.ok) {
-      return failure({
-        provider: "openai",
-        errorType: response.status === 401 ? "auth" : "network",
-        message: `API request failed with status ${response.status}`,
+): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const response = await fetch("https://api.openai.com/v1/models", {
+        headers: { Authorization: `Bearer ${apiKey}` },
       })
-    }
-    const data = await response.json()
-    const allModels =
-      data.data?.map((m: { id: string }) => ({
-        id: m.id,
-        name: m.id.toUpperCase().replace(/-/g, " "),
-      })) ?? []
-
-    return success(allModels)
-  } catch (error) {
-    return failure({
-      provider: "openai",
-      errorType: "network",
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    })
-  }
+      if (!response.ok) {
+        throw new ModelFetchError({
+          provider: "openai",
+          message: `API request failed with status ${response.status}`,
+        })
+      }
+      const data = await response.json()
+      return (
+        data.data?.map((m: { id: string }) => ({
+          id: m.id,
+          name: m.id.toUpperCase().replace(/-/g, " "),
+        })) ?? []
+      )
+    },
+    catch: (e) =>
+      ModelFetchError.is(e)
+        ? e
+        : new ModelFetchError({
+            provider: "openai",
+            message: e instanceof Error ? e.message : "Unknown error occurred",
+            cause: e,
+          }),
+  })
 }
 
-async function fetchOpenRouterModels(
+function fetchOpenRouterModels(
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[]>> {
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!response.ok) {
-      return failure({
-        provider: "openrouter",
-        errorType: response.status === 401 ? "auth" : "network",
-        message: `API request failed with status ${response.status}`,
+): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const response = await fetch("https://openrouter.ai/api/v1/models", {
+        headers: { Authorization: `Bearer ${apiKey}` },
       })
-    }
-    const data = await response.json()
-    const models =
-      data.data?.map((m: { id: string; name?: string }) => ({
-        id: m.id,
-        name: m.name ?? m.id,
-      })) ?? []
-    return success(models)
-  } catch (error) {
-    return failure({
-      provider: "openrouter",
-      errorType: "network",
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    })
-  }
+      if (!response.ok) {
+        throw new ModelFetchError({
+          provider: "openrouter",
+          message: `API request failed with status ${response.status}`,
+        })
+      }
+      const data = await response.json()
+      return (
+        data.data?.map((m: { id: string; name?: string }) => ({
+          id: m.id,
+          name: m.name ?? m.id,
+        })) ?? []
+      )
+    },
+    catch: (e) =>
+      ModelFetchError.is(e)
+        ? e
+        : new ModelFetchError({
+            provider: "openrouter",
+            message: e instanceof Error ? e.message : "Unknown error occurred",
+            cause: e,
+          }),
+  })
 }

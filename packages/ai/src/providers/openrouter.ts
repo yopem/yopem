@@ -1,5 +1,6 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 import { generateText } from "ai"
+import { Result } from "better-result"
 
 import {
   AIProviderError,
@@ -7,6 +8,7 @@ import {
   InvalidKeyError,
   RateLimitError,
   type AIProvider,
+  type AIProviderErrors,
   type ExecutionRequest,
   type ExecutionResponse,
   type ProviderConfig,
@@ -25,57 +27,69 @@ export class OpenRouterProvider implements AIProvider {
     this.model = config.model
   }
 
-  async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
-    try {
-      const result = await generateText({
-        model: this.provider(this.model),
-        system: request.systemRole,
-        prompt: request.userInstruction,
-        maxOutputTokens: request.maxOutputTokens,
-      })
+  execute(
+    request: ExecutionRequest,
+  ): Promise<Result<ExecutionResponse, AIProviderErrors>> {
+    return Result.tryPromise({
+      try: async () => {
+        const result = await generateText({
+          model: this.provider(this.model),
+          system: request.systemRole,
+          prompt: request.userInstruction,
+          maxOutputTokens: request.maxOutputTokens,
+        })
 
-      return {
-        output: result.text,
-        usage: {
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: result.usage?.totalTokens ?? 0,
-        },
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase()
-        if (
-          errorMessage.includes("401") ||
-          errorMessage.includes("unauthorized")
-        ) {
-          throw new InvalidKeyError("openrouter", error)
+        return {
+          output: result.text,
+          usage: {
+            promptTokens: 0,
+            completionTokens: 0,
+            totalTokens: result.usage?.totalTokens ?? 0,
+          },
         }
-        if (
-          errorMessage.includes("429") ||
-          errorMessage.includes("rate limit")
-        ) {
-          throw new RateLimitError("openrouter", error)
+      },
+      catch: (e) => {
+        if (e instanceof Error) {
+          const msg = e.message.toLowerCase()
+          if (msg.includes("401") || msg.includes("unauthorized")) {
+            return new InvalidKeyError({
+              provider: "openrouter",
+              message: "Invalid API key. Please check your credentials.",
+              cause: e,
+            })
+          }
+          if (msg.includes("429") || msg.includes("rate limit")) {
+            return new RateLimitError({
+              provider: "openrouter",
+              message: "Rate limit exceeded. Please try again later.",
+              cause: e,
+            })
+          }
+          if (
+            msg.includes("context_length_exceeded") ||
+            msg.includes("context window") ||
+            msg.includes("maximum context length") ||
+            msg.includes("too many tokens")
+          ) {
+            return new ContextLengthError({
+              provider: "openrouter",
+              message:
+                "Your input exceeds the context window of this model. Please adjust your input and try again.",
+              cause: e,
+            })
+          }
+          return new AIProviderError({
+            provider: "openrouter",
+            message: e.message ?? "OpenRouter API error",
+            cause: e,
+          })
         }
-        if (
-          errorMessage.includes("context_length_exceeded") ||
-          errorMessage.includes("context window") ||
-          errorMessage.includes("maximum context length") ||
-          errorMessage.includes("too many tokens")
-        ) {
-          throw new ContextLengthError("openrouter", error)
-        }
-        throw new AIProviderError(
-          error.message ?? "OpenRouter API error",
-          "openrouter",
-          error,
-        )
-      }
-      throw new AIProviderError(
-        "Unexpected error during OpenRouter execution",
-        "openrouter",
-        error,
-      )
-    }
+        return new AIProviderError({
+          provider: "openrouter",
+          message: "Unexpected error during OpenRouter execution",
+          cause: e,
+        })
+      },
+    })
   }
 }

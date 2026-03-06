@@ -43,6 +43,7 @@
     "@repo/payments": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/storage": "workspace:*",
+    "better-result": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "^4.7.11",
     "ioredis": "catalog:",

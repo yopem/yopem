@@ -25,7 +25,8 @@
     "@ai-sdk/openai-compatible": "catalog:",
     "@repo/logger": "workspace:*",
     "@repo/storage": "workspace:*",
-    "ai": "catalog:"
+    "ai": "catalog:",
+    "better-result": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

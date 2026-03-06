@@ -16,6 +16,7 @@ import {
 } from "@repo/shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/shared/crypto"
 import { createCustomId } from "@repo/shared/custom-id"
+import { Result } from "better-result"
 import { z } from "zod"
 
 export const userRouter = {
@@ -121,10 +122,15 @@ export const userRouter = {
     try {
       const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
 
-      return apiKeys.map((key) => ({
-        ...key,
-        apiKey: maskApiKey(decryptApiKey(key.apiKey)),
-      }))
+      return apiKeys.map((key) => {
+        const decryptResult = decryptApiKey(key.apiKey)
+        return {
+          ...key,
+          apiKey: Result.isOk(decryptResult)
+            ? maskApiKey(decryptResult.value)
+            : "Error: Failed to decrypt",
+        }
+      })
     } catch (error) {
       logger.error(`Error parsing API keys: ${formatError(error)}`)
       return []
@@ -151,12 +157,19 @@ export const userRouter = {
 
       const settings = await userService.getUserSettings(context.session.id)
 
+      const encryptResult = encryptApiKey(input.apiKey)
+      if (Result.isError(encryptResult)) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to encrypt API key",
+        })
+      }
+
       const newKey: ApiKeyConfig = {
         id: createCustomId(),
         provider: input.provider,
         name: input.name,
         description: input.description,
-        apiKey: encryptApiKey(input.apiKey),
+        apiKey: encryptResult.value,
         status: input.status,
         restrictions: input.restrictions,
         createdAt: new Date().toISOString(),
@@ -217,12 +230,21 @@ export const userRouter = {
           throw new ORPCError("NOT_FOUND", { message: "API key not found" })
         }
 
+        let encryptedApiKey: string = existingKeys[keyIndex].apiKey
+        if (input.apiKey) {
+          const encryptResult = encryptApiKey(input.apiKey)
+          if (Result.isError(encryptResult)) {
+            throw new ORPCError("INTERNAL_SERVER_ERROR", {
+              message: "Failed to encrypt API key",
+            })
+          }
+          encryptedApiKey = encryptResult.value
+        }
+
         const updatedKey: ApiKeyConfig = {
           ...existingKeys[keyIndex],
           ...input,
-          apiKey: input.apiKey
-            ? encryptApiKey(input.apiKey)
-            : existingKeys[keyIndex].apiKey,
+          apiKey: encryptedApiKey,
           updatedAt: new Date().toISOString(),
         }
 
@@ -233,11 +255,16 @@ export const userRouter = {
           apiKeys: updatedKeys,
         })
 
+        const decryptResult = decryptApiKey(
+          input.apiKey ?? existingKeys[keyIndex].apiKey,
+        )
+        const maskedKey = Result.isOk(decryptResult)
+          ? maskApiKey(decryptResult.value)
+          : "Error: Failed to decrypt"
+
         return {
           ...updatedKey,
-          apiKey: maskApiKey(
-            input.apiKey ?? decryptApiKey(existingKeys[keyIndex].apiKey),
-          ),
+          apiKey: maskedKey,
         }
       } catch (error) {
         logger.error(`Error updating API key: ${formatError(error)}`)

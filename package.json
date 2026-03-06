@@ -34,6 +34,7 @@
       "@yopem/typescript-config": "^0.2.1",
       "ai": "^6.0.86",
       "babel-plugin-react-compiler": "^1.0.0",
+      "better-result": "^2.7.0",
       "dayjs": "^1.11.19",
       "dotenv-cli": "^11.0.0",
       "drizzle-kit": "^0.31.9",

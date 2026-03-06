@@ -1,5 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateText } from "ai"
+import { Result } from "better-result"
 
 import {
   AIProviderError,
@@ -7,6 +8,7 @@ import {
   InvalidKeyError,
   RateLimitError,
   type AIProvider,
+  type AIProviderErrors,
   type ExecutionRequest,
   type ExecutionResponse,
   type ProviderConfig,
@@ -24,59 +26,71 @@ export class OpenAIProvider implements AIProvider {
     this.model = config.model
   }
 
-  async execute(request: ExecutionRequest): Promise<ExecutionResponse> {
-    try {
-      const result = await generateText({
-        model: this.provider(this.model),
-        system: request.systemRole,
-        prompt: request.userInstruction,
-        maxOutputTokens: request.maxOutputTokens,
-      })
+  execute(
+    request: ExecutionRequest,
+  ): Promise<Result<ExecutionResponse, AIProviderErrors>> {
+    return Result.tryPromise({
+      try: async () => {
+        const result = await generateText({
+          model: this.provider(this.model),
+          system: request.systemRole,
+          prompt: request.userInstruction,
+          maxOutputTokens: request.maxOutputTokens,
+        })
 
-      return {
-        output: result.text,
-        usage: result.usage
-          ? {
-              promptTokens: 0,
-              completionTokens: 0,
-              totalTokens: result.usage.totalTokens ?? 0,
-            }
-          : undefined,
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase()
-        if (
-          errorMessage.includes("401") ||
-          errorMessage.includes("unauthorized")
-        ) {
-          throw new InvalidKeyError("openai", error)
+        return {
+          output: result.text,
+          usage: result.usage
+            ? {
+                promptTokens: 0,
+                completionTokens: 0,
+                totalTokens: result.usage.totalTokens ?? 0,
+              }
+            : undefined,
         }
-        if (
-          errorMessage.includes("429") ||
-          errorMessage.includes("rate limit")
-        ) {
-          throw new RateLimitError("openai", error)
+      },
+      catch: (e) => {
+        if (e instanceof Error) {
+          const msg = e.message.toLowerCase()
+          if (msg.includes("401") || msg.includes("unauthorized")) {
+            return new InvalidKeyError({
+              provider: "openai",
+              message: "Invalid API key. Please check your credentials.",
+              cause: e,
+            })
+          }
+          if (msg.includes("429") || msg.includes("rate limit")) {
+            return new RateLimitError({
+              provider: "openai",
+              message: "Rate limit exceeded. Please try again later.",
+              cause: e,
+            })
+          }
+          if (
+            msg.includes("context_length_exceeded") ||
+            msg.includes("context window") ||
+            msg.includes("maximum context length") ||
+            msg.includes("too many tokens")
+          ) {
+            return new ContextLengthError({
+              provider: "openai",
+              message:
+                "Your input exceeds the context window of this model. Please adjust your input and try again.",
+              cause: e,
+            })
+          }
+          return new AIProviderError({
+            provider: "openai",
+            message: e.message ?? "OpenAI API error",
+            cause: e,
+          })
         }
-        if (
-          errorMessage.includes("context_length_exceeded") ||
-          errorMessage.includes("context window") ||
-          errorMessage.includes("maximum context length") ||
-          errorMessage.includes("too many tokens")
-        ) {
-          throw new ContextLengthError("openai", error)
-        }
-        throw new AIProviderError(
-          error.message ?? "OpenAI API error",
-          "openai",
-          error,
-        )
-      }
-      throw new AIProviderError(
-        "Unexpected error during OpenAI execution",
-        "openai",
-        error,
-      )
-    }
+        return new AIProviderError({
+          provider: "openai",
+          message: "Unexpected error during OpenAI execution",
+          cause: e,
+        })
+      },
+    })
   }
 }

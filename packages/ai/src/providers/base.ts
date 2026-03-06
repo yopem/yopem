@@ -1,3 +1,6 @@
+import { TaggedError } from "better-result"
+import type { Result } from "better-result"
+
 export type ApiKeyProvider = "openai" | "openrouter"
 
 export interface ExecutionRequest {
@@ -21,50 +24,38 @@ export interface ProviderConfig {
   model: string
 }
 
-export class AIProviderError extends Error {
-  constructor(
-    message: string,
-    public provider: ApiKeyProvider,
-    public originalError?: unknown,
-  ) {
-    super(message)
-    this.name = "AIProviderError"
-  }
-}
+export class RateLimitError extends TaggedError("RateLimitError")<{
+  provider: ApiKeyProvider
+  message: string
+  cause?: unknown
+}>() {}
 
-export class RateLimitError extends AIProviderError {
-  constructor(provider: ApiKeyProvider, originalError?: unknown) {
-    super(
-      "Rate limit exceeded. Please try again later.",
-      provider,
-      originalError,
-    )
-    this.name = "RateLimitError"
-  }
-}
+export class InvalidKeyError extends TaggedError("InvalidKeyError")<{
+  provider: ApiKeyProvider
+  message: string
+  cause?: unknown
+}>() {}
 
-export class InvalidKeyError extends AIProviderError {
-  constructor(provider: ApiKeyProvider, originalError?: unknown) {
-    super(
-      "Invalid API key. Please check your credentials.",
-      provider,
-      originalError,
-    )
-    this.name = "InvalidKeyError"
-  }
-}
+export class ContextLengthError extends TaggedError("ContextLengthError")<{
+  provider: ApiKeyProvider
+  message: string
+  cause?: unknown
+}>() {}
 
-export class ContextLengthError extends AIProviderError {
-  constructor(provider: ApiKeyProvider, originalError?: unknown) {
-    super(
-      "Your input exceeds the context window of this model. Please adjust your input and try again.",
-      provider,
-      originalError,
-    )
-    this.name = "ContextLengthError"
-  }
-}
+export class AIProviderError extends TaggedError("AIProviderError")<{
+  provider: ApiKeyProvider
+  message: string
+  cause?: unknown
+}>() {}
+
+export type AIProviderErrors =
+  | RateLimitError
+  | InvalidKeyError
+  | ContextLengthError
+  | AIProviderError
 
 export interface AIProvider {
-  execute(request: ExecutionRequest): Promise<ExecutionResponse>
+  execute(
+    request: ExecutionRequest,
+  ): Promise<Result<ExecutionResponse, AIProviderErrors>>
 }

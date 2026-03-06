@@ -76,6 +76,7 @@
         "@repo/payments": "workspace:*",
         "@repo/shared": "workspace:*",
         "@repo/storage": "workspace:*",
+        "better-result": "catalog:",
         "drizzle-orm": "catalog:",
         "hono": "^4.7.11",
         "ioredis": "catalog:",
@@ -140,6 +141,7 @@
         "@repo/logger": "workspace:*",
         "@repo/storage": "workspace:*",
         "ai": "catalog:",
+        "better-result": "catalog:",
       },
       "devDependencies": {
         "@types/node": "catalog:",
@@ -176,6 +178,7 @@
       "dependencies": {
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
+        "better-result": "catalog:",
         "ioredis": "catalog:",
       },
       "devDependencies": {
@@ -294,6 +297,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@repo/logger": "workspace:*",
+        "better-result": "catalog:",
         "dayjs": "catalog:",
         "nanoid": "catalog:",
         "transliteration": "catalog:",
@@ -321,6 +325,7 @@
         "@aws-sdk/client-s3": "catalog:",
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
+        "better-result": "catalog:",
         "nanoid": "catalog:",
         "sharp": "^0.34.2",
         "transliteration": "catalog:",
@@ -388,6 +393,7 @@
     "@yopem/typescript-config": "^0.2.1",
     "ai": "^6.0.86",
     "babel-plugin-react-compiler": "^1.0.0",
+    "better-result": "^2.7.0",
     "dayjs": "^1.11.19",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.9",
@@ -560,6 +566,10 @@
     "@base-ui/react": ["@base-ui/react@1.2.0", "", { "dependencies": { "@babel/runtime": "^7.28.6", "@base-ui/utils": "0.2.5", "@floating-ui/react-dom": "^2.1.6", "@floating-ui/utils": "^0.2.10", "tabbable": "^6.4.0", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "@types/react": "^17 || ^18 || ^19", "react": "^17 || ^18 || ^19", "react-dom": "^17 || ^18 || ^19" }, "optionalPeers": ["@types/react"] }, "sha512-O6aEQHcm+QyGTFY28xuwRD3SEJGZOBDpyjN2WvpfWYFVhg+3zfXPysAILqtM0C1kWC82MccOE/v1j+GHXE4qIw=="],
 
     "@base-ui/utils": ["@base-ui/utils@0.2.5", "", { "dependencies": { "@babel/runtime": "^7.28.6", "@floating-ui/utils": "^0.2.10", "reselect": "^5.1.1", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "@types/react": "^17 || ^18 || ^19", "react": "^17 || ^18 || ^19", "react-dom": "^17 || ^18 || ^19" }, "optionalPeers": ["@types/react"] }, "sha512-oYC7w0gp76RI5MxprlGLV0wze0SErZaRl3AAkeP3OnNB/UBMb6RqNf6ZSIlxOc9Qp68Ab3C2VOcJQyRs7Xc7Vw=="],
+
+    "@clack/core": ["@clack/core@0.5.0", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow=="],
+
+    "@clack/prompts": ["@clack/prompts@0.11.0", "", { "dependencies": { "@clack/core": "0.5.0", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
 
@@ -1225,6 +1235,8 @@
 
     "baseline-browser-mapping": ["baseline-browser-mapping@2.10.0", "", { "bin": { "baseline-browser-mapping": "dist/cli.cjs" } }, "sha512-lIyg0szRfYbiy67j9KN8IyeD7q7hcmqnJ1ddWmNt19ItGpNN64mnllmxUNFIOdOm6by97jlL6wfpTTJrmnjWAA=="],
 
+    "better-result": ["better-result@2.7.0", "", { "dependencies": { "@clack/prompts": "^0.11.0" }, "bin": { "better-result": "bin/cli.mjs" } }, "sha512-7zrmXjAK8u8Z6SOe4R65XObOR5X+Y2I/VVku3t5cPOGQ8/WsBcfFmfnIPiEl5EBMDOzPHRwbiPbMtQBKYdw7RA=="],
+
     "binary-extensions": ["binary-extensions@2.3.0", "", {}, "sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw=="],
 
     "boolbase": ["boolbase@1.0.0", "", {}, "sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww=="],
@@ -1644,6 +1656,8 @@
     "shebang-regex": ["shebang-regex@3.0.0", "", {}, "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A=="],
 
     "shimmer-from-structure": ["shimmer-from-structure@2.3.2", "", { "dependencies": { "@shimmer-from-structure/angular": "*", "@shimmer-from-structure/react": "*", "@shimmer-from-structure/solid": "*", "@shimmer-from-structure/svelte": "*", "@shimmer-from-structure/vue": "*" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" }, "optionalPeers": ["react", "react-dom"] }, "sha512-6ho8yezoFbmsVs3321ywoEcPv6KHP1Cr0+X8vqgsRFeLI1xGVmlvnpkydw0QIOAqzpxE9fP0axpQpsgr2ejABg=="],
+
+    "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
 
     "solid-js": ["solid-js@1.9.11", "", { "dependencies": { "csstype": "^3.1.0", "seroval": "~1.5.0", "seroval-plugins": "~1.5.0" } }, "sha512-WEJtcc5mkh/BnHA6Yrg4whlF8g6QwpmXXRg4P2ztPmcKeHHlH4+djYecBLhSpecZY2RRECXYUwIc/C2r3yzQ4Q=="],
 

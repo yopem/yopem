@@ -1,11 +1,20 @@
-import { logger } from "@repo/logger"
 import { getR2Storage } from "@repo/storage"
+import { Result, TaggedError } from "better-result"
 
 import type { AIProvider, ExecutionResponse } from "./providers/base"
 import type { ApiKeyProvider } from "./providers/base"
+import type { AIProviderErrors } from "./providers/base"
 
 import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
+
+export class UploadError extends TaggedError("UploadError")<{
+  format: "image" | "video"
+  message: string
+  cause?: unknown
+}>() {}
+
+export type AIExecutionError = AIProviderErrors | UploadError
 
 interface ExecuteAIToolParams {
   systemRole: string
@@ -44,28 +53,82 @@ function getProviderInstance(
   }
 }
 
-export async function executeAITool(
+function wrapStorageError(format: "image" | "video", e: unknown): UploadError {
+  return new UploadError({
+    format,
+    message: `Failed to upload ${format}: ${e instanceof Error ? e.message : "Unknown error"}`,
+    cause: e,
+  })
+}
+
+async function doUpload(
+  r2: ReturnType<typeof getR2Storage>,
+  outputFormat: "image" | "video",
+  buffer: Buffer,
+  contentType: string,
+): Promise<Result<string, UploadError>> {
+  const uploadResult =
+    outputFormat === "image"
+      ? await r2.uploadImage(buffer, contentType)
+      : await r2.uploadVideo(buffer, contentType)
+  return uploadResult.mapError((e) => wrapStorageError(outputFormat, e))
+}
+
+async function uploadMediaOutput(
+  output: string,
+  outputFormat: "image" | "video",
+  usage: ExecutionResponse["usage"],
+): Promise<Result<ExecutionResponse, UploadError>> {
+  const base64Regex = /^data:([^;]+);base64,(.+)$/
+  const base64Match = base64Regex.exec(output)
+
+  if (base64Match) {
+    const contentType = base64Match[1]
+    const base64Data = base64Match[2]
+    const buffer = Buffer.from(base64Data, "base64")
+    const r2 = getR2Storage()
+    const urlResult = await doUpload(r2, outputFormat, buffer, contentType)
+    if (Result.isError(urlResult)) return urlResult
+    return Result.ok({ output: urlResult.value, usage })
+  }
+
+  if (output.startsWith("http://") || output.startsWith("https://")) {
+    return Result.ok({ output, usage })
+  }
+
+  const buffer = Buffer.from(output, "utf8")
+  const r2 = getR2Storage()
+  const contentType = outputFormat === "image" ? "image/png" : "video/mp4"
+  const urlResult = await doUpload(r2, outputFormat, buffer, contentType)
+  if (Result.isError(urlResult)) return urlResult
+  return Result.ok({ output: urlResult.value, usage })
+}
+
+export function executeAITool(
   params: ExecuteAIToolParams,
-): Promise<ExecutionResponse> {
-  const systemRole = replaceVariables(params.systemRole, params.inputs)
-  const userInstruction = replaceVariables(
-    params.userInstructionTemplate,
-    params.inputs,
-  )
+): Promise<Result<ExecutionResponse, AIExecutionError>> {
+  return Result.gen(async function* () {
+    const systemRole = replaceVariables(params.systemRole, params.inputs)
+    const userInstruction = replaceVariables(
+      params.userInstructionTemplate,
+      params.inputs,
+    )
 
-  const maxOutputTokens = Math.min(
-    4096,
-    Math.max(512, Math.ceil((systemRole.length + userInstruction.length) / 4)),
-  )
+    const maxOutputTokens = Math.min(
+      4096,
+      Math.max(
+        512,
+        Math.ceil((systemRole.length + userInstruction.length) / 4),
+      ),
+    )
 
-  const provider = getProviderInstance(
-    params.provider,
-    params.apiKey,
-    params.config.modelEngine,
-  )
+    const provider = getProviderInstance(
+      params.provider,
+      params.apiKey,
+      params.config.modelEngine,
+    )
 
-  try {
-    const response = await provider.execute({
+    const response = yield* await provider.execute({
       systemRole,
       userInstruction,
       maxOutputTokens,
@@ -73,65 +136,14 @@ export async function executeAITool(
     })
 
     if (params.outputFormat === "image" || params.outputFormat === "video") {
-      const output = response.output
-
-      const base64Regex = /^data:([^;]+);base64,(.+)$/
-      const base64Match = base64Regex.exec(output)
-      if (base64Match) {
-        const contentType = base64Match[1]
-        const base64Data = base64Match[2]
-        const buffer = Buffer.from(base64Data, "base64")
-
-        const r2 = getR2Storage()
-
-        let publicUrl: string
-        if (params.outputFormat === "image") {
-          publicUrl = await r2.uploadImage(buffer, contentType)
-        } else {
-          publicUrl = await r2.uploadVideo(buffer, contentType)
-        }
-
-        return {
-          output: publicUrl,
-          usage: response.usage,
-        }
-      }
-
-      if (output.startsWith("http://") || output.startsWith("https://")) {
-        return response
-      }
-
-      try {
-        const buffer = Buffer.from(output, "utf8")
-        const r2 = getR2Storage()
-
-        let publicUrl: string
-        const contentType =
-          params.outputFormat === "image" ? "image/png" : "video/mp4"
-
-        if (params.outputFormat === "image") {
-          publicUrl = await r2.uploadImage(buffer, contentType)
-        } else {
-          publicUrl = await r2.uploadVideo(buffer, contentType)
-        }
-
-        return {
-          output: publicUrl,
-          usage: response.usage,
-        }
-      } catch (uploadError) {
-        const message = `Failed to upload ${params.outputFormat}: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`
-        logger.error(message)
-        throw new Error(message)
-      }
+      const uploaded = yield* await uploadMediaOutput(
+        response.output,
+        params.outputFormat,
+        response.usage,
+      )
+      return Result.ok(uploaded)
     }
 
-    return response
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error
-    }
-    logger.error("Unknown error during AI execution")
-    throw new Error("Unknown error during AI execution")
-  }
+    return Result.ok(response)
+  })
 }
