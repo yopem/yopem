@@ -45,6 +45,7 @@
     "@repo/storage": "workspace:*",
     "drizzle-orm": "catalog:",
     "hono": "^4.7.11",
+    "ioredis": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
