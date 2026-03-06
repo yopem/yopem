@@ -178,7 +178,6 @@
       "dependencies": {
         "@repo/env": "workspace:*",
         "@repo/logger": "workspace:*",
-        "better-result": "catalog:",
         "ioredis": "catalog:",
       },
       "devDependencies": {

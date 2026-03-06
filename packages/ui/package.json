@@ -9,6 +9,10 @@
       "default": "./src/index.ts"
     },
     "./style.css": "./src/style.css",
+    "./avatar": {
+      "types": "./src/components/avatar.tsx",
+      "default": "./src/components/avatar.tsx"
+    },
     "./alert-dialog": {
       "types": "./src/components/alert-dialog.tsx",
       "default": "./src/components/alert-dialog.tsx"

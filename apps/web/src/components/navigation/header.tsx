@@ -3,17 +3,41 @@
 import type { SessionUser } from "@repo/auth/types"
 
 import { adminUrl } from "@repo/env/client"
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/avatar"
 import { Button } from "@repo/ui/button"
 import Logo from "@repo/ui/logo"
+import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/ui/menu"
 import { Link } from "@tanstack/react-router"
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 
-import { loginFn } from "@/lib/auth"
+import { loginFn, logoutFn } from "@/lib/auth"
 
 interface HeaderProps {
   session: SessionUser | false
 }
 
+const getInitials = (name: string | null, email: string) => {
+  if (name) {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+  }
+  return email[0].toUpperCase()
+}
+
 const Header = ({ session }: HeaderProps) => {
+  const { theme, setTheme } = useTheme()
+
   const handleLogin = async () => {
     await loginFn()
   }
@@ -60,11 +84,73 @@ const Header = ({ session }: HeaderProps) => {
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
             {session ? (
-              <Link to="/dashboard">
-                <Button variant="ghost" className="h-9">
-                  {session.name ?? session.email}
-                </Button>
-              </Link>
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      className="focus-visible:ring-ring cursor-pointer rounded-full outline-none focus-visible:ring-2"
+                    >
+                      <Avatar className="size-8">
+                        <AvatarImage
+                          src={session.image!}
+                          alt={session.name ?? session.email}
+                        />
+                        <AvatarFallback>
+                          {getInitials(session.name, session.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  }
+                />
+                <MenuPopup align="end" className="w-48">
+                  <MenuItem render={<Link to="/dashboard" />}>
+                    Activity
+                  </MenuItem>
+                  <MenuItem render={<Link to="/dashboard/runs" />}>
+                    Logs
+                  </MenuItem>
+                  <MenuItem render={<Link to="/dashboard/credits" />}>
+                    Credits
+                  </MenuItem>
+                  <MenuItem render={<Link to="/dashboard/profile" />}>
+                    Settings
+                  </MenuItem>
+                  <MenuItem
+                    className="text-destructive"
+                    onClick={() => logoutFn()}
+                  >
+                    Logout
+                  </MenuItem>
+                  <MenuSeparator />
+                  <div className="flex items-center justify-center gap-1 px-2 py-1">
+                    <button
+                      type="button"
+                      aria-label="Light theme"
+                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "light" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                      onClick={() => setTheme("light")}
+                    >
+                      <SunIcon className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Dark theme"
+                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "dark" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                      onClick={() => setTheme("dark")}
+                    >
+                      <MoonIcon className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="System theme"
+                      className={`flex size-8 items-center justify-center rounded-sm transition-colors ${theme === "system" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                      onClick={() => setTheme("system")}
+                    >
+                      <MonitorIcon className="size-4" />
+                    </button>
+                  </div>
+                </MenuPopup>
+              </Menu>
             ) : (
               <Button variant="ghost" className="h-9" onClick={handleLogin}>
                 Login
