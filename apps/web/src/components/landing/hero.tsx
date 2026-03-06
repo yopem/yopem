@@ -1,13 +1,12 @@
+import type { SessionUser } from "@repo/auth/types"
+
 import { Button } from "@repo/ui/button"
 import { Link } from "@tanstack/react-router"
 import { BarChart3Icon, BotIcon, ImageIcon, PlayCircleIcon } from "lucide-react"
 
-import type { SessionUser } from "@repo/auth/types"
-
 import CTAButton from "@/components/navigation/cta-button"
 
 const Hero = ({ session }: { session: SessionUser | false }) => {
-
   return (
     <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden pt-16 pb-24">
       <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-20" />

@@ -1,12 +1,11 @@
+import type { SessionUser } from "@repo/auth/types"
+
 import { Button } from "@repo/ui/button"
 import { Link } from "@tanstack/react-router"
-
-import type { SessionUser } from "@repo/auth/types"
 
 import CTAButton from "@/components/navigation/cta-button"
 
 const CTA = ({ session }: { session: SessionUser | false }) => {
-
   return (
     <section className="relative overflow-hidden py-32">
       <div className="bg-background absolute inset-0" />
