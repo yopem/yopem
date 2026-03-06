@@ -19,7 +19,6 @@ import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import { useActivityFeed } from "@/hooks/use-activity-feed"
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
@@ -46,7 +45,10 @@ const AdminDashboardPage = () => {
     staleTime: 30 * 1000,
   })
 
-  const { data: activityFeed, isLoading: activityLoading } = useActivityFeed()
+  const { data: activityFeed, isLoading: activityLoading } = useQuery({
+    ...queryApi.admin.getActivityFeed.queryOptions(),
+    staleTime: 30 * 1000,
+  })
 
   const activityItems =
     activityFeed?.map((activity) => ({

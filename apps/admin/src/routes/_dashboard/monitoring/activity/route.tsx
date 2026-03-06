@@ -1,4 +1,6 @@
+import { queryApi } from "@repo/orpc/query"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { BadgeCheckIcon, KeyIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
@@ -6,7 +8,6 @@ import { Shimmer } from "shimmer-from-structure"
 import ActivityFeedItem from "@/components/dashboard/activity-feed-item"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import { useActivityFeed } from "@/hooks/use-activity-feed"
 
 const breadcrumbItems = [
   { label: "Home", href: "/" },
@@ -15,7 +16,10 @@ const breadcrumbItems = [
 ]
 
 const ActivityPage = () => {
-  const { data: activityFeed, isLoading } = useActivityFeed()
+  const { data: activityFeed, isLoading } = useQuery({
+    ...queryApi.admin.getActivityFeed.queryOptions(),
+    staleTime: 30 * 1000,
+  })
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
