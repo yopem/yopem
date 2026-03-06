@@ -14,8 +14,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react"
 import { z } from "zod"
 
-import { useAvailableModels } from "@/hooks/use-available-models"
-
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 
 const toolFormSchema = insertToolSchema
@@ -179,7 +177,11 @@ const useToolForm = ({
   const safeApiKeys = apiKeys ?? EMPTY_API_KEYS
   const systemRoleRef = useRef<HTMLTextAreaElement>(null)
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
-  const { data: availableModelsData } = useAvailableModels()
+
+  const { data: availableModelsData } = useQuery({
+    ...queryApi.admin.getAvailableModels.queryOptions(),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],

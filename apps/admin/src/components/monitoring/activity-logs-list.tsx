@@ -1,5 +1,6 @@
 "use client"
 
+import { queryApi } from "@repo/orpc/query"
 import { formatDateTime } from "@repo/shared/format-date"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
@@ -11,11 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/select"
+import { useQuery } from "@tanstack/react-query"
 import { ChevronLeftIcon, ChevronRightIcon, FilterIcon } from "lucide-react"
 import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
-
-import { useActivityLogs } from "@/hooks/use-activity-logs"
 
 const severityColors: Record<
   string,
@@ -33,23 +33,27 @@ const ActivityLogsList = () => {
   const [severity, setSeverity] = useState<string>("all")
   const [cursor, setCursor] = useState<string | undefined>(undefined)
 
-  const { data, isLoading } = useActivityLogs({
-    eventType:
-      eventType === "all"
-        ? undefined
-        : (eventType as
-            | "auth"
-            | "system"
-            | "payment"
-            | "tool"
-            | "api"
-            | "webhook"),
-    severity:
-      severity === "all"
-        ? undefined
-        : (severity as "critical" | "error" | "warning" | "info" | "debug"),
-    cursor,
-    limit: 50,
+  const { data, isLoading } = useQuery({
+    ...queryApi.admin.getActivityLogs.queryOptions({
+      input: {
+        eventType:
+          eventType === "all"
+            ? undefined
+            : (eventType as
+                | "auth"
+                | "system"
+                | "payment"
+                | "tool"
+                | "api"
+                | "webhook"),
+        severity:
+          severity === "all"
+            ? undefined
+            : (severity as "critical" | "error" | "warning" | "info" | "debug"),
+        cursor,
+        limit: 50,
+      },
+    }),
   })
 
   const handleNext = () => {
