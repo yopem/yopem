@@ -5,7 +5,7 @@ FROM base AS pruner
 WORKDIR /app
 RUN bun add -g turbo@^2
 COPY . .
-RUN turbo prune ~web --docker
+RUN turbo prune web --docker
 
 FROM base AS deps
 WORKDIR /app
@@ -39,7 +39,7 @@ ARG PUBLIC_YOUTUBE_USERNAME
 ARG PUBLIC_ADMIN_URL
 ARG PUBLIC_API_URL
 
-RUN bun x turbo run build --filter=~web
+RUN bun x turbo run build --filter=web
 
 FROM base AS runner
 WORKDIR /app
@@ -47,7 +47,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 appgroup && \
-    adduser --system --uid 1001 appuser
+  adduser --system --uid 1001 appuser
 
 COPY --from=builder --chown=appuser:appgroup /app/apps/web/.output ./.output
 COPY --from=builder --chown=appuser:appgroup /app/apps/web/public ./public

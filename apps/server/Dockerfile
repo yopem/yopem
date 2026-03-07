@@ -5,7 +5,7 @@ FROM base AS pruner
 WORKDIR /app
 RUN bun add -g turbo@^2
 COPY . .
-RUN turbo prune ~server --docker
+RUN turbo prune server --docker
 
 FROM base AS builder
 WORKDIR /app
@@ -20,7 +20,7 @@ RUN apk add --no-cache libc6-compat vips
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 honojs && \
-    adduser --system --uid 1001 hono
+  adduser --system --uid 1001 hono
 
 COPY --from=builder /app/dist/index.js ./index.js
 
