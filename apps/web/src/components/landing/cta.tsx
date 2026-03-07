@@ -22,7 +22,9 @@ const CTA = ({ session }: { session: SessionUser | false }) => {
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {session ? (
               <Button
-                render={<Link to="/marketplace">Browser marketplace</Link>}
+                size="xl"
+                className="rounded-2xl"
+                render={<Link to="/marketplace">Browse marketplace</Link>}
               />
             ) : (
               <CTAButton className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-full px-8 font-medium shadow-sm sm:w-auto" />

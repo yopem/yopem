@@ -23,6 +23,8 @@ const Hero = ({ session }: { session: SessionUser | false }) => {
         <div className="flex w-full flex-wrap items-center justify-center gap-4">
           {session ? (
             <Button
+              className="rounded-2xl"
+              size="lg"
               render={<Link to="/marketplace">Browse marketplace</Link>}
             />
           ) : (
