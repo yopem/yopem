@@ -59,10 +59,6 @@
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
-    "format:check": {},
-    "format:write": {
-      "cache": false
-    },
     "db:generate": {
       "cache": false
     },

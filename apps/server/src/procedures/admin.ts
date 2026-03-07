@@ -542,14 +542,13 @@ export const adminRouter = {
     .output(activityFeedOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:activity_feed"
-      const cached =
-        await context.redis.getCache<
-          {
-            type: string
-            message: string
-            timestamp: Date
-          }[]
-        >(cacheKey)
+      const cached = await context.redis.getCache<
+        {
+          type: string
+          message: string
+          timestamp: Date
+        }[]
+      >(cacheKey)
 
       if (cached) {
         return cached

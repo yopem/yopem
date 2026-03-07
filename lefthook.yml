@@ -5,7 +5,7 @@ pre-commit:
     typecheck:
       run: bun x turbo run typecheck
     format:
-      run: bun x turbo run format:check
+      run: bun run format:check
 
 pre-push:
   commands:
@@ -14,4 +14,4 @@ pre-push:
     typecheck:
       run: bun x turbo run typecheck
     format:
-      run: bun x turbo run format:check
+      run: bun run format:check

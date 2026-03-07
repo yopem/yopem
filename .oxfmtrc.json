@@ -8,6 +8,9 @@
   "singleQuote": false,
   "tabWidth": 2,
   "trailingComma": "all",
+  "experimentalTailwindcss": {
+    "functions": ["cn", "cva", "clsx"]
+  },
   "experimentalSortPackageJson": true,
   "ignorePatterns": [
     "node_modules",
@@ -34,6 +37,7 @@
     "tsconfig.tsbuildinfo",
     "*.tsbuildinfo",
     "next-env.d.ts",
+    "routeTree.gen.ts",
     "**/migrations/**"
   ],
   "sortImports": {
@@ -96,24 +100,13 @@
     ],
     "groups": [
       "type-import",
-      [
-        "value-builtin",
-        "value-external"
-      ],
+      ["value-builtin", "value-external"],
       "type-workspace",
       "value-workspace",
       "type-internal",
       "value-internal",
-      [
-        "type-parent",
-        "type-sibling",
-        "type-index"
-      ],
-      [
-        "value-parent",
-        "value-sibling",
-        "value-index"
-      ],
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
       "unknown"
     ]
   }
