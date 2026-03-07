@@ -3,11 +3,12 @@
 import type { UseMutationResult } from "@tanstack/react-query"
 
 import { ClockIcon, ExternalLinkIcon } from "lucide-react"
-import { formatDateOnly } from "~shared/format-date"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
-import { Input } from "~ui/input"
-import { Label } from "~ui/label"
+
+import { formatDateOnly } from "shared/format-date"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
 
 interface PendingCheckout {
   id: string

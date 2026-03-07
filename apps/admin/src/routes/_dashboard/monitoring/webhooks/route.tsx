@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import { BarChartIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
 import { lazy, Suspense, useEffect, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
-import { queryApi } from "~orpc/query"
+
+import { queryApi } from "rpc/query"
 
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

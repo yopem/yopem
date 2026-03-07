@@ -1,15 +1,14 @@
 "use client"
 
-import type { ApiKeyConfig } from "~shared/api-keys-schema"
-
-import { Label } from "~ui/label"
+import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { Label } from "ui/label"
 import {
   Select,
   SelectItem,
   SelectPopup,
   SelectTrigger,
   SelectValue,
-} from "~ui/select"
+} from "ui/select"
 
 interface ApiKeySelectorProps {
   value?: string

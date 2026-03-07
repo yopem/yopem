@@ -9,8 +9,8 @@ import {
   AlertDialogHeader,
   AlertDialogPopup,
   AlertDialogTitle,
-} from "~ui/alert-dialog"
-import { Button } from "~ui/button"
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
 
 import type { Asset } from "./asset-card"
 

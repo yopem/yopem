@@ -1,6 +1,6 @@
 "use client"
 
-import { Progress, ProgressIndicator, ProgressTrack } from "~ui/progress"
+import { Progress, ProgressIndicator, ProgressTrack } from "ui/progress"
 
 interface UploadProgressProps {
   isUploading: boolean

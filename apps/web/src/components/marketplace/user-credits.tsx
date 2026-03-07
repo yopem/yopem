@@ -2,8 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { CreditCardIcon, PlusIcon } from "lucide-react"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
 
 export default function UserCredits() {
   const { data: creditsData } = useQuery({

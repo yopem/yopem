@@ -1,7 +1,8 @@
 import { KeyIcon } from "lucide-react"
-import { Card, CardContent, CardHeader } from "~ui/card"
-import { Input } from "~ui/input"
-import { Label } from "~ui/label"
+
+import { Card, CardContent, CardHeader } from "ui/card"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
 
 const ProviderCardSkeleton = () => {
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { Tabs, TabsList, TabsTab } from "~ui/tabs"
+import { Tabs, TabsList, TabsTab } from "ui/tabs"
 
 interface FeatureBuilderTabsProps {
   activeTab: string

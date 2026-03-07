@@ -6,7 +6,8 @@ import {
   ChevronsUpDownIcon,
   ChevronUpIcon,
 } from "lucide-react"
-import { cn } from "~ui"
+
+import { cn } from "ui"
 
 const Select = SelectPrimitive.Root
 

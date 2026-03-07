@@ -1,7 +1,7 @@
 "use client"
 
-import { cn } from "~ui"
-import { Button } from "~ui/button"
+import { cn } from "ui"
+import { Button } from "ui/button"
 
 import { loginFn } from "@/lib/auth"
 

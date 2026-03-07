@@ -1,12 +1,13 @@
 import { Result, TaggedError } from "better-result"
-import { getR2Storage } from "~storage"
 
-import type { AIProvider, ExecutionResponse } from "./providers/base"
-import type { ApiKeyProvider } from "./providers/base"
-import type { AIProviderErrors } from "./providers/base"
+import { getR2Storage } from "storage"
 
-import { OpenAIProvider } from "./providers/openai"
-import { OpenRouterProvider } from "./providers/openrouter"
+import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
+import type { ApiKeyProvider } from "./providers/base.ts"
+import type { AIProviderErrors } from "./providers/base.ts"
+
+import { OpenAIProvider } from "./providers/openai.ts"
+import { OpenRouterProvider } from "./providers/openrouter.ts"
 
 export class UploadError extends TaggedError("UploadError")<{
   format: "image" | "video"

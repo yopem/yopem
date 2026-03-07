@@ -1,8 +1,8 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
-import { db } from "../index"
-import { categoriesTable } from "../schema"
-import { generateUniqueCategorySlug } from "./slug"
+import { db } from "../index.ts"
+import { categoriesTable } from "../schema/index.ts"
+import { generateUniqueCategorySlug } from "./slug.ts"
 
 export const listCategories = () => {
   return db

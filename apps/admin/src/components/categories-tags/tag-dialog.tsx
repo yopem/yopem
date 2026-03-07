@@ -2,10 +2,10 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
-import { Button } from "~ui/button"
-import { Dialog, DialogPopup } from "~ui/dialog"
-import { Field, FieldLabel } from "~ui/field"
-import { Input } from "~ui/input"
+import { Button } from "ui/button"
+import { Dialog, DialogPopup } from "ui/dialog"
+import { Field, FieldLabel } from "ui/field"
+import { Input } from "ui/input"
 
 interface TagDialogProps {
   open: boolean

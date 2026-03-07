@@ -1,15 +1,14 @@
 "use client"
 
-import type { ApiKeyConfig } from "~shared/api-keys-schema"
-
-import { Label } from "~ui/label"
+import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { Label } from "ui/label"
 import {
   Select,
   SelectItem,
   SelectPopup,
   SelectTrigger,
   SelectValue,
-} from "~ui/select"
+} from "ui/select"
 
 import ApiKeySelector from "./api-key-selector"
 import CategorySelector, { type Category } from "./category-selector"

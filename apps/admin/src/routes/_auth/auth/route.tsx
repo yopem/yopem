@@ -3,7 +3,7 @@ import { redirect, createFileRoute } from "@tanstack/react-router"
 import LoginButton from "@/components/auth/login-button"
 import { getSession } from "@/lib/auth"
 
-export const Route = createFileRoute("/_auth/auth/login")({
+export const Route = createFileRoute("/_auth/auth")({
   beforeLoad: async () => {
     const session = await getSession()
     if (session) {

@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
-import { queryApi } from "~orpc/query"
-import { formatDateTime } from "~shared/format-date"
-import { Badge } from "~ui/badge"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
+
+import { queryApi } from "rpc/query"
+import { formatDateTime } from "shared/format-date"
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 import {
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~ui/table"
+} from "ui/table"
 
 const getStatusIcon = (status: string) => {
   switch (status) {

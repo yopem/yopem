@@ -6,7 +6,8 @@ import {
   LoaderCircleIcon,
   PlayIcon,
 } from "lucide-react"
-import { Button } from "~ui/button"
+
+import { Button } from "ui/button"
 
 interface BreadcrumbItem {
   label: string

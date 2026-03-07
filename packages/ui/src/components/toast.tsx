@@ -8,7 +8,8 @@ import {
   LoaderCircleIcon,
   TriangleAlertIcon,
 } from "lucide-react"
-import { cn } from "~ui"
+
+import { cn } from "ui"
 
 import { buttonVariants } from "./button"
 

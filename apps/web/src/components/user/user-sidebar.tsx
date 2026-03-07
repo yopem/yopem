@@ -1,13 +1,14 @@
 "use client"
 
 import { type ReactNode } from "react"
+
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-} from "~ui/sidebar"
-import ThemeSwitcher from "~ui/theme-switcher"
+} from "ui/sidebar"
+import ThemeSwitcher from "ui/theme-switcher"
 
 import UserSidebarFooter from "@/components/user/user-sidebar-footer"
 

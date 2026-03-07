@@ -2,7 +2,8 @@
 
 import { Image } from "@unpic/react"
 import { Image as ImageIcon, Upload as UploadIcon } from "lucide-react"
-import { Button } from "~ui/button"
+
+import { Button } from "ui/button"
 
 interface Asset {
   id: string

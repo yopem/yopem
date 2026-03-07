@@ -2,7 +2,8 @@
 
 import { Image } from "@unpic/react"
 import { ImageIcon, XIcon } from "lucide-react"
-import { Button } from "~ui/button"
+
+import { Button } from "ui/button"
 import {
   Dialog,
   DialogBackdrop,
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogPanel,
   DialogPopup,
-} from "~ui/dialog"
+} from "ui/dialog"
 
 import type { Asset } from "./asset-card"
 

@@ -1,8 +1,8 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
-import { db } from "../index"
-import { tagsTable } from "../schema"
-import { generateUniqueTagSlug } from "./slug"
+import { db } from "../index.ts"
+import { tagsTable } from "../schema/index.ts"
+import { generateUniqueTagSlug } from "./slug.ts"
 
 export const listTags = () => {
   return db

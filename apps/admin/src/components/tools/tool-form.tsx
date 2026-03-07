@@ -1,13 +1,13 @@
 "use client"
 
-import type { SelectTool } from "~db/schema"
-import type { ApiKeyConfig } from "~shared/api-keys-schema"
-
 import { useImperativeHandle, type Ref } from "react"
-import { Field, FieldLabel } from "~ui/field"
-import { Input } from "~ui/input"
-import { Separator } from "~ui/separator"
-import { Textarea } from "~ui/textarea"
+
+import type { SelectTool } from "db/schema"
+import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { Field, FieldLabel } from "ui/field"
+import { Input } from "ui/input"
+import { Separator } from "ui/separator"
+import { Textarea } from "ui/textarea"
 
 import ConfigurationPanel from "./configuration-panel"
 import InputVariableSection from "./input-variable-section"

@@ -2,16 +2,17 @@
 
 import { PlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import { useState } from "react"
-import { Button } from "~ui/button"
-import { Checkbox } from "~ui/checkbox"
-import { Input } from "~ui/input"
+
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { Input } from "ui/input"
 import {
   Select,
   SelectItem,
   SelectPopup,
   SelectTrigger,
   SelectValue,
-} from "~ui/select"
+} from "ui/select"
 
 export type InputFieldType =
   | "text"

@@ -1,6 +1,6 @@
 import { createEnv } from "@t3-oss/env-core"
 
-import { clientSchema, serverSchema, sharedSchema } from "./schema"
+import { clientSchema, serverSchema, sharedSchema } from "./schema.ts"
 
 function getProtocol() {
   if (process.env["APP_ENV"] === "development") {

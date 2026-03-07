@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "~ui/button"
+import { Button } from "ui/button"
 
 export type TimeRange = "24h" | "7d"
 

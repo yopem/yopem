@@ -1,5 +1,5 @@
 {
-  "name": "~orpc",
+  "name": "rpc",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -50,9 +50,9 @@
     "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-start": "catalog:",
+    "logger": "workspace:*",
     "react": "catalog:",
-    "zod": "catalog:",
-    "~logger": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
@@ -61,7 +61,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
-    "typescript": "catalog:",
-    "~server": "workspace:*"
+    "server": "workspace:*",
+    "typescript": "catalog:"
   }
 }

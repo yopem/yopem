@@ -1,8 +1,9 @@
 import { redirect } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
-import { authClient } from "~auth/client"
-import { subjects } from "~auth/subjects"
-import { logger } from "~logger"
+
+import { authClient } from "auth/client"
+import { subjects } from "auth/subjects"
+import { logger } from "logger"
 
 const getServerUtils = async () => {
   const { getCookie, setCookie, deleteCookie, getRequestHeaders } =

@@ -1,13 +1,13 @@
 import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
 
-import { db } from "../index"
+import { db } from "../index.ts"
 import {
   activityLogsTable,
   adminSettingsTable,
   polarPaymentsTable,
   toolRunsTable,
   uptimeEventsTable,
-} from "../schema"
+} from "../schema/index.ts"
 
 export const getSetting = async (key: string) => {
   const [setting] = await db

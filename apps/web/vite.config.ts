@@ -19,5 +19,20 @@ export default defineConfig({
   server: {
     port: Number(process.env["WEB_PORT"]) || 3000,
   },
+  ssr: {
+    noExternal: [
+      "ui",
+      "auth",
+      "db",
+      "env",
+      "logger",
+      "orpc",
+      "shared",
+      "cache",
+      "ai",
+      "payments",
+      "storage",
+    ],
+  },
   plugins: [tsconfigPaths(), tanstackStart(), react(), tailwindCSS()],
 })

@@ -1,10 +1,11 @@
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
-import { createCustomId } from "~shared/custom-id"
 
-import type { InsertToolVersion } from "../schema/tool-versions"
-import type { InsertTool } from "../schema/tools"
+import { createCustomId } from "shared/custom-id"
 
-import { db } from "../index"
+import type { InsertToolVersion } from "../schema/tool-versions.ts"
+import type { InsertTool } from "../schema/tools.ts"
+
+import { db } from "../index.ts"
 import {
   assetsTable,
   categoriesTable,
@@ -15,8 +16,8 @@ import {
   toolTagsTable,
   toolVersionsTable,
   toolsTable,
-} from "../schema"
-import { generateUniqueToolSlug } from "./slug"
+} from "../schema/index.ts"
+import { generateUniqueToolSlug } from "./slug.ts"
 
 export const listTools = async (input?: {
   limit?: number

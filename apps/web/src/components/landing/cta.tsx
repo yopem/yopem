@@ -1,7 +1,7 @@
-import type { SessionUser } from "~auth/types"
-
 import { Link } from "@tanstack/react-router"
-import { Button } from "~ui/button"
+
+import type { SessionUser } from "auth/types"
+import { Button } from "ui/button"
 
 import CTAButton from "@/components/navigation/cta-button"
 

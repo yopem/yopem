@@ -1,6 +1,7 @@
 import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
-import { createCustomId } from "~shared/custom-id"
+
+import { createCustomId } from "shared/custom-id"
 
 export const polarPaymentEventsTable = pgTable(
   "polar_payment_events",

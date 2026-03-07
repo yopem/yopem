@@ -1,4 +1,4 @@
-import type { ApiKeyProvider } from "./api-keys-schema"
+import type { ApiKeyProvider } from "./api-keys-schema.ts"
 
 function getProviderForModel(modelEngine: string): ApiKeyProvider | null {
   const modelLower = modelEngine.toLowerCase()

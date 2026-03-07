@@ -3,11 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangleIcon, CopyIcon, LockIcon, PlayIcon } from "lucide-react"
 import { useRef, useState } from "react"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
-import { Field, FieldLabel } from "~ui/field"
-import { Textarea } from "~ui/textarea"
-import ToolInputField, { type ToolInputVariable } from "~ui/tool-input-field"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
+import { Field, FieldLabel } from "ui/field"
+import { Textarea } from "ui/textarea"
+import ToolInputField, { type ToolInputVariable } from "ui/tool-input-field"
 
 interface ExecutionResult {
   runId: string

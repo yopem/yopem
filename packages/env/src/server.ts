@@ -1,5 +1,5 @@
 import "server-only"
-import { env } from "./index"
+import { env } from "./index.ts"
 
 export const appEnv = env.APP_ENV
 export const databaseUrl = env.DATABASE_URL

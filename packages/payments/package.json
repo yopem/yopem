@@ -1,5 +1,5 @@
 {
-  "name": "~payments",
+  "name": "payments",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -38,12 +38,12 @@
   },
   "dependencies": {
     "@polar-sh/sdk": "catalog:",
+    "db": "workspace:*",
     "drizzle-orm": "catalog:",
+    "env": "workspace:*",
     "ioredis": "catalog:",
-    "~db": "workspace:*",
-    "~env": "workspace:*",
-    "~logger": "workspace:*",
-    "~shared": "workspace:*"
+    "logger": "workspace:*",
+    "shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

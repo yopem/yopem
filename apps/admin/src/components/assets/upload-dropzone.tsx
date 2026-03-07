@@ -2,8 +2,9 @@
 
 import { UploadIcon } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
-import { Card, CardContent } from "~ui/card"
-import { toastManager } from "~ui/toast"
+
+import { Card, CardContent } from "ui/card"
+import { toastManager } from "ui/toast"
 
 interface UploadDropzoneProps {
   onUpload: (file: File) => void

@@ -1,8 +1,7 @@
 "use client"
 
-import type { ApiKeyConfig } from "~shared/api-keys-schema"
-
-import { Button } from "~ui/button"
+import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { Button } from "ui/button"
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,7 @@ import {
   DialogHeader,
   DialogPanel,
   DialogTitle,
-} from "~ui/dialog"
+} from "ui/dialog"
 
 import { providerNames } from "./provider-card"
 

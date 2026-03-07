@@ -7,9 +7,10 @@ import {
 import { Link } from "@tanstack/react-router"
 
 import "@/globals.css"
-import "~ui/style.css"
+import "ui/style.css"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
+
 import {
   logoOgHeight,
   logoOgUrl,
@@ -19,10 +20,10 @@ import {
   siteTitle,
   siteUrl,
   xUsername,
-} from "~env/client"
-import { appEnv } from "~env/client"
-import { formatError, logger } from "~logger"
-import { Button } from "~ui/button"
+} from "env/client"
+import { appEnv } from "env/client"
+import { formatError, logger } from "logger"
+import { Button } from "ui/button"
 
 import AnalyticsScripts from "@/components/analytics-scripts"
 import Providers from "@/components/providers"

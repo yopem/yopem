@@ -1,7 +1,8 @@
 "use client"
 
 import { lazy, Suspense } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
+
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 
 const ResponsiveContainer = lazy(() =>
   import("recharts").then((m) => ({ default: m.ResponsiveContainer })),

@@ -1,5 +1,5 @@
 {
-  "name": "~web",
+  "name": "web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,18 +20,18 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "@unpic/react": "catalog:",
+    "auth": "workspace:*",
+    "cache": "workspace:*",
+    "db": "workspace:*",
+    "env": "workspace:*",
+    "logger": "workspace:*",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "rpc": "workspace:*",
+    "shared": "workspace:*",
     "shimmer-from-structure": "catalog:",
-    "~auth": "workspace:*",
-    "~cache": "workspace:*",
-    "~db": "workspace:*",
-    "~env": "workspace:*",
-    "~logger": "workspace:*",
-    "~orpc": "workspace:*",
-    "~shared": "workspace:*",
-    "~ui": "workspace:*"
+    "ui": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

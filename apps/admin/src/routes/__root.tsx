@@ -7,13 +7,14 @@ import {
 import { Link } from "@tanstack/react-router"
 
 import "@/globals.css"
-import "~ui/style.css"
+import "ui/style.css"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
-import { siteTitle } from "~env/client"
-import { appEnv } from "~env/client"
-import { formatError, logger } from "~logger"
-import { Button } from "~ui/button"
+
+import { siteTitle } from "env/client"
+import { appEnv } from "env/client"
+import { formatError, logger } from "logger"
+import { Button } from "ui/button"
 
 import Providers from "@/components/providers"
 

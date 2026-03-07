@@ -2,8 +2,9 @@
 
 import { Check as CheckIcon } from "lucide-react"
 import { useState } from "react"
-import { Button } from "~ui/button"
-import { Separator } from "~ui/separator"
+
+import { Button } from "ui/button"
+import { Separator } from "ui/separator"
 
 interface CategoryItem {
   id: string

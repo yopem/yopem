@@ -1,9 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useReducer } from "react"
-import { formatError, logger } from "~logger"
-import { queryApi } from "~orpc/query"
-import { Dialog, DialogPopup } from "~ui/dialog"
+
+import { formatError, logger } from "logger"
+import { queryApi } from "rpc/query"
+import { Dialog, DialogPopup } from "ui/dialog"
 
 import AssetLibrary from "./asset-library"
 import ThumbnailDisplay from "./thumbnail-display"

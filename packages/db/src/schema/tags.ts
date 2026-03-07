@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
-import { createCustomId } from "~shared/custom-id"
+
+import { createCustomId } from "shared/custom-id"
 
 export const tagsTable = pgTable("tags", {
   id: text()

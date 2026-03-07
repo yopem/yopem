@@ -4,7 +4,8 @@ import type { UseMutationResult } from "@tanstack/react-query"
 
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
-import { Button } from "~ui/button"
+
+import { Button } from "ui/button"
 
 interface Category {
   id: string

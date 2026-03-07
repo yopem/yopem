@@ -3,9 +3,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { Suspense, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
-import { toastManager } from "~ui/toast"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
+import { toastManager } from "ui/toast"
 
 import CategoryDialog from "@/components/categories-tags/category-dialog"
 import CategoryList from "@/components/categories-tags/category-list"

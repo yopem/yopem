@@ -1,14 +1,14 @@
-import type { SessionUser } from "~auth/types"
-
 import { Polar } from "@polar-sh/sdk"
 import { Hono } from "hono"
+
+import type { SessionUser } from "auth/types"
 import {
   getUserSettings,
   insertCheckoutSession,
   upsertPolarCustomer,
-} from "~db/services/user"
-import { formatError, logger } from "~logger"
-import { validateTopupAmount } from "~payments/credit-calculation"
+} from "db/services/user"
+import { formatError, logger } from "logger"
+import { validateTopupAmount } from "payments/credit-calculation"
 
 interface Env {
   Variables: {

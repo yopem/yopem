@@ -1,14 +1,14 @@
 "use client"
 
-import type { SessionUser } from "~auth/types"
-
 import { Link } from "@tanstack/react-router"
-import { adminUrl } from "~env/client"
-import { Avatar, AvatarFallback, AvatarImage } from "~ui/avatar"
-import { Button } from "~ui/button"
-import Logo from "~ui/logo"
-import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "~ui/menu"
-import ThemeSwitcher from "~ui/theme-switcher"
+
+import type { SessionUser } from "auth/types"
+import { adminUrl } from "env/client"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import Logo from "ui/logo"
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
+import ThemeSwitcher from "ui/theme-switcher"
 
 import { loginFn, logoutFn } from "@/lib/auth"
 

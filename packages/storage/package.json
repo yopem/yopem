@@ -1,5 +1,5 @@
 {
-  "name": "~storage",
+  "name": "storage",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,11 +19,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
     "better-result": "catalog:",
+    "env": "workspace:*",
+    "logger": "workspace:*",
     "nanoid": "catalog:",
     "sharp": "^0.34.2",
-    "transliteration": "catalog:",
-    "~env": "workspace:*",
-    "~logger": "workspace:*"
+    "transliteration": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

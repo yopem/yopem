@@ -1,6 +1,7 @@
 import { Result, TaggedError } from "better-result"
 import crypto from "crypto"
-import { env } from "~env"
+
+import { env } from "env"
 
 export class EncryptionError extends TaggedError("EncryptionError")<{
   message: string

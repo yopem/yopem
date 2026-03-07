@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "~ui/sidebar"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "ui/sidebar"
 
 import UserSidebar from "./user-sidebar"
 

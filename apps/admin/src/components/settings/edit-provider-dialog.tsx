@@ -1,8 +1,7 @@
 "use client"
 
-import type { ApiKeyConfig } from "~shared/api-keys-schema"
-
-import { Button } from "~ui/button"
+import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { Button } from "ui/button"
 import {
   Dialog,
   DialogContent,
@@ -11,17 +10,17 @@ import {
   DialogHeader,
   DialogPanel,
   DialogTitle,
-} from "~ui/dialog"
-import { Input } from "~ui/input"
-import { Label } from "~ui/label"
+} from "ui/dialog"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "~ui/select"
-import { Textarea } from "~ui/textarea"
+} from "ui/select"
+import { Textarea } from "ui/textarea"
 
 interface EditProviderDialogProps {
   open: boolean

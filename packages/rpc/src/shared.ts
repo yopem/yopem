@@ -3,7 +3,8 @@ import type { appRouter } from "~server/router"
 
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
-import { logger } from "~logger"
+
+import { logger } from "logger"
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {

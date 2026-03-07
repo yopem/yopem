@@ -1,8 +1,8 @@
 "use client"
 
-import type { clientApi } from "~orpc/client"
-
 import { useState } from "react"
+
+import type { clientApi } from "rpc/client"
 
 import MarketplaceGrid from "@/components/marketplace/marketplace-grid"
 import MarketplaceSidebar from "@/components/marketplace/marketplace-sidebar"

@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense, useCallback, useState } from "react"
-import { queryApi } from "~orpc/query"
-import { toastManager } from "~ui/toast"
+
+import { queryApi } from "rpc/query"
+import { toastManager } from "ui/toast"
 
 import { AssetCard, type Asset } from "@/components/assets/asset-card"
 import { TypeFilter } from "@/components/assets/type-filter"

@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { DollarSignIcon, ServerIcon, UsersIcon, ZapIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
-import { queryApi } from "~orpc/query"
+
+import { queryApi } from "rpc/query"
 
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

@@ -1,6 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai"
-import { generateText } from "ai"
 import { Result } from "better-result"
+
+import { generateText } from "ai"
 
 import {
   AIProviderError,
@@ -12,7 +13,7 @@ import {
   type ExecutionRequest,
   type ExecutionResponse,
   type ProviderConfig,
-} from "./base"
+} from "./base.ts"
 
 export class OpenAIProvider implements AIProvider {
   private provider: ReturnType<typeof createOpenAI>

@@ -2,8 +2,9 @@
 
 import { Search as SearchIcon, X as XIcon } from "lucide-react"
 import { useState, type FormEvent } from "react"
-import { Button } from "~ui/button"
-import { Input } from "~ui/input"
+
+import { Button } from "ui/button"
+import { Input } from "ui/input"
 
 interface SearchBarProps {
   onSearch: (query: string) => void

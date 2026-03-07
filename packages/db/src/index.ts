@@ -1,9 +1,10 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
-import { appEnv, databaseUrl } from "~env/hono"
-import { logger } from "~logger"
 
-import * as schema from "./schema"
+import { appEnv, databaseUrl } from "env/hono"
+import { logger } from "logger"
+
+import * as schema from "./schema/index.ts"
 
 const pool = new Pool({
   connectionString: databaseUrl,

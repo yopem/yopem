@@ -1,12 +1,13 @@
 import { eq, sql } from "drizzle-orm"
-import { db } from "~db"
+
+import { db } from "db"
 import {
   creditTransactionsTable,
   polarPaymentsTable,
   userCreditsTable,
-} from "~db/schema"
-import { logger } from "~logger"
-import { createCustomId } from "~shared/custom-id"
+} from "db/schema"
+import { logger } from "logger"
+import { createCustomId } from "shared/custom-id"
 
 interface RefundCreditsParams {
   polarPaymentId: string

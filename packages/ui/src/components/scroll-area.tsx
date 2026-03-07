@@ -1,7 +1,8 @@
 "use client"
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
-import { cn } from "~ui"
+
+import { cn } from "ui"
 
 function ScrollArea({
   className,

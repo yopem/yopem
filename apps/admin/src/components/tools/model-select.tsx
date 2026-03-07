@@ -7,7 +7,7 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxPopup,
-} from "~ui/combobox"
+} from "ui/combobox"
 
 interface ModelSelectProps {
   id?: string

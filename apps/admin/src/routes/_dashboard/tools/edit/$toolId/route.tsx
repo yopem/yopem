@@ -2,9 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
-import { queryApi } from "~orpc/query"
-import { Separator } from "~ui/separator"
-import { toastManager } from "~ui/toast"
+
+import { queryApi } from "rpc/query"
+import { Separator } from "ui/separator"
+import { toastManager } from "ui/toast"
 
 import FeatureBuilderHeader from "@/components/tools/feature-builder-header"
 import FeatureBuilderTabs from "@/components/tools/feature-builder-tabs"

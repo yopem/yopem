@@ -1,5 +1,6 @@
 import { PencilIcon, StarIcon, XIcon } from "lucide-react"
-import { Button } from "~ui/button"
+
+import { Button } from "ui/button"
 
 import ToolRatingInput from "@/components/marketplace/tool-rating-input"
 

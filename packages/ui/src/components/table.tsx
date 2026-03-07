@@ -1,6 +1,6 @@
 import type * as React from "react"
 
-import { cn } from "~ui"
+import { cn } from "ui"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (

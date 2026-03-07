@@ -1,7 +1,8 @@
 "use client"
 
 import { CreditCardIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
+
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 
 interface CreditStatsProps {
   balance: number

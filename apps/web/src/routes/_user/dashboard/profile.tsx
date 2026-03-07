@@ -2,12 +2,13 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { SaveIcon, UserIcon } from "lucide-react"
 import { useEffect, useEffectEvent, useState, type ChangeEvent } from "react"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
-import { Input } from "~ui/input"
-import { Label } from "~ui/label"
-import { toastManager } from "~ui/toast"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { toastManager } from "ui/toast"
 
 export const Route = createFileRoute("/_user/dashboard/profile")({
   component: ProfilePage,

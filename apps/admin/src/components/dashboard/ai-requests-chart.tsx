@@ -2,9 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useState, lazy, Suspense } from "react"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader } from "~ui/card"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader } from "ui/card"
 
 const ResponsiveContainer = lazy(() =>
   import("recharts").then((m) => ({ default: m.ResponsiveContainer })),

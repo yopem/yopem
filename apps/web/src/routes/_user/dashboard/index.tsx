@@ -3,10 +3,11 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import { CreditCardIcon, DollarSignIcon, PlayIcon } from "lucide-react"
 import { memo } from "react"
-import { queryApi } from "~orpc/query"
-import { formatDateOnly } from "~shared/format-date"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
+
+import { queryApi } from "rpc/query"
+import { formatDateOnly } from "shared/format-date"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 
 export const Route = createFileRoute("/_user/dashboard/")({
   component: DashboardPage,

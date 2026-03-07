@@ -1,5 +1,6 @@
 import { type ReactNode } from "react"
-import { Card } from "~ui/card"
+
+import { Card } from "ui/card"
 
 import Link from "@/components/link"
 

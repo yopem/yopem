@@ -11,8 +11,9 @@ import {
   ZapIcon,
 } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
-import { queryApi } from "~orpc/query"
-import { Button } from "~ui/button"
+
+import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
 
 import ActivityFeed from "@/components/dashboard/activity-feed"
 import AiRequestsChart from "@/components/dashboard/ai-requests-chart"

@@ -3,7 +3,8 @@
 import { Image } from "@unpic/react"
 import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
-import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "~ui/menu"
+
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 
 import { logoutFn } from "@/lib/auth"
 

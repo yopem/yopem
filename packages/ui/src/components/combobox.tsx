@@ -3,7 +3,8 @@
 import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox"
 import { ChevronsUpDownIcon, XIcon } from "lucide-react"
 import * as React from "react"
-import { cn } from "~ui"
+
+import { cn } from "ui"
 
 import { Input } from "./input"
 import { ScrollArea } from "./scroll-area"

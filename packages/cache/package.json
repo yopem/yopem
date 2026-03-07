@@ -1,5 +1,5 @@
 {
-  "name": "~cache",
+  "name": "cache",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,9 +21,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "env": "workspace:*",
     "ioredis": "catalog:",
-    "~env": "workspace:*",
-    "~logger": "workspace:*"
+    "logger": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

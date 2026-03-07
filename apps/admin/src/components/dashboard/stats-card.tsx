@@ -4,8 +4,9 @@ import {
   Minus as MinusIcon,
 } from "lucide-react"
 import { type ReactNode } from "react"
-import { Card } from "~ui/card"
-import { Skeleton } from "~ui/skeleton"
+
+import { Card } from "ui/card"
+import { Skeleton } from "ui/skeleton"
 
 interface StatsCardChange {
   value: string

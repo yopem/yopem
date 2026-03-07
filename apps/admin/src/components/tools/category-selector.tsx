@@ -2,10 +2,11 @@
 
 import { XIcon } from "lucide-react"
 import { useState } from "react"
-import { Badge } from "~ui/badge"
-import { Button } from "~ui/button"
-import { Checkbox } from "~ui/checkbox"
-import { Input } from "~ui/input"
+
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { Input } from "ui/input"
 
 interface Category {
   id: string

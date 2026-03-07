@@ -1,6 +1,6 @@
-import { formatError, logger } from "~logger"
+import { formatError, logger } from "logger"
 
-import { createORPCClientFromLink, createORPCLink } from "./shared"
+import { createORPCClientFromLink, createORPCLink } from "./shared.ts"
 
 const createServerFetchWithCookies = () => {
   return async (

@@ -11,17 +11,76 @@
   "experimentalTailwindcss": {
     "functions": ["cn", "clsx", "cva"]
   },
-  "experimentalSortImports": {
+  "experimentalSortPackageJson": true,
+  "ignorePatterns": ["node_modules", ".next/", "dist", "build", "migrations/"],
+  "sortImports": {
+    "newlinesBetween": true,
+    "customGroups": [
+      {
+        "groupName": "value-workspace",
+        "elementNamePattern": [
+          "ui",
+          "ui/**",
+          "auth",
+          "auth/**",
+          "db",
+          "db/**",
+          "env",
+          "env/**",
+          "logger",
+          "logger/**",
+          "rpc",
+          "rpc/**",
+          "shared",
+          "shared/**",
+          "cache",
+          "cache/**",
+          "ai",
+          "ai/**",
+          "payments",
+          "payments/**",
+          "storage",
+          "storage/**"
+        ]
+      },
+      {
+        "groupName": "type-workspace",
+        "elementNamePattern": [
+          "ui",
+          "ui/**",
+          "auth",
+          "auth/**",
+          "db",
+          "db/**",
+          "env",
+          "env/**",
+          "logger",
+          "logger/**",
+          "rpc",
+          "rpc/**",
+          "shared",
+          "shared/**",
+          "cache",
+          "cache/**",
+          "ai",
+          "ai/**",
+          "payments",
+          "payments/**",
+          "storage",
+          "storage/**"
+        ]
+      }
+    ],
     "groups": [
       "type-import",
       ["value-builtin", "value-external"],
+      "type-workspace",
+      "value-workspace",
       "type-internal",
       "value-internal",
       ["type-parent", "type-sibling", "type-index"],
       ["value-parent", "value-sibling", "value-index"],
       "unknown"
     ]
-  },
-  "experimentalSortPackageJson": true,
-  "ignorePatterns": ["node_modules", ".next/", "dist", "build", "migrations/"]
+  }
 }

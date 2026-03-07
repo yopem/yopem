@@ -2,10 +2,11 @@
 
 import { LoaderCircleIcon, XIcon } from "lucide-react"
 import { useEffect, useReducer, useRef } from "react"
-import { Button } from "~ui/button"
-import { Field, FieldLabel } from "~ui/field"
-import { ScrollArea } from "~ui/scroll-area"
-import ToolInputField, { type ToolInputVariable } from "~ui/tool-input-field"
+
+import { Button } from "ui/button"
+import { Field, FieldLabel } from "ui/field"
+import { ScrollArea } from "ui/scroll-area"
+import ToolInputField, { type ToolInputVariable } from "ui/tool-input-field"
 
 interface ToolPreviewSheetProps {
   open: boolean

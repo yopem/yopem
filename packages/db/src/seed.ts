@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
-import { env } from "~env"
-import { formatError, logger } from "~logger"
-import { createCustomId } from "~shared/custom-id"
+
+import { env } from "env"
+import { formatError, logger } from "logger"
+import { createCustomId } from "shared/custom-id"
 
 import {
   categoriesTable,
@@ -10,7 +11,7 @@ import {
   toolCategoriesTable,
   toolsTable,
   toolTagsTable,
-} from "./schema"
+} from "./schema/index.ts"
 
 const databaseUrl = env.DATABASE_URL
 if (!databaseUrl) {

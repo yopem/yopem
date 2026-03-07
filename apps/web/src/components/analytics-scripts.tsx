@@ -1,5 +1,6 @@
 import { useEffect } from "react"
-import { gaMeasurementId, umamiTrackingId } from "~env/client"
+
+import { gaMeasurementId, umamiTrackingId } from "env/client"
 
 const AnalyticsScripts = () => {
   useEffect(() => {

@@ -3,11 +3,12 @@
 import type { UseMutationResult } from "@tanstack/react-query"
 
 import { ZapIcon } from "lucide-react"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
-import { Input } from "~ui/input"
-import { Label } from "~ui/label"
-import { Switch } from "~ui/switch"
+
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { Switch } from "ui/switch"
 
 interface AutoTopupState {
   enabled: boolean

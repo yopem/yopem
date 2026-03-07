@@ -1,5 +1,5 @@
 {
-  "name": "~db",
+  "name": "db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -56,12 +56,12 @@
   "dependencies": {
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",
+    "env": "workspace:*",
+    "logger": "workspace:*",
     "pg": "catalog:",
+    "shared": "workspace:*",
     "transliteration": "catalog:",
-    "zod": "catalog:",
-    "~env": "workspace:*",
-    "~logger": "workspace:*",
-    "~shared": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

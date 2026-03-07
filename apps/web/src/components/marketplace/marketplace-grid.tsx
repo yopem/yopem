@@ -4,8 +4,9 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
 import { lazy, Suspense } from "react"
 import { Shimmer } from "shimmer-from-structure"
-import { clientApi } from "~orpc/client"
-import { Button } from "~ui/button"
+
+import { clientApi } from "rpc/client"
+import { Button } from "ui/button"
 
 import SearchBar from "@/components/marketplace/search-bar"
 

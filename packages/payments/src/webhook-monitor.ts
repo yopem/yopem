@@ -1,8 +1,8 @@
 import type { Redis } from "ioredis"
 
-import { formatError, logger } from "~logger"
+import { formatError, logger } from "logger"
 
-import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics"
+import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics.ts"
 
 interface WebhookMonitorMetrics {
   eventType: string

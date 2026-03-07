@@ -8,8 +8,9 @@ import {
   PencilIcon,
   Trash2Icon,
 } from "lucide-react"
-import { Button } from "~ui/button"
-import { Menu, MenuGroup, MenuItem, MenuPopup, MenuTrigger } from "~ui/menu"
+
+import { Button } from "ui/button"
+import { Menu, MenuGroup, MenuItem, MenuPopup, MenuTrigger } from "ui/menu"
 
 import Link from "@/components/link"
 

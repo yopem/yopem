@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { queryApi } from "~orpc/query"
+
+import { queryApi } from "rpc/query"
 
 import AiRequestsChart from "@/components/dashboard/ai-requests-chart"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

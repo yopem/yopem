@@ -2,11 +2,12 @@
 
 import { StarIcon } from "lucide-react"
 import { useEffect, useReducer } from "react"
-import { logger } from "~logger"
-import { clientApi } from "~orpc/client"
-import { Button } from "~ui/button"
-import { Textarea } from "~ui/textarea"
-import { toastManager } from "~ui/toast"
+
+import { logger } from "logger"
+import { clientApi } from "rpc/client"
+import { Button } from "ui/button"
+import { Textarea } from "ui/textarea"
+import { toastManager } from "ui/toast"
 
 interface ToolRatingInputProps {
   slug: string

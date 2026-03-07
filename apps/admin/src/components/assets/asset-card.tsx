@@ -3,10 +3,11 @@
 import { Image } from "@unpic/react"
 import { ImageIcon, Trash2Icon } from "lucide-react"
 import { memo } from "react"
-import { formatDateOnly } from "~shared/format-date"
-import { Badge } from "~ui/badge"
-import { Button } from "~ui/button"
-import { Card, CardContent, CardHeader } from "~ui/card"
+
+import { formatDateOnly } from "shared/format-date"
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Card, CardContent, CardHeader } from "ui/card"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 

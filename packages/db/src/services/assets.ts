@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm"
 
-import { db } from "../index"
-import { adminSettingsTable, assetsTable } from "../schema"
+import { db } from "../index.ts"
+import { adminSettingsTable, assetsTable } from "../schema/index.ts"
 
 export const listAssets = async (input: {
   limit: number

@@ -6,7 +6,8 @@ import {
   RocketIcon,
   ZapIcon,
 } from "lucide-react"
-import { Badge } from "~ui/badge"
+
+import { Badge } from "ui/badge"
 
 import FeatureCard from "./feature-card"
 
