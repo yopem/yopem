@@ -1,8 +1,8 @@
-import type { SessionUser } from "@repo/auth/types"
+import type { SessionUser } from "~auth/types"
 
 import { Polar } from "@polar-sh/sdk"
-import { logger } from "@repo/logger"
 import { Hono } from "hono"
+import { logger } from "~logger"
 
 interface Env {
   Variables: {

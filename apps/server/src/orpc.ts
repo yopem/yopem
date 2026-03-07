@@ -1,9 +1,9 @@
-import type { SessionUser } from "@repo/auth/types"
+import type { SessionUser } from "~auth/types"
 
 import { ORPCError, os } from "@orpc/server"
-import { redisCache } from "@repo/cache"
-import { db } from "@repo/db"
-import { logger } from "@repo/logger"
+import { redisCache } from "~cache"
+import { db } from "~db"
+import { logger } from "~logger"
 
 export async function createRPCContext(opts: {
   headers: Headers
@@ -33,8 +33,8 @@ export async function createRPCContext(opts: {
 
     if (accessToken) {
       try {
-        const { authClient } = await import("@repo/auth/client")
-        const { subjects } = await import("@repo/auth/subjects")
+        const { authClient } = await import("~auth/client")
+        const { subjects } = await import("~auth/subjects")
 
         const verified = await authClient.verify(subjects, accessToken.value, {
           refresh: refreshToken?.value,

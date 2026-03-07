@@ -1,5 +1,5 @@
 {
-  "name": "@repo/db",
+  "name": "~db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -54,14 +54,14 @@
     "db:seed": "bun run with-env bun run src/seed.ts"
   },
   "dependencies": {
-    "@repo/env": "workspace:*",
-    "@repo/logger": "workspace:*",
-    "@repo/shared": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",
     "pg": "catalog:",
     "transliteration": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "~env": "workspace:*",
+    "~logger": "workspace:*",
+    "~shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react"
 
-import { QueryProvider } from "@repo/orpc/provider"
-import ThemeProvider from "@repo/ui/theme-provider"
-import { AnchoredToastProvider, ToastProvider } from "@repo/ui/toast"
+import { QueryProvider } from "~orpc/provider"
+import ThemeProvider from "~ui/theme-provider"
+import { AnchoredToastProvider, ToastProvider } from "~ui/toast"
 
 const Providers = ({ children }: { children: ReactNode }) => {
   return (

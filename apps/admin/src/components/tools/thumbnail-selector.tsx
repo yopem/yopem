@@ -1,9 +1,9 @@
 "use client"
 
-import { formatError, logger } from "@repo/logger"
-import { queryApi } from "@repo/orpc/query"
-import { Dialog, DialogPopup } from "@repo/ui/dialog"
 import { useCallback, useEffect, useReducer } from "react"
+import { formatError, logger } from "~logger"
+import { queryApi } from "~orpc/query"
+import { Dialog, DialogPopup } from "~ui/dialog"
 
 import AssetLibrary from "./asset-library"
 import ThumbnailDisplay from "./thumbnail-display"

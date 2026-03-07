@@ -2,12 +2,12 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
-import { formatDateOnly } from "@repo/shared/format-date"
-import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
-import { Input } from "@repo/ui/input"
-import { Label } from "@repo/ui/label"
 import { ClockIcon, ExternalLinkIcon } from "lucide-react"
+import { formatDateOnly } from "~shared/format-date"
+import { Button } from "~ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
+import { Input } from "~ui/input"
+import { Label } from "~ui/label"
 
 interface PendingCheckout {
   id: string

@@ -1,6 +1,6 @@
 import type { Redis } from "ioredis"
 
-import { formatError, logger } from "@repo/logger"
+import { formatError, logger } from "~logger"
 
 interface WebhookMetricsSummary {
   totalProcessed: number

@@ -1,8 +1,8 @@
-import { env } from "@repo/env"
-import { formatError, logger } from "@repo/logger"
-import { createCustomId } from "@repo/shared/custom-id"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
+import { env } from "~env"
+import { formatError, logger } from "~logger"
+import { createCustomId } from "~shared/custom-id"
 
 import {
   categoriesTable,

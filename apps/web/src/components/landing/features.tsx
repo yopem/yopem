@@ -1,4 +1,3 @@
-import { Badge } from "@repo/ui/badge"
 import {
   CheckCircleIcon,
   CreditCardIcon,
@@ -7,6 +6,7 @@ import {
   RocketIcon,
   ZapIcon,
 } from "lucide-react"
+import { Badge } from "~ui/badge"
 
 import FeatureCard from "./feature-card"
 

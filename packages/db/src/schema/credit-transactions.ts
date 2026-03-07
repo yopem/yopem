@@ -1,6 +1,6 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import { decimal, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { createCustomId } from "~shared/custom-id"
 
 export const creditTransactionTypeEnum = [
   "purchase",

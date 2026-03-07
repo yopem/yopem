@@ -1,9 +1,9 @@
-import { queryApi } from "@repo/orpc/query"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { BadgeCheckIcon, KeyIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
+import { queryApi } from "~orpc/query"
+import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
 
 import ActivityFeedItem from "@/components/dashboard/activity-feed-item"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

@@ -1,7 +1,7 @@
 "use client"
 
-import { clientApi } from "@repo/orpc/client"
 import { useState } from "react"
+import { clientApi } from "~orpc/client"
 
 import LoginButton from "@/components/auth/login-button"
 import ToolReviewsList from "@/components/marketplace/tool-reviews-list"

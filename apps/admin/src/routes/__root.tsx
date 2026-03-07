@@ -1,10 +1,3 @@
-import { siteTitle } from "@repo/env/client"
-import { appEnv } from "@repo/env/client"
-
-import "@/globals.css"
-import "@repo/ui/style.css"
-import { formatError, logger } from "@repo/logger"
-import { Button } from "@repo/ui/button"
 import {
   HeadContent,
   Outlet,
@@ -12,8 +5,15 @@ import {
   createRootRoute,
 } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
+
+import "@/globals.css"
+import "~ui/style.css"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
+import { siteTitle } from "~env/client"
+import { appEnv } from "~env/client"
+import { formatError, logger } from "~logger"
+import { Button } from "~ui/button"
 
 import Providers from "@/components/providers"
 

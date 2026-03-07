@@ -1,4 +1,4 @@
-import { formatError, logger } from "@repo/logger"
+import { formatError, logger } from "~logger"
 
 import { createORPCClientFromLink, createORPCLink } from "./shared"
 

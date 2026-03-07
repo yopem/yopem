@@ -1,4 +1,3 @@
-import { Badge } from "@repo/ui/badge"
 import {
   CalendarIcon,
   FolderIcon,
@@ -6,6 +5,7 @@ import {
   CreditCardIcon,
   StarIcon,
 } from "lucide-react"
+import { Badge } from "~ui/badge"
 
 interface ToolInfoProps {
   tool: {

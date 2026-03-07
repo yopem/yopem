@@ -1,7 +1,6 @@
 "use client"
 
 import { Toast } from "@base-ui/react/toast"
-import { cn } from "@repo/ui"
 import {
   CircleAlertIcon,
   CircleCheckIcon,
@@ -9,6 +8,7 @@ import {
   LoaderCircleIcon,
   TriangleAlertIcon,
 } from "lucide-react"
+import { cn } from "~ui"
 
 import { buttonVariants } from "./button"
 

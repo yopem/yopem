@@ -1,4 +1,4 @@
-import Logo from "@repo/ui/logo"
+import Logo from "~ui/logo"
 
 import Link from "@/components/link"
 

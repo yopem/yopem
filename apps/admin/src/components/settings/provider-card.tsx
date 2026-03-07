@@ -1,13 +1,7 @@
 "use client"
 
-import type { ApiKeyConfig } from "@repo/shared/api-keys-schema"
+import type { ApiKeyConfig } from "~shared/api-keys-schema"
 
-import { Badge } from "@repo/ui/badge"
-import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader } from "@repo/ui/card"
-import { Input } from "@repo/ui/input"
-import { Label } from "@repo/ui/label"
-import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@repo/ui/menu"
 import {
   BotIcon,
   EyeIcon,
@@ -16,6 +10,12 @@ import {
   MoreVerticalIcon,
 } from "lucide-react"
 import { memo, type ReactNode } from "react"
+import { Badge } from "~ui/badge"
+import { Button } from "~ui/button"
+import { Card, CardContent, CardHeader } from "~ui/card"
+import { Input } from "~ui/input"
+import { Label } from "~ui/label"
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "~ui/menu"
 
 const providerIcons: Record<string, ReactNode> = {
   openai: <BotIcon className="text-background" />,

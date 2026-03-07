@@ -1,11 +1,11 @@
+import { z } from "zod"
 import {
   createCategory,
   deleteCategory,
   listCategories,
   updateCategory,
-} from "@repo/db/services/categories"
-import { adminProcedure, publicProcedure } from "@repo/server/orpc"
-import { z } from "zod"
+} from "~db/services/categories"
+import { adminProcedure, publicProcedure } from "~server/orpc"
 
 export const categoriesRouter = {
   list: publicProcedure.handler(() => {

@@ -1,5 +1,5 @@
 {
-  "name": "@repo/shared",
+  "name": "~shared",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -33,12 +33,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/logger": "workspace:*",
     "better-result": "catalog:",
     "dayjs": "catalog:",
     "nanoid": "catalog:",
     "transliteration": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "~logger": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
@@ -49,10 +49,10 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@repo/env": "workspace:*"
+    "~env": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@repo/env": {
+    "~env": {
       "optional": true
     }
   }

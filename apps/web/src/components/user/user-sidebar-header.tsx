@@ -1,5 +1,5 @@
-import Logo from "@repo/ui/logo"
 import { Link } from "@tanstack/react-router"
+import Logo from "~ui/logo"
 
 interface UserSidebarHeaderProps {
   title: string

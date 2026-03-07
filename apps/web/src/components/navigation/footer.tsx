@@ -1,7 +1,7 @@
 "use client"
-import Logo from "@repo/ui/logo"
-import ThemeSwitcher from "@repo/ui/theme-switcher"
 import { Link } from "@tanstack/react-router"
+import Logo from "~ui/logo"
+import ThemeSwitcher from "~ui/theme-switcher"
 
 const Footer = () => {
   return (

@@ -3,12 +3,8 @@ import type {
   ApiKeyConfig,
   DeleteApiKeyInput,
   UpdateApiKeyInput,
-} from "@repo/shared/api-keys-schema"
+} from "~shared/api-keys-schema"
 
-import { formatError, logger } from "@repo/logger"
-import { queryApi } from "@repo/orpc/query"
-import { formatDateTime } from "@repo/shared/format-date"
-import { toastManager } from "@repo/ui/toast"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import {
@@ -19,6 +15,10 @@ import {
 } from "lucide-react"
 import { useCallback, useEffect, useReducer, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
+import { formatError, logger } from "~logger"
+import { queryApi } from "~orpc/query"
+import { formatDateTime } from "~shared/format-date"
+import { toastManager } from "~ui/toast"
 
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

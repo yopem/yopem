@@ -1,4 +1,3 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import {
   integer,
   pgTable,
@@ -7,6 +6,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { createCustomId } from "~shared/custom-id"
 
 export const toolReviewsTable = pgTable(
   "tool_reviews",

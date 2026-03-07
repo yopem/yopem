@@ -2,11 +2,11 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
-import { Button } from "@repo/ui/button"
-import { Dialog, DialogPopup } from "@repo/ui/dialog"
-import { Field, FieldLabel } from "@repo/ui/field"
-import { Input } from "@repo/ui/input"
-import { Textarea } from "@repo/ui/textarea"
+import { Button } from "~ui/button"
+import { Dialog, DialogPopup } from "~ui/dialog"
+import { Field, FieldLabel } from "~ui/field"
+import { Input } from "~ui/input"
+import { Textarea } from "~ui/textarea"
 
 interface CategoryDialogProps {
   open: boolean

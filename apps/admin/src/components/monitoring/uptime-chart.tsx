@@ -1,10 +1,10 @@
 "use client"
 
-import { queryApi } from "@repo/orpc/query"
-import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { useState, lazy, Suspense } from "react"
+import { queryApi } from "~orpc/query"
+import { Button } from "~ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
 
 const ResponsiveContainer = lazy(() =>
   import("recharts").then((m) => ({ default: m.ResponsiveContainer })),

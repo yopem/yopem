@@ -1,5 +1,5 @@
-import { getR2Storage } from "@repo/storage"
 import { Result, TaggedError } from "better-result"
+import { getR2Storage } from "~storage"
 
 import type { AIProvider, ExecutionResponse } from "./providers/base"
 import type { ApiKeyProvider } from "./providers/base"

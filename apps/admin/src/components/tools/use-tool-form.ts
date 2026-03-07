@@ -1,18 +1,18 @@
 "use client"
 
-import type { ApiKeyConfig } from "@repo/shared/api-keys-schema"
+import type { ApiKeyConfig } from "~shared/api-keys-schema"
 
-import { insertToolSchema, type SelectTool } from "@repo/db/schema"
-import { queryApi } from "@repo/orpc/query"
-import {
-  getProviderMismatchMessage,
-  validateModelProviderMatch,
-} from "@repo/shared/model-provider-validation"
-import { toastManager } from "@repo/ui/toast"
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react"
 import { z } from "zod"
+import { insertToolSchema, type SelectTool } from "~db/schema"
+import { queryApi } from "~orpc/query"
+import {
+  getProviderMismatchMessage,
+  validateModelProviderMatch,
+} from "~shared/model-provider-validation"
+import { toastManager } from "~ui/toast"
 
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 

@@ -1,7 +1,7 @@
-import { queryApi } from "@repo/orpc/query"
-import { Skeleton } from "@repo/ui/skeleton"
 import { createFileRoute } from "@tanstack/react-router"
 import { Suspense } from "react"
+import { queryApi } from "~orpc/query"
+import { Skeleton } from "~ui/skeleton"
 
 import MarketplaceContent from "@/components/marketplace/marketplace-content"
 

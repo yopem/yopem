@@ -1,16 +1,10 @@
 "use client"
 
-import {
-  Menu,
-  MenuItem,
-  MenuPopup,
-  MenuSeparator,
-  MenuTrigger,
-} from "@repo/ui/menu"
 import { Link } from "@tanstack/react-router"
 import { Image } from "@unpic/react"
 import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "~ui/menu"
 
 import { logoutFn } from "@/lib/auth"
 

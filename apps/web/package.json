@@ -1,5 +1,5 @@
 {
-  "name": "@repo/web",
+  "name": "~web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,14 +15,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@repo/auth": "workspace:*",
-    "@repo/cache": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/env": "workspace:*",
-    "@repo/logger": "workspace:*",
-    "@repo/orpc": "workspace:*",
-    "@repo/shared": "workspace:*",
-    "@repo/ui": "workspace:*",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
@@ -31,7 +23,15 @@
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shimmer-from-structure": "catalog:"
+    "shimmer-from-structure": "catalog:",
+    "~auth": "workspace:*",
+    "~cache": "workspace:*",
+    "~db": "workspace:*",
+    "~env": "workspace:*",
+    "~logger": "workspace:*",
+    "~orpc": "workspace:*",
+    "~shared": "workspace:*",
+    "~ui": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

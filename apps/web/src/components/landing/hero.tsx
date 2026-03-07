@@ -1,8 +1,8 @@
-import type { SessionUser } from "@repo/auth/types"
+import type { SessionUser } from "~auth/types"
 
-import { Button } from "@repo/ui/button"
 import { Link } from "@tanstack/react-router"
 import { BarChart3Icon, BotIcon, ImageIcon, PlayCircleIcon } from "lucide-react"
+import { Button } from "~ui/button"
 
 import CTAButton from "@/components/navigation/cta-button"
 

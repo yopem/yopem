@@ -1,12 +1,12 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
 import {
   CheckCircleIcon,
   FileTextIcon,
   LoaderCircleIcon,
   PlayIcon,
 } from "lucide-react"
+import { Button } from "~ui/button"
 
 interface BreadcrumbItem {
   label: string

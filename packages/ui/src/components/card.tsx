@@ -1,5 +1,5 @@
-import { cn } from "@repo/ui"
 import * as React from "react"
+import { cn } from "~ui"
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

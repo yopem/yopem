@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
 import { Image } from "@unpic/react"
 import { Image as ImageIcon, XIcon } from "lucide-react"
+import { Button } from "~ui/button"
 
 interface Asset {
   id: string

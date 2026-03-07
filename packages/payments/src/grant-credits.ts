@@ -1,12 +1,12 @@
-import { db } from "@repo/db"
+import { eq, sql } from "drizzle-orm"
+import { db } from "~db"
 import {
   creditTransactionsTable,
   polarPaymentsTable,
   userCreditsTable,
-} from "@repo/db/schema"
-import { logger } from "@repo/logger"
-import { createCustomId } from "@repo/shared/custom-id"
-import { eq, sql } from "drizzle-orm"
+} from "~db/schema"
+import { logger } from "~logger"
+import { createCustomId } from "~shared/custom-id"
 
 interface GrantCreditsParams {
   userId: string

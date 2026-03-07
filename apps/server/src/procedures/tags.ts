@@ -1,12 +1,7 @@
-import { insertTagSchema } from "@repo/db/schema"
-import {
-  createTag,
-  deleteTag,
-  listTags,
-  updateTag,
-} from "@repo/db/services/tags"
-import { adminProcedure, publicProcedure } from "@repo/server/orpc"
 import { z } from "zod"
+import { insertTagSchema } from "~db/schema"
+import { createTag, deleteTag, listTags, updateTag } from "~db/services/tags"
+import { adminProcedure, publicProcedure } from "~server/orpc"
 
 export const tagsRouter = {
   list: publicProcedure.handler(() => {

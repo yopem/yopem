@@ -2,10 +2,10 @@
 
 import type { RefObject } from "react"
 
-import { Button } from "@repo/ui/button"
-import { Label } from "@repo/ui/label"
-import { Textarea } from "@repo/ui/textarea"
 import { HistoryIcon } from "lucide-react"
+import { Button } from "~ui/button"
+import { Label } from "~ui/label"
+import { Textarea } from "~ui/textarea"
 
 interface VariableInfo {
   name: string

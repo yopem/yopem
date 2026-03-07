@@ -1,20 +1,19 @@
-import type { ApiKeyConfig } from "@repo/shared/api-keys-schema"
+import type { ApiKeyConfig } from "~shared/api-keys-schema"
 
 import { ORPCError } from "@orpc/server"
-import { executeAITool } from "@repo/ai/executor"
+import { Result } from "better-result"
+import { z } from "zod"
+import { executeAITool } from "~ai/executor"
 import {
   ContextLengthError,
   InvalidKeyError,
   RateLimitError,
-} from "@repo/ai/providers"
-import { insertToolSchema, updateToolSchema } from "@repo/db/schema"
-import { getSetting } from "@repo/db/services/admin"
-import { getAssetById } from "@repo/db/services/assets"
-import {
-  listCategories,
-  validateCategoryIds,
-} from "@repo/db/services/categories"
-import { listTags, validateTagIds } from "@repo/db/services/tags"
+} from "~ai/providers"
+import { insertToolSchema, updateToolSchema } from "~db/schema"
+import { getSetting } from "~db/services/admin"
+import { getAssetById } from "~db/services/assets"
+import { listCategories, validateCategoryIds } from "~db/services/categories"
+import { listTags, validateTagIds } from "~db/services/tags"
 import {
   createTool,
   deleteTool,
@@ -33,22 +32,20 @@ import {
   updateToolReview,
   updateToolStatus,
   upsertToolReview,
-} from "@repo/db/services/tools"
+} from "~db/services/tools"
 import {
   deductCreditsForRun,
   getUserCredits,
   initUserCredits,
-} from "@repo/db/services/user"
-import { checkAndTriggerAutoTopup } from "@repo/payments/auto-topup"
+} from "~db/services/user"
+import { checkAndTriggerAutoTopup } from "~payments/auto-topup"
 import {
   adminProcedure,
   protectedProcedure,
   publicProcedure,
-} from "@repo/server/orpc"
-import { decryptApiKey } from "@repo/shared/crypto"
-import { createCustomId } from "@repo/shared/custom-id"
-import { Result } from "better-result"
-import { z } from "zod"
+} from "~server/orpc"
+import { decryptApiKey } from "~shared/crypto"
+import { createCustomId } from "~shared/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 

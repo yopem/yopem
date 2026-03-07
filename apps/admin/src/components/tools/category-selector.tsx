@@ -1,11 +1,11 @@
 "use client"
 
-import { Badge } from "@repo/ui/badge"
-import { Button } from "@repo/ui/button"
-import { Checkbox } from "@repo/ui/checkbox"
-import { Input } from "@repo/ui/input"
 import { XIcon } from "lucide-react"
 import { useState } from "react"
+import { Badge } from "~ui/badge"
+import { Button } from "~ui/button"
+import { Checkbox } from "~ui/checkbox"
+import { Input } from "~ui/input"
 
 interface Category {
   id: string

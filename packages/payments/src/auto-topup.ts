@@ -1,15 +1,10 @@
 import { Polar } from "@polar-sh/sdk"
-import { db } from "@repo/db"
-import { userCreditsTable, userSettingsTable } from "@repo/db/schema"
-import {
-  appEnv,
-  polarAccessToken,
-  polarProductId,
-  siteDomain,
-} from "@repo/env/hono"
-import { formatError, logger } from "@repo/logger"
-import { createCustomId } from "@repo/shared/custom-id"
 import { eq } from "drizzle-orm"
+import { db } from "~db"
+import { userCreditsTable, userSettingsTable } from "~db/schema"
+import { appEnv, polarAccessToken, polarProductId, siteDomain } from "~env/hono"
+import { formatError, logger } from "~logger"
+import { createCustomId } from "~shared/custom-id"
 
 export async function checkAndTriggerAutoTopup(
   userId: string,

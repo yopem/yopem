@@ -1,13 +1,11 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
-import { Field, FieldLabel } from "@repo/ui/field"
-import { ScrollArea } from "@repo/ui/scroll-area"
-import ToolInputField, {
-  type ToolInputVariable,
-} from "@repo/ui/tool-input-field"
 import { LoaderCircleIcon, XIcon } from "lucide-react"
 import { useEffect, useReducer, useRef } from "react"
+import { Button } from "~ui/button"
+import { Field, FieldLabel } from "~ui/field"
+import { ScrollArea } from "~ui/scroll-area"
+import ToolInputField, { type ToolInputVariable } from "~ui/tool-input-field"
 
 interface ToolPreviewSheetProps {
   open: boolean

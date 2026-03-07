@@ -5,7 +5,7 @@ FROM base AS pruner
 WORKDIR /app
 RUN bun add -g turbo@^2
 COPY . .
-RUN turbo prune @repo/web --docker
+RUN turbo prune ~web --docker
 
 FROM base AS deps
 WORKDIR /app
@@ -39,7 +39,7 @@ ARG PUBLIC_YOUTUBE_USERNAME
 ARG PUBLIC_ADMIN_URL
 ARG PUBLIC_API_URL
 
-RUN bun x turbo run build --filter=@repo/web
+RUN bun x turbo run build --filter=~web
 
 FROM base AS runner
 WORKDIR /app

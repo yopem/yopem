@@ -1,6 +1,6 @@
 "use client"
 
-import { Slider } from "@repo/ui/slider"
+import { Slider } from "~ui/slider"
 
 interface RangeSliderProps {
   label: string

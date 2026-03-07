@@ -1,5 +1,5 @@
-import { Skeleton } from "@repo/ui/skeleton"
 import { Outlet, createFileRoute } from "@tanstack/react-router"
+import { Skeleton } from "~ui/skeleton"
 
 export const Route = createFileRoute("/_user")({
   component: UserLayout,

@@ -1,10 +1,10 @@
-import { queryApi } from "@repo/orpc/query"
-import { Button } from "@repo/ui/button"
-import { toastManager } from "@repo/ui/toast"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
+import { queryApi } from "~orpc/query"
+import { Button } from "~ui/button"
+import { toastManager } from "~ui/toast"
 
 import Link from "@/components/link"
 import DeleteDialog from "@/components/tools/delete-dialog"

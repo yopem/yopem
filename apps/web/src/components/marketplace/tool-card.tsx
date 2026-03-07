@@ -1,10 +1,10 @@
 "use client"
 
-import { Card } from "@repo/ui/card"
 import { Link } from "@tanstack/react-router"
 import { Image } from "@unpic/react"
 import { Image as ImageIcon, StarIcon } from "lucide-react"
 import { useState } from "react"
+import { Card } from "~ui/card"
 
 export interface ToolCardProps {
   slug: string

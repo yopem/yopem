@@ -1,12 +1,12 @@
 "use client"
 
-import { formatDateOnly } from "@repo/shared/format-date"
-import { Badge } from "@repo/ui/badge"
-import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader } from "@repo/ui/card"
 import { Image } from "@unpic/react"
 import { ImageIcon, Trash2Icon } from "lucide-react"
 import { memo } from "react"
+import { formatDateOnly } from "~shared/format-date"
+import { Badge } from "~ui/badge"
+import { Button } from "~ui/button"
+import { Card, CardContent, CardHeader } from "~ui/card"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 

@@ -1,8 +1,8 @@
 import { serve } from "@hono/node-server"
-import { logger as pinoLogger } from "@repo/logger"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
+import { logger as pinoLogger } from "~logger"
 
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"

@@ -1,4 +1,3 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import {
   boolean,
   decimal,
@@ -9,6 +8,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 import { z } from "zod"
+import { createCustomId } from "~shared/custom-id"
 
 export const toolStatusEnum = ["draft", "active", "archived"] as const
 export type ToolStatus = (typeof toolStatusEnum)[number]

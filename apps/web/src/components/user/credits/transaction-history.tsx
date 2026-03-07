@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateOnly } from "@repo/shared/format-date"
+import { formatDateOnly } from "~shared/format-date"
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/table"
+} from "~ui/table"
 
 interface Transaction {
   id: string

@@ -1,5 +1,5 @@
-import { Card } from "@repo/ui/card"
 import { type ReactNode } from "react"
+import { Card } from "~ui/card"
 
 import Link from "@/components/link"
 

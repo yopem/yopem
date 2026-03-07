@@ -1,6 +1,8 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
+import { Image } from "@unpic/react"
+import { ImageIcon, XIcon } from "lucide-react"
+import { Button } from "~ui/button"
 import {
   Dialog,
   DialogBackdrop,
@@ -8,9 +10,7 @@ import {
   DialogHeader,
   DialogPanel,
   DialogPopup,
-} from "@repo/ui/dialog"
-import { Image } from "@unpic/react"
-import { ImageIcon, XIcon } from "lucide-react"
+} from "~ui/dialog"
 
 import type { Asset } from "./asset-card"
 

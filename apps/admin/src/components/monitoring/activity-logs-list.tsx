@@ -1,21 +1,21 @@
 "use client"
 
-import { queryApi } from "@repo/orpc/query"
-import { formatDateTime } from "@repo/shared/format-date"
-import { Badge } from "@repo/ui/badge"
-import { Button } from "@repo/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
+import { useQuery } from "@tanstack/react-query"
+import { ChevronLeftIcon, ChevronRightIcon, FilterIcon } from "lucide-react"
+import { useState } from "react"
+import { Shimmer } from "shimmer-from-structure"
+import { queryApi } from "~orpc/query"
+import { formatDateTime } from "~shared/format-date"
+import { Badge } from "~ui/badge"
+import { Button } from "~ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~ui/card"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/select"
-import { useQuery } from "@tanstack/react-query"
-import { ChevronLeftIcon, ChevronRightIcon, FilterIcon } from "lucide-react"
-import { useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
+} from "~ui/select"
 
 const severityColors: Record<
   string,

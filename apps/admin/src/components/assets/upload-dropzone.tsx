@@ -1,9 +1,9 @@
 "use client"
 
-import { Card, CardContent } from "@repo/ui/card"
-import { toastManager } from "@repo/ui/toast"
 import { UploadIcon } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
+import { Card, CardContent } from "~ui/card"
+import { toastManager } from "~ui/toast"
 
 interface UploadDropzoneProps {
   onUpload: (file: File) => void

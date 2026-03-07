@@ -2,9 +2,9 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
-import { formatDateOnly } from "@repo/shared/format-date"
-import { Button } from "@repo/ui/button"
-import { Checkbox } from "@repo/ui/checkbox"
+import { formatDateOnly } from "~shared/format-date"
+import { Button } from "~ui/button"
+import { Checkbox } from "~ui/checkbox"
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/table"
+} from "~ui/table"
 
 import Link from "@/components/link"
 

@@ -1,5 +1,5 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import { desc, eq, sql } from "drizzle-orm"
+import { createCustomId } from "~shared/custom-id"
 
 import type { InsertUserSettings } from "../schema/user-settings"
 

@@ -5,7 +5,7 @@ FROM base AS pruner
 WORKDIR /app
 RUN bun add -g turbo@^2
 COPY . .
-RUN turbo prune @repo/server --docker
+RUN turbo prune ~server --docker
 
 FROM base AS builder
 WORKDIR /app

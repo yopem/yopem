@@ -1,23 +1,23 @@
 import { ORPCError } from "@orpc/server"
-import * as userService from "@repo/db/services/user"
-import { formatError, logger } from "@repo/logger"
+import { Result } from "better-result"
+import { z } from "zod"
+import * as userService from "~db/services/user"
+import { formatError, logger } from "~logger"
 import {
   MAX_TOPUP_AMOUNT,
   MIN_TOPUP_AMOUNT,
-} from "@repo/payments/credit-calculation"
-import { adminProcedure, protectedProcedure } from "@repo/server/orpc"
-import { checkRateLimit, RATE_LIMITS } from "@repo/server/rate-limit"
+} from "~payments/credit-calculation"
+import { adminProcedure, protectedProcedure } from "~server/orpc"
+import { checkRateLimit, RATE_LIMITS } from "~server/rate-limit"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "@repo/shared/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "@repo/shared/crypto"
-import { createCustomId } from "@repo/shared/custom-id"
-import { Result } from "better-result"
-import { z } from "zod"
+} from "~shared/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "~shared/crypto"
+import { createCustomId } from "~shared/custom-id"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {

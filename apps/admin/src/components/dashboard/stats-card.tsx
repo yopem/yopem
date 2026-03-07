@@ -1,11 +1,11 @@
-import { Card } from "@repo/ui/card"
-import { Skeleton } from "@repo/ui/skeleton"
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   Minus as MinusIcon,
 } from "lucide-react"
 import { type ReactNode } from "react"
+import { Card } from "~ui/card"
+import { Skeleton } from "~ui/skeleton"
 
 interface StatsCardChange {
   value: string

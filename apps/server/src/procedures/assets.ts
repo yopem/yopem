@@ -1,20 +1,20 @@
 import { ORPCError } from "@orpc/server"
+import { Result } from "better-result"
+import { z } from "zod"
 import {
   deleteAsset,
   getAdminUploadSizeSetting,
   getAssetById,
   insertAsset,
   listAssets,
-} from "@repo/db/services/assets"
-import { r2Domain } from "@repo/env/hono"
+} from "~db/services/assets"
+import { r2Domain } from "~env/hono"
 import {
   adminProcedure,
   protectedProcedure,
   publicProcedure,
-} from "@repo/server/orpc"
-import { getR2Storage } from "@repo/storage"
-import { Result } from "better-result"
-import { z } from "zod"
+} from "~server/orpc"
+import { getR2Storage } from "~storage"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

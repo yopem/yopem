@@ -1,6 +1,6 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { createCustomId } from "~shared/custom-id"
 
 export const toolVersionsTable = pgTable("tool_versions", {
   id: text()

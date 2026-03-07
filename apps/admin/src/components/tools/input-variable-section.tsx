@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
 import { PlusIcon } from "lucide-react"
+import { Button } from "~ui/button"
 
 import InputVariableRow, {
   type InputFieldType,

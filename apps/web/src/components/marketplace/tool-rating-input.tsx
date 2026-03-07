@@ -1,12 +1,12 @@
 "use client"
 
-import { logger } from "@repo/logger"
-import { clientApi } from "@repo/orpc/client"
-import { Button } from "@repo/ui/button"
-import { Textarea } from "@repo/ui/textarea"
-import { toastManager } from "@repo/ui/toast"
 import { StarIcon } from "lucide-react"
 import { useEffect, useReducer } from "react"
+import { logger } from "~logger"
+import { clientApi } from "~orpc/client"
+import { Button } from "~ui/button"
+import { Textarea } from "~ui/textarea"
+import { toastManager } from "~ui/toast"
 
 interface ToolRatingInputProps {
   slug: string

@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@repo/ui/button"
+import { Button } from "~ui/button"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 

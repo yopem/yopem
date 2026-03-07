@@ -1,7 +1,7 @@
-import { Button } from "@repo/ui/button"
-import { Card, CardContent } from "@repo/ui/card"
-import { Input } from "@repo/ui/input"
-import { Label } from "@repo/ui/label"
+import { Button } from "~ui/button"
+import { Card, CardContent } from "~ui/card"
+import { Input } from "~ui/input"
+import { Label } from "~ui/label"
 
 interface AssetUploadSettingsProps {
   maxUploadSize: number

@@ -1,11 +1,11 @@
-import type { SessionUser } from "@repo/auth/types"
+import type { SessionUser } from "~auth/types"
 
 import { LoggingHandlerPlugin } from "@orpc/experimental-pino"
 import { RPCHandler } from "@orpc/server/fetch"
-import { logger } from "@repo/logger"
-import { createRPCContext } from "@repo/server/orpc"
-import { appRouter } from "@repo/server/router"
 import { Hono } from "hono"
+import { logger } from "~logger"
+import { createRPCContext } from "~server/orpc"
+import { appRouter } from "~server/router"
 
 interface Env {
   Variables: {

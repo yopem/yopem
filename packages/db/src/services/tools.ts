@@ -1,5 +1,5 @@
-import { createCustomId } from "@repo/shared/custom-id"
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
+import { createCustomId } from "~shared/custom-id"
 
 import type { InsertToolVersion } from "../schema/tool-versions"
 import type { InsertTool } from "../schema/tools"

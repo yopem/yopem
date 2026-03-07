@@ -1,7 +1,5 @@
 "use client"
 
-import { queryApi } from "@repo/orpc/query"
-import { formatDateTime } from "@repo/shared/format-date"
 import { useQuery } from "@tanstack/react-query"
 import {
   ServerIcon,
@@ -10,6 +8,8 @@ import {
   ActivityIcon,
 } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
+import { queryApi } from "~orpc/query"
+import { formatDateTime } from "~shared/format-date"
 
 import StatsCard from "@/components/dashboard/stats-card"
 

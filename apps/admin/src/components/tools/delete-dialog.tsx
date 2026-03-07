@@ -9,8 +9,8 @@ import {
   AlertDialogDescription,
   AlertDialogPopup,
   AlertDialogTitle,
-} from "@repo/ui/alert-dialog"
-import { Button } from "@repo/ui/button"
+} from "~ui/alert-dialog"
+import { Button } from "~ui/button"
 
 interface DeleteDialogProps {
   open: boolean

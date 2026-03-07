@@ -2,20 +2,14 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
-import { Button } from "@repo/ui/button"
-import {
-  Menu,
-  MenuGroup,
-  MenuItem,
-  MenuPopup,
-  MenuTrigger,
-} from "@repo/ui/menu"
 import {
   CopyIcon,
   MoreHorizontalIcon,
   PencilIcon,
   Trash2Icon,
 } from "lucide-react"
+import { Button } from "~ui/button"
+import { Menu, MenuGroup, MenuItem, MenuPopup, MenuTrigger } from "~ui/menu"
 
 import Link from "@/components/link"
 

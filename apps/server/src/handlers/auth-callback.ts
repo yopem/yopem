@@ -1,6 +1,6 @@
-import { logger } from "@repo/logger"
 import { Hono } from "hono"
 import { getCookie, deleteCookie } from "hono/cookie"
+import { logger } from "~logger"
 
 import { authClient, setTokenCookies } from "@/auth"
 
