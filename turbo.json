@@ -43,6 +43,7 @@
     "R2_DOMAIN",
     "R2_REGION"
   ],
+  "ui": "tui",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
