@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_public/marketplace")({
 
 function MarketplaceLayout() {
   return (
-    <div className="bg-muted/30">
+    <div>
       <Outlet />
     </div>
   )
