@@ -1,7 +1,6 @@
-import { createOpenAI } from "@ai-sdk/openai"
-import { Result } from "better-result"
-
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 import { generateText } from "ai"
+import { Result } from "better-result"
 
 import {
   AIProviderError,
@@ -15,14 +14,15 @@ import {
   type ProviderConfig,
 } from "./base.ts"
 
-export class OpenAIProvider implements AIProvider {
-  private provider: ReturnType<typeof createOpenAI>
+export class OpenRouterProvider implements AIProvider {
+  private provider: ReturnType<typeof createOpenAICompatible>
   private model: string
 
   constructor(config: ProviderConfig) {
-    this.provider = createOpenAI({
+    this.provider = createOpenAICompatible({
+      name: "openrouter",
       apiKey: config.apiKey,
-      baseURL: "https://api.openai.com/v1",
+      baseURL: "https://openrouter.ai/api/v1",
     })
     this.model = config.model
   }
@@ -41,13 +41,11 @@ export class OpenAIProvider implements AIProvider {
 
         return {
           output: result.text,
-          usage: result.usage
-            ? {
-                promptTokens: 0,
-                completionTokens: 0,
-                totalTokens: result.usage.totalTokens ?? 0,
-              }
-            : undefined,
+          usage: {
+            promptTokens: 0,
+            completionTokens: 0,
+            totalTokens: result.usage?.totalTokens ?? 0,
+          },
         }
       },
       catch: (e) => {
@@ -55,14 +53,14 @@ export class OpenAIProvider implements AIProvider {
           const msg = e.message.toLowerCase()
           if (msg.includes("401") || msg.includes("unauthorized")) {
             return new InvalidKeyError({
-              provider: "openai",
+              provider: "openrouter",
               message: "Invalid API key. Please check your credentials.",
               cause: e,
             })
           }
           if (msg.includes("429") || msg.includes("rate limit")) {
             return new RateLimitError({
-              provider: "openai",
+              provider: "openrouter",
               message: "Rate limit exceeded. Please try again later.",
               cause: e,
             })
@@ -74,21 +72,21 @@ export class OpenAIProvider implements AIProvider {
             msg.includes("too many tokens")
           ) {
             return new ContextLengthError({
-              provider: "openai",
+              provider: "openrouter",
               message:
                 "Your input exceeds the context window of this model. Please adjust your input and try again.",
               cause: e,
             })
           }
           return new AIProviderError({
-            provider: "openai",
-            message: e.message ?? "OpenAI API error",
+            provider: "openrouter",
+            message: e.message ?? "OpenRouter API error",
             cause: e,
           })
         }
         return new AIProviderError({
-          provider: "openai",
-          message: "Unexpected error during OpenAI execution",
+          provider: "openrouter",
+          message: "Unexpected error during OpenRouter execution",
           cause: e,
         })
       },
