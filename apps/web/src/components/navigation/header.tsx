@@ -54,17 +54,19 @@ const Header = ({ session }: HeaderProps) => {
                   render={
                     <button
                       type="button"
-                      className="focus-visible:ring-ring cursor-pointer rounded-full outline-none focus-visible:ring-2"
+                      className="focus-visible:ring-ring group cursor-pointer rounded-full outline-none focus-visible:ring-2"
                     >
-                      <Avatar className="size-8">
-                        <AvatarImage
-                          src={session.image!}
-                          alt={session.name ?? session.email}
-                        />
-                        <AvatarFallback>
-                          {getInitials(session.name, session.email)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="group-hover:bg-accent group-data-popup-open:bg-accent rounded-full p-0.5 transition-colors">
+                        <Avatar className="size-8">
+                          <AvatarImage
+                            src={session.image!}
+                            alt={session.name ?? session.email}
+                          />
+                          <AvatarFallback>
+                            {getInitials(session.name, session.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
                     </button>
                   }
                 />
