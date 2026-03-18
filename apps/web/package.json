@@ -29,7 +29,8 @@
     "rpc": "workspace:*",
     "shared": "workspace:*",
     "shimmer-from-structure": "catalog:",
-    "ui": "workspace:*"
+    "ui": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

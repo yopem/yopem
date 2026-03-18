@@ -26,6 +26,7 @@ import {
   hasUserUsedTool,
   insertToolRun,
   listTools,
+  searchTools,
   updateTool,
   updateToolReview,
   updateToolStatus,
@@ -680,5 +681,36 @@ export const toolsRouter = {
       const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
 
       return { hasUsed }
+    }),
+
+  search: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1).max(200),
+        limit: z.number().min(1).max(20).default(8),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const cacheKey = `search:${input.query.toLowerCase().trim()}:${input.limit}`
+      const cached = await context.redis.getCache<
+        {
+          id: string
+          slug: string
+          name: string
+          excerpt: string | null
+          costPerRun: string | null
+          thumbnail: { id: string; url: string } | null
+        }[]
+      >(cacheKey)
+
+      if (cached) {
+        return { results: cached }
+      }
+
+      const results = await searchTools(input.query, input.limit)
+
+      await context.redis.setCache(cacheKey, results, 60)
+
+      return { results }
     }),
 }

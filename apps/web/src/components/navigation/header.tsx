@@ -10,6 +10,7 @@ import Logo from "ui/logo"
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 import ThemeSwitcher from "ui/theme-switcher"
 
+import HeaderSearch from "@/components/navigation/header-search"
 import { loginFn, logoutFn } from "@/lib/auth"
 
 interface HeaderProps {
@@ -46,6 +47,7 @@ const Header = ({ session }: HeaderProps) => {
             </h2>
           </div>
         </Link>
+        <HeaderSearch />
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
             {session ? (

@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { Suspense } from "react"
+import { z } from "zod"
 
 import { queryApi } from "rpc/query"
 import { Skeleton } from "ui/skeleton"
 
 import MarketplaceContent from "@/components/marketplace/marketplace-content"
 
+const marketplaceSearchSchema = z.object({
+  search: z.string().optional(),
+})
+
 export const Route = createFileRoute("/_public/marketplace/")({
+  validateSearch: marketplaceSearchSchema,
   loader: async () => {
     const [categories, tags] = await Promise.all([
       queryApi.tools.getCategories.call({}),
@@ -19,6 +25,7 @@ export const Route = createFileRoute("/_public/marketplace/")({
 
 function MarketplacePage() {
   const { categories, tags } = Route.useLoaderData()
+  const { search } = Route.useSearch()
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
@@ -35,7 +42,11 @@ function MarketplacePage() {
       <Suspense
         fallback={<Skeleton className="h-[600px] w-full rounded-2xl" />}
       >
-        <MarketplaceContent categories={categories} tags={tags} />
+        <MarketplaceContent
+          categories={categories}
+          tags={tags}
+          initialSearch={search}
+        />
       </Suspense>
     </div>
   )

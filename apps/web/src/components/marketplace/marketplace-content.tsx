@@ -10,11 +10,13 @@ import MarketplaceSidebar from "@/components/marketplace/marketplace-sidebar"
 interface MarketplaceContentProps {
   categories: Awaited<ReturnType<typeof clientApi.tools.getCategories>>
   tags: Awaited<ReturnType<typeof clientApi.tools.getTags>>
+  initialSearch?: string
 }
 
 export default function MarketplaceContent({
   categories,
   tags,
+  initialSearch,
 }: MarketplaceContentProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedPriceFilter, setSelectedPriceFilter] = useState<string>("all")
@@ -53,6 +55,7 @@ export default function MarketplaceContent({
           tagIds={selectedTags}
           priceFilter={selectedPriceFilter}
           status="active"
+          initialSearch={initialSearch}
         />
       </div>
     </div>

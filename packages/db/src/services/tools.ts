@@ -634,3 +634,37 @@ export const updateToolRun = async (
     .returning()
   return run
 }
+
+export const searchTools = async (query: string, limit = 20) => {
+  const tools = await db
+    .select({
+      id: toolsTable.id,
+      slug: toolsTable.slug,
+      name: toolsTable.name,
+      excerpt: toolsTable.excerpt,
+      costPerRun: toolsTable.costPerRun,
+      thumbnailUrl: assetsTable.url,
+      thumbnailAssetId: assetsTable.id,
+    })
+    .from(toolsTable)
+    .leftJoin(assetsTable, eq(toolsTable.thumbnailId, assetsTable.id))
+    .where(
+      and(
+        eq(toolsTable.status, "active"),
+        sql`(${ilike(toolsTable.name, `%${query}%`).getSQL()} OR ${ilike(toolsTable.description, `%${query}%`).getSQL()})`,
+      ),
+    )
+    .orderBy(desc(toolsTable.createdAt))
+    .limit(limit)
+
+  return tools.map((tool) => {
+    const thumbnail =
+      tool.thumbnailAssetId && tool.thumbnailUrl
+        ? { id: tool.thumbnailAssetId, url: tool.thumbnailUrl }
+        : null
+
+    const { thumbnailUrl: _, thumbnailAssetId: __, ...toolData } = tool
+
+    return { ...toolData, thumbnail }
+  })
+}
