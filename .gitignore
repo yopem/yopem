@@ -40,6 +40,7 @@ yarn-error.log*
 *.pem
 tmp/
 PLAN.md
+TODO.md
 
 # typescript
 tsconfig.tsbuildinfo
