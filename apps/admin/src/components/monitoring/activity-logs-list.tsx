@@ -145,7 +145,7 @@ const ActivityLogsList = () => {
                   {data?.logs.map((log) => (
                     <tr
                       key={log.id}
-                      className="hover:bg-muted/50 border-t transition-colors"
+                      className="hover:bg-muted/50 border-border border-t transition-colors"
                     >
                       <td className="p-4 text-sm">
                         {formatDateTime(log.timestamp)}

@@ -209,7 +209,7 @@ const ToolPreviewSheet = ({
           <XIcon className="size-4" />
         </Button>
 
-        <div className="flex flex-col gap-2 border-b p-6">
+        <div className="border-border flex flex-col gap-2 border-b p-6">
           <h2 className="font-heading text-xl leading-none font-semibold">
             Tool Preview
           </h2>

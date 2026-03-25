@@ -59,7 +59,7 @@ const PromptLogicSection = ({
         </Button>
       </div>
       <div className="flex flex-col overflow-hidden rounded-xl border">
-        <div className="bg-muted/50 border-b">
+        <div className="bg-muted/50 border-border border-b">
           <div className="p-4">
             <Label
               htmlFor="system-role"
@@ -79,7 +79,7 @@ const PromptLogicSection = ({
             />
           </div>
           {variableList.length > 0 && (
-            <div className="bg-muted/30 flex flex-wrap items-center gap-2 border-t px-4 py-2">
+            <div className="bg-muted/30 border-border flex flex-wrap items-center gap-2 border-t px-4 py-2">
               <span className="text-muted-foreground text-xs">
                 Insert variable:
               </span>
@@ -122,7 +122,7 @@ const PromptLogicSection = ({
             />
           </div>
           {variableList.length > 0 && (
-            <div className="bg-muted/30 flex flex-wrap items-center gap-2 border-t px-4 py-2">
+            <div className="bg-muted/30 border-border flex flex-wrap items-center gap-2 border-t px-4 py-2">
               <span className="text-muted-foreground text-xs">
                 Insert variable:
               </span>

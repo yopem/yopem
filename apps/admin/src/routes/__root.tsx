@@ -6,8 +6,8 @@ import {
 } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 
-import "@/globals.css"
 import "ui/style.css"
+import "@/globals.css"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
 

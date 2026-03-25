@@ -29,7 +29,7 @@ const TransactionHistory = ({
 }: TransactionHistoryProps) => {
   return (
     <div className="rounded-xl border">
-      <div className="border-b p-4">
+      <div className="border-border border-b p-4">
         <h3 className="text-lg font-semibold">Transaction History</h3>
       </div>
       <Table>

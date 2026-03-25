@@ -46,7 +46,7 @@ const InputVariableSection = ({
         </Button>
       </div>
       <div className="overflow-hidden rounded-xl border">
-        <div className="bg-muted/50 text-muted-foreground grid grid-cols-12 gap-4 border-b p-4 text-xs font-semibold tracking-wider uppercase">
+        <div className="bg-muted/50 text-muted-foreground border-border grid grid-cols-12 gap-4 border-b p-4 text-xs font-semibold tracking-wider uppercase">
           <div className="col-span-3">Variable Name</div>
           <div className="col-span-2">Type</div>
           <div className="col-span-3">Description</div>

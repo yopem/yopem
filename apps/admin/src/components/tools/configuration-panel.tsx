@@ -81,7 +81,7 @@ const ConfigurationPanel = ({ config, handlers }: ConfigurationPanelProps) => {
   } = handlers
 
   return (
-    <aside className="bg-background flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
+    <aside className="bg-background border-border flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
       <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase">
         Configuration
       </h3>

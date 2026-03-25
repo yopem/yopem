@@ -18,7 +18,7 @@ const FeatureBuilderTabs = ({
   onTabChange,
 }: FeatureBuilderTabsProps) => {
   return (
-    <div className="border-b">
+    <div className="border-border border-b">
       <Tabs value={activeTab} onValueChange={onTabChange}>
         <TabsList variant="underline" className="gap-8 p-0">
           {tabs.map((tab) => (

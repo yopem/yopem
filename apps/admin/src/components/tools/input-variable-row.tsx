@@ -101,7 +101,7 @@ const InputVariableRow = ({
   }
 
   return (
-    <div className="group hover:bg-muted/50 border-b p-4 transition-colors">
+    <div className="group hover:bg-muted/50 border-border border-b p-4 transition-colors">
       <div className="grid grid-cols-12 items-center gap-4">
         <div className="col-span-3">
           <Input

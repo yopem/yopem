@@ -56,7 +56,7 @@ const Header = ({ session }: HeaderProps) => {
   }
 
   return (
-    <div className="bg-card/80 supports-backdrop-filter:bg-card/60 sticky top-0 z-50 w-full border-b backdrop-blur-sm">
+    <div className="bg-card/80 supports-backdrop-filter:bg-card/60 border-border sticky top-0 z-50 w-full border-b backdrop-blur-sm">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4">
         <Link to="/">
           <div className="hover:bg-accent mr-8 flex items-center gap-1 rounded-sm p-2">

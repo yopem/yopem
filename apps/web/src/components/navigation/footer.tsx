@@ -6,7 +6,7 @@ import ThemeSwitcher from "ui/theme-switcher"
 
 const Footer = () => {
   return (
-    <footer className="bg-background w-full border-t py-12 text-sm">
+    <footer className="bg-background border-border w-full border-t py-12 text-sm">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
         <div className="mb-8 flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="flex-1">
@@ -53,7 +53,7 @@ const Footer = () => {
             </a>
           </div>
         </div>
-        <div className="text-muted-foreground flex flex-col items-center justify-between gap-4 border-t pt-8 text-sm md:flex-row">
+        <div className="text-muted-foreground border-border flex flex-col items-center justify-between gap-4 border-t pt-8 text-sm md:flex-row">
           <p>© {new Date().getFullYear()} Yopem. All rights reserved.</p>
           <div className="flex gap-6">
             <a className="hover:text-foreground" href="/privacy">

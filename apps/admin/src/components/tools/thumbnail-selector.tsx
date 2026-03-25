@@ -217,7 +217,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
               </p>
             </div>
 
-            <div className="flex shrink-0 gap-2 border-b">
+            <div className="border-border flex shrink-0 gap-2 border-b">
               <button
                 type="button"
                 className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${

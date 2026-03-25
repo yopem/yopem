@@ -37,7 +37,7 @@ const FeatureBuilderHeader = ({
   isLoading = false,
 }: FeatureBuilderHeaderProps) => {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b px-8">
+    <header className="border-border flex h-16 shrink-0 items-center justify-between border-b px-8">
       <div className="flex items-center gap-2">
         {breadcrumbItems.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
