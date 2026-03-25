@@ -6,7 +6,21 @@ import { loginFn } from "@/lib/auth"
 
 const LoginButton = () => {
   const handleLogin = async () => {
-    await loginFn()
+    try {
+      await loginFn()
+    } catch (error) {
+      if (error && typeof error === 'object') {
+        const err = error as { status?: number; href?: string; options?: { href?: string } }
+        if (err.status === 307) {
+          const redirectUrl = err.href || err.options?.href
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+            return
+          }
+        }
+      }
+      throw error
+    }
   }
 
   return (

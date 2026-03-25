@@ -7,7 +7,13 @@ import { loginFn } from "@/lib/auth"
 
 const CTAButton = ({ className }: { className?: string }) => {
   const handleLogin = async () => {
-    await loginFn()
+    const response = await loginFn() as unknown
+    if (response && typeof response === 'object') {
+      const res = response as { status?: number; options?: { href?: string } }
+      if (res.status === 307 && res.options?.href) {
+        window.location.href = res.options.href
+      }
+    }
   }
 
   return (
