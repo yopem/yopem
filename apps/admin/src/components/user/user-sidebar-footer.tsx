@@ -1,9 +1,10 @@
 "use client"
 
 import { Image } from "@unpic/react"
-import { ChevronUpIcon, LogOutIcon, UserIcon } from "lucide-react"
+import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
 
+import { siteUrl } from "env/client"
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 
 import { logoutFn } from "@/lib/auth"
@@ -71,10 +72,22 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
         }
       />
       <MenuPopup side="top" align="end" sideOffset={8} className="min-w-56">
-        <MenuItem>
-          <UserIcon className="mr-2 size-4" />
-          <span>Profile</span>
-        </MenuItem>
+        <MenuItem
+          render={
+            <a href={siteUrl}>
+              <HomeIcon className="mr-2 size-4" />
+              <span>Back to Home</span>
+            </a>
+          }
+        />
+        <MenuItem
+          render={
+            <a href={`${siteUrl}/profile`}>
+              <UserIcon className="mr-2 size-4" />
+              <span>Profile</span>
+            </a>
+          }
+        />
         <MenuSeparator />
         <MenuItem
           onClick={handleLogout}
