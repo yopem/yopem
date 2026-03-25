@@ -19,6 +19,7 @@
     "@tanstack/react-start": "catalog:",
     "@unpic/react": "catalog:",
     "auth": "workspace:*",
+    "better-result": "catalog:",
     "db": "workspace:*",
     "env": "workspace:*",
     "logger": "workspace:*",

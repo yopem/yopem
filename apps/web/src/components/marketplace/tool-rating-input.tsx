@@ -1,13 +1,16 @@
 "use client"
 
+import { Result } from "better-result"
 import { StarIcon } from "lucide-react"
 import { useEffect, useReducer } from "react"
 
-import { logger } from "logger"
+import { formatError, logger } from "logger"
 import { clientApi } from "rpc/client"
 import { Button } from "ui/button"
 import { Textarea } from "ui/textarea"
 import { toastManager } from "ui/toast"
+
+import { ReviewLoadError, ReviewSubmitError } from "@/lib/errors"
 
 interface ToolRatingInputProps {
   slug: string
@@ -116,42 +119,49 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
     let cancelled = false
 
     const loadReviewData = async () => {
-      let reviewData
-      let usageData
+      const result = await Result.tryPromise({
+        try: async () => {
+          const [reviewResult, usageResult] = await Promise.all([
+            clientApi.tools.getUserReview({ slug }),
+            clientApi.tools.hasUsedTool({ slug }),
+          ])
+          return { review: reviewResult, usage: usageResult }
+        },
+        catch: (error) =>
+          new ReviewLoadError({
+            message: "Failed to load review data",
+            cause: error,
+          }),
+      })
 
-      try {
-        const [r, u] = await Promise.all([
-          clientApi.tools.getUserReview({ slug }),
-          clientApi.tools.hasUsedTool({ slug }),
-        ])
-        reviewData = r
-        usageData = u
-      } catch (err) {
-        if (!cancelled) {
-          logger.error(`Failed to load review data: ${String(err)}`)
-          dispatch({ type: "LOAD_ERROR" })
-        }
-        return
-      }
+      result.match({
+        ok: (data) => {
+          if (cancelled) return
 
-      if (cancelled) return
-
-      if (reviewData) {
-        dispatch({
-          type: "LOAD_SUCCESS",
-          payload: {
-            hasUsed: usageData?.hasUsed ?? false,
-            rating: reviewData.rating,
-            reviewText: reviewData.reviewText ?? "",
-            isEditing: true,
-          },
-        })
-      } else {
-        dispatch({
-          type: "LOAD_NO_REVIEW",
-          payload: { hasUsed: usageData?.hasUsed ?? false },
-        })
-      }
+          if (data.review) {
+            dispatch({
+              type: "LOAD_SUCCESS",
+              payload: {
+                hasUsed: data.usage?.hasUsed ?? false,
+                rating: data.review.rating,
+                reviewText: data.review.reviewText ?? "",
+                isEditing: true,
+              },
+            })
+          } else {
+            dispatch({
+              type: "LOAD_NO_REVIEW",
+              payload: { hasUsed: data.usage?.hasUsed ?? false },
+            })
+          }
+        },
+        err: (error) => {
+          if (!cancelled) {
+            logger.error(`Failed to load review data: ${formatError(error)}`)
+            dispatch({ type: "LOAD_ERROR" })
+          }
+        },
+      })
     }
 
     void loadReviewData()
@@ -171,26 +181,41 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
     const reviewTextParam = reviewText.trim() || undefined
     const toastTitle = isEditing ? "Review updated" : "Review submitted"
 
-    try {
-      await clientApi.tools.submitReview({
-        slug,
-        rating,
-        reviewText: reviewTextParam,
-      })
+    const result = await Result.tryPromise({
+      try: async () => {
+        await clientApi.tools.submitReview({
+          slug,
+          rating,
+          reviewText: reviewTextParam,
+        })
+        return { success: true }
+      },
+      catch: (error) =>
+        new ReviewSubmitError({
+          message:
+            error instanceof Error ? error.message : "Failed to submit review",
+          cause: error,
+        }),
+    })
 
-      toastManager.add({
-        title: toastTitle,
-        description: "Thank you for your feedback!",
-        type: "success",
-      })
+    result.match({
+      ok: () => {
+        toastManager.add({
+          title: toastTitle,
+          description: "Thank you for your feedback!",
+          type: "success",
+        })
 
-      dispatch({ type: "SUBMIT_SUCCESS" })
-    } catch (err) {
-      dispatch({
-        type: "SUBMIT_ERROR",
-        payload: err instanceof Error ? err.message : "Failed to submit review",
-      })
-    }
+        dispatch({ type: "SUBMIT_SUCCESS" })
+      },
+      err: (error) => {
+        dispatch({
+          type: "SUBMIT_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Failed to submit review",
+        })
+      },
+    })
 
     if (onSuccess) {
       onSuccess()

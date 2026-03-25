@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { Result } from "better-result"
 import {
   BarChartIcon,
   DollarSignIcon,
@@ -29,6 +30,7 @@ import DeleteProviderDialog from "@/components/settings/delete-provider-dialog"
 import EditProviderDialog from "@/components/settings/edit-provider-dialog"
 import ProviderCard from "@/components/settings/provider-card"
 import ProviderCardSkeleton from "@/components/settings/provider-card-skeleton"
+import { ApiKeyOperationError, AssetSettingsError } from "@/lib/errors"
 
 type ModalState =
   | { type: "closed" }
@@ -183,19 +185,37 @@ const AdminSettingsPage = () => {
   useEffect(() => {
     let cancelled = false
     const fetchAssetSettings = async () => {
-      try {
-        const result = await queryApi.admin.getAssetSettings.call()
-        if (!cancelled) {
-          assetSettingsDispatch({
-            type: "SET_LOADED",
-            maxUploadSizeMB: result.maxUploadSizeMB,
-          })
-        }
-      } catch (error) {
-        if (!cancelled) {
-          logger.error(`Failed to fetch asset settings: ${formatError(error)}`)
-        }
-      }
+      const result = await Result.tryPromise({
+        try: async () => {
+          const result = await queryApi.admin.getAssetSettings.call()
+          return result
+        },
+        catch: (error) =>
+          new AssetSettingsError({
+            message: "Failed to fetch asset settings",
+            operation: "fetch",
+            cause: error,
+          }),
+      })
+
+      result.match({
+        ok: (data) => {
+          if (!cancelled) {
+            assetSettingsDispatch({
+              type: "SET_LOADED",
+              maxUploadSizeMB: data.maxUploadSizeMB,
+            })
+          }
+        },
+        err: (error) => {
+          if (!cancelled) {
+            logger.error(
+              `Failed to fetch asset settings: ${formatError(error)}`,
+            )
+          }
+        },
+      })
+
       if (!cancelled) {
         assetSettingsDispatch({ type: "SET_LOADING_DONE" })
       }
@@ -207,37 +227,67 @@ const AdminSettingsPage = () => {
   }, [])
 
   const updateAssetSettings = useCallback(async () => {
-    try {
-      await queryApi.admin.updateAssetSettings.call({
-        maxUploadSizeMB: assetSettings.maxUploadSize,
-      })
-      toastManager.add({
-        title: "Asset settings updated",
-        type: "success",
-      })
-    } catch (error) {
-      logger.error(`Failed to update asset settings: ${formatError(error)}`)
-      toastManager.add({
-        title: "Failed to update asset settings",
-        type: "error",
-      })
-    }
+    const result = await Result.tryPromise({
+      try: async () => {
+        await queryApi.admin.updateAssetSettings.call({
+          maxUploadSizeMB: assetSettings.maxUploadSize,
+        })
+        return { success: true }
+      },
+      catch: (error) =>
+        new AssetSettingsError({
+          message: "Failed to update asset settings",
+          operation: "update",
+          cause: error,
+        }),
+    })
+
+    result.match({
+      ok: () => {
+        toastManager.add({
+          title: "Asset settings updated",
+          type: "success",
+        })
+      },
+      err: (error) => {
+        logger.error(`Failed to update asset settings: ${formatError(error)}`)
+        toastManager.add({
+          title: "Failed to update asset settings",
+          type: "error",
+        })
+      },
+    })
   }, [assetSettings.maxUploadSize])
 
   const handleAddProvider = useCallback(() => {
     void (async () => {
-      try {
-        await addMutation.mutateAsync(providerForm.formData)
-        toastManager.add({
-          title: "Provider added successfully",
-          type: "success",
-        })
-        dispatch({ type: "CLOSE" })
-        providerFormDispatch({ type: "RESET_FORM_DATA" })
-      } catch (error) {
-        toastManager.add({ title: "Failed to add provider", type: "error" })
-        logger.error(`Error adding provider: ${formatError(error)}`)
-      }
+      const result = await Result.tryPromise({
+        try: async () => {
+          await addMutation.mutateAsync(providerForm.formData)
+          return { success: true }
+        },
+        catch: (error) =>
+          new ApiKeyOperationError({
+            message: "Failed to add provider",
+            operation: "add",
+            cause: error,
+          }),
+      })
+
+      result.match({
+        ok: () => {
+          toastManager.add({
+            title: "Provider added successfully",
+            type: "success",
+          })
+          dispatch({ type: "CLOSE" })
+          providerFormDispatch({ type: "RESET_FORM_DATA" })
+        },
+        err: (error) => {
+          toastManager.add({ title: "Failed to add provider", type: "error" })
+          logger.error(`Error adding provider: ${formatError(error)}`)
+        },
+      })
     })()
   }, [addMutation, providerForm.formData])
 
@@ -245,40 +295,76 @@ const AdminSettingsPage = () => {
     const ep = providerForm.editingProvider
     if (!ep) return
     void (async () => {
-      try {
-        await updateMutation.mutateAsync({
-          id: ep.id,
-          name: ep.name,
-          description: ep.description,
-          status: ep.status,
-          provider: ep.provider,
-        })
-        toastManager.add({
-          title: "Provider updated successfully",
-          type: "success",
-        })
-        dispatch({ type: "CLOSE" })
-      } catch (error) {
-        toastManager.add({ title: "Failed to update provider", type: "error" })
-        logger.error(`Error updating provider: ${formatError(error)}`)
-      }
+      const result = await Result.tryPromise({
+        try: async () => {
+          await updateMutation.mutateAsync({
+            id: ep.id,
+            name: ep.name,
+            description: ep.description,
+            status: ep.status,
+            provider: ep.provider,
+          })
+          return { success: true }
+        },
+        catch: (error) =>
+          new ApiKeyOperationError({
+            message: "Failed to update provider",
+            operation: "update",
+            cause: error,
+          }),
+      })
+
+      result.match({
+        ok: () => {
+          toastManager.add({
+            title: "Provider updated successfully",
+            type: "success",
+          })
+          dispatch({ type: "CLOSE" })
+        },
+        err: (error) => {
+          toastManager.add({
+            title: "Failed to update provider",
+            type: "error",
+          })
+          logger.error(`Error updating provider: ${formatError(error)}`)
+        },
+      })
     })()
   }, [updateMutation, providerForm.editingProvider])
 
   const handleDeleteProvider = useCallback(() => {
     if (modalState.type !== "deleting") return
     void (async () => {
-      try {
-        await deleteMutation.mutateAsync({ id: modalState.provider.id })
-        toastManager.add({
-          title: "Provider deleted successfully",
-          type: "success",
-        })
-        dispatch({ type: "CLOSE" })
-      } catch (error) {
-        toastManager.add({ title: "Failed to delete provider", type: "error" })
-        logger.error(`Error deleting provider: ${formatError(error)}`)
-      }
+      const result = await Result.tryPromise({
+        try: async () => {
+          await deleteMutation.mutateAsync({ id: modalState.provider.id })
+          return { success: true }
+        },
+        catch: (error) =>
+          new ApiKeyOperationError({
+            message: "Failed to delete provider",
+            operation: "delete",
+            cause: error,
+          }),
+      })
+
+      result.match({
+        ok: () => {
+          toastManager.add({
+            title: "Provider deleted successfully",
+            type: "success",
+          })
+          dispatch({ type: "CLOSE" })
+        },
+        err: (error) => {
+          toastManager.add({
+            title: "Failed to delete provider",
+            type: "error",
+          })
+          logger.error(`Error deleting provider: ${formatError(error)}`)
+        },
+      })
     })()
   }, [deleteMutation, modalState])
 

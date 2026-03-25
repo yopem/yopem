@@ -2,12 +2,14 @@
 
 import { Link } from "@tanstack/react-router"
 import { Image } from "@unpic/react"
+import { Result } from "better-result"
 import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 
 import { logoutFn } from "@/lib/auth"
+import { LogoutError } from "@/lib/errors"
 
 interface User {
   name: string
@@ -26,12 +28,23 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
   const handleLogout = async () => {
     if (isLoggingOut) return
     setIsLoggingOut(true)
-    try {
-      await logoutFn()
-    } catch (error) {
-      setIsLoggingOut(false)
-      throw error
-    }
+
+    const result = await Result.tryPromise({
+      try: async () => {
+        await logoutFn()
+        return { success: true }
+      },
+      catch: (error) =>
+        new LogoutError({ message: "Logout failed", cause: error }),
+    })
+
+    result.match({
+      ok: () => void 0,
+      err: (error) => {
+        setIsLoggingOut(false)
+        throw error
+      },
+    })
   }
 
   return (

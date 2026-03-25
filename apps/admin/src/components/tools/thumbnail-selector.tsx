@@ -1,10 +1,13 @@
 "use client"
 
+import { Result } from "better-result"
 import { useCallback, useEffect, useReducer } from "react"
 
 import { formatError, logger } from "logger"
 import { queryApi } from "rpc/query"
 import { Dialog, DialogPopup } from "ui/dialog"
+
+import { AssetLoadError, AssetUploadError } from "@/lib/errors"
 
 import AssetLibrary from "./asset-library"
 import ThumbnailDisplay from "./thumbnail-display"
@@ -100,28 +103,51 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
 
   const loadAssets = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true })
-    try {
-      const result = await queryApi.assets.list.call({
-        type: "images",
-        limit: 100,
-      })
-      dispatch({ type: "SET_ASSETS", payload: result.assets as Asset[] })
-    } catch (error) {
-      logger.error(`Failed to load assets: ${formatError(error)}`)
-    }
+
+    const result = await Result.tryPromise({
+      try: async () => {
+        const result = await queryApi.assets.list.call({
+          type: "images",
+          limit: 100,
+        })
+        return result.assets as Asset[]
+      },
+      catch: (error) =>
+        new AssetLoadError({ message: "Failed to load assets", cause: error }),
+    })
+
+    result.match({
+      ok: (assets) => {
+        dispatch({ type: "SET_ASSETS", payload: assets })
+      },
+      err: (error) => {
+        logger.error(`Failed to load assets: ${formatError(error)}`)
+      },
+    })
+
     dispatch({ type: "SET_LOADING", payload: false })
   }, [])
 
   const loadCurrentThumbnail = useCallback(async (id: string) => {
-    try {
-      const result = await queryApi.assets.list.call({ limit: 100 })
-      const asset = (result.assets as Asset[]).find((a) => a.id === id)
-      if (asset) {
-        dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: asset })
-      }
-    } catch (error) {
-      logger.error(`Failed to load thumbnail: ${formatError(error)}`)
-    }
+    const result = await Result.tryPromise({
+      try: async () => {
+        const result = await queryApi.assets.list.call({ limit: 100 })
+        return (result.assets as Asset[]).find((a) => a.id === id)
+      },
+      catch: (error) =>
+        new AssetLoadError({ message: "Failed to load assets", cause: error }),
+    })
+
+    result.match({
+      ok: (asset) => {
+        if (asset) {
+          dispatch({ type: "SET_CURRENT_THUMBNAIL", payload: asset })
+        }
+      },
+      err: (error) => {
+        logger.error(`Failed to load thumbnail: ${formatError(error)}`)
+      },
+    })
   }, [])
 
   useEffect(() => {
@@ -170,14 +196,30 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
       if (!file) return
 
       dispatch({ type: "SET_UPLOADING", payload: true })
-      try {
-        const asset = await queryApi.assets.upload.call(file)
-        dispatch({ type: "PREPEND_ASSET", payload: asset as Asset })
-        onChange(asset.id)
-        dispatch({ type: "CLOSE_DIALOG" })
-      } catch (error) {
-        logger.error(`Upload failed: ${formatError(error)}`)
-      }
+
+      const result = await Result.tryPromise({
+        try: async () => {
+          const asset = await queryApi.assets.upload.call(file)
+          return asset as Asset
+        },
+        catch: (error) =>
+          new AssetUploadError({
+            message: "Failed to upload asset",
+            cause: error,
+          }),
+      })
+
+      result.match({
+        ok: (asset) => {
+          dispatch({ type: "PREPEND_ASSET", payload: asset })
+          onChange(asset.id)
+          dispatch({ type: "CLOSE_DIALOG" })
+        },
+        err: (error) => {
+          logger.error(`Upload failed: ${formatError(error)}`)
+        },
+      })
+
       dispatch({ type: "SET_UPLOADING", payload: false })
       if (event.target) {
         event.target.value = ""
