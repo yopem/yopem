@@ -1,6 +1,7 @@
 "use client"
 
 import { Link } from "@tanstack/react-router"
+import { useState } from "react"
 
 import type { SessionUser } from "auth/types"
 import { adminUrl } from "env/client"
@@ -30,6 +31,8 @@ const getInitials = (name: string | null, email: string) => {
 }
 
 const Header = ({ session }: HeaderProps) => {
+  const [imageError, setImageError] = useState(false)
+
   const handleLogin = async () => {
     try {
       await loginFn()
@@ -78,10 +81,13 @@ const Header = ({ session }: HeaderProps) => {
                     >
                       <div className="group-hover:bg-accent group-data-popup-open:bg-accent rounded-full p-0.5 transition-colors">
                         <Avatar className="size-8">
-                          <AvatarImage
-                            src={session.image!}
-                            alt={session.name ?? session.email}
-                          />
+                          {session.image && !imageError && (
+                            <AvatarImage
+                              src={session.image}
+                              alt={session.name ?? session.email}
+                              onError={() => setImageError(true)}
+                            />
+                          )}
                           <AvatarFallback>
                             {getInitials(session.name, session.email)}
                           </AvatarFallback>

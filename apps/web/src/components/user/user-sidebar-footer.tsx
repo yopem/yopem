@@ -21,6 +21,7 @@ interface UserSidebarFooterProps {
 
 const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -39,11 +40,12 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
         className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
         render={
           <button
+            type="button"
             className="flex items-center gap-3 p-2"
             id="user-sidebar-footer-trigger"
           >
             <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-full border text-xs font-bold">
-              {user.avatar ? (
+              {user.avatar && !imageError ? (
                 <Image
                   src={user.avatar}
                   alt={user.name}
@@ -51,6 +53,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
                   width={32}
                   height={32}
                   className="size-8 rounded-full object-cover"
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 user.name

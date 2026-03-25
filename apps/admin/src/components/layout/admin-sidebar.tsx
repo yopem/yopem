@@ -30,7 +30,7 @@ interface NavItem {
 interface User {
   name: string
   email: string
-  image?: string
+  avatar?: string
 }
 
 interface AdminSidebarProps {
