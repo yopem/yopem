@@ -22,6 +22,7 @@ interface ToolReviewsListProps {
   onEditorClose?: () => void
   slug?: string
   onEditorSuccess?: () => void
+  hasUsedTool?: boolean
 }
 
 const ToolReviewsList = ({
@@ -34,6 +35,7 @@ const ToolReviewsList = ({
   onEditorClose,
   slug,
   onEditorSuccess,
+  hasUsedTool,
 }: ToolReviewsListProps) => {
   if (reviews.length === 0) {
     return (
@@ -63,16 +65,24 @@ const ToolReviewsList = ({
               <p className="text-muted-foreground text-sm">
                 No reviews yet. Be the first to review this tool!
               </p>
-              {isAuthenticated && !hasExistingReview && onEditorOpen && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 gap-1.5"
-                  onClick={onEditorOpen}
-                >
-                  <PencilIcon className="size-3.5" />
-                  Write a review
-                </Button>
+              {isAuthenticated &&
+                !hasExistingReview &&
+                hasUsedTool &&
+                onEditorOpen && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 gap-1.5"
+                    onClick={onEditorOpen}
+                  >
+                    <PencilIcon className="size-3.5" />
+                    Write a review
+                  </Button>
+                )}
+              {isAuthenticated && !hasExistingReview && !hasUsedTool && (
+                <p className="text-muted-foreground mt-3 text-xs">
+                  Run this tool at least once to leave a review.
+                </p>
               )}
             </>
           )}

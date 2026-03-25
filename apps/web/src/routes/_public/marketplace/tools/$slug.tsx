@@ -15,15 +15,19 @@ import ToolReviewsSection from "@/components/marketplace/tool-reviews-section"
 import UserCredits from "@/components/marketplace/user-credits"
 
 export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
-  loader: async ({ params }) => {
-    const [tool, reviewsData] = await Promise.all([
+  loader: async ({ params, context }) => {
+    const [tool, reviewsData, hasUsedResult] = await Promise.all([
       queryApi.tools.getBySlug.call({ slug: params.slug }),
       queryApi.tools.getReviews.call({ slug: params.slug }),
+      context.session
+        ? queryApi.tools.hasUsedTool.call({ slug: params.slug })
+        : Promise.resolve({ hasUsed: false }),
     ])
     return {
       tool,
       reviewsData,
       slug: params.slug,
+      hasUsedTool: hasUsedResult.hasUsed,
     }
   },
   head: ({ loaderData }) => {
@@ -59,7 +63,7 @@ export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
 })
 
 function ToolDetailPage() {
-  const { tool, reviewsData, slug } = Route.useLoaderData()
+  const { tool, reviewsData, slug, hasUsedTool } = Route.useLoaderData()
   const { session } = Route.useRouteContext()
   const isAuthenticated = !!session
 
@@ -164,6 +168,7 @@ function ToolDetailPage() {
           slug={slug}
           reviews={reviewsData.reviews}
           isAuthenticated={isAuthenticated}
+          hasUsedTool={hasUsedTool}
           currentUserName={
             session ? (session.username ?? session.name ?? null) : null
           }

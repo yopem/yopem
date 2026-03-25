@@ -20,6 +20,7 @@ interface ToolReviewsSectionProps {
   reviews: Review[]
   isAuthenticated: boolean
   currentUserName?: string | null
+  hasUsedTool?: boolean
 }
 
 const ToolReviewsSection = ({
@@ -27,6 +28,7 @@ const ToolReviewsSection = ({
   reviews: initialReviews,
   isAuthenticated,
   currentUserName,
+  hasUsedTool,
 }: ToolReviewsSectionProps) => {
   const [reviews, setReviews] = useState(initialReviews)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -66,6 +68,7 @@ const ToolReviewsSection = ({
         hasExistingReview={hasExistingReview}
         slug={slug}
         onEditorSuccess={handleReviewSubmit}
+        hasUsedTool={hasUsedTool}
       />
 
       {!isAuthenticated && (
