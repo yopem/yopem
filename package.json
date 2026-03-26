@@ -97,11 +97,11 @@
     "@yopem/typescript-config": "^0.2.1",
     "dotenv-cli": "^11.0.0",
     "lefthook": "^2.1.2",
-    "oxfmt": "^0.36.0",
+    "oxfmt": "^0.42.0",
     "oxlint": "^1.51.0",
-    "oxlint-tsgolint": "^0.16.0",
+    "oxlint-tsgolint": "^0.17.4",
     "turbo": "^2.8.14",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "packageManager": "bun@1.3.10"
 }
