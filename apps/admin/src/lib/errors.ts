@@ -31,3 +31,8 @@ export class AssetSettingsError extends TaggedError("AssetSettingsError")<{
   operation: "fetch" | "update"
   cause?: unknown
 }>() {}
+
+export class WebhookMetricsError extends TaggedError("WebhookMetricsError")<{
+  message: string
+  cause?: unknown
+}>() {}
