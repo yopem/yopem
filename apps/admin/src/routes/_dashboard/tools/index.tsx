@@ -80,6 +80,14 @@ const ToolsIndexPage = () => {
       return await queryApi.tools.duplicate.call({ id })
     },
     onSuccess: (data, variables) => {
+      if (!data) {
+        toastManager.add({
+          title: "Error duplicating tool",
+          description: "Failed to duplicate tool",
+          type: "error",
+        })
+        return
+      }
       const originalTool = tools.find((t) => t.id === variables)
       toastManager.add({
         title: "Tool duplicated",

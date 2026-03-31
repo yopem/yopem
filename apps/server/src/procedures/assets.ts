@@ -17,7 +17,7 @@ import {
 import { r2Domain } from "env/hono"
 import { getR2Storage } from "storage"
 
-import { AssetNotFoundError } from "../procedure-errors"
+import { AssetNotFoundError } from "./procedure-errors"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

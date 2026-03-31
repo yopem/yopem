@@ -1,6 +1,6 @@
-import { ORPCError } from "@orpc/server"
-import { Result, TaggedError } from "better-result"
+import { Result } from "better-result"
 import { adminProcedure } from "server/orpc"
+import { z } from "zod"
 
 import * as adminService from "db/services/admin"
 import { logger } from "logger"
@@ -14,13 +14,13 @@ import {
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
 
-class ModelFetchError extends TaggedError("ModelFetchError")<{
-  provider: string
-  message: string
-  cause?: unknown
-}>() {}
-
-import { z } from "zod"
+import { handleProcedureError } from "./error-handler"
+import {
+  ApiKeyNotFoundError,
+  CryptoOperationError,
+  ModelFetchError,
+  SettingsNotFoundError,
+} from "./procedure-errors"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
@@ -136,67 +136,119 @@ export const adminRouter = {
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
-
-      const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
-
-      const encryptResult = encryptApiKey(input.apiKey)
-      if (Result.isError(encryptResult)) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Failed to encrypt API key",
+      const result = await Result.gen(async function* () {
+        const settings = yield* await Result.tryPromise({
+          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to fetch settings: ${e}`,
+            }),
         })
+
+        const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
+
+        const encryptResult = encryptApiKey(input.apiKey)
+        if (Result.isError(encryptResult)) {
+          return Result.err(
+            new CryptoOperationError({
+              operation: "encrypt",
+              message: encryptResult.error.message,
+            }),
+          )
+        }
+
+        const newKey: ApiKeyConfig = {
+          id: createCustomId(),
+          provider: input.provider,
+          name: input.name,
+          description: input.description,
+          apiKey: encryptResult.value,
+          status: input.status ?? "active",
+          restrictions: input.restrictions,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+
+        const updatedKeys = [...existingKeys, newKey]
+
+        yield* await Result.tryPromise({
+          try: () =>
+            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to update settings: ${e}`,
+            }),
+        })
+
+        yield* await Result.tryPromise({
+          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
+          catch: () => null,
+        })
+
+        yield* await Result.tryPromise({
+          try: () =>
+            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
+          catch: () => null,
+        })
+
+        return Result.ok({ success: true, id: newKey.id })
+      })
+
+      if (Result.isError(result)) {
+        return handleProcedureError(result)
       }
 
-      const newKey: ApiKeyConfig = {
-        id: createCustomId(),
-        provider: input.provider,
-        name: input.name,
-        description: input.description,
-        apiKey: encryptResult.value,
-        status: input.status ?? "active",
-        restrictions: input.restrictions,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      const updatedKeys = [...existingKeys, newKey]
-
-      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
-
-      await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
-      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
-
-      return { success: true, id: newKey.id }
+      return result.value
     }),
 
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const result = await Result.gen(async function* () {
+        const settings = yield* await Result.tryPromise({
+          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to fetch settings: ${e}`,
+            }),
+        })
 
-      if (!settings?.settingValue) {
-        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
-      }
+        if (!settings?.settingValue) {
+          return Result.err(
+            new ApiKeyNotFoundError({ message: "No API keys found" }),
+          )
+        }
 
-      const existingKeys = settings.settingValue as ApiKeyConfig[]
-      const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
+        const existingKeys = settings.settingValue as ApiKeyConfig[]
+        const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
 
-      if (keyIndex === -1) {
-        throw new ORPCError("NOT_FOUND", { message: "API key not found" })
-      }
+        if (keyIndex === -1) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              keyId: input.id,
+              message: "API key not found",
+            }),
+          )
+        }
 
-      const updatedKey: ApiKeyConfig = (() => {
         let newApiKey: string | undefined
         if (input.apiKey) {
           const encryptResult = encryptApiKey(input.apiKey)
           if (Result.isError(encryptResult)) {
-            throw new ORPCError("INTERNAL_SERVER_ERROR", {
-              message: "Failed to encrypt API key",
-            })
+            return Result.err(
+              new CryptoOperationError({
+                operation: "encrypt",
+                message: encryptResult.error.message,
+              }),
+            )
           }
           newApiKey = encryptResult.value
         }
-        return {
+
+        const updatedKey: ApiKeyConfig = {
           ...existingKeys[keyIndex],
           ...(input.provider && { provider: input.provider }),
           ...(input.name && { name: input.name }),
@@ -210,37 +262,92 @@ export const adminRouter = {
           }),
           updatedAt: new Date().toISOString(),
         }
-      })()
 
-      const updatedKeys = [...existingKeys]
-      updatedKeys[keyIndex] = updatedKey
+        const updatedKeys = [...existingKeys]
+        updatedKeys[keyIndex] = updatedKey
 
-      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+        yield* await Result.tryPromise({
+          try: () =>
+            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to update settings: ${e}`,
+            }),
+        })
 
-      await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
-      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+        yield* await Result.tryPromise({
+          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
+          catch: () => null,
+        })
 
-      return { success: true }
+        yield* await Result.tryPromise({
+          try: () =>
+            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
+          catch: () => null,
+        })
+
+        return Result.ok({ success: true })
+      })
+
+      if (Result.isError(result)) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const result = await Result.gen(async function* () {
+        const settings = yield* await Result.tryPromise({
+          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to fetch settings: ${e}`,
+            }),
+        })
 
-      if (!settings?.settingValue) {
-        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
+        if (!settings?.settingValue) {
+          return Result.err(
+            new ApiKeyNotFoundError({ message: "No API keys found" }),
+          )
+        }
+
+        const existingKeys = settings.settingValue as ApiKeyConfig[]
+        const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
+
+        yield* await Result.tryPromise({
+          try: () =>
+            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
+          catch: (e) =>
+            new SettingsNotFoundError({
+              key: API_KEYS_SETTING_KEY,
+              message: `Failed to update settings: ${e}`,
+            }),
+        })
+
+        yield* await Result.tryPromise({
+          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
+          catch: () => null,
+        })
+
+        yield* await Result.tryPromise({
+          try: () =>
+            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
+          catch: () => null,
+        })
+
+        return Result.ok({ success: true })
+      })
+
+      if (Result.isError(result)) {
+        return handleProcedureError(result)
       }
 
-      const existingKeys = settings.settingValue as ApiKeyConfig[]
-      const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
-
-      await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
-
-      await context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
-      await context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
-
-      return { success: true }
+      return result.value
     }),
 
   getApiKeyStats: adminProcedure

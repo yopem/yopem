@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server"
 import { Result } from "better-result"
 import { adminProcedure, protectedProcedure } from "server/orpc"
 import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
@@ -16,6 +15,15 @@ import {
 } from "shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
+
+import { handleProcedureError } from "./error-handler"
+import {
+  ApiKeyNotFoundError,
+  ApiKeyValidationError,
+  CryptoOperationError,
+  RateLimitExceededError,
+  ValidationError,
+} from "./procedure-errors"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {
@@ -117,150 +125,205 @@ export const userRouter = {
       return []
     }
 
-    try {
-      const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+    const parseResult = Result.try({
+      try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
+      catch: (e) => {
+        logger.error(`Error parsing API keys: ${formatError(e)}`)
+        return []
+      },
+    })
 
-      return apiKeys.map((key) => {
-        const decryptResult = decryptApiKey(key.apiKey)
-        return {
-          ...key,
-          apiKey: Result.isOk(decryptResult)
-            ? maskApiKey(decryptResult.value)
-            : "Error: Failed to decrypt",
-        }
-      })
-    } catch (error) {
-      logger.error(`Error parsing API keys: ${formatError(error)}`)
+    if (parseResult.isErr()) {
       return []
     }
+
+    const apiKeys = parseResult.value
+
+    const processedKeys = apiKeys.map((key) => {
+      const decryptResult = decryptApiKey(key.apiKey)
+      return {
+        ...key,
+        apiKey: Result.isOk(decryptResult)
+          ? maskApiKey(decryptResult.value)
+          : "Error: Failed to decrypt",
+      }
+    })
+
+    return processedKeys
   }),
 
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const rateLimitKey = `${context.session.id}:api-key:add`
-      const rateLimitResult = await checkRateLimit(
-        () => context.redis.getRedisClient(),
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_ADD.maxRequests,
-        RATE_LIMITS.API_KEY_ADD.windowMs,
-      )
+      const result = await Result.gen(async function* () {
+        const rateLimitKey = `${context.session.id}:api-key:add`
+        const rateLimitResult = await checkRateLimit(
+          () => context.redis.getRedisClient(),
+          rateLimitKey,
+          RATE_LIMITS.API_KEY_ADD.maxRequests,
+          RATE_LIMITS.API_KEY_ADD.windowMs,
+        )
 
-      const rateLimitCheck = rateLimitResult.match({
-        ok: (v) => v,
-        err: () => ({
-          isLimited: false,
-          remaining: RATE_LIMITS.API_KEY_ADD.maxRequests,
-        }),
-      })
-
-      if (rateLimitCheck.isLimited) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
+        const rateLimitCheck = rateLimitResult.match({
+          ok: (v) => v,
+          err: () => ({
+            isLimited: false,
+            remaining: RATE_LIMITS.API_KEY_ADD.maxRequests,
+          }),
         })
-      }
 
-      const settings = await userService.getUserSettings(context.session.id)
-
-      const encryptResult = encryptApiKey(input.apiKey)
-      if (Result.isError(encryptResult)) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Failed to encrypt API key",
-        })
-      }
-
-      const newKey: ApiKeyConfig = {
-        id: createCustomId(),
-        provider: input.provider,
-        name: input.name,
-        description: input.description,
-        apiKey: encryptResult.value,
-        status: input.status,
-        restrictions: input.restrictions,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      let existingKeys: ApiKeyConfig[] = []
-
-      if (settings?.apiKeys) {
-        try {
-          existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
-        } catch (error) {
-          logger.error(`Error parsing existing API keys: ${formatError(error)}`)
+        if (rateLimitCheck.isLimited) {
+          return Result.err(
+            new RateLimitExceededError({
+              operation: "add-api-key",
+              remaining: rateLimitCheck.remaining,
+            }),
+          )
         }
-      }
 
-      const updatedKeys = [...existingKeys, newKey]
+        const settings = await userService.getUserSettings(context.session.id)
 
-      await userService.upsertUserSettings(context.session.id, {
-        apiKeys: updatedKeys,
+        const encryptedKey = yield* encryptApiKey(input.apiKey).mapError(
+          () =>
+            new CryptoOperationError({
+              operation: "encrypt",
+              message: "Failed to encrypt API key",
+            }),
+        )
+
+        const newKey: ApiKeyConfig = {
+          id: createCustomId(),
+          provider: input.provider,
+          name: input.name,
+          description: input.description,
+          apiKey: encryptedKey,
+          status: input.status,
+          restrictions: input.restrictions,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+
+        let existingKeys: ApiKeyConfig[] = []
+
+        if (settings?.apiKeys) {
+          try {
+            existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+          } catch (error) {
+            logger.error(
+              `Error parsing existing API keys: ${formatError(error)}`,
+            )
+          }
+        }
+
+        const updatedKeys = [...existingKeys, newKey]
+
+        await userService.upsertUserSettings(context.session.id, {
+          apiKeys: updatedKeys,
+        })
+
+        return Result.ok({
+          ...newKey,
+          apiKey: maskApiKey(input.apiKey),
+        })
       })
 
-      return {
-        ...newKey,
-        apiKey: maskApiKey(input.apiKey),
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
+
+      return result.value
     }),
 
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const rateLimitKey = `${context.session.id}:api-key:update`
-      const rateLimitResult = await checkRateLimit(
-        () => context.redis.getRedisClient(),
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-        RATE_LIMITS.API_KEY_UPDATE.windowMs,
-      )
+      // eslint-disable-next-line require-yield
+      const result = await Result.gen(async function* () {
+        const rateLimitKey = `${context.session.id}:api-key:update`
+        const rateLimitResult = await checkRateLimit(
+          () => context.redis.getRedisClient(),
+          rateLimitKey,
+          RATE_LIMITS.API_KEY_UPDATE.maxRequests,
+          RATE_LIMITS.API_KEY_UPDATE.windowMs,
+        )
 
-      const rateLimitCheck = rateLimitResult.match({
-        ok: (v) => v,
-        err: () => ({
-          isLimited: false,
-          remaining: RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-        }),
-      })
-
-      if (rateLimitCheck.isLimited) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
+        const rateLimitCheck = rateLimitResult.match({
+          ok: (v) => v,
+          err: () => ({
+            isLimited: false,
+            remaining: RATE_LIMITS.API_KEY_UPDATE.maxRequests,
+          }),
         })
-      }
 
-      const settings = await userService.getUserSettings(context.session.id)
-
-      if (!settings?.apiKeys) {
-        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
-      }
-
-      try {
-        const existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
-        const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
-
-        if (keyIndex === -1) {
-          throw new ORPCError("NOT_FOUND", { message: "API key not found" })
+        if (rateLimitCheck.isLimited) {
+          return Result.err(
+            new RateLimitExceededError({
+              operation: "update-api-key",
+              remaining: rateLimitCheck.remaining,
+            }),
+          )
         }
 
-        let encryptedApiKey: string = existingKeys[keyIndex].apiKey
+        const settings = await userService.getUserSettings(context.session.id)
+
+        if (!settings?.apiKeys) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              message: "No API keys found",
+            }),
+          )
+        }
+
+        const existingKeys = Result.try({
+          try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
+          catch: (e) => {
+            logger.error(`Error parsing existing API keys: ${formatError(e)}`)
+            return Result.err(
+              new ApiKeyValidationError({
+                message: "Failed to parse existing API keys",
+              }),
+            )
+          },
+        })
+
+        if (existingKeys.isErr()) {
+          return Result.err(existingKeys.error)
+        }
+
+        const keyIndex = existingKeys.value.findIndex(
+          (key) => key.id === input.id,
+        )
+
+        if (keyIndex === -1) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              keyId: input.id,
+            }),
+          )
+        }
+
+        let encryptedApiKey: string = existingKeys.value[keyIndex].apiKey
         if (input.apiKey) {
           const encryptResult = encryptApiKey(input.apiKey)
-          if (Result.isError(encryptResult)) {
-            throw new ORPCError("INTERNAL_SERVER_ERROR", {
-              message: "Failed to encrypt API key",
-            })
+          if (encryptResult.isErr()) {
+            return Result.err(
+              new CryptoOperationError({
+                operation: "encrypt",
+                message: "Failed to encrypt API key",
+              }),
+            )
           }
           encryptedApiKey = encryptResult.value
         }
 
         const updatedKey: ApiKeyConfig = {
-          ...existingKeys[keyIndex],
+          ...existingKeys.value[keyIndex],
           ...input,
           apiKey: encryptedApiKey,
           updatedAt: new Date().toISOString(),
         }
 
-        const updatedKeys = [...existingKeys]
+        const updatedKeys = [...existingKeys.value]
         updatedKeys[keyIndex] = updatedKey
 
         await userService.upsertUserSettings(context.session.id, {
@@ -268,74 +331,105 @@ export const userRouter = {
         })
 
         const decryptResult = decryptApiKey(
-          input.apiKey ?? existingKeys[keyIndex].apiKey,
+          input.apiKey ?? existingKeys.value[keyIndex].apiKey,
         )
         const maskedKey = Result.isOk(decryptResult)
           ? maskApiKey(decryptResult.value)
           : "Error: Failed to decrypt"
 
-        return {
+        return Result.ok({
           ...updatedKey,
           apiKey: maskedKey,
-        }
-      } catch (error) {
-        logger.error(`Error updating API key: ${formatError(error)}`)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Failed to update API key",
         })
+      })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
+
+      return result.value
     }),
 
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const rateLimitKey = `${context.session.id}:api-key:delete`
-      const rateLimitResult = await checkRateLimit(
-        () => context.redis.getRedisClient(),
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_DELETE.maxRequests,
-        RATE_LIMITS.API_KEY_DELETE.windowMs,
-      )
+      // eslint-disable-next-line require-yield
+      const result = await Result.gen(async function* () {
+        const rateLimitKey = `${context.session.id}:api-key:delete`
+        const rateLimitResult = await checkRateLimit(
+          () => context.redis.getRedisClient(),
+          rateLimitKey,
+          RATE_LIMITS.API_KEY_DELETE.maxRequests,
+          RATE_LIMITS.API_KEY_DELETE.windowMs,
+        )
 
-      const rateLimitCheck = rateLimitResult.match({
-        ok: (v) => v,
-        err: () => ({
-          isLimited: false,
-          remaining: RATE_LIMITS.API_KEY_DELETE.maxRequests,
-        }),
-      })
-
-      if (rateLimitCheck.isLimited) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
+        const rateLimitCheck = rateLimitResult.match({
+          ok: (v) => v,
+          err: () => ({
+            isLimited: false,
+            remaining: RATE_LIMITS.API_KEY_DELETE.maxRequests,
+          }),
         })
-      }
 
-      const settings = await userService.getUserSettings(context.session.id)
+        if (rateLimitCheck.isLimited) {
+          return Result.err(
+            new RateLimitExceededError({
+              operation: "delete-api-key",
+              remaining: rateLimitCheck.remaining,
+            }),
+          )
+        }
 
-      if (!settings?.apiKeys) {
-        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
-      }
+        const settings = await userService.getUserSettings(context.session.id)
 
-      try {
-        const existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
-        const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
+        if (!settings?.apiKeys) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              message: "No API keys found",
+            }),
+          )
+        }
 
-        if (updatedKeys.length === existingKeys.length) {
-          throw new ORPCError("NOT_FOUND", { message: "API key not found" })
+        const existingKeys = Result.try({
+          try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
+          catch: (e) => {
+            logger.error(`Error parsing API keys: ${formatError(e)}`)
+            return Result.err(
+              new ApiKeyValidationError({
+                message: "Failed to parse API keys",
+              }),
+            )
+          },
+        })
+
+        if (existingKeys.isErr()) {
+          return Result.err(existingKeys.error)
+        }
+
+        const updatedKeys = existingKeys.value.filter(
+          (key) => key.id !== input.id,
+        )
+
+        if (updatedKeys.length === existingKeys.value.length) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              keyId: input.id,
+            }),
+          )
         }
 
         await userService.upsertUserSettings(context.session.id, {
           apiKeys: updatedKeys,
         })
 
-        return { success: true, id: input.id }
-      } catch (error) {
-        logger.error(`Error deleting API key: ${formatError(error)}`)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Failed to delete API key",
-        })
+        return Result.ok({ success: true, id: input.id })
+      })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
+
+      return result.value
     }),
 
   getApiKeyStats: adminProcedure.handler(async ({ context }) => {
@@ -393,10 +487,15 @@ export const userRouter = {
     )
     .handler(async ({ context, input }) => {
       if (input.enabled && (!input.threshold || !input.amount)) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "Both threshold and amount are required when enabling auto-topup",
-        })
+        return handleProcedureError(
+          Result.err(
+            new ValidationError({
+              field: "enabled",
+              message:
+                "Both threshold and amount are required when enabling auto-topup",
+            }),
+          ),
+        )
       }
 
       if (
@@ -405,9 +504,14 @@ export const userRouter = {
         input.amount &&
         input.threshold >= input.amount
       ) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Threshold must be less than top-up amount",
-        })
+        return handleProcedureError(
+          Result.err(
+            new ValidationError({
+              field: "threshold",
+              message: "Threshold must be less than top-up amount",
+            }),
+          ),
+        )
       }
 
       await userService.updateAutoTopup(context.session.id, {

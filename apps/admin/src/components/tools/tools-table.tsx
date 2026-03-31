@@ -25,7 +25,12 @@ interface ToolsTableProps {
   onToggleAll: () => void
   onToggleTool: (toolId: string) => void
   onDelete: (tool: { id: string; name: string }) => void
-  duplicateMutation: UseMutationResult<{ id: string }, Error, string, unknown>
+  duplicateMutation: UseMutationResult<
+    { id: string } | undefined,
+    Error,
+    string,
+    unknown
+  >
 }
 
 const ToolsTable = ({

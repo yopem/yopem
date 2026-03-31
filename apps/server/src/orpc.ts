@@ -1,4 +1,5 @@
 import { ORPCError, os } from "@orpc/server"
+import { Result } from "better-result"
 
 import type { SessionUser } from "auth/types"
 import { redisCache } from "cache"
@@ -32,21 +33,34 @@ export async function createRPCContext(opts: {
     const refreshToken = cookies.get("refresh_token")
 
     if (accessToken) {
-      try {
-        const { authClient } = await import("auth/client")
-        const { subjects } = await import("auth/subjects")
+      const result = await Result.tryPromise({
+        try: async () => {
+          const { authClient } = await import("auth/client")
+          const { subjects } = await import("auth/subjects")
 
-        const verified = await authClient.verify(subjects, accessToken.value, {
-          refresh: refreshToken?.value,
-        })
+          const verified = await authClient.verify(
+            subjects,
+            accessToken.value,
+            {
+              refresh: refreshToken?.value,
+            },
+          )
 
-        if (!verified.err) {
-          session = verified.subject.properties
-        }
-      } catch (err) {
-        logger.error(
-          `[createRPCContext] token verification threw unexpectedly: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
-        )
+          if (!verified.err) {
+            return verified.subject.properties
+          }
+          return null
+        },
+        catch: (err) => {
+          logger.error(
+            `[createRPCContext] token verification threw unexpectedly: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
+          )
+          return null
+        },
+      })
+
+      if (result.isOk() && result.value) {
+        session = result.value
       }
     }
   }
@@ -78,7 +92,7 @@ const timingMiddleware = o.middleware(async ({ next, path }) => {
 export const publicProcedure = o.use(timingMiddleware)
 
 export const protectedProcedure = publicProcedure.use(({ context, next }) => {
-  if (!context.session || typeof context.session != "object") {
+  if (!context.session || typeof context.session !== "object") {
     throw new ORPCError("UNAUTHORIZED")
   }
 

@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server"
 import { Result } from "better-result"
 import {
   adminProcedure,
@@ -48,6 +47,7 @@ import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { decryptApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
 
+import { handleProcedureError } from "./error-handler"
 import {
   AiExecutionError,
   ApiKeyInactiveError,
@@ -62,7 +62,8 @@ import {
   ToolConfigurationError,
   ToolNotAvailableError,
   ToolNotFoundError,
-} from "../procedure-errors"
+  ValidationError,
+} from "./procedure-errors"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 
@@ -102,6 +103,175 @@ function projectPublicTool<T extends Record<string, unknown>>(
   return result
 }
 
+async function getToolWithError(
+  toolId: string,
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<typeof getToolById>>>,
+    ToolNotFoundError
+  >
+> {
+  const tool = await getToolById(toolId)
+  if (!tool) {
+    return Result.err(new ToolNotFoundError({ toolId }))
+  }
+  return Result.ok(tool)
+}
+
+async function getToolBySlugWithError(
+  slug: string,
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<typeof getToolBySlug>>>,
+    ToolNotFoundError
+  >
+> {
+  const tool = await getToolBySlug(slug)
+  if (!tool) {
+    return Result.err(new ToolNotFoundError({ slug }))
+  }
+  return Result.ok(tool)
+}
+
+async function getToolBySlugIdWithError(
+  slug: string,
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<typeof getToolBySlugId>>>,
+    ToolNotFoundError
+  >
+> {
+  const tool = await getToolBySlugId(slug)
+  if (!tool) {
+    return Result.err(new ToolNotFoundError({ slug }))
+  }
+  return Result.ok(tool)
+}
+
+async function getReviewWithError(
+  reviewId: string,
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<typeof getToolReviewById>>>,
+    ReviewNotFoundError
+  >
+> {
+  const review = await getToolReviewById(reviewId)
+  if (!review) {
+    return Result.err(new ReviewNotFoundError({ reviewId }))
+  }
+  return Result.ok(review)
+}
+
+async function getAssetWithValidation(
+  assetId: string,
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<typeof getAssetById>>>,
+    AssetNotFoundError | AssetValidationError
+  >
+> {
+  const asset = await getAssetById(assetId)
+  if (!asset) {
+    return Result.err(new AssetNotFoundError({ assetId }))
+  }
+  if (asset.type !== "images") {
+    return Result.err(
+      new AssetValidationError({
+        message: "Thumbnail must be an image asset",
+      }),
+    )
+  }
+  return Result.ok(asset)
+}
+
+async function getApiKeysWithError(redis: {
+  getCache: <T>(key: string) => Promise<Result<T | null, unknown>>
+}): Promise<Result<ApiKeyConfig[], SettingsNotFoundError>> {
+  const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
+  const cachedResult = await redis.getCache<ApiKeyConfig[]>(cacheKey)
+
+  const cached = cachedResult.match({
+    ok: (v) => v,
+    err: () => null,
+  })
+
+  if (cached) {
+    return Result.ok(cached)
+  }
+
+  const settings = await getSetting(API_KEYS_SETTING_KEY)
+
+  if (!settings?.settingValue) {
+    return Result.err(
+      new SettingsNotFoundError({
+        key: API_KEYS_SETTING_KEY,
+        message: "No API keys configured",
+      }),
+    )
+  }
+
+  return Result.ok(settings.settingValue as ApiKeyConfig[])
+}
+
+function validateRequiredInputs(
+  inputs: Record<string, string>,
+  inputVariables: { variableName: string; isOptional?: boolean }[],
+): Result<void, ValidationError> {
+  const requiredInputs = inputVariables.filter((v) => !v.isOptional)
+  const missingInputs = requiredInputs
+    .filter((v) => !inputs[v.variableName])
+    .map((v) => v.variableName)
+
+  if (missingInputs.length > 0) {
+    return Result.err(
+      new ValidationError({
+        message: `Missing required inputs: ${missingInputs.join(", ")}`,
+      }),
+    )
+  }
+
+  return Result.ok(undefined)
+}
+
+function validateSystemRole(systemRole: string): Result<void, ValidationError> {
+  if (!systemRole || systemRole.trim() === "") {
+    return Result.err(
+      new ValidationError({
+        field: "systemRole",
+        message: "System role is required",
+      }),
+    )
+  }
+  return Result.ok(undefined)
+}
+
+function validateUserInstructionTemplate(
+  template: string,
+): Result<void, ValidationError> {
+  if (!template || template.trim() === "") {
+    return Result.err(
+      new ValidationError({
+        field: "userInstructionTemplate",
+        message: "User instruction template is required",
+      }),
+    )
+  }
+  return Result.ok(undefined)
+}
+
+function validateApiKeyId(apiKeyId: string): Result<void, ValidationError> {
+  if (!apiKeyId) {
+    return Result.err(
+      new ValidationError({
+        field: "apiKeyId",
+        message: "API key is required for preview execution",
+      }),
+    )
+  }
+  return Result.ok(undefined)
+}
+
 export const toolsRouter = {
   list: publicProcedure
     .input(
@@ -124,73 +294,37 @@ export const toolsRouter = {
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolById(input.id)
-          if (!tool) {
-            throw new ToolNotFoundError({ toolId: input.id })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ toolId: input.id }),
-      })
+      const result = await getToolWithError(input.id)
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      return projectPublicTool(toolResult.value)
+      return projectPublicTool(result.value)
     }),
 
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
     .handler(async ({ input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolBySlug(input.slug)
-          if (!tool) {
-            throw new ToolNotFoundError({ slug: input.slug })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ slug: input.slug }),
-      })
+      const result = await getToolBySlugWithError(input.slug)
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      return projectPublicTool(toolResult.value)
+      return projectPublicTool(result.value)
     }),
 
   adminGetById: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolById(input.id)
-          if (!tool) {
-            throw new ToolNotFoundError({ toolId: input.id })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ toolId: input.id }),
-      })
+      const result = await getToolWithError(input.id)
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      return toolResult.value
+      return result.value
     }),
 
   getPopular: publicProcedure.handler(() => {
@@ -213,159 +347,145 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const [tool, cachedApiKeysResult, userCredits] = await Promise.all([
-        getToolById(input.toolId),
-        context.redis.getCache<ApiKeyConfig[]>(cacheKey),
-        getUserCredits(context.session.id),
-      ])
+      const result = await Result.gen(async function* () {
+        const tool = yield* await getToolWithError(input.toolId)
 
-      if (!tool) {
-        throw new ToolNotFoundError({ toolId: input.toolId })
-      }
-
-      if (tool.status !== "active") {
-        throw new ToolNotAvailableError({ toolId: input.toolId })
-      }
-
-      if (tool.apiKeyId === null) {
-        throw new ToolConfigurationError({
-          toolId: input.toolId,
-          message: "Tool is not configured with an API key",
-        })
-      }
-
-      const cachedApiKeys = cachedApiKeysResult.match({
-        ok: (v) => v,
-        err: () => null,
-      })
-
-      let apiKeys = cachedApiKeys
-      if (!apiKeys) {
-        const settings = await getSetting(API_KEYS_SETTING_KEY)
-
-        if (!settings?.settingValue) {
-          throw new SettingsNotFoundError({
-            key: API_KEYS_SETTING_KEY,
-            message: "No API keys configured",
-          })
+        if (tool.status !== "active") {
+          return Result.err(new ToolNotAvailableError({ toolId: input.toolId }))
         }
-        apiKeys = settings.settingValue as ApiKeyConfig[]
-      }
 
-      const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
+        if (tool.apiKeyId === null) {
+          return Result.err(
+            new ToolConfigurationError({
+              toolId: input.toolId,
+              message: "Tool is not configured with an API key",
+            }),
+          )
+        }
 
-      if (!selectedKey) {
-        throw new ApiKeyNotFoundError({
-          keyId: tool.apiKeyId,
-          message: "The API key configured for this tool no longer exists",
+        const apiKeys = yield* await getApiKeysWithError(context.redis)
+
+        const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
+
+        if (!selectedKey) {
+          return Result.err(
+            new ApiKeyNotFoundError({
+              keyId: tool.apiKeyId,
+              message: "The API key configured for this tool no longer exists",
+            }),
+          )
+        }
+
+        if (selectedKey.status !== "active") {
+          return Result.err(
+            new ApiKeyInactiveError({
+              apiKeyId: tool.apiKeyId,
+              message: "The API key configured for this tool is inactive",
+            }),
+          )
+        }
+
+        const userCredits = await getUserCredits(context.session.id)
+        const credits =
+          userCredits ?? (await initUserCredits(context.session.id))
+
+        const cost = Number(tool.costPerRun ?? 0)
+        if (Number(credits.balance) < cost) {
+          return Result.err(
+            new InsufficientCreditsError({
+              required: cost,
+              available: Number(credits.balance),
+            }),
+          )
+        }
+
+        const decryptedKey = yield* decryptApiKey(selectedKey.apiKey).mapError(
+          () =>
+            new CryptoOperationError({
+              operation: "decrypt",
+              message: "Failed to decrypt API key",
+            }),
+        )
+
+        const toolConfig = tool.config as { modelEngine: string } | null
+
+        if (toolConfig === null) {
+          return Result.err(
+            new ToolConfigurationError({
+              toolId: input.toolId,
+              message: "Tool configuration is missing",
+            }),
+          )
+        }
+
+        const runId = createCustomId()
+
+        const execResult = await executeAITool({
+          systemRole: tool.systemRole ?? "",
+          userInstructionTemplate: tool.userInstructionTemplate ?? "",
+          inputs: input.inputs,
+          config: toolConfig,
+          outputFormat: tool.outputFormat ?? "plain",
+          apiKey: decryptedKey,
+          provider: selectedKey.provider,
         })
-      }
 
-      if (selectedKey.status !== "active") {
-        throw new ApiKeyInactiveError({
-          apiKeyId: tool.apiKeyId,
-          message: "The API key configured for this tool is inactive",
-        })
-      }
+        if (Result.isError(execResult)) {
+          const error = execResult.error
+          const errorMessage = error.message
+          await insertToolRun({
+            id: runId,
+            toolId: input.toolId,
+            userId: context.session.id,
+            inputs: input.inputs,
+            outputs: { error: errorMessage },
+            status: "failed",
+            cost: String(cost),
+            completedAt: new Date(),
+          })
+          return Result.err(
+            new AiExecutionError({
+              message: `AI execution failed: ${errorMessage}`,
+              cause: error,
+            }),
+          )
+        }
 
-      const credits = userCredits ?? (await initUserCredits(context.session.id))
+        const output = execResult.value.output
 
-      const cost = Number(tool.costPerRun ?? 0)
-      if (Number(credits.balance) < cost) {
-        throw new InsufficientCreditsError({
-          required: cost,
-          available: Number(credits.balance),
-        })
-      }
-
-      const runId = createCustomId()
-      const decryptResult = decryptApiKey(selectedKey.apiKey)
-
-      if (Result.isError(decryptResult)) {
-        throw new CryptoOperationError({
-          operation: "decrypt",
-          message: "Failed to decrypt API key",
-        })
-      }
-
-      const decryptedKey = decryptResult.value
-      const toolConfig = tool.config as { modelEngine: string } | null
-
-      if (toolConfig === null) {
-        throw new ToolConfigurationError({
-          toolId: input.toolId,
-          message: "Tool configuration is missing",
-        })
-      }
-
-      const execResult = await executeAITool({
-        systemRole: tool.systemRole ?? "",
-        userInstructionTemplate: tool.userInstructionTemplate ?? "",
-        inputs: input.inputs,
-        config: toolConfig,
-        outputFormat: tool.outputFormat ?? "plain",
-        apiKey: decryptedKey,
-        provider: selectedKey.provider,
-      })
-
-      if (Result.isError(execResult)) {
-        const error = execResult.error
-        const errorMessage = error.message
         await insertToolRun({
           id: runId,
           toolId: input.toolId,
           userId: context.session.id,
           inputs: input.inputs,
-          outputs: { error: errorMessage },
-          status: "failed",
+          outputs: { result: output },
+          status: "completed",
           cost: String(cost),
           completedAt: new Date(),
         })
-        if (
-          ContextLengthError.is(error) ||
-          InvalidKeyError.is(error) ||
-          RateLimitError.is(error)
-        ) {
-          throw new AiExecutionError({
-            message: `AI execution failed: ${errorMessage}`,
-            cause: error,
-          })
-        }
-        throw new AiExecutionError({
-          message: `AI execution failed: ${errorMessage}`,
-          cause: error,
+
+        await deductCreditsForRun(context.session.id, cost, runId, tool.name)
+
+        checkAndTriggerAutoTopup(
+          context.session.id,
+          context.session.email,
+          context.session.username ?? context.session.name,
+        ).catch(() => {
+          return
         })
-      }
 
-      const output = execResult.value.output
-
-      await insertToolRun({
-        id: runId,
-        toolId: input.toolId,
-        userId: context.session.id,
-        inputs: input.inputs,
-        outputs: { result: output },
-        status: "completed",
-        cost: String(cost),
-        completedAt: new Date(),
+        return Result.ok({
+          runId,
+          output,
+          cost,
+        })
       })
 
-      await deductCreditsForRun(context.session.id, cost, runId, tool.name)
-
-      checkAndTriggerAutoTopup(
-        context.session.id,
-        context.session.email,
-        context.session.username ?? context.session.name,
-      ).catch(() => {
-        return
-      })
-
-      return {
-        runId,
-        output,
-        cost,
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
+
+      return result.value
     }),
 
   executePreview: adminProcedure
@@ -406,241 +526,190 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const requiredInputs = input.inputVariable.filter((v) => !v.isOptional)
-      const missingInputs = requiredInputs
-        .filter((v) => !input.inputs[v.variableName])
-        .map((v) => v.variableName)
+      const result = await Result.gen(async function* () {
+        yield* validateRequiredInputs(input.inputs, input.inputVariable)
+        yield* validateSystemRole(input.systemRole)
+        yield* validateUserInstructionTemplate(input.userInstructionTemplate)
+        yield* validateApiKeyId(input.apiKeyId)
 
-      if (missingInputs.length > 0) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: `Missing required inputs: ${missingInputs.join(", ")}`,
+        const apiKeys = yield* await getApiKeysWithError(context.redis)
+
+        const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
+
+        if (!selectedKey) {
+          return Result.err(
+            new ValidationError({
+              field: "apiKeyId",
+              message: "Selected API key not found",
+            }),
+          )
+        }
+
+        if (selectedKey.status !== "active") {
+          return Result.err(
+            new ValidationError({
+              field: "apiKeyId",
+              message: "Selected API key is inactive",
+            }),
+          )
+        }
+
+        const decryptedKey = yield* decryptApiKey(selectedKey.apiKey).mapError(
+          () =>
+            new CryptoOperationError({
+              operation: "decrypt",
+              message: "Failed to decrypt API key",
+            }),
+        )
+
+        const execResult = await executeAITool({
+          systemRole: input.systemRole,
+          userInstructionTemplate: input.userInstructionTemplate,
+          inputs: input.inputs,
+          config: input.config,
+          outputFormat: input.outputFormat,
+          apiKey: decryptedKey,
+          provider: selectedKey.provider,
         })
-      }
 
-      if (!input.systemRole || input.systemRole.trim() === "") {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "System role is required",
+        if (Result.isError(execResult)) {
+          const error = execResult.error
+          const errorMessage = error.message
+          if (
+            ContextLengthError.is(error) ||
+            InvalidKeyError.is(error) ||
+            RateLimitError.is(error)
+          ) {
+            return Result.err(
+              new ValidationError({
+                message: `AI execution failed: ${errorMessage}`,
+              }),
+            )
+          }
+          return Result.err(
+            new AiExecutionError({
+              message: `AI execution failed: ${errorMessage}`,
+              cause: error,
+            }),
+          )
+        }
+
+        return Result.ok({
+          output: execResult.value.output,
+          cost: 0,
         })
-      }
-      if (
-        !input.userInstructionTemplate ||
-        input.userInstructionTemplate.trim() === ""
-      ) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "User instruction template is required",
-        })
-      }
-
-      if (!input.apiKeyId) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "API key is required for preview execution",
-        })
-      }
-
-      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const cachedApiKeysResult =
-        await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
-
-      const cachedApiKeys = cachedApiKeysResult.match({
-        ok: (v) => v,
-        err: () => null,
       })
 
-      let apiKeys = cachedApiKeys
-      if (!apiKeys) {
-        const settings = await getSetting(API_KEYS_SETTING_KEY)
-
-        if (!settings?.settingValue) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            message:
-              "No API keys configured. Please add an API key in settings.",
-          })
-        }
-        apiKeys = settings.settingValue as ApiKeyConfig[]
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
-
-      if (!selectedKey) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Selected API key not found",
-        })
-      }
-
-      if (selectedKey.status !== "active") {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Selected API key is inactive",
-        })
-      }
-
-      const decryptResult = decryptApiKey(selectedKey.apiKey)
-
-      if (Result.isError(decryptResult)) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Failed to decrypt API key",
-        })
-      }
-
-      const decryptedKey = decryptResult.value
-
-      const execResult = await executeAITool({
-        systemRole: input.systemRole,
-        userInstructionTemplate: input.userInstructionTemplate,
-        inputs: input.inputs,
-        config: input.config,
-        outputFormat: input.outputFormat,
-        apiKey: decryptedKey,
-        provider: selectedKey.provider,
-      })
-
-      if (Result.isError(execResult)) {
-        const error = execResult.error
-        const errorMessage = error.message
-        if (
-          ContextLengthError.is(error) ||
-          InvalidKeyError.is(error) ||
-          RateLimitError.is(error)
-        ) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: `AI execution failed: ${errorMessage}`,
-          })
-        }
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `AI execution failed: ${errorMessage}`,
-          cause: error,
-        })
-      }
-
-      return {
-        output: execResult.value.output,
-        cost: 0,
-      }
+      return result.value
     }),
 
   create: adminProcedure
     .input(insertToolSchema)
     .handler(async ({ context, input }) => {
-      const { tagIds, categoryIds, thumbnailId, ...toolData } = input
+      const result = await Result.gen(async function* () {
+        const { tagIds, categoryIds, thumbnailId, ...toolData } = input
 
-      if (thumbnailId) {
-        const assetResult = await Result.tryPromise({
-          try: async () => {
-            const asset = await getAssetById(thumbnailId)
-            if (!asset) {
-              throw new AssetNotFoundError({ assetId: thumbnailId })
-            }
-            if (asset.type !== "images") {
-              throw new AssetValidationError({
-                message: "Thumbnail must be an image asset",
-              })
-            }
-            return asset
-          },
-          catch: (e) => {
-            if (AssetNotFoundError.is(e) || AssetValidationError.is(e)) {
-              return e
-            }
-            return new AssetNotFoundError({ assetId: thumbnailId })
-          },
+        if (thumbnailId) {
+          yield* await getAssetWithValidation(thumbnailId)
+        }
+
+        if (categoryIds && categoryIds.length > 0) {
+          const valid = await validateCategoryIds(categoryIds)
+          if (!valid) {
+            return Result.err(
+              new ValidationError({
+                message: "One or more category IDs are invalid",
+              }),
+            )
+          }
+        }
+
+        if (tagIds && tagIds.length > 0) {
+          const valid = await validateTagIds(tagIds)
+          if (!valid) {
+            return Result.err(
+              new ValidationError({
+                message: "One or more tag IDs are invalid",
+              }),
+            )
+          }
+        }
+
+        const tool = await createTool({
+          ...toolData,
+          thumbnailId: thumbnailId ?? undefined,
+          categoryIds,
+          tagIds,
+          createdBy: context.session.id,
         })
 
-        if (Result.isError(assetResult)) {
-          const error = assetResult.error
-          if (AssetNotFoundError.is(error)) {
-            throw new ORPCError("NOT_FOUND", { message: error.message })
-          }
-          throw new ORPCError("BAD_REQUEST", { message: error.message })
-        }
+        return Result.ok(tool)
+      })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
+    }),
+
+  update: adminProcedure.input(updateToolSchema).handler(async ({ input }) => {
+    const result = await Result.gen(async function* () {
+      if (!input.id) {
+        return Result.err(
+          new ValidationError({
+            field: "id",
+            message: "Tool ID is required",
+          }),
+        )
+      }
+      const { id, tagIds, categoryIds, thumbnailId, ...data } = input
+
+      if (thumbnailId) {
+        yield* await getAssetWithValidation(thumbnailId)
       }
 
       if (categoryIds && categoryIds.length > 0) {
         const valid = await validateCategoryIds(categoryIds)
         if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: "One or more category IDs are invalid",
-          })
+          return Result.err(
+            new ValidationError({
+              message: "One or more category IDs are invalid",
+            }),
+          )
         }
       }
 
       if (tagIds && tagIds.length > 0) {
         const valid = await validateTagIds(tagIds)
         if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: "One or more tag IDs are invalid",
-          })
+          return Result.err(
+            new ValidationError({
+              message: "One or more tag IDs are invalid",
+            }),
+          )
         }
       }
 
-      return createTool({
-        ...toolData,
+      const tool = await updateTool(id, {
+        ...data,
         thumbnailId: thumbnailId ?? undefined,
         categoryIds,
         tagIds,
-        createdBy: context.session.id,
-      })
-    }),
-
-  update: adminProcedure.input(updateToolSchema).handler(async ({ input }) => {
-    if (!input.id) {
-      throw new ORPCError("BAD_REQUEST", { message: "Tool ID is required" })
-    }
-    const { id, tagIds, categoryIds, thumbnailId, ...data } = input
-
-    if (thumbnailId) {
-      const assetResult = await Result.tryPromise({
-        try: async () => {
-          const asset = await getAssetById(thumbnailId)
-          if (!asset) {
-            throw new AssetNotFoundError({ assetId: thumbnailId })
-          }
-          if (asset.type !== "images") {
-            throw new AssetValidationError({
-              message: "Thumbnail must be an image asset",
-            })
-          }
-          return asset
-        },
-        catch: (e) => {
-          if (AssetNotFoundError.is(e) || AssetValidationError.is(e)) {
-            return e
-          }
-          return new AssetNotFoundError({ assetId: thumbnailId })
-        },
       })
 
-      if (Result.isError(assetResult)) {
-        const error = assetResult.error
-        if (AssetNotFoundError.is(error)) {
-          throw new ORPCError("NOT_FOUND", { message: error.message })
-        }
-        throw new ORPCError("BAD_REQUEST", { message: error.message })
-      }
-    }
-
-    if (categoryIds && categoryIds.length > 0) {
-      const valid = await validateCategoryIds(categoryIds)
-      if (!valid) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "One or more category IDs are invalid",
-        })
-      }
-    }
-
-    if (tagIds && tagIds.length > 0) {
-      const valid = await validateTagIds(tagIds)
-      if (!valid) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "One or more tag IDs are invalid",
-        })
-      }
-    }
-
-    return updateTool(id, {
-      ...data,
-      thumbnailId: thumbnailId ?? undefined,
-      categoryIds,
-      tagIds,
+      return Result.ok(tool)
     })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   delete: adminProcedure
@@ -653,22 +722,16 @@ export const toolsRouter = {
   duplicate: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
-      const result = await Result.tryPromise({
-        try: async () => {
-          const tool = await duplicateTool(input.id, context.session.id)
-          if (!tool) {
-            throw new ToolNotFoundError({ toolId: input.id })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ toolId: input.id }),
+      const result = await Result.gen(async function* () {
+        const tool = await duplicateTool(input.id, context.session.id)
+        if (!tool) {
+          yield* Result.err(new ToolNotFoundError({ toolId: input.id }))
+        }
+        return Result.ok(tool)
       })
 
-      if (Result.isError(result)) {
-        throw new ORPCError("NOT_FOUND", { message: result.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
       return result.value
@@ -688,31 +751,22 @@ export const toolsRouter = {
   getReviews: publicProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolBySlugId(input.slug)
-          if (!tool) {
-            throw new ToolNotFoundError({ slug: input.slug })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ slug: input.slug }),
+      const result = await Result.gen(async function* () {
+        const tool = yield* await getToolBySlugIdWithError(input.slug)
+        const reviews = await getToolReviews(tool.id)
+        return Result.ok({
+          ...reviews,
+          reviews: reviews.reviews.map(
+            ({ userId: _userId, ...publicReview }) => publicReview,
+          ),
+        })
       })
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      const result = await getToolReviews(toolResult.value.id)
-      return {
-        ...result,
-        reviews: result.reviews.map(
-          ({ userId: _userId, ...publicReview }) => publicReview,
-        ),
-      }
+      return result.value
     }),
 
   submitReview: protectedProcedure
@@ -724,45 +778,39 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolBySlugId(input.slug)
-          if (!tool) {
-            throw new ToolNotFoundError({ slug: input.slug })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ slug: input.slug }),
+      const result = await Result.gen(async function* () {
+        const tool = yield* await getToolBySlugIdWithError(input.slug)
+
+        const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
+
+        if (!hasUsed) {
+          return Result.err(
+            new ValidationError({
+              message:
+                "You must use this tool at least once before reviewing it",
+            }),
+          )
+        }
+
+        const review = await upsertToolReview(
+          tool.id,
+          context.session.id,
+          context.session.username ??
+            context.session.name ??
+            context.session.email ??
+            null,
+          input.rating,
+          input.reviewText ?? null,
+        )
+
+        return Result.ok(review)
       })
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      const hasUsed = await hasUserUsedTool(
-        toolResult.value.id,
-        context.session.id,
-      )
-
-      if (!hasUsed) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "You must use this tool at least once before reviewing it",
-        })
-      }
-
-      return upsertToolReview(
-        toolResult.value.id,
-        context.session.id,
-        context.session.username ??
-          context.session.name ??
-          context.session.email ??
-          null,
-        input.rating,
-        input.reviewText ?? null,
-      )
+      return result.value
     }),
 
   updateReview: protectedProcedure
@@ -774,97 +822,63 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const reviewResult = await Result.tryPromise({
-        try: async () => {
-          const review = await getToolReviewById(input.reviewId)
-          if (!review) {
-            throw new ReviewNotFoundError({ reviewId: input.reviewId })
-          }
-          if (review.userId !== context.session.id) {
-            throw new ForbiddenError({
+      const result = await Result.gen(async function* () {
+        const review = yield* await getReviewWithError(input.reviewId)
+
+        if (review.userId !== context.session.id) {
+          return Result.err(
+            new ForbiddenError({
               message: "You can only update your own reviews",
-            })
-          }
-          return review
-        },
-        catch: (e) => {
-          if (ReviewNotFoundError.is(e) || ForbiddenError.is(e)) {
-            return e
-          }
-          return new ReviewNotFoundError({ reviewId: input.reviewId })
-        },
+            }),
+          )
+        }
+
+        await updateToolReview(
+          input.reviewId,
+          input.rating,
+          input.reviewText ?? null,
+        )
+
+        return Result.ok({ success: true })
       })
 
-      if (Result.isError(reviewResult)) {
-        const error = reviewResult.error
-        if (ReviewNotFoundError.is(error)) {
-          throw new ORPCError("NOT_FOUND", { message: error.message })
-        }
-        if (ForbiddenError.is(error)) {
-          throw new ORPCError("FORBIDDEN", { message: error.message })
-        }
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      await updateToolReview(
-        input.reviewId,
-        input.rating,
-        input.reviewText ?? null,
-      )
-
-      return { success: true }
+      return result.value
     }),
 
   getUserReview: protectedProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ context, input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolBySlugId(input.slug)
-          if (!tool) {
-            throw new ToolNotFoundError({ slug: input.slug })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ slug: input.slug }),
+      const result = await Result.gen(async function* () {
+        const tool = yield* await getToolBySlugIdWithError(input.slug)
+        const review = await getUserReview(tool.id, context.session.id)
+        return Result.ok(review)
       })
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      return getUserReview(toolResult.value.id, context.session.id)
+      return result.value
     }),
 
   hasUsedTool: protectedProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ context, input }) => {
-      const toolResult = await Result.tryPromise({
-        try: async () => {
-          const tool = await getToolBySlugId(input.slug)
-          if (!tool) {
-            throw new ToolNotFoundError({ slug: input.slug })
-          }
-          return tool
-        },
-        catch: (e) =>
-          ToolNotFoundError.is(e)
-            ? e
-            : new ToolNotFoundError({ slug: input.slug }),
+      const result = await Result.gen(async function* () {
+        const tool = yield* await getToolBySlugIdWithError(input.slug)
+        const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
+        return Result.ok({ hasUsed })
       })
 
-      if (Result.isError(toolResult)) {
-        throw new ORPCError("NOT_FOUND", { message: toolResult.error.message })
+      if (result.isErr()) {
+        return handleProcedureError(result)
       }
 
-      const hasUsed = await hasUserUsedTool(
-        toolResult.value.id,
-        context.session.id,
-      )
-
-      return { hasUsed }
+      return result.value
     }),
 
   search: publicProcedure

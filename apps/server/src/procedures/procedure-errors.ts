@@ -231,6 +231,25 @@ export class ApiKeyInactiveError extends TaggedError("ApiKeyInactiveError")<{
   }
 }
 
+export class ModelFetchError extends TaggedError("ModelFetchError")<{
+  provider: string
+  message: string
+  cause?: unknown
+}>() {
+  constructor(args: { provider: string; message: string; cause?: unknown }) {
+    super(args)
+  }
+}
+
+export class ValidationError extends TaggedError("ValidationError")<{
+  field?: string
+  message: string
+}>() {
+  constructor(args: { field?: string; message: string }) {
+    super(args)
+  }
+}
+
 export type ToolProcedureError =
   | ToolNotFoundError
   | ToolValidationError
@@ -248,6 +267,7 @@ export type ToolProcedureError =
   | SettingsNotFoundError
   | ToolNotAvailableError
   | ApiKeyInactiveError
+  | ValidationError
 
 export type UserProcedureError =
   | ApiKeyNotFoundError
@@ -255,11 +275,14 @@ export type UserProcedureError =
   | RateLimitExceededError
   | AutoTopupValidationError
   | CryptoOperationError
+  | ValidationError
 
 export type AdminProcedureError =
   | ApiKeyNotFoundError
   | ApiKeyValidationError
   | SettingsNotFoundError
   | CryptoOperationError
+  | ValidationError
+  | ModelFetchError
 
 export type AssetProcedureError = AssetNotFoundError | AssetValidationError
