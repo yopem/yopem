@@ -1,9 +1,15 @@
+import { Result, TaggedError } from "better-result"
 import { Hono } from "hono"
 import { getCookie, deleteCookie } from "hono/cookie"
 
 import { logger } from "logger"
 
 import { authClient, setTokenCookies } from "@/auth"
+
+export class AuthCallbackError extends TaggedError("AuthCallbackError")<{
+  message: string
+  cause?: unknown
+}>() {}
 
 const appEnv = process.env["APP_ENV"] ?? "development"
 const allowedOrigins =
@@ -31,29 +37,40 @@ authCallbackRoute.get("/callback", async (c) => {
 
   const callbackUrl = `${serverOrigin}/auth/callback`
 
-  try {
-    const exchanged = await authClient.exchange(code, callbackUrl)
+  const result = await Result.tryPromise({
+    try: async () => {
+      const exchanged = await authClient.exchange(code, callbackUrl)
 
-    if (exchanged.err) {
-      logger.error(`Token exchange failed: ${JSON.stringify(exchanged.err)}`)
-      return c.json({ error: "Token exchange failed" }, 401)
-    }
+      if (exchanged.err) {
+        throw new AuthCallbackError({
+          message: `Token exchange failed: ${JSON.stringify(exchanged.err)}`,
+        })
+      }
 
-    setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
+      setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
 
-    const loginOrigin = getCookie(c, "login_origin")
-    const origin =
-      loginOrigin && allowedOrigins.includes(loginOrigin)
-        ? loginOrigin
-        : defaultOrigin
-    deleteCookie(c, "login_origin", { path: "/" })
+      const loginOrigin = getCookie(c, "login_origin")
+      const origin =
+        loginOrigin && allowedOrigins.includes(loginOrigin)
+          ? loginOrigin
+          : defaultOrigin
+      deleteCookie(c, "login_origin", { path: "/" })
 
-    const targetUrl = `${origin}${redirectPath}`
-    return c.redirect(targetUrl, 302)
-  } catch (err) {
-    logger.error(
-      `Auth callback error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
-    )
-    return c.json({ error: "Authentication failed" }, 500)
+      return `${origin}${redirectPath}`
+    },
+    catch: (error) =>
+      error instanceof AuthCallbackError
+        ? error
+        : new AuthCallbackError({
+            message: "Authentication failed",
+            cause: error,
+          }),
+  })
+
+  if (result.isOk()) {
+    return c.redirect(result.value, 302)
   }
+
+  logger.error(`Auth callback error: ${result.error.message}`)
+  return c.json({ error: "Authentication failed" }, 500)
 })

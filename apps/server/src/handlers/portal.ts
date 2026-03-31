@@ -1,8 +1,14 @@
 import { Polar } from "@polar-sh/sdk"
+import { Result, TaggedError } from "better-result"
 import { Hono } from "hono"
 
 import type { SessionUser } from "auth/types"
 import { logger } from "logger"
+
+export class PortalSessionError extends TaggedError("PortalSessionError")<{
+  message: string
+  cause?: unknown
+}>() {}
 
 interface Env {
   Variables: {
@@ -27,18 +33,29 @@ portalRoute.get("/", async (c) => {
     return c.text("Unauthorized", 401)
   }
 
-  try {
-    const result = await polar.customerSessions.create({
-      customerId: session.id,
-    })
+  const result = await Result.tryPromise({
+    try: async () => {
+      const polarResult = await polar.customerSessions.create({
+        customerId: session.id,
+      })
+      return polarResult.customerPortalUrl
+    },
+    catch: (error) =>
+      new PortalSessionError({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to create portal session",
+        cause: error,
+      }),
+  })
 
-    return c.redirect(result.customerPortalUrl, 303)
-  } catch (error) {
-    logger.error(
-      `Portal error: ${error instanceof Error ? error.message : String(error)}`,
-    )
-    return c.text("Failed to create portal session", 500)
+  if (result.isOk()) {
+    return c.redirect(result.value, 303)
   }
+
+  logger.error(`Portal error: ${result.error.message}`)
+  return c.text("Failed to create portal session", 500)
 })
 
 export { portalRoute }

@@ -1,4 +1,5 @@
 import { Polar } from "@polar-sh/sdk"
+import { Result, TaggedError } from "better-result"
 import { Hono } from "hono"
 
 import type { SessionUser } from "auth/types"
@@ -7,8 +8,20 @@ import {
   insertCheckoutSession,
   upsertPolarCustomer,
 } from "db/services/user"
-import { formatError, logger } from "logger"
+import { logger } from "logger"
 import { validateTopupAmount } from "payments/credit-calculation"
+
+export class CheckoutError extends TaggedError("CheckoutError")<{
+  message: string
+  cause?: unknown
+}>() {}
+
+export class CustomerCreationError extends TaggedError(
+  "CustomerCreationError",
+)<{
+  message: string
+  cause?: unknown
+}>() {}
 
 interface Env {
   Variables: {
@@ -51,60 +64,82 @@ checkoutRoute.get("/", async (c) => {
     return c.text(validation.error ?? "Invalid amount", 400)
   }
 
-  try {
-    let polarCustomerId: string | null = null
-
-    try {
+  const customerResult = await Result.tryPromise({
+    try: async () => {
       const userSettings = await getUserSettings(session.id)
 
       if (userSettings?.polarCustomerId) {
-        polarCustomerId = userSettings.polarCustomerId
-      } else {
-        const customer = await polar.customers.create({
-          email: session.email,
-          metadata: { externalId: session.id },
-        })
-
-        polarCustomerId = customer.id
-        await upsertPolarCustomer(session.id, polarCustomerId)
+        return userSettings.polarCustomerId
       }
-    } catch (error) {
-      logger.error(
-        `Failed to create/get Polar customer: userId=${session.id}, error=${formatError(error)}`,
-      )
-    }
 
-    const checkout = await polar.checkouts.custom.create({
-      productId: polarProductId,
-      amount: Math.round(amountNum * 100),
-      successUrl,
-      customerId: polarCustomerId ?? undefined,
-      metadata: {
-        userId: session.id,
-        userName: session.username ?? session.name ?? session.email,
-        amount: String(amountNum),
-        auto_topup: String(autoTopup),
-      },
-    })
+      const customer = await polar.customers.create({
+        email: session.email,
+        metadata: { externalId: session.id },
+      })
 
-    const checkoutUrl = checkout.url
-    if (!checkoutUrl) {
-      return c.text("Checkout URL not available", 500)
-    }
+      await upsertPolarCustomer(session.id, customer.id)
+      return customer.id
+    },
+    catch: (error) =>
+      new CustomerCreationError({
+        message: "Failed to create/get Polar customer",
+        cause: error,
+      }),
+  })
 
-    await insertCheckoutSession({
-      userId: session.id,
-      checkoutId: checkout.id,
-      productId: polarProductId,
-      checkoutUrl,
-      amount: String(amountNum),
-    })
+  const polarCustomerId = customerResult.isOk() ? customerResult.value : null
 
-    return c.redirect(checkoutUrl, 303)
-  } catch (error) {
-    logger.error(`Checkout error: ${formatError(error)}`)
-    return c.text("Internal Server Error", 500)
+  if (customerResult.isErr()) {
+    logger.error(
+      `Failed to create/get Polar customer: userId=${session.id}, error=${customerResult.error.message}`,
+    )
   }
+
+  const checkoutResult = await Result.tryPromise({
+    try: async () => {
+      const checkout = await polar.checkouts.custom.create({
+        productId: polarProductId,
+        amount: Math.round(amountNum * 100),
+        successUrl,
+        customerId: polarCustomerId ?? undefined,
+        metadata: {
+          userId: session.id,
+          userName: session.username ?? session.name ?? session.email,
+          amount: String(amountNum),
+          auto_topup: String(autoTopup),
+        },
+      })
+
+      const checkoutUrl = checkout.url
+      if (!checkoutUrl) {
+        throw new CheckoutError({ message: "Checkout URL not available" })
+      }
+
+      await insertCheckoutSession({
+        userId: session.id,
+        checkoutId: checkout.id,
+        productId: polarProductId,
+        checkoutUrl,
+        amount: String(amountNum),
+      })
+
+      return checkoutUrl
+    },
+    catch: (error) =>
+      error instanceof CheckoutError
+        ? error
+        : new CheckoutError({
+            message: "Failed to create checkout",
+            cause: error,
+          }),
+  })
+
+  if (checkoutResult.isOk()) {
+    return c.redirect(checkoutResult.value, 303)
+  }
+
+  logger.error(`Checkout error: ${checkoutResult.error.message}`)
+  return c.text("Internal Server Error", 500)
 })
 
 export { checkoutRoute }

@@ -206,12 +206,15 @@ export const userRouter = {
         let existingKeys: ApiKeyConfig[] = []
 
         if (settings?.apiKeys) {
-          try {
-            existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
-          } catch (error) {
-            logger.error(
-              `Error parsing existing API keys: ${formatError(error)}`,
-            )
+          const parseResult = Result.try({
+            try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
+            catch: () => null,
+          })
+
+          if (parseResult.isOk() && parseResult.value) {
+            existingKeys = parseResult.value
+          } else {
+            logger.error("Error parsing existing API keys")
           }
         }
 
@@ -438,11 +441,17 @@ export const userRouter = {
     let activeKeys = 0
 
     if (settings?.apiKeys) {
-      try {
-        const apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
-        activeKeys = apiKeys.filter((key) => key.status === "active").length
-      } catch (error) {
-        logger.error(`Error parsing API keys: ${formatError(error)}`)
+      const parseResult = Result.try({
+        try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
+        catch: () => null,
+      })
+
+      if (parseResult.isOk() && parseResult.value) {
+        activeKeys = parseResult.value.filter(
+          (key) => key.status === "active",
+        ).length
+      } else {
+        logger.error("Error parsing API keys")
       }
     }
 
