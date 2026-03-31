@@ -17,6 +17,8 @@ import {
 import { r2Domain } from "env/hono"
 import { getR2Storage } from "storage"
 
+import { AssetNotFoundError } from "../procedure-errors"
+
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
 const SETTINGS_CACHE_TTL = 300
@@ -134,14 +136,26 @@ export const assetsRouter = {
   delete: adminProcedure
     .input(deleteAssetInputSchema)
     .handler(async ({ input }) => {
-      const asset = await getAssetById(input.id)
+      const assetResult = await Result.tryPromise({
+        try: async () => {
+          const asset = await getAssetById(input.id)
+          if (!asset) {
+            throw new AssetNotFoundError({ assetId: input.id })
+          }
+          return asset
+        },
+        catch: (e) =>
+          AssetNotFoundError.is(e)
+            ? e
+            : new AssetNotFoundError({ assetId: input.id }),
+      })
 
-      if (!asset) {
-        throw new ORPCError("NOT_FOUND", { message: "Asset not found" })
+      if (Result.isError(assetResult)) {
+        throw new ORPCError("NOT_FOUND", { message: assetResult.error.message })
       }
 
       const r2 = getR2Storage()
-      const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+      const key = assetResult.value.url.replace(r2Domain, "").replace(/^\//, "")
       await r2.deleteFile(key)
 
       await deleteAsset(input.id)
