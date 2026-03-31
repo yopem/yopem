@@ -90,7 +90,15 @@ const uptimeHistoryOutputSchema = z.object({
 export const adminRouter = {
   getApiKeys: adminProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-    const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+    const cachedResult = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+
+    const cached = cachedResult.match({
+      ok: (v) => v,
+      err: (e) => {
+        logger.error(`Failed to get cache: ${e.message}`)
+        return null
+      },
+    })
 
     if (cached) {
       return cached.map((key) => ({
@@ -109,7 +117,7 @@ export const adminRouter = {
     }
 
     const apiKeys = settings.settingValue as ApiKeyConfig[]
-    await context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
+    void context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
 
     return apiKeys.map((key) => {
       return {
@@ -239,13 +247,21 @@ export const adminRouter = {
     .output(apiKeyStatsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:api_key_stats"
-      const cached = await context.redis.getCache<{
+      const cachedResult = await context.redis.getCache<{
         totalRequests: number
         activeKeys: number
         monthlyCost: number
         requestsThisMonth: number
         costChange: string
       }>(cacheKey)
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -286,7 +302,7 @@ export const adminRouter = {
         costChange,
       }
 
-      await context.redis.setCache(cacheKey, stats, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, stats, MODEL_CACHE_TTL)
 
       return stats
     }),
@@ -312,8 +328,16 @@ export const adminRouter = {
     const results = await Promise.all(
       entries.map(async ([provider, key]) => {
         const cacheKey = `${MODEL_CACHE_PREFIX}${provider}:${key.id}`
-        const cached =
+        const cachedResult =
           await context.redis.getCache<{ id: string; name: string }[]>(cacheKey)
+
+        const cached = cachedResult.match({
+          ok: (v) => v,
+          err: (e) => {
+            logger.error(`Failed to get cache: ${e.message}`)
+            return null
+          },
+        })
 
         if (cached) {
           return { provider, models: cached }
@@ -357,7 +381,12 @@ export const adminRouter = {
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cached = await context.redis.getCache<number>(cacheKey)
+    const cachedResult = await context.redis.getCache<number>(cacheKey)
+
+    const cached = cachedResult.match({
+      ok: (v) => v,
+      err: () => null,
+    })
 
     if (cached !== null) {
       return { maxUploadSizeMB: cached }
@@ -370,7 +399,7 @@ export const adminRouter = {
         ? settings.settingValue
         : 50
 
-    await context.redis.setCache(cacheKey, maxUploadSizeMB, SETTINGS_CACHE_TTL)
+    void context.redis.setCache(cacheKey, maxUploadSizeMB, SETTINGS_CACHE_TTL)
 
     return { maxUploadSizeMB }
   }),
@@ -395,7 +424,19 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const redisClient = await context.redis.getRedisClient()
+      const redisClientResult = await context.redis.getRedisClient()
+      const redisClient = redisClientResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get Redis client: ${e.message}`)
+          return null
+        },
+      })
+
+      if (!redisClient) {
+        return { metrics: [] }
+      }
+
       const metricsTracker = new WebhookMetrics(redisClient)
 
       const eventTypes = input.eventType
@@ -422,7 +463,14 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const redisClient = await context.redis.getRedisClient()
+      const redisClientResult = await context.redis.getRedisClient()
+      const redisClient = redisClientResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get Redis client: ${e.message}`)
+          return null
+        },
+      })
 
       if (!redisClient) {
         return {
@@ -473,16 +521,16 @@ export const adminRouter = {
             await Promise.all([
               redisClient
                 .get(`webhook:metrics:${eventType}:success:${dateStr}`)
-                .then((v) => Number.parseInt(v ?? "0", 10)),
+                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
               redisClient
                 .get(`webhook:metrics:${eventType}:failure:${dateStr}`)
-                .then((v) => Number.parseInt(v ?? "0", 10)),
+                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
               redisClient
                 .get(`webhook:metrics:${eventType}:processing_time:${dateStr}`)
-                .then((v) => Number.parseInt(v ?? "0", 10)),
+                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
               redisClient
                 .get(`webhook:metrics:${eventType}:processing_count:${dateStr}`)
-                .then((v) => Number.parseInt(v ?? "0", 10)),
+                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
             ])
 
           dataPointsMap.set(dateStr, {
@@ -542,13 +590,21 @@ export const adminRouter = {
     .output(activityFeedOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:activity_feed"
-      const cached = await context.redis.getCache<
+      const cachedResult = await context.redis.getCache<
         {
           type: string
           message: string
           timestamp: Date
         }[]
       >(cacheKey)
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -566,7 +622,7 @@ export const adminRouter = {
         }
       })
 
-      await context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
 
       return activities
     }),
@@ -575,10 +631,18 @@ export const adminRouter = {
     .output(uptimeMetricsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:uptime:metrics"
-      const cached =
+      const cachedResult =
         await context.redis.getCache<z.infer<typeof uptimeMetricsOutputSchema>>(
           cacheKey,
         )
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -598,7 +662,7 @@ export const adminRouter = {
         downtimeCount: rawMetrics.downtimeCount,
       }
 
-      await context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
 
       return metrics
     }),
@@ -621,10 +685,18 @@ export const adminRouter = {
     .output(activityLogsOutputSchema)
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:activity-logs:${input.eventType ?? "all"}:${input.severity ?? "all"}:${input.startDate?.toISOString() ?? "all"}:${input.endDate?.toISOString() ?? "all"}:${input.cursor ?? "initial"}`
-      const cached =
+      const cachedResult =
         await context.redis.getCache<z.infer<typeof activityLogsOutputSchema>>(
           cacheKey,
         )
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -652,7 +724,7 @@ export const adminRouter = {
         totalCount: rawResult.totalCount,
       }
 
-      await context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
       return result
     }),
@@ -666,10 +738,18 @@ export const adminRouter = {
     .output(uptimeHistoryOutputSchema)
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:uptime:history:${input.timeRange}`
-      const cached =
+      const cachedResult =
         await context.redis.getCache<z.infer<typeof uptimeHistoryOutputSchema>>(
           cacheKey,
         )
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -721,7 +801,7 @@ export const adminRouter = {
       )
 
       const result = { dataPoints }
-      await context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
       return result
     }),
@@ -730,10 +810,18 @@ export const adminRouter = {
     .output(systemMetricsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:system"
-      const cached =
+      const cachedResult =
         await context.redis.getCache<z.infer<typeof systemMetricsOutputSchema>>(
           cacheKey,
         )
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -774,7 +862,7 @@ export const adminRouter = {
         systemUptimeChange: uptimeChange,
       }
 
-      await context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
 
       return metrics
     }),
@@ -797,9 +885,17 @@ export const adminRouter = {
     )
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:metrics:ai_requests_history:${input.timeRange}`
-      const cached = await context.redis.getCache<{
+      const cachedResult = await context.redis.getCache<{
         dataPoints: { date: string; requests: number }[]
       }>(cacheKey)
+
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: (e) => {
+          logger.error(`Failed to get cache: ${e.message}`)
+          return null
+        },
+      })
 
       if (cached) {
         return cached
@@ -837,7 +933,7 @@ export const adminRouter = {
       )
 
       const result = { dataPoints }
-      await context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
+      void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
       return result
     }),

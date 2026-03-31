@@ -46,7 +46,12 @@ export const assetsRouter = {
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cached = await context.redis.getCache<number>(cacheKey)
+    const cachedResult = await context.redis.getCache<number>(cacheKey)
+
+    const cached = cachedResult.match({
+      ok: (v) => v,
+      err: () => null,
+    })
 
     if (cached !== null) {
       return {
@@ -62,7 +67,7 @@ export const assetsRouter = {
         ? settings.settingValue
         : MAX_UPLOAD_SIZE_MB
 
-    await context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+    void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
 
     return {
       maxSizeMB,
@@ -74,7 +79,12 @@ export const assetsRouter = {
     .input(z.instanceof(File))
     .handler(async ({ context, input: file }) => {
       const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-      let maxSizeMB = await context.redis.getCache<number>(cacheKey)
+      const maxSizeMBResult = await context.redis.getCache<number>(cacheKey)
+
+      let maxSizeMB = maxSizeMBResult.match({
+        ok: (v) => v,
+        err: () => null,
+      })
 
       if (maxSizeMB === null) {
         const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
@@ -84,7 +94,7 @@ export const assetsRouter = {
             ? settings.settingValue
             : MAX_UPLOAD_SIZE_MB
 
-        await context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+        void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
       }
 
       const maxSizeBytes = maxSizeMB * 1024 * 1024

@@ -1,4 +1,5 @@
 import { Webhooks } from "@polar-sh/hono"
+import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { z } from "zod"
@@ -26,9 +27,11 @@ let redisInitialized = false
 
 async function ensureRedisInitialized() {
   if (!redisInitialized) {
-    const redis = await redisCache.getRedisClient()
-    WebhookMonitor.setRedisClient(redis)
-    redisInitialized = true
+    const redisResult = await redisCache.getRedisClient()
+    if (redisResult.isOk()) {
+      WebhookMonitor.setRedisClient(redisResult.value)
+      redisInitialized = true
+    }
   }
 }
 
@@ -71,7 +74,7 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
             { orderId: order.id, error: metadataParse.error.format() },
             "Invalid webhook order metadata",
           )
-          return
+          return Result.ok(undefined)
         }
 
         const productId = order.productId ?? ""
@@ -105,7 +108,7 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
           logger.info(
             `Order already processed (idempotent): orderId=${order.id}`,
           )
-          return
+          return Result.ok(undefined)
         }
 
         if (order.checkoutId) {
@@ -118,6 +121,8 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
         logger.info(
           `Order paid processed successfully: orderId=${order.id}, userId=${userId}, credits=${creditsGranted}`,
         )
+
+        return Result.ok(undefined)
       } catch (error) {
         logger.error(
           `Error processing order paid webhook: orderId=${order.id}, error=${formatError(error)}`,
@@ -159,7 +164,7 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
           logger.error(
             `Failed to process refund, payment not found: orderId=${order.id}`,
           )
-          return
+          return Result.ok(undefined)
         }
 
         if (result.alreadyProcessed) {
@@ -171,13 +176,15 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
           logger.info(
             `Order refund already processed (idempotent): orderId=${order.id}`,
           )
-          return
+          return Result.ok(undefined)
         }
 
         const refundType = result.isPartialRefund ? "partial" : "full"
         logger.info(
           `Order ${refundType} refund processed successfully: orderId=${order.id}, credits=${result.creditsRefunded}`,
         )
+
+        return Result.ok(undefined)
       } catch (error) {
         logger.error(
           `Error processing order refunded webhook: orderId=${order.id}, error=${formatError(error)}`,

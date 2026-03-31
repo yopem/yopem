@@ -1,7 +1,12 @@
 import type { Redis } from "ioredis"
 
-import { formatError, logger } from "logger"
+import { Result } from "better-result"
 
+import { logger } from "logger"
+
+import type { WebhookExecutionError } from "./errors.ts"
+
+import { WebhookMetricsError } from "./errors.ts"
 import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics.ts"
 
 interface WebhookMonitorMetrics {
@@ -40,17 +45,17 @@ export class WebhookMonitor {
     }
   }
 
-  static async trackWebhookExecution<T>(
+  static async trackWebhookExecution<T, E>(
     eventType: string,
     metadata: Record<string, unknown>,
-    handler: () => Promise<T>,
-  ): Promise<T> {
+    handler: () => Promise<Result<T, E>>,
+  ): Promise<Result<T, E | WebhookExecutionError | WebhookMetricsError>> {
     const startTime = Date.now()
 
-    try {
-      const result = await handler()
-      const processingTimeMs = Date.now() - startTime
+    const result = await handler()
+    const processingTimeMs = Date.now() - startTime
 
+    if (result.isOk()) {
       this.logWebhookEvent({
         eventType,
         status: "success",
@@ -59,35 +64,52 @@ export class WebhookMonitor {
       })
 
       if (this.metricsTracker) {
-        await this.metricsTracker.recordWebhookEvent(
-          eventType,
-          "success",
-          processingTimeMs,
-        )
+        const metricsResult = await Result.tryPromise({
+          try: () =>
+            this.metricsTracker!.recordWebhookEvent(
+              eventType,
+              "success",
+              processingTimeMs,
+            ),
+          catch: (e) =>
+            new WebhookMetricsError({ operation: "record", cause: e }),
+        })
+
+        if (metricsResult.isErr()) {
+          return Result.err(metricsResult.error)
+        }
       }
 
       return result
-    } catch (error) {
-      const processingTimeMs = Date.now() - startTime
+    }
 
-      this.logWebhookEvent({
-        eventType,
-        status: "failure",
-        processingTimeMs,
-        errorMessage: formatError(error),
-        metadata,
+    const error = result.error
+    this.logWebhookEvent({
+      eventType,
+      status: "failure",
+      processingTimeMs,
+      errorMessage: String(error),
+      metadata,
+    })
+
+    if (this.metricsTracker) {
+      const metricsResult = await Result.tryPromise({
+        try: () =>
+          this.metricsTracker!.recordWebhookEvent(
+            eventType,
+            "failure",
+            processingTimeMs,
+          ),
+        catch: (e) =>
+          new WebhookMetricsError({ operation: "record", cause: e }),
       })
 
-      if (this.metricsTracker) {
-        await this.metricsTracker.recordWebhookEvent(
-          eventType,
-          "failure",
-          processingTimeMs,
-        )
+      if (metricsResult.isErr()) {
+        return Result.err(metricsResult.error)
       }
-
-      throw error
     }
+
+    return result
   }
 
   static detectAnomalousRefund(params: {

@@ -12,6 +12,10 @@
       "types": "./src/credit-calculation.ts",
       "default": "./src/credit-calculation.ts"
     },
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./src/errors.ts"
+    },
     "./grant-credits": {
       "types": "./src/grant-credits.ts",
       "default": "./src/grant-credits.ts"
@@ -36,6 +40,7 @@
   },
   "dependencies": {
     "@polar-sh/sdk": "catalog:",
+    "better-result": "catalog:",
     "db": "workspace:*",
     "drizzle-orm": "catalog:",
     "env": "workspace:*",

@@ -1,37 +1,46 @@
 import type { Redis } from "ioredis"
 
+import { Result } from "better-result"
+
 import { redisKeyPrefix, redisUrl } from "env/hono"
-import { formatError, logger } from "logger"
+import { logger } from "logger"
+
+import {
+  CacheOperationError,
+  CacheSerializationError,
+  RedisConnectionError,
+} from "./errors.ts"
 
 export function createRedisCache() {
   let redis: Redis | null = null
   const prefix = redisKeyPrefix
 
-  async function initRedis(): Promise<Redis | null> {
-    if (redis) return redis
+  function initRedis(): Promise<Result<Redis | null, RedisConnectionError>> {
+    if (redis) return Promise.resolve(Result.ok(redis))
 
     if (!redisUrl) {
       logger.warn("Redis URL not found. Caching will be disabled.")
-      return null
+      return Promise.resolve(Result.ok(null))
     }
 
-    try {
-      const { default: RedisClient } = await import("ioredis")
-      redis = new RedisClient(redisUrl)
+    return Result.tryPromise({
+      try: async () => {
+        const { default: RedisClient } = await import("ioredis")
+        const client = new RedisClient(redisUrl)
 
-      redis.on("error", (error: Error) => {
-        logger.error(`Redis connection error: ${error.message}`)
-      })
+        client.on("error", (error: Error) => {
+          logger.error(`Redis connection error: ${error.message}`)
+        })
 
-      redis.on("connect", () => {
-        logger.info("Redis connected successfully")
-      })
+        client.on("connect", () => {
+          logger.info("Redis connected successfully")
+        })
 
-      return redis
-    } catch (error) {
-      logger.error(`Failed to create Redis client: ${formatError(error)}`)
-      return null
-    }
+        redis = client
+        return client
+      },
+      catch: (e) => new RedisConnectionError({ cause: e }),
+    })
   }
 
   function markDatesForSerialization(obj: unknown): unknown {
@@ -58,90 +67,177 @@ export function createRedisCache() {
     key: string,
     value: T,
     ttlSeconds = 3601,
-  ): Promise<void> {
-    const client = await getRedisClient()
-    if (!client) return
+  ): Promise<Result<void, CacheOperationError | CacheSerializationError>> {
+    const clientResult = await getRedisClient()
 
-    try {
-      const processedValue = markDatesForSerialization(value)
-      const serialized = JSON.stringify(processedValue)
-      const prefixedKey = `${prefix}${key}`
-      await client.setex(prefixedKey, ttlSeconds, serialized)
-    } catch (error) {
-      logger.error(`Failed to set cache: ${formatError(error)}`)
+    if (clientResult.isErr()) {
+      return Result.err(
+        new CacheOperationError({
+          operation: "set",
+          key,
+          cause: clientResult.error,
+        }),
+      )
     }
+
+    const client = clientResult.value
+    if (!client) return Result.ok(undefined)
+
+    return Result.tryPromise({
+      try: async () => {
+        const processedValue = markDatesForSerialization(value)
+        const serialized = JSON.stringify(processedValue)
+        const prefixedKey = `${prefix}${key}`
+        await client.setex(prefixedKey, ttlSeconds, serialized)
+      },
+      catch: (e) =>
+        e instanceof CacheSerializationError
+          ? e
+          : new CacheOperationError({ operation: "set", key, cause: e }),
+    })
   }
 
-  async function getCache<T>(key: string): Promise<T | null> {
-    const client = await getRedisClient()
-    if (!client) return null
+  async function getCache<T>(
+    key: string,
+  ): Promise<Result<T | null, CacheOperationError | CacheSerializationError>> {
+    const clientResult = await getRedisClient()
 
-    try {
-      const prefixedKey = `${prefix}${key}`
-      const value = await client.get(prefixedKey)
-      if (!value) return null
+    if (clientResult.isErr()) {
+      return Result.err(
+        new CacheOperationError({
+          operation: "get",
+          key,
+          cause: clientResult.error,
+        }),
+      )
+    }
 
-      return JSON.parse(value, (_key, val) => {
-        if (val && typeof val === "object" && val.__type === "Date") {
-          return new Date(val.value)
+    const client = clientResult.value
+    if (!client) return Result.ok(null)
+
+    return Result.tryPromise({
+      try: async () => {
+        const prefixedKey = `${prefix}${key}`
+        const value = await client.get(prefixedKey)
+        if (!value) return null
+
+        return JSON.parse(value, (_key, val) => {
+          if (val && typeof val === "object" && val.__type === "Date") {
+            return new Date(val.value)
+          }
+          return val
+        }) as T
+      },
+      catch: (e) =>
+        e instanceof CacheSerializationError
+          ? e
+          : new CacheOperationError({ operation: "get", key, cause: e }),
+    })
+  }
+
+  async function deleteCache(
+    key: string,
+  ): Promise<Result<void, CacheOperationError>> {
+    const clientResult = await getRedisClient()
+
+    if (clientResult.isErr()) {
+      return Result.err(
+        new CacheOperationError({
+          operation: "delete",
+          key,
+          cause: clientResult.error,
+        }),
+      )
+    }
+
+    const client = clientResult.value
+    if (!client) return Result.ok(undefined)
+
+    return Result.tryPromise({
+      try: async () => {
+        const prefixedKey = `${prefix}${key}`
+        await client.del(prefixedKey)
+      },
+      catch: (e) =>
+        new CacheOperationError({ operation: "delete", key, cause: e }),
+    })
+  }
+
+  async function invalidatePattern(
+    pattern: string,
+  ): Promise<Result<void, CacheOperationError>> {
+    const clientResult = await getRedisClient()
+
+    if (clientResult.isErr()) {
+      return Result.err(
+        new CacheOperationError({
+          operation: "invalidate",
+          key: pattern,
+          cause: clientResult.error,
+        }),
+      )
+    }
+
+    const client = clientResult.value
+    if (!client) return Result.ok(undefined)
+
+    return Result.tryPromise({
+      try: async () => {
+        const prefixedPattern = `${prefix}${pattern}`
+        const keys = await client.keys(prefixedPattern)
+        if (keys.length > 0) {
+          await client.del(...keys)
         }
-        return val
-      })
-    } catch (error) {
-      logger.error(`Failed to get cache: ${formatError(error)}`)
-      return null
-    }
+      },
+      catch: (e) =>
+        new CacheOperationError({
+          operation: "invalidate",
+          key: pattern,
+          cause: e,
+        }),
+    })
   }
 
-  async function deleteCache(key: string): Promise<void> {
-    const client = await getRedisClient()
-    if (!client) return
-
-    try {
-      const prefixedKey = `${prefix}${key}`
-      await client.del(prefixedKey)
-    } catch (error) {
-      logger.error(`Failed to delete cache: ${formatError(error)}`)
-    }
-  }
-
-  async function invalidatePattern(pattern: string): Promise<void> {
-    const client = await getRedisClient()
-    if (!client) return
-
-    try {
-      const prefixedPattern = `${prefix}${pattern}`
-      const keys = await client.keys(prefixedPattern)
-      if (keys.length > 0) {
-        await client.del(...keys)
-      }
-    } catch (error) {
-      logger.error(`Failed to invalidate cache pattern: ${formatError(error)}`)
-    }
-  }
-
-  async function getRedisClient(): Promise<Redis | null> {
+  async function getRedisClient(): Promise<
+    Result<Redis | null, RedisConnectionError>
+  > {
     if (typeof process === "undefined") {
-      return null
+      return Result.ok(null)
     }
-    redis ??= await initRedis()
-    return redis
+
+    if (!redis) {
+      const initResult = await initRedis()
+      if (initResult.isErr()) {
+        return Result.err(initResult.error)
+      }
+      redis = initResult.value
+    }
+
+    return Result.ok(redis)
   }
 
-  async function close(): Promise<void> {
-    if (redis) {
-      try {
-        await redis.quit()
+  async function close(): Promise<Result<void, CacheOperationError>> {
+    if (!redis) {
+      return Result.ok(undefined)
+    }
+
+    const result = await Result.tryPromise({
+      try: async () => {
+        await redis!.quit()
         logger.info("Redis connection closed successfully")
         redis = null
-      } catch (error) {
-        logger.error(`Failed to close Redis connection: ${formatError(error)}`)
-        if (redis) {
-          redis.disconnect()
-          redis = null
-        }
+      },
+      catch: (e) => new CacheOperationError({ operation: "close", cause: e }),
+    })
+
+    if (result.isErr()) {
+      if (redis) {
+        redis.disconnect()
+        redis = null
       }
     }
+
+    return result
   }
 
   return {

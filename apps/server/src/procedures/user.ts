@@ -139,17 +139,24 @@ export const userRouter = {
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const rateLimitKey = `${context.session.id}:api-key:add`
-      const redisClient = await context.redis.getRedisClient()
-      const { isLimited, remaining } = await checkRateLimit(
-        () => Promise.resolve(redisClient),
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
         rateLimitKey,
         RATE_LIMITS.API_KEY_ADD.maxRequests,
         RATE_LIMITS.API_KEY_ADD.windowMs,
       )
 
-      if (isLimited) {
+      const rateLimitCheck = rateLimitResult.match({
+        ok: (v) => v,
+        err: () => ({
+          isLimited: false,
+          remaining: RATE_LIMITS.API_KEY_ADD.maxRequests,
+        }),
+      })
+
+      if (rateLimitCheck.isLimited) {
         throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
         })
       }
 
@@ -200,17 +207,24 @@ export const userRouter = {
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const rateLimitKey = `${context.session.id}:api-key:update`
-      const redisClient = await context.redis.getRedisClient()
-      const { isLimited, remaining } = await checkRateLimit(
-        () => Promise.resolve(redisClient),
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
         rateLimitKey,
         RATE_LIMITS.API_KEY_UPDATE.maxRequests,
         RATE_LIMITS.API_KEY_UPDATE.windowMs,
       )
 
-      if (isLimited) {
+      const rateLimitCheck = rateLimitResult.match({
+        ok: (v) => v,
+        err: () => ({
+          isLimited: false,
+          remaining: RATE_LIMITS.API_KEY_UPDATE.maxRequests,
+        }),
+      })
+
+      if (rateLimitCheck.isLimited) {
         throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
         })
       }
 
@@ -276,17 +290,24 @@ export const userRouter = {
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const rateLimitKey = `${context.session.id}:api-key:delete`
-      const redisClient = await context.redis.getRedisClient()
-      const { isLimited, remaining } = await checkRateLimit(
-        () => Promise.resolve(redisClient),
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
         rateLimitKey,
         RATE_LIMITS.API_KEY_DELETE.maxRequests,
         RATE_LIMITS.API_KEY_DELETE.windowMs,
       )
 
-      if (isLimited) {
+      const rateLimitCheck = rateLimitResult.match({
+        ok: (v) => v,
+        err: () => ({
+          isLimited: false,
+          remaining: RATE_LIMITS.API_KEY_DELETE.maxRequests,
+        }),
+      })
+
+      if (rateLimitCheck.isLimited) {
         throw new ORPCError("BAD_REQUEST", {
-          message: `Rate limit exceeded. Please try again later. (${remaining} requests remaining)`,
+          message: `Rate limit exceeded. Please try again later. (${rateLimitCheck.remaining} requests remaining)`,
         })
       }
 

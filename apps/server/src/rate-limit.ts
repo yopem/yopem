@@ -1,58 +1,66 @@
 import type { Redis } from "ioredis"
 
-import { formatError, logger } from "logger"
+import { Result } from "better-result"
+
+import { RateLimitError } from "./errors.ts"
 
 export async function checkRateLimit(
-  getRedisClient: () => Promise<Redis | null>,
+  getRedisClient: () => Promise<Result<Redis | null, unknown>>,
   key: string,
   maxRequests: number,
   windowMs: number,
   options?: { failClosed?: boolean },
-): Promise<{ isLimited: boolean; remaining: number }> {
-  const redis = await getRedisClient()
+): Promise<Result<{ isLimited: boolean; remaining: number }, RateLimitError>> {
+  const redisResult = await getRedisClient()
+
+  if (redisResult.isErr()) {
+    if (options?.failClosed) {
+      return Result.ok({ isLimited: true, remaining: 0 })
+    }
+    return Result.ok({
+      isLimited: false,
+      remaining: maxRequests,
+    })
+  }
+
+  const redis = redisResult.value
 
   if (!redis) {
     if (options?.failClosed) {
-      return { isLimited: true, remaining: 0 }
+      return Result.ok({ isLimited: true, remaining: 0 })
     }
-    return {
+    return Result.ok({
       isLimited: false,
       remaining: maxRequests,
-    }
+    })
   }
 
   const now = Date.now()
   const windowStart = now - windowMs
   const redisKey = `ratelimit:${key}`
 
-  try {
-    await redis.zremrangebyscore(redisKey, 0, windowStart)
-    const count = await redis.zcard(redisKey)
+  return Result.tryPromise({
+    try: async () => {
+      await redis.zremrangebyscore(redisKey, 0, windowStart)
+      const count = await redis.zcard(redisKey)
 
-    if (count >= maxRequests) {
-      return {
-        isLimited: true,
-        remaining: 0,
+      if (count >= maxRequests) {
+        return {
+          isLimited: true,
+          remaining: 0,
+        }
       }
-    }
 
-    await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
-    await redis.pexpire(redisKey, windowMs)
+      await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
+      await redis.pexpire(redisKey, windowMs)
 
-    return {
-      isLimited: false,
-      remaining: maxRequests - count - 1,
-    }
-  } catch (error) {
-    logger.error(`Rate limit check failed: ${formatError(error)}`)
-    if (options?.failClosed) {
-      return { isLimited: true, remaining: 0 }
-    }
-    return {
-      isLimited: false,
-      remaining: maxRequests,
-    }
-  }
+      return {
+        isLimited: false,
+        remaining: maxRequests - count - 1,
+      }
+    },
+    catch: (e) => new RateLimitError({ operation: "check", cause: e }),
+  })
 }
 
 export const RATE_LIMITS = {

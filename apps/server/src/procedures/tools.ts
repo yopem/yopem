@@ -162,7 +162,7 @@ export const toolsRouter = {
     )
     .handler(async ({ context, input }) => {
       const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const [tool, cachedApiKeys, userCredits] = await Promise.all([
+      const [tool, cachedApiKeysResult, userCredits] = await Promise.all([
         getToolById(input.toolId),
         context.redis.getCache<ApiKeyConfig[]>(cacheKey),
         getUserCredits(context.session.id),
@@ -182,6 +182,11 @@ export const toolsRouter = {
             "Tool is not configured with an API key. Please update the tool configuration.",
         })
       }
+
+      const cachedApiKeys = cachedApiKeysResult.match({
+        ok: (v) => v,
+        err: () => null,
+      })
 
       let apiKeys = cachedApiKeys
       if (!apiKeys) {
@@ -374,8 +379,13 @@ export const toolsRouter = {
       }
 
       const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const cachedApiKeys =
+      const cachedApiKeysResult =
         await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+
+      const cachedApiKeys = cachedApiKeysResult.match({
+        ok: (v) => v,
+        err: () => null,
+      })
 
       let apiKeys = cachedApiKeys
       if (!apiKeys) {
@@ -692,7 +702,7 @@ export const toolsRouter = {
     )
     .handler(async ({ context, input }) => {
       const cacheKey = `search:${input.query.toLowerCase().trim()}:${input.limit}`
-      const cached = await context.redis.getCache<
+      const cachedResult = await context.redis.getCache<
         {
           id: string
           slug: string
@@ -703,13 +713,18 @@ export const toolsRouter = {
         }[]
       >(cacheKey)
 
+      const cached = cachedResult.match({
+        ok: (v) => v,
+        err: () => null,
+      })
+
       if (cached) {
         return { results: cached }
       }
 
       const results = await searchTools(input.query, input.limit)
 
-      await context.redis.setCache(cacheKey, results, 60)
+      void context.redis.setCache(cacheKey, results, 60)
 
       return { results }
     }),
