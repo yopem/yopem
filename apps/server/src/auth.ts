@@ -1,5 +1,6 @@
 import type { Context, MiddlewareHandler } from "hono"
 
+import { Result } from "better-result"
 import { getCookie, setCookie } from "hono/cookie"
 
 import { authClient } from "auth/client"
@@ -54,29 +55,34 @@ export const authMiddleware: MiddlewareHandler<SessionEnv> = async (
     return next()
   }
 
-  try {
-    const verified = await authClient.verify(subjects, accessToken, {
-      refresh: refreshToken,
-    })
+  const result = await Result.tryPromise({
+    try: async () => {
+      const verified = await authClient.verify(subjects, accessToken, {
+        refresh: refreshToken,
+      })
 
-    if (verified.err) {
-      logger.error(`Token verification failed: ${JSON.stringify(verified.err)}`)
-      c.set("session", null)
-      return next()
-    }
+      if (verified.err) {
+        logger.error(
+          `Token verification failed: ${JSON.stringify(verified.err)}`,
+        )
+        return null
+      }
 
-    if (verified.tokens) {
-      setTokenCookies(c, verified.tokens.access, verified.tokens.refresh)
-    }
+      if (verified.tokens) {
+        setTokenCookies(c, verified.tokens.access, verified.tokens.refresh)
+      }
 
-    c.set("session", verified.subject.properties)
-  } catch (err) {
-    logger.error(
-      `Auth middleware error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
-    )
-    c.set("session", null)
-  }
+      return verified.subject.properties
+    },
+    catch: (err) => {
+      logger.error(
+        `Auth middleware error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
+      )
+      return null
+    },
+  })
 
+  c.set("session", result.isOk() ? result.value : null)
   return next()
 }
 

@@ -1,3 +1,4 @@
+import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
@@ -45,27 +46,37 @@ async function clearExistingTools() {
     "comprehensive-content-generator",
   ]
 
-  try {
-    for (const slug of demoToolSlugs) {
-      const tools = await db
-        .select({ id: toolsTable.id })
-        .from(toolsTable)
-        .where(eq(toolsTable.slug, slug))
+  const result = await Result.tryPromise({
+    try: async () => {
+      for (const slug of demoToolSlugs) {
+        const tools = await db
+          .select({ id: toolsTable.id })
+          .from(toolsTable)
+          .where(eq(toolsTable.slug, slug))
 
-      for (const tool of tools) {
-        await db
-          .delete(toolCategoriesTable)
-          .where(eq(toolCategoriesTable.toolId, tool.id))
-        await db.delete(toolTagsTable).where(eq(toolTagsTable.toolId, tool.id))
+        for (const tool of tools) {
+          await db
+            .delete(toolCategoriesTable)
+            .where(eq(toolCategoriesTable.toolId, tool.id))
+          await db
+            .delete(toolTagsTable)
+            .where(eq(toolTagsTable.toolId, tool.id))
+        }
+
+        await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
       }
+      return "cleared"
+    },
+    catch: (error) => {
+      logger.warn(
+        `⚠️  No existing tools to clear or error occurred: ${formatError(error)}`,
+      )
+      return "failed"
+    },
+  })
 
-      await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
-    }
+  if (result.isOk()) {
     logger.info("✅ Cleared existing demo tools")
-  } catch (error) {
-    logger.warn(
-      `⚠️  No existing tools to clear or error occurred: ${formatError(error)}`,
-    )
   }
 }
 
@@ -610,24 +621,32 @@ async function seedTools() {
     },
   ]
 
-  try {
-    await clearExistingTools()
+  const result = await Result.tryPromise({
+    try: async () => {
+      await clearExistingTools()
 
-    for (const tool of tools) {
-      await db.insert(toolsTable).values(tool)
-      logger.info(`✅ Seeded: ${tool.name}`)
-    }
+      for (const tool of tools) {
+        await db.insert(toolsTable).values(tool)
+        logger.info(`✅ Seeded: ${tool.name}`)
+      }
 
-    logger.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
-    logger.info("\nTools created:")
-    tools.forEach((tool, index) => {
-      logger.info(
-        `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
-      )
-    })
-  } catch (error) {
-    logger.error(`❌ Error seeding tools: ${formatError(error)}`)
-    throw error
+      logger.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
+      logger.info("\nTools created:")
+      tools.forEach((tool, index) => {
+        logger.info(
+          `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
+        )
+      })
+      return "success"
+    },
+    catch: (error) => {
+      logger.error(`❌ Error seeding tools: ${formatError(error)}`)
+      return error
+    },
+  })
+
+  if (result.isErr()) {
+    throw result.error
   }
 }
 

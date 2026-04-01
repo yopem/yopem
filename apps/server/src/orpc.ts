@@ -80,13 +80,18 @@ const o = os.$context<Awaited<ReturnType<typeof createRPCContext>>>()
 const timingMiddleware = o.middleware(async ({ next, path }) => {
   const start = Date.now()
 
-  try {
-    return await next()
-  } finally {
-    logger.info(
-      `[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`,
-    )
+  const result = await Result.tryPromise({
+    try: async () => await next(),
+    catch: (error: unknown) => error,
+  })
+
+  logger.info(`[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`)
+
+  if (result.isErr()) {
+    throw result.error
   }
+
+  return result.value
 })
 
 export const publicProcedure = o.use(timingMiddleware)

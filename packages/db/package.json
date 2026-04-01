@@ -52,6 +52,7 @@
     "db:seed": "bun run with-env bun run src/seed.ts"
   },
   "dependencies": {
+    "better-result": "catalog:",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",
     "env": "workspace:*",

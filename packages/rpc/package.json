@@ -48,6 +48,7 @@
     "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-start": "catalog:",
+    "better-result": "catalog:",
     "logger": "workspace:*",
     "react": "catalog:",
     "zod": "catalog:"

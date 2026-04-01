@@ -176,6 +176,7 @@
       "name": "db",
       "version": "0.0.0",
       "dependencies": {
+        "better-result": "catalog:",
         "drizzle-orm": "catalog:",
         "drizzle-zod": "catalog:",
         "env": "workspace:*",
@@ -280,6 +281,7 @@
         "@orpc/tanstack-query": "catalog:",
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-start": "catalog:",
+        "better-result": "catalog:",
         "logger": "workspace:*",
         "react": "catalog:",
         "zod": "catalog:",

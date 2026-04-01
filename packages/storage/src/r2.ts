@@ -212,43 +212,54 @@ class R2Storage {
     })
   }
 
+  private uploadSingle(
+    buffer: Buffer,
+    key: string,
+    contentType: string,
+  ): Promise<Result<void, StorageUploadError>> {
+    return Result.tryPromise({
+      try: async () => {
+        const command = new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          Body: buffer,
+          ContentType: contentType,
+        })
+        await this.client.send(command)
+      },
+      catch: (e) =>
+        new StorageUploadError({
+          message: `Failed to upload to R2: ${e instanceof Error ? e.message : "Unknown error"}`,
+          cause: e,
+        }),
+    })
+  }
+
   private uploadWithRetry(
     buffer: Buffer,
     key: string,
     contentType: string,
-    retryCount = 0,
   ): Promise<Result<void, StorageUploadError>> {
-    return Result.tryPromise({
-      try: async () => {
-        try {
-          const command = new PutObjectCommand({
-            Bucket: this.bucketName,
-            Key: key,
-            Body: buffer,
-            ContentType: contentType,
-          })
-          await this.client.send(command)
-        } catch (error) {
-          if (retryCount < 1) {
-            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
-            const retryResult = await this.uploadWithRetry(
-              buffer,
-              key,
-              contentType,
-              retryCount + 1,
-            )
-            if (Result.isError(retryResult)) throw retryResult.error
-            return
-          }
-          throw error
+    return Result.gen(
+      async function* (this: R2Storage) {
+        const firstAttempt = yield* await this.uploadSingle(
+          buffer,
+          key,
+          contentType,
+        )
+        if (firstAttempt === undefined) {
+          return Result.ok(undefined)
         }
-      },
-      catch: (e) =>
-        new StorageUploadError({
-          message: `Failed to upload to R2 after retry: ${e instanceof Error ? e.message : "Unknown error"}`,
-          cause: e,
-        }),
-    })
+
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+        const retryResult = yield* await this.uploadSingle(
+          buffer,
+          key,
+          contentType,
+        )
+        return Result.ok(retryResult)
+      }.bind(this),
+    )
   }
 
   classifyFileType(mimeType: string, filename: string): AssetType {
