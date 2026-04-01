@@ -1,5 +1,9 @@
+import { Result } from "better-result"
 import { and, desc, eq, sql } from "drizzle-orm"
 
+import type { SelectAdminSettings } from "../schema/admin-settings.ts"
+
+import { NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import { adminSettingsTable, assetsTable } from "../schema/index.ts"
 
@@ -34,13 +38,21 @@ export const listAssets = async (input: {
   return { assets, nextCursor }
 }
 
-export const getAssetById = async (id: string) => {
+import type { SelectAsset } from "../schema/assets.ts"
+
+export const getAssetById = async (
+  id: string,
+): Promise<Result<SelectAsset, NotFoundError>> => {
   const [asset] = await db
     .select()
     .from(assetsTable)
     .where(eq(assetsTable.id, id))
 
-  return asset
+  if (!asset) {
+    return Result.err(new NotFoundError({ resource: "Asset", id }))
+  }
+
+  return Result.ok(asset)
 }
 
 export const insertAsset = async (data: {
@@ -59,11 +71,17 @@ export const deleteAsset = async (id: string) => {
   await db.delete(assetsTable).where(eq(assetsTable.id, id))
 }
 
-export const getAdminUploadSizeSetting = async (key: string) => {
+export const getAdminUploadSizeSetting = async (
+  key: string,
+): Promise<Result<SelectAdminSettings, NotFoundError>> => {
   const [settings] = await db
     .select()
     .from(adminSettingsTable)
     .where(eq(adminSettingsTable.settingKey, key))
 
-  return settings
+  if (!settings) {
+    return Result.err(new NotFoundError({ resource: "AdminSettings", id: key }))
+  }
+
+  return Result.ok(settings)
 }

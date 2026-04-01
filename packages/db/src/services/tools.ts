@@ -1,10 +1,12 @@
+import { Result } from "better-result"
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
 
 import { createCustomId } from "shared/custom-id"
 
 import type { InsertToolVersion } from "../schema/tool-versions.ts"
-import type { InsertTool } from "../schema/tools.ts"
+import type { InsertTool, SelectTool } from "../schema/tools.ts"
 
+import { NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import {
   assetsTable,
@@ -191,10 +193,14 @@ export const listTools = async (input?: {
   return { tools: toolsWithCategories, nextCursor }
 }
 
-export const getToolById = async (id: string) => {
+export const getToolById = async (
+  id: string,
+): Promise<Result<SelectTool, NotFoundError>> => {
   const [tool] = await db.select().from(toolsTable).where(eq(toolsTable.id, id))
 
-  if (!tool) return undefined
+  if (!tool) {
+    return Result.err(new NotFoundError({ resource: "Tool", id }))
+  }
 
   const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
     db
@@ -226,20 +232,24 @@ export const getToolById = async (id: string) => {
       : Promise.resolve([]),
   ])
 
-  return {
+  return Result.ok({
     ...tool,
     categories: categoriesResult,
     tags: tagsResult,
     thumbnail: thumbnailResult[0] ?? null,
-  }
+  })
 }
 
-export const getToolBySlug = async (slug: string) => {
+export const getToolBySlug = async (
+  slug: string,
+): Promise<Result<SelectTool, NotFoundError>> => {
   const tool = await db.query.toolsTable.findFirst({
     where: eq(toolsTable.slug, slug),
   })
 
-  if (!tool) return undefined
+  if (!tool) {
+    return Result.err(new NotFoundError({ resource: "Tool", id: slug }))
+  }
 
   const [categoriesResult, tagsResult, thumbnailResult, ratingResult] =
     await Promise.all([
@@ -288,14 +298,14 @@ export const getToolBySlug = async (slug: string) => {
     : null
   const reviewCount = Number(ratingResult[0]?.count ?? 0)
 
-  return {
+  return Result.ok({
     ...tool,
     categories: categoriesResult,
     tags: tagsResult,
     thumbnail: thumbnailResult[0] ?? null,
     averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
     reviewCount,
-  }
+  })
 }
 
 export const createTool = async (
@@ -385,13 +395,18 @@ export const deleteTool = async (id: string) => {
   await db.delete(toolsTable).where(eq(toolsTable.id, id))
 }
 
-export const duplicateTool = async (sourceId: string, createdBy: string) => {
+export const duplicateTool = async (
+  sourceId: string,
+  createdBy: string,
+): Promise<Result<{ id: string }, NotFoundError>> => {
   const [tool] = await db
     .select()
     .from(toolsTable)
     .where(eq(toolsTable.id, sourceId))
 
-  if (!tool) return undefined
+  if (!tool) {
+    return Result.err(new NotFoundError({ resource: "Tool", id: sourceId }))
+  }
 
   const newId = createCustomId()
   const duplicateName = `${tool.name} (Copy)`
@@ -414,7 +429,7 @@ export const duplicateTool = async (sourceId: string, createdBy: string) => {
     status: "draft",
   })
 
-  return { id: newId }
+  return Result.ok({ id: newId })
 }
 
 export const updateToolStatus = async (
@@ -487,13 +502,19 @@ export const getPopularTools = async (limit = 10) => {
   })
 }
 
-export const getToolBySlugId = async (slug: string) => {
+export const getToolBySlugId = async (
+  slug: string,
+): Promise<Result<{ id: string }, NotFoundError>> => {
   const [tool] = await db
     .select({ id: toolsTable.id })
     .from(toolsTable)
     .where(eq(toolsTable.slug, slug))
 
-  return tool
+  if (!tool) {
+    return Result.err(new NotFoundError({ resource: "Tool", id: slug }))
+  }
+
+  return Result.ok(tool)
 }
 
 export const getToolReviews = async (toolId: string) => {

@@ -62,12 +62,15 @@ export const assetsRouter = {
       }
     }
 
-    const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+    const settingsResult = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
 
-    const maxSizeMB =
-      settings && typeof settings.settingValue === "number"
-        ? settings.settingValue
-        : MAX_UPLOAD_SIZE_MB
+    const maxSizeMB = settingsResult.match({
+      ok: (settings) =>
+        typeof settings.settingValue === "number"
+          ? settings.settingValue
+          : MAX_UPLOAD_SIZE_MB,
+      err: () => MAX_UPLOAD_SIZE_MB,
+    })
 
     void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
 
@@ -90,12 +93,16 @@ export const assetsRouter = {
         })
 
         if (maxSizeMB === null) {
-          const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+          const settingsResult =
+            await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
 
-          maxSizeMB =
-            settings && typeof settings.settingValue === "number"
-              ? settings.settingValue
-              : MAX_UPLOAD_SIZE_MB
+          maxSizeMB = settingsResult.match({
+            ok: (settings) =>
+              typeof settings.settingValue === "number"
+                ? settings.settingValue
+                : MAX_UPLOAD_SIZE_MB,
+            err: () => MAX_UPLOAD_SIZE_MB,
+          })
 
           void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
         }
@@ -157,22 +164,12 @@ export const assetsRouter = {
   delete: adminProcedure
     .input(deleteAssetInputSchema)
     .handler(async ({ input }) => {
-      const assetResult = await Result.tryPromise({
-        try: async () => {
-          const asset = await getAssetById(input.id)
-          if (!asset) {
-            throw new AssetNotFoundError({ assetId: input.id })
-          }
-          return asset
-        },
-        catch: (e) =>
-          AssetNotFoundError.is(e)
-            ? e
-            : new AssetNotFoundError({ assetId: input.id }),
-      })
+      const assetResult = await getAssetById(input.id)
 
       if (assetResult.isErr()) {
-        return handleProcedureError(assetResult)
+        return handleProcedureError(
+          Result.err(new AssetNotFoundError({ assetId: input.id })),
+        )
       }
 
       const asset = assetResult.value

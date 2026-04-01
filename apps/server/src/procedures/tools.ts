@@ -6,6 +6,7 @@ import {
 } from "server/orpc"
 import { z } from "zod"
 
+import type { SelectAsset, SelectTool } from "db/schema"
 import { insertToolSchema, updateToolSchema } from "db/schema"
 import { getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
@@ -108,47 +109,23 @@ function projectPublicTool<T extends Record<string, unknown>>(
 
 async function getToolWithError(
   toolId: string,
-): Promise<
-  Result<
-    NonNullable<Awaited<ReturnType<typeof getToolById>>>,
-    ToolNotFoundError
-  >
-> {
-  const tool = await getToolById(toolId)
-  if (!tool) {
-    return Result.err(new ToolNotFoundError({ toolId }))
-  }
-  return Result.ok(tool)
+): Promise<Result<SelectTool, ToolNotFoundError>> {
+  const result = await getToolById(toolId)
+  return result.mapError(() => new ToolNotFoundError({ toolId }))
 }
 
 async function getToolBySlugWithError(
   slug: string,
-): Promise<
-  Result<
-    NonNullable<Awaited<ReturnType<typeof getToolBySlug>>>,
-    ToolNotFoundError
-  >
-> {
-  const tool = await getToolBySlug(slug)
-  if (!tool) {
-    return Result.err(new ToolNotFoundError({ slug }))
-  }
-  return Result.ok(tool)
+): Promise<Result<SelectTool, ToolNotFoundError>> {
+  const result = await getToolBySlug(slug)
+  return result.mapError(() => new ToolNotFoundError({ slug }))
 }
 
 async function getToolBySlugIdWithError(
   slug: string,
-): Promise<
-  Result<
-    NonNullable<Awaited<ReturnType<typeof getToolBySlugId>>>,
-    ToolNotFoundError
-  >
-> {
-  const tool = await getToolBySlugId(slug)
-  if (!tool) {
-    return Result.err(new ToolNotFoundError({ slug }))
-  }
-  return Result.ok(tool)
+): Promise<Result<{ id: string }, ToolNotFoundError>> {
+  const result = await getToolBySlugId(slug)
+  return result.mapError(() => new ToolNotFoundError({ slug }))
 }
 
 async function getReviewWithError(
@@ -168,16 +145,15 @@ async function getReviewWithError(
 
 async function getAssetWithValidation(
   assetId: string,
-): Promise<
-  Result<
-    NonNullable<Awaited<ReturnType<typeof getAssetById>>>,
-    AssetNotFoundError | AssetValidationError
-  >
-> {
-  const asset = await getAssetById(assetId)
-  if (!asset) {
-    return Result.err(new AssetNotFoundError({ assetId }))
+): Promise<Result<SelectAsset, AssetNotFoundError | AssetValidationError>> {
+  const result = await getAssetById(assetId)
+  const mappedResult = result.mapError(
+    () => new AssetNotFoundError({ assetId }),
+  )
+  if (mappedResult.isErr()) {
+    return mappedResult
   }
+  const asset = mappedResult.value
   if (asset.type !== "images") {
     return Result.err(
       new AssetValidationError({
@@ -769,10 +745,7 @@ export const toolsRouter = {
     .input(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
-        const tool = await duplicateTool(input.id, context.session.id)
-        if (!tool) {
-          yield* Result.err(new ToolNotFoundError({ toolId: input.id }))
-        }
+        const tool = yield* await duplicateTool(input.id, context.session.id)
         return Result.ok(tool)
       })
 
