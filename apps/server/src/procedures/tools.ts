@@ -55,11 +55,13 @@ import {
   ApiKeyNotFoundError,
   AssetNotFoundError,
   AssetValidationError,
+  CategoryValidationError,
   CryptoOperationError,
   ForbiddenError,
   InsufficientCreditsError,
   ReviewNotFoundError,
   SettingsNotFoundError,
+  TagValidationError,
   ToolConfigurationError,
   ToolNotAvailableError,
   ToolNotFoundError,
@@ -288,8 +290,17 @@ export const toolsRouter = {
         })
         .optional(),
     )
-    .handler(({ input }) => {
-      return listTools(input ?? undefined)
+    .handler(async ({ input }) => {
+      const result = await Result.tryPromise({
+        try: () => listTools(input ?? undefined),
+        catch: (e) => new ToolConfigurationError({ message: String(e) }),
+      })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   getById: publicProcedure
@@ -328,16 +339,43 @@ export const toolsRouter = {
       return result.value
     }),
 
-  getPopular: publicProcedure.handler(() => {
-    return getPopularTools(10)
+  getPopular: publicProcedure.handler(async () => {
+    const result = await Result.tryPromise({
+      try: () => getPopularTools(10),
+      catch: (e) => new ToolConfigurationError({ message: String(e) }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
-  getCategories: publicProcedure.handler(() => {
-    return listCategories()
+  getCategories: publicProcedure.handler(async () => {
+    const result = await Result.tryPromise({
+      try: () => listCategories(),
+      catch: (e) => new CategoryValidationError({ message: String(e) }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
-  getTags: publicProcedure.handler(() => {
-    return listTags()
+  getTags: publicProcedure.handler(async () => {
+    const result = await Result.tryPromise({
+      try: () => listTags(),
+      catch: (e) => new TagValidationError({ message: String(e) }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   execute: protectedProcedure

@@ -1,5 +1,49 @@
 import { TaggedError } from "better-result"
 
+export class CategoryNotFoundError extends TaggedError(
+  "CategoryNotFoundError",
+)<{
+  categoryId: string
+  message: string
+}>() {
+  constructor(args: { categoryId: string }) {
+    super({
+      ...args,
+      message: `Category not found: ${args.categoryId}`,
+    })
+  }
+}
+
+export class CategoryValidationError extends TaggedError(
+  "CategoryValidationError",
+)<{
+  message: string
+}>() {
+  constructor(args: { message: string }) {
+    super(args)
+  }
+}
+
+export class TagNotFoundError extends TaggedError("TagNotFoundError")<{
+  tagId: string
+  message: string
+}>() {
+  constructor(args: { tagId: string }) {
+    super({
+      ...args,
+      message: `Tag not found: ${args.tagId}`,
+    })
+  }
+}
+
+export class TagValidationError extends TaggedError("TagValidationError")<{
+  message: string
+}>() {
+  constructor(args: { message: string }) {
+    super(args)
+  }
+}
+
 export class ToolNotFoundError extends TaggedError("ToolNotFoundError")<{
   toolId?: string
   slug?: string
@@ -144,24 +188,6 @@ export class AutoTopupValidationError extends TaggedError(
   }
 }
 
-export class CategoryValidationError extends TaggedError(
-  "CategoryValidationError",
-)<{
-  message: string
-}>() {
-  constructor(args: { message: string }) {
-    super(args)
-  }
-}
-
-export class TagValidationError extends TaggedError("TagValidationError")<{
-  message: string
-}>() {
-  constructor(args: { message: string }) {
-    super(args)
-  }
-}
-
 export class CryptoOperationError extends TaggedError("CryptoOperationError")<{
   operation: string
   message: string
@@ -188,6 +214,46 @@ export class ForbiddenError extends TaggedError("ForbiddenError")<{
 }>() {
   constructor(args: { message: string }) {
     super(args)
+  }
+}
+
+export class UserNotFoundError extends TaggedError("UserNotFoundError")<{
+  userId: string
+  message: string
+}>() {
+  constructor(args: { userId: string }) {
+    super({
+      ...args,
+      message: `User not found: ${args.userId}`,
+    })
+  }
+}
+
+export class UserCreditsNotFoundError extends TaggedError(
+  "UserCreditsNotFoundError",
+)<{
+  userId: string
+  message: string
+}>() {
+  constructor(args: { userId: string }) {
+    super({
+      ...args,
+      message: `User credits not found for user: ${args.userId}`,
+    })
+  }
+}
+
+export class UserSettingsNotFoundError extends TaggedError(
+  "UserSettingsNotFoundError",
+)<{
+  userId: string
+  message: string
+}>() {
+  constructor(args: { userId: string }) {
+    super({
+      ...args,
+      message: `User settings not found for user: ${args.userId}`,
+    })
   }
 }
 
@@ -258,7 +324,9 @@ export type ToolProcedureError =
   | ReviewValidationError
   | AssetNotFoundError
   | AssetValidationError
+  | CategoryNotFoundError
   | CategoryValidationError
+  | TagNotFoundError
   | TagValidationError
   | InsufficientCreditsError
   | CryptoOperationError
@@ -276,6 +344,9 @@ export type UserProcedureError =
   | AutoTopupValidationError
   | CryptoOperationError
   | ValidationError
+  | UserNotFoundError
+  | UserCreditsNotFoundError
+  | UserSettingsNotFoundError
 
 export type AdminProcedureError =
   | ApiKeyNotFoundError
@@ -284,5 +355,9 @@ export type AdminProcedureError =
   | CryptoOperationError
   | ValidationError
   | ModelFetchError
+  | CategoryNotFoundError
+  | CategoryValidationError
+  | TagNotFoundError
+  | TagValidationError
 
 export type AssetProcedureError = AssetNotFoundError | AssetValidationError

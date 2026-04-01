@@ -22,6 +22,8 @@ import {
   ApiKeyValidationError,
   CryptoOperationError,
   RateLimitExceededError,
+  UserCreditsNotFoundError,
+  UserNotFoundError,
   ValidationError,
 } from "./procedure-errors"
 
@@ -51,8 +53,17 @@ export const userRouter = {
       }
     }),
 
-  getStats: protectedProcedure.handler(({ context }) => {
-    return userService.getUserStats(context.session.id)
+  getStats: protectedProcedure.handler(async ({ context }) => {
+    const result = await Result.tryPromise({
+      try: () => userService.getUserStats(context.session.id),
+      catch: () => new UserNotFoundError({ userId: context.session.id }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   getRuns: protectedProcedure
@@ -64,15 +75,43 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(({ context, input }) => {
-      return userService.getUserRuns(context.session.id, {
-        limit: input?.limit ?? 20,
-        cursor: input?.cursor,
+    .handler(async ({ context, input }) => {
+      const result = await Result.tryPromise({
+        try: () =>
+          userService.getUserRuns(context.session.id, {
+            limit: input?.limit ?? 20,
+            cursor: input?.cursor,
+          }),
+        catch: () => new UserNotFoundError({ userId: context.session.id }),
       })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
-  getCredits: protectedProcedure.handler(({ context }) => {
-    return userService.getUserCredits(context.session.id)
+  getCredits: protectedProcedure.handler(async ({ context }) => {
+    const result = await Result.tryPromise({
+      try: async () => {
+        const credits = await userService.getUserCredits(context.session.id)
+        if (!credits) {
+          throw new UserCreditsNotFoundError({ userId: context.session.id })
+        }
+        return credits
+      },
+      catch: (e) =>
+        e instanceof UserCreditsNotFoundError
+          ? e
+          : new UserNotFoundError({ userId: context.session.id }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   getTransactions: protectedProcedure
@@ -83,10 +122,20 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(({ context, input }) => {
-      return userService.getUserTransactions(context.session.id, {
-        limit: input?.limit ?? 20,
+    .handler(async ({ context, input }) => {
+      const result = await Result.tryPromise({
+        try: () =>
+          userService.getUserTransactions(context.session.id, {
+            limit: input?.limit ?? 20,
+          }),
+        catch: () => new UserNotFoundError({ userId: context.session.id }),
       })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   getPurchases: protectedProcedure
@@ -97,14 +146,33 @@ export const userRouter = {
         })
         .optional(),
     )
-    .handler(({ context, input }) => {
-      return userService.getPaymentHistory(context.session.id, {
-        limit: input?.limit ?? 20,
+    .handler(async ({ context, input }) => {
+      const result = await Result.tryPromise({
+        try: () =>
+          userService.getPaymentHistory(context.session.id, {
+            limit: input?.limit ?? 20,
+          }),
+        catch: () => new UserNotFoundError({ userId: context.session.id }),
       })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
-  getPendingCheckouts: protectedProcedure.handler(({ context }) => {
-    return userService.getPendingCheckouts(context.session.id)
+  getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
+    const result = await Result.tryPromise({
+      try: () => userService.getPendingCheckouts(context.session.id),
+      catch: () => new UserNotFoundError({ userId: context.session.id }),
+    })
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   addCredits: protectedProcedure
@@ -114,8 +182,19 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      await userService.addCredits(context.session.id, input.amount)
-      return { success: true, amount: input.amount }
+      const result = await Result.tryPromise({
+        try: async () => {
+          await userService.addCredits(context.session.id, input.amount)
+          return { success: true, amount: input.amount }
+        },
+        catch: () => new UserNotFoundError({ userId: context.session.id }),
+      })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {
