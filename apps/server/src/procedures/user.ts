@@ -198,9 +198,15 @@ export const userRouter = {
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const settings = await userService.getUserSettings(context.session.id)
+    const settingsResult = await userService.getUserSettings(context.session.id)
 
-    if (!settings?.apiKeys) {
+    if (settingsResult.isErr()) {
+      return []
+    }
+
+    const settings = settingsResult.value
+
+    if (!settings.apiKeys) {
       return []
     }
 
@@ -260,7 +266,14 @@ export const userRouter = {
           )
         }
 
-        const settings = await userService.getUserSettings(context.session.id)
+        const settingsResult = await userService.getUserSettings(
+          context.session.id,
+        )
+
+        const settings = settingsResult.match({
+          ok: (v) => v,
+          err: () => null,
+        })
 
         const encryptedKey = yield* encryptApiKey(input.apiKey).mapError(
           () =>
@@ -299,9 +312,20 @@ export const userRouter = {
 
         const updatedKeys = [...existingKeys, newKey]
 
-        await userService.upsertUserSettings(context.session.id, {
-          apiKeys: updatedKeys,
-        })
+        const upsertResult = await userService.upsertUserSettings(
+          context.session.id,
+          {
+            apiKeys: updatedKeys,
+          },
+        )
+
+        if (upsertResult.isErr()) {
+          return Result.err(
+            new ApiKeyValidationError({
+              message: "Failed to save API key",
+            }),
+          )
+        }
 
         return Result.ok({
           ...newKey,
@@ -346,7 +370,14 @@ export const userRouter = {
           )
         }
 
-        const settings = await userService.getUserSettings(context.session.id)
+        const settingsResult = await userService.getUserSettings(
+          context.session.id,
+        )
+
+        const settings = settingsResult.match({
+          ok: (v) => v,
+          err: () => null,
+        })
 
         if (!settings?.apiKeys) {
           return Result.err(
@@ -408,9 +439,20 @@ export const userRouter = {
         const updatedKeys = [...existingKeys.value]
         updatedKeys[keyIndex] = updatedKey
 
-        await userService.upsertUserSettings(context.session.id, {
-          apiKeys: updatedKeys,
-        })
+        const upsertResult = await userService.upsertUserSettings(
+          context.session.id,
+          {
+            apiKeys: updatedKeys,
+          },
+        )
+
+        if (upsertResult.isErr()) {
+          return Result.err(
+            new ApiKeyValidationError({
+              message: "Failed to update API key",
+            }),
+          )
+        }
 
         const decryptResult = decryptApiKey(
           input.apiKey ?? existingKeys.value[keyIndex].apiKey,
@@ -462,7 +504,14 @@ export const userRouter = {
           )
         }
 
-        const settings = await userService.getUserSettings(context.session.id)
+        const settingsResult = await userService.getUserSettings(
+          context.session.id,
+        )
+
+        const settings = settingsResult.match({
+          ok: (v) => v,
+          err: () => null,
+        })
 
         if (!settings?.apiKeys) {
           return Result.err(
@@ -500,9 +549,20 @@ export const userRouter = {
           )
         }
 
-        await userService.upsertUserSettings(context.session.id, {
-          apiKeys: updatedKeys,
-        })
+        const upsertResult = await userService.upsertUserSettings(
+          context.session.id,
+          {
+            apiKeys: updatedKeys,
+          },
+        )
+
+        if (upsertResult.isErr()) {
+          return Result.err(
+            new ApiKeyValidationError({
+              message: "Failed to delete API key",
+            }),
+          )
+        }
 
         return Result.ok({ success: true, id: input.id })
       })
@@ -515,7 +575,12 @@ export const userRouter = {
     }),
 
   getApiKeyStats: adminProcedure.handler(async ({ context }) => {
-    const settings = await userService.getUserSettings(context.session.id)
+    const settingsResult = await userService.getUserSettings(context.session.id)
+
+    const settings = settingsResult.match({
+      ok: (v) => v,
+      err: () => null,
+    })
 
     let activeKeys = 0
 
@@ -538,7 +603,12 @@ export const userRouter = {
   }),
 
   getAutoTopupSettings: protectedProcedure.handler(async ({ context }) => {
-    const credits = await userService.getUserCredits(context.session.id)
+    const creditsResult = await userService.getUserCredits(context.session.id)
+
+    const credits = creditsResult.match({
+      ok: (v) => v,
+      err: () => null,
+    })
 
     return credits
       ? {

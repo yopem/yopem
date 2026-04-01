@@ -66,10 +66,13 @@ checkoutRoute.get("/", async (c) => {
 
   const customerResult = await Result.tryPromise({
     try: async () => {
-      const userSettings = await getUserSettings(session.id)
+      const userSettingsResult = await getUserSettings(session.id)
 
-      if (userSettings?.polarCustomerId) {
-        return { polarCustomerId: userSettings.polarCustomerId }
+      if (Result.isOk(userSettingsResult)) {
+        const userSettings = userSettingsResult.value
+        if (userSettings.polarCustomerId) {
+          return { polarCustomerId: userSettings.polarCustomerId }
+        }
       }
 
       const customer = await polar.customers.create({

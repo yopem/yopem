@@ -32,11 +32,7 @@ import {
   updateToolStatus,
   upsertToolReview,
 } from "db/services/tools"
-import {
-  deductCreditsForRun,
-  getUserCredits,
-  initUserCredits,
-} from "db/services/user"
+import { deductCreditsForRun, getUserCredits } from "db/services/user"
 import { executeAITool } from "llm/executor"
 import {
   ContextLengthError,
@@ -179,18 +175,28 @@ async function getApiKeysWithError(redis: {
     return Result.ok(cached)
   }
 
-  const settings = await getSetting(API_KEYS_SETTING_KEY)
+  const settingsResult = await getSetting(API_KEYS_SETTING_KEY)
 
-  if (!settings?.settingValue) {
-    return Result.err(
-      new SettingsNotFoundError({
-        key: API_KEYS_SETTING_KEY,
-        message: "No API keys configured",
-      }),
-    )
-  }
-
-  return Result.ok(settings.settingValue as ApiKeyConfig[])
+  return settingsResult.match({
+    ok: (settings) => {
+      if (!settings?.settingValue) {
+        return Result.err(
+          new SettingsNotFoundError({
+            key: API_KEYS_SETTING_KEY,
+            message: "No API keys configured",
+          }),
+        )
+      }
+      return Result.ok(settings.settingValue as ApiKeyConfig[])
+    },
+    err: () =>
+      Result.err(
+        new SettingsNotFoundError({
+          key: API_KEYS_SETTING_KEY,
+          message: "No API keys configured",
+        }),
+      ),
+  })
 }
 
 function validateRequiredInputs(
@@ -400,11 +406,13 @@ export const toolsRouter = {
           )
         }
 
-        const userCredits = await getUserCredits(context.session.id)
-        const credits =
-          userCredits ?? (await initUserCredits(context.session.id))
-
         const cost = Number(tool.costPerRun ?? 0)
+
+        const creditsResult = await getUserCredits(context.session.id)
+        const credits = yield* creditsResult.mapError(
+          () => new Error("Failed to get credits"),
+        )
+
         if (Number(credits.balance) < cost) {
           return Result.err(
             new InsufficientCreditsError({

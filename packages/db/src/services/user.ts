@@ -1,9 +1,16 @@
+import { Result } from "better-result"
 import { desc, eq, sql } from "drizzle-orm"
 
 import { createCustomId } from "shared/custom-id"
 
+import type {
+  SelectPolarCheckoutSession,
+  SelectUserCredits,
+  SelectUserSettings,
+} from "../schema/index.ts"
 import type { InsertUserSettings } from "../schema/user-settings.ts"
 
+import { DatabaseOperationError, NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import {
   creditTransactionsTable,
@@ -66,13 +73,21 @@ export const getUserRuns = async (
   return { runs, nextCursor }
 }
 
-export const getUserCredits = async (userId: string) => {
+export const getUserCredits = async (
+  userId: string,
+): Promise<Result<SelectUserCredits, NotFoundError>> => {
   const [credits] = await db
     .select()
     .from(userCreditsTable)
     .where(eq(userCreditsTable.userId, userId))
 
-  return credits ?? null
+  if (!credits) {
+    return Result.err(
+      new NotFoundError({ resource: "UserCredits", id: userId }),
+    )
+  }
+
+  return Result.ok(credits)
 }
 
 export const getUserTransactions = (
@@ -93,29 +108,47 @@ export const getUserTransactions = (
     .limit(input.limit)
 }
 
-export const getUserSettings = async (userId: string) => {
+export const getUserSettings = async (
+  userId: string,
+): Promise<Result<SelectUserSettings, NotFoundError>> => {
   const [settings] = await db
     .select()
     .from(userSettingsTable)
     .where(eq(userSettingsTable.userId, userId))
 
-  return settings
+  if (!settings) {
+    return Result.err(
+      new NotFoundError({ resource: "UserSettings", id: userId }),
+    )
+  }
+
+  return Result.ok(settings)
 }
 
 export const upsertUserSettings = async (
   userId: string,
   data: Partial<InsertUserSettings>,
-) => {
-  const existing = await getUserSettings(userId)
+): Promise<Result<SelectUserSettings, DatabaseOperationError>> => {
+  const creditsResult = await getUserCredits(userId)
 
-  if (existing) {
+  if (creditsResult.isOk()) {
     const [updated] = await db
       .update(userSettingsTable)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(userSettingsTable.userId, userId))
       .returning()
 
-    return updated
+    if (!updated) {
+      return Result.err(
+        new DatabaseOperationError({
+          operation: "update",
+          table: "user_settings",
+          cause: new Error("Update returned no rows"),
+        }),
+      )
+    }
+
+    return Result.ok(updated)
   }
 
   const [created] = await db
@@ -123,7 +156,17 @@ export const upsertUserSettings = async (
     .values({ id: createCustomId(), userId, ...data })
     .returning()
 
-  return created
+  if (!created) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "user_settings",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(created)
 }
 
 export const upsertPolarCustomer = (
@@ -139,13 +182,23 @@ export const insertCheckoutSession = async (data: {
   productId: string
   checkoutUrl: string
   amount: string
-}) => {
+}): Promise<Result<SelectPolarCheckoutSession, DatabaseOperationError>> => {
   const [session] = await db
     .insert(polarCheckoutSessionsTable)
     .values(data)
     .returning()
 
-  return session
+  if (!session) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "polar_checkout_sessions",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(session)
 }
 
 export const updateAutoTopup = async (
@@ -226,9 +279,13 @@ export const getPendingCheckouts = (userId: string) => {
     .limit(10)
 }
 
-export const initUserCredits = async (userId: string) => {
-  const existing = await getUserCredits(userId)
-  if (existing) return existing
+export const initUserCredits = async (
+  userId: string,
+): Promise<Result<SelectUserCredits, DatabaseOperationError>> => {
+  const creditsResult = await getUserCredits(userId)
+  if (creditsResult.isOk()) {
+    return Result.ok(creditsResult.value)
+  }
 
   const [created] = await db
     .insert(userCreditsTable)
@@ -241,7 +298,17 @@ export const initUserCredits = async (userId: string) => {
     })
     .returning()
 
-  return created
+  if (!created) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "user_credits",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(created)
 }
 
 export const deductCreditsForRun = async (

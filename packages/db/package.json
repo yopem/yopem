@@ -39,6 +39,10 @@
     "./services/admin": {
       "types": "./src/services/admin.ts",
       "default": "./src/services/admin.ts"
+    },
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./src/errors.ts"
     }
   },
   "scripts": {

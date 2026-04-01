@@ -105,26 +105,37 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
         creditsGranted,
       })
 
-      if (grantResult.alreadyProcessed) {
-        WebhookMonitor.detectDuplicateWebhook({
-          eventType: "order.paid",
-          orderId: order.id,
-          isProcessed: true,
-        })
-        logger.info(`Order already processed (idempotent): orderId=${order.id}`)
-        return
-      }
+      await grantResult.match({
+        ok: async (result) => {
+          if (result.alreadyProcessed) {
+            WebhookMonitor.detectDuplicateWebhook({
+              eventType: "order.paid",
+              orderId: order.id,
+              isProcessed: true,
+            })
+            logger.info(
+              `Order already processed (idempotent): orderId=${order.id}`,
+            )
+            return
+          }
 
-      if (order.checkoutId) {
-        await db
-          .update(polarCheckoutSessionsTable)
-          .set({ status: "completed", updatedAt: new Date() })
-          .where(eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId))
-      }
+          if (order.checkoutId) {
+            await db
+              .update(polarCheckoutSessionsTable)
+              .set({ status: "completed", updatedAt: new Date() })
+              .where(
+                eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId),
+              )
+          }
 
-      logger.info(
-        `Order paid processed successfully: orderId=${order.id}, userId=${userId}, credits=${creditsGranted}`,
-      )
+          logger.info(
+            `Order paid processed successfully: orderId=${order.id}, userId=${userId}, credits=${creditsGranted}`,
+          )
+        },
+        err: (error) => {
+          throw error
+        },
+      })
     },
     catch: (error) =>
       new WebhookHandlerError({
@@ -164,29 +175,29 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
         refundAmount: order.refundedAmount ?? 0,
       })
 
-      if (!refundResult) {
-        logger.error(
-          `Failed to process refund, payment not found: orderId=${order.id}`,
-        )
-        return
-      }
+      await refundResult.match({
+        ok: (result) => {
+          if (result.alreadyProcessed) {
+            WebhookMonitor.detectDuplicateWebhook({
+              eventType: "order.refunded",
+              orderId: order.id,
+              isProcessed: true,
+            })
+            logger.info(
+              `Order refund already processed (idempotent): orderId=${order.id}`,
+            )
+            return
+          }
 
-      if (refundResult.alreadyProcessed) {
-        WebhookMonitor.detectDuplicateWebhook({
-          eventType: "order.refunded",
-          orderId: order.id,
-          isProcessed: true,
-        })
-        logger.info(
-          `Order refund already processed (idempotent): orderId=${order.id}`,
-        )
-        return
-      }
-
-      const refundType = refundResult.isPartialRefund ? "partial" : "full"
-      logger.info(
-        `Order ${refundType} refund processed successfully: orderId=${order.id}, credits=${refundResult.creditsRefunded}`,
-      )
+          const refundType = result.isPartialRefund ? "partial" : "full"
+          logger.info(
+            `Order ${refundType} refund processed successfully: orderId=${order.id}, credits=${result.creditsRefunded}`,
+          )
+        },
+        err: (error) => {
+          throw error
+        },
+      })
     },
     catch: (error) =>
       new WebhookHandlerError({

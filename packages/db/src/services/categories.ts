@@ -1,5 +1,9 @@
+import { Result } from "better-result"
 import { asc, eq, inArray } from "drizzle-orm"
 
+import type { SelectCategory } from "../schema/categories.ts"
+
+import { DatabaseOperationError } from "../errors.ts"
 import { db } from "../index.ts"
 import { categoriesTable } from "../schema/index.ts"
 import { generateUniqueCategorySlug } from "./slug.ts"
@@ -19,7 +23,7 @@ export const listCategories = () => {
 export const createCategory = async (input: {
   name: string
   description?: string
-}) => {
+}): Promise<Result<SelectCategory, DatabaseOperationError>> => {
   const slug = await generateUniqueCategorySlug(input.name)
 
   const [category] = await db
@@ -27,14 +31,24 @@ export const createCategory = async (input: {
     .values({ name: input.name, slug, description: input.description })
     .returning()
 
-  return category
+  if (!category) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "categories",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(category)
 }
 
 export const updateCategory = async (input: {
   id: string
   name: string
   description?: string
-}) => {
+}): Promise<Result<SelectCategory, DatabaseOperationError>> => {
   const slug = await generateUniqueCategorySlug(input.name, input.id)
 
   const [category] = await db
@@ -43,7 +57,17 @@ export const updateCategory = async (input: {
     .where(eq(categoriesTable.id, input.id))
     .returning()
 
-  return category
+  if (!category) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "update",
+        table: "categories",
+        cause: new Error("Update returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(category)
 }
 
 export const deleteCategory = async (id: string) => {

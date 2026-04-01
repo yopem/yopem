@@ -147,9 +147,24 @@ function CreditsPage() {
     return Math.floor(amount * 10)
   }
 
-  const balance = Number(creditsData?.balance ?? 0)
-  const totalPurchased = Number(creditsData?.totalPurchased ?? 0)
-  const totalUsed = Number(creditsData?.totalUsed ?? 0)
+  const balance = creditsData
+    ? creditsData.match({
+        ok: (c) => Number(c.balance ?? 0),
+        err: () => 0,
+      })
+    : 0
+  const totalPurchased = creditsData
+    ? creditsData.match({
+        ok: (c) => Number(c.totalPurchased ?? 0),
+        err: () => 0,
+      })
+    : 0
+  const totalUsed = creditsData
+    ? creditsData.match({
+        ok: (c) => Number(c.totalUsed ?? 0),
+        err: () => 0,
+      })
+    : 0
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">

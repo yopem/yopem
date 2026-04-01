@@ -110,13 +110,17 @@ export const adminRouter = {
       }))
     }
 
-    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+    const settingsResult = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
-    if (!settings?.settingValue) {
+    const apiKeys = settingsResult.match({
+      ok: (settings) => settings.settingValue as ApiKeyConfig[],
+      err: () => null,
+    })
+
+    if (!apiKeys) {
       return []
     }
 
-    const apiKeys = settings.settingValue as ApiKeyConfig[]
     void context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
 
     return apiKeys.map((key) => {
@@ -137,13 +141,11 @@ export const adminRouter = {
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
-        const settings = yield* await Result.tryPromise({
-          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to fetch settings: ${e}`,
-            }),
+        const settingsResult =
+          await adminService.getSetting(API_KEYS_SETTING_KEY)
+        const settings = settingsResult.match({
+          ok: (s) => s,
+          err: () => null,
         })
 
         const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
@@ -207,13 +209,11 @@ export const adminRouter = {
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
-        const settings = yield* await Result.tryPromise({
-          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to fetch settings: ${e}`,
-            }),
+        const settingsResult =
+          await adminService.getSetting(API_KEYS_SETTING_KEY)
+        const settings = settingsResult.match({
+          ok: (s) => s,
+          err: () => null,
         })
 
         if (!settings?.settingValue) {
@@ -301,13 +301,11 @@ export const adminRouter = {
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
-        const settings = yield* await Result.tryPromise({
-          try: () => adminService.getSetting(API_KEYS_SETTING_KEY),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to fetch settings: ${e}`,
-            }),
+        const settingsResult =
+          await adminService.getSetting(API_KEYS_SETTING_KEY)
+        const settings = settingsResult.match({
+          ok: (s) => s,
+          err: () => null,
         })
 
         if (!settings?.settingValue) {
@@ -374,10 +372,15 @@ export const adminRouter = {
         return cached
       }
 
-      const [settings, rawStats] = await Promise.all([
+      const [settingsResult, rawStats] = await Promise.all([
         adminService.getSetting(API_KEYS_SETTING_KEY),
         adminService.getApiKeyStats(),
       ])
+
+      const settings = settingsResult.match({
+        ok: (s) => s,
+        err: () => null,
+      })
 
       const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
       const activeKeys = apiKeys.filter((key) => key.status === "active").length
@@ -415,7 +418,12 @@ export const adminRouter = {
     }),
 
   getAvailableModels: adminProcedure.handler(async ({ context }) => {
-    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+    const settingsResult = await adminService.getSetting(API_KEYS_SETTING_KEY)
+
+    const settings = settingsResult.match({
+      ok: (s) => s,
+      err: () => null,
+    })
 
     if (!settings?.settingValue) {
       return []
@@ -499,7 +507,12 @@ export const adminRouter = {
       return { maxUploadSizeMB: cached }
     }
 
-    const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
+    const settingsResult = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
+
+    const settings = settingsResult.match({
+      ok: (s) => s,
+      err: () => null,
+    })
 
     const maxUploadSizeMB =
       settings && typeof settings.settingValue === "number"

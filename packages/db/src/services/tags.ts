@@ -1,5 +1,9 @@
+import { Result } from "better-result"
 import { asc, eq, inArray } from "drizzle-orm"
 
+import type { SelectTag } from "../schema/tags.ts"
+
+import { DatabaseOperationError } from "../errors.ts"
 import { db } from "../index.ts"
 import { tagsTable } from "../schema/index.ts"
 import { generateUniqueTagSlug } from "./slug.ts"
@@ -15,7 +19,9 @@ export const listTags = () => {
     .orderBy(asc(tagsTable.name))
 }
 
-export const createTag = async (input: { name: string }) => {
+export const createTag = async (input: {
+  name: string
+}): Promise<Result<SelectTag, DatabaseOperationError>> => {
   const slug = await generateUniqueTagSlug(input.name)
 
   const [tag] = await db
@@ -23,10 +29,23 @@ export const createTag = async (input: { name: string }) => {
     .values({ name: input.name, slug })
     .returning()
 
-  return tag
+  if (!tag) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "tags",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(tag)
 }
 
-export const updateTag = async (input: { id: string; name: string }) => {
+export const updateTag = async (input: {
+  id: string
+  name: string
+}): Promise<Result<SelectTag, DatabaseOperationError>> => {
   const slug = await generateUniqueTagSlug(input.name, input.id)
 
   const [tag] = await db
@@ -35,7 +54,17 @@ export const updateTag = async (input: { id: string; name: string }) => {
     .where(eq(tagsTable.id, input.id))
     .returning()
 
-  return tag
+  if (!tag) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "update",
+        table: "tags",
+        cause: new Error("Update returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(tag)
 }
 
 export const deleteTag = async (id: string) => {

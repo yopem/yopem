@@ -210,15 +210,26 @@ const useToolForm = ({
       })
     },
     onSuccess: (category) => {
-      toastManager.add({
-        title: "Category created",
-        description: `${dialogsState.category.name} has been created successfully.`,
-        type: "success",
+      category.match({
+        ok: (value) => {
+          toastManager.add({
+            title: "Category created",
+            description: `${dialogsState.category.name} has been created successfully.`,
+            type: "success",
+          })
+          void queryClient.invalidateQueries({ queryKey: ["categories"] })
+          const currentCategoryIds = form.getFieldValue("categoryIds")
+          form.setFieldValue("categoryIds", [...currentCategoryIds, value.id])
+          dialogsDispatch({ type: "RESET_CATEGORY_FORM" })
+        },
+        err: (error) => {
+          toastManager.add({
+            title: "Error creating category",
+            description: error.message,
+            type: "error",
+          })
+        },
       })
-      void queryClient.invalidateQueries({ queryKey: ["categories"] })
-      const currentCategoryIds = form.getFieldValue("categoryIds")
-      form.setFieldValue("categoryIds", [...currentCategoryIds, category.id])
-      dialogsDispatch({ type: "RESET_CATEGORY_FORM" })
     },
     onError: (error: Error) => {
       toastManager.add({
@@ -236,15 +247,26 @@ const useToolForm = ({
       })
     },
     onSuccess: (tag) => {
-      toastManager.add({
-        title: "Tag created",
-        description: `${dialogsState.tag.name} has been created successfully.`,
-        type: "success",
+      tag.match({
+        ok: (value) => {
+          toastManager.add({
+            title: "Tag created",
+            description: `${dialogsState.tag.name} has been created successfully.`,
+            type: "success",
+          })
+          void queryClient.invalidateQueries({ queryKey: ["tags"] })
+          const currentTagIds = form.getFieldValue("tagIds")
+          form.setFieldValue("tagIds", [...currentTagIds, value.id])
+          dialogsDispatch({ type: "RESET_TAG_FORM" })
+        },
+        err: (error) => {
+          toastManager.add({
+            title: "Error creating tag",
+            description: error.message,
+            type: "error",
+          })
+        },
       })
-      void queryClient.invalidateQueries({ queryKey: ["tags"] })
-      const currentTagIds = form.getFieldValue("tagIds")
-      form.setFieldValue("tagIds", [...currentTagIds, tag.id])
-      dialogsDispatch({ type: "RESET_TAG_FORM" })
     },
     onError: (error: Error) => {
       toastManager.add({

@@ -1,5 +1,9 @@
+import { Result } from "better-result"
 import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
 
+import type { SelectAdminSettings } from "../schema/admin-settings.ts"
+
+import { DatabaseOperationError, NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import {
   activityLogsTable,
@@ -9,26 +13,46 @@ import {
   uptimeEventsTable,
 } from "../schema/index.ts"
 
-export const getSetting = async (key: string) => {
+export const getSetting = async (
+  key: string,
+): Promise<Result<SelectAdminSettings, NotFoundError>> => {
   const [setting] = await db
     .select()
     .from(adminSettingsTable)
     .where(eq(adminSettingsTable.settingKey, key))
 
-  return setting
+  if (!setting) {
+    return Result.err(new NotFoundError({ resource: "AdminSettings", id: key }))
+  }
+
+  return Result.ok(setting)
 }
 
-export const upsertSetting = async (key: string, value: unknown) => {
-  const existing = await getSetting(key)
+export const upsertSetting = async (
+  key: string,
+  value: unknown,
+): Promise<Result<SelectAdminSettings, DatabaseOperationError>> => {
+  const settingResult = await getSetting(key)
 
-  if (existing) {
+  if (settingResult.isOk()) {
+    const existing = settingResult.value
     const [updated] = await db
       .update(adminSettingsTable)
       .set({ settingValue: value, updatedAt: new Date() })
       .where(eq(adminSettingsTable.id, existing.id))
       .returning()
 
-    return updated
+    if (!updated) {
+      return Result.err(
+        new DatabaseOperationError({
+          operation: "update",
+          table: "admin_settings",
+          cause: new Error("Update returned no rows"),
+        }),
+      )
+    }
+
+    return Result.ok(updated)
   }
 
   const [created] = await db
@@ -36,7 +60,17 @@ export const upsertSetting = async (key: string, value: unknown) => {
     .values({ settingKey: key, settingValue: value })
     .returning()
 
-  return created
+  if (!created) {
+    return Result.err(
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "admin_settings",
+        cause: new Error("Insert returned no rows"),
+      }),
+    )
+  }
+
+  return Result.ok(created)
 }
 
 export const getActivityFeed = (limit: number) => {

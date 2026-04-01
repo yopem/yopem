@@ -1,5 +1,38 @@
 import { TaggedError } from "better-result"
 
+export class PaymentNotFoundError extends TaggedError("PaymentNotFoundError")<{
+  polarPaymentId: string
+  message: string
+}>() {
+  constructor(args: { polarPaymentId: string }) {
+    super({
+      ...args,
+      message: `Payment with id ${args.polarPaymentId} not found`,
+    })
+  }
+}
+
+export class PaymentAlreadyProcessedError extends TaggedError(
+  "PaymentAlreadyProcessedError",
+)<{
+  polarPaymentId: string
+  message: string
+}>() {
+  constructor(args: { polarPaymentId: string }) {
+    super({
+      ...args,
+      message: `Payment ${args.polarPaymentId} already processed`,
+    })
+  }
+}
+
+export class RefundValidationError extends TaggedError(
+  "RefundValidationError",
+)<{
+  polarPaymentId: string
+  message: string
+}>() {}
+
 export class WebhookExecutionError extends TaggedError(
   "WebhookExecutionError",
 )<{
@@ -48,6 +81,9 @@ export class WebhookMetricsError extends TaggedError("WebhookMetricsError")<{
 }
 
 export type PaymentError =
+  | PaymentNotFoundError
+  | PaymentAlreadyProcessedError
+  | RefundValidationError
   | WebhookExecutionError
   | AutoTopupError
   | WebhookMetricsError

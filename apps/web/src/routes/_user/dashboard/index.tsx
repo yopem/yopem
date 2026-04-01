@@ -66,7 +66,14 @@ function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Credit Balance"
-          value={credits?.balance ?? "0"}
+          value={
+            credits
+              ? credits.match({
+                  ok: (c) => c.balance ?? "0",
+                  err: () => "0",
+                })
+              : "0"
+          }
           icon={CreditCardIcon}
           description="Available credits"
         />
