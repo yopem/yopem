@@ -1,6 +1,7 @@
 import type { Result } from "better-result"
 
 import { ORPCError } from "@orpc/server"
+import { panic } from "better-result"
 
 import {
   AiExecutionError,
@@ -26,7 +27,7 @@ import {
 
 export function handleProcedureError<E>(result: Result<unknown, E>): never {
   if (result.isOk()) {
-    throw new Error("handleProcedureError called on ok result")
+    panic("handleProcedureError called on ok result")
   }
 
   const error = result.error

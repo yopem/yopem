@@ -42,6 +42,7 @@ import {
   InvalidKeyError,
   RateLimitError,
 } from "llm/providers"
+import { formatError, logger } from "logger"
 import { checkAndTriggerAutoTopup } from "payments/auto-topup"
 import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { decryptApiKey } from "shared/crypto"
@@ -466,12 +467,19 @@ export const toolsRouter = {
 
         await deductCreditsForRun(context.session.id, cost, runId, tool.name)
 
-        checkAndTriggerAutoTopup(
-          context.session.id,
-          context.session.email,
-          context.session.username ?? context.session.name,
-        ).catch(() => {
-          return
+        void Result.tryPromise({
+          try: () =>
+            checkAndTriggerAutoTopup(
+              context.session.id,
+              context.session.email,
+              context.session.username ?? context.session.name,
+            ),
+          catch: (error) => {
+            logger.warn(
+              `Auto-topup check failed for user ${context.session.id}: ${formatError(error)}`,
+            )
+            return undefined
+          },
         })
 
         return Result.ok({
