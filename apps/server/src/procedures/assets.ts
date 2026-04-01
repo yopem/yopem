@@ -157,42 +157,41 @@ export const assetsRouter = {
   delete: adminProcedure
     .input(deleteAssetInputSchema)
     .handler(async ({ input }) => {
-      const result = await Result.gen(async function* () {
-        const asset = yield* await Result.tryPromise({
-          try: async () => {
-            const asset = await getAssetById(input.id)
-            if (!asset) {
-              throw new AssetNotFoundError({ assetId: input.id })
-            }
-            return asset
-          },
-          catch: (e) =>
-            AssetNotFoundError.is(e)
-              ? e
-              : new AssetNotFoundError({ assetId: input.id }),
-        })
+      const assetResult = await Result.tryPromise({
+        try: async () => {
+          const asset = await getAssetById(input.id)
+          if (!asset) {
+            throw new AssetNotFoundError({ assetId: input.id })
+          }
+          return asset
+        },
+        catch: (e) =>
+          AssetNotFoundError.is(e)
+            ? e
+            : new AssetNotFoundError({ assetId: input.id }),
+      })
 
-        const r2 = getR2Storage()
-        const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+      if (assetResult.isErr()) {
+        return handleProcedureError(assetResult)
+      }
 
-        const deleteResult = await r2.deleteFile(key)
-        if (Result.isError(deleteResult)) {
-          return Result.err(
+      const asset = assetResult.value
+      const r2 = getR2Storage()
+      const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+
+      const deleteResult = await r2.deleteFile(key)
+      if (Result.isError(deleteResult)) {
+        return handleProcedureError(
+          Result.err(
             new AssetValidationError({
               message: `Failed to delete asset from storage: ${deleteResult.error.message}`,
             }),
-          )
-        }
-
-        await deleteAsset(input.id)
-
-        return Result.ok({ success: true })
-      })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
+          ),
+        )
       }
 
-      return result.value
+      await deleteAsset(input.id)
+
+      return { success: true }
     }),
 }

@@ -1,4 +1,4 @@
-import { Result, TaggedError } from "better-result"
+import { TaggedError } from "better-result"
 import { Hono } from "hono"
 import { getCookie, deleteCookie } from "hono/cookie"
 
@@ -37,40 +37,23 @@ authCallbackRoute.get("/callback", async (c) => {
 
   const callbackUrl = `${serverOrigin}/auth/callback`
 
-  const result = await Result.tryPromise({
-    try: async () => {
-      const exchanged = await authClient.exchange(code, callbackUrl)
+  const exchanged = await authClient.exchange(code, callbackUrl)
 
-      if (exchanged.err) {
-        throw new AuthCallbackError({
-          message: `Token exchange failed: ${JSON.stringify(exchanged.err)}`,
-        })
-      }
-
-      setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
-
-      const loginOrigin = getCookie(c, "login_origin")
-      const origin =
-        loginOrigin && allowedOrigins.includes(loginOrigin)
-          ? loginOrigin
-          : defaultOrigin
-      deleteCookie(c, "login_origin", { path: "/" })
-
-      return `${origin}${redirectPath}`
-    },
-    catch: (error) =>
-      error instanceof AuthCallbackError
-        ? error
-        : new AuthCallbackError({
-            message: "Authentication failed",
-            cause: error,
-          }),
-  })
-
-  if (result.isOk()) {
-    return c.redirect(result.value, 302)
+  if (exchanged.err) {
+    logger.error(
+      `Auth callback error: Token exchange failed: ${JSON.stringify(exchanged.err)}`,
+    )
+    return c.json({ error: "Authentication failed" }, 500)
   }
 
-  logger.error(`Auth callback error: ${result.error.message}`)
-  return c.json({ error: "Authentication failed" }, 500)
+  setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
+
+  const loginOrigin = getCookie(c, "login_origin")
+  const origin =
+    loginOrigin && allowedOrigins.includes(loginOrigin)
+      ? loginOrigin
+      : defaultOrigin
+  deleteCookie(c, "login_origin", { path: "/" })
+
+  return c.redirect(`${origin}${redirectPath}`, 302)
 })
