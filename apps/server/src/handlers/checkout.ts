@@ -100,8 +100,8 @@ checkoutRoute.get("/", async (c) => {
 
   const checkoutResult = await Result.tryPromise({
     try: async () => {
-      const checkout = await polar.checkouts.custom.create({
-        productId: polarProductId,
+      const checkout = await polar.checkouts.create({
+        products: [polarProductId],
         amount: Math.round(amountNum * 100),
         successUrl,
         customerId: customerResult.value.polarCustomerId,

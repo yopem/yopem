@@ -89,8 +89,8 @@ export async function checkAndTriggerAutoTopup(
         }
       }
 
-      const checkout = await polar.checkouts.custom.create({
-        productId: polarProductId,
+      const checkout = await polar.checkouts.create({
+        products: [polarProductId],
         amount: Math.round(amount * 100),
         successUrl: `https://${siteDomain}/dashboard/credits?auto_topup=true`,
         customerId: polarCustomerId ?? undefined,

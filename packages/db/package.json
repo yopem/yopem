@@ -46,8 +46,8 @@
     }
   },
   "scripts": {
-    "lint": "oxlint .",
-    "lint:fix": "oxlint --fix .",
+    "lint": "oxlint --config .oxlintrc.json .",
+    "lint:fix": "oxlint --config .oxlintrc.json --fix .",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
     "db:generate": "bun run with-env drizzle-kit generate",
