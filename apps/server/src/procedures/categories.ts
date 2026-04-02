@@ -58,26 +58,33 @@ export const categoriesRouter = {
       }),
     )
     .handler(async ({ input }) => {
-      const result = await Result.tryPromise({
-        try: async () => {
-          const category = await updateCategory({
-            id: input.id,
-            name: input.name,
-            description: input.description,
-          })
-          if (!category) {
-            throw new CategoryNotFoundError({ categoryId: input.id })
-          }
-          return category
-        },
-        catch: (error) => {
-          if (CategoryNotFoundError.is(error)) {
-            return error
-          }
-          return new CategoryValidationError({
-            message: `Failed to update category: ${error instanceof Error ? error.message : String(error)}`,
-          })
-        },
+      const result = await Result.gen(async function* () {
+        const category = yield* Result.await(
+          Result.tryPromise({
+            try: async () => {
+              const updated = await updateCategory({
+                id: input.id,
+                name: input.name,
+                description: input.description,
+              })
+              if (!updated) {
+                return Result.err(
+                  new CategoryNotFoundError({ categoryId: input.id }),
+                )
+              }
+              return Result.ok(updated)
+            },
+            catch: (error) => {
+              return Result.err(
+                new CategoryValidationError({
+                  message: `Failed to update category: ${error instanceof Error ? error.message : String(error)}`,
+                }),
+              )
+            },
+          }),
+        )
+
+        return Result.ok(category)
       })
 
       if (result.isErr()) {

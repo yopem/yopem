@@ -645,17 +645,26 @@ async function seedTools() {
     },
   })
 
-  if (result.isErr()) {
-    throw result.error
-  }
+  return result
 }
 
-seedTools()
-  .then(() => {
-    logger.info("\n✨ Seeding completed successfully!")
-    process.exit(0)
+async function runSeed() {
+  const result = await Result.tryPromise({
+    try: async () => {
+      await seedTools()
+      logger.info("\n✨ Seeding completed successfully!")
+      return "success"
+    },
+    catch: (error) => {
+      logger.error(`\n💥 Seeding failed: ${formatError(error)}`)
+      return error
+    },
   })
-  .catch((error) => {
-    logger.error(`\n💥 Seeding failed: ${formatError(error)}`)
+
+  if (result.isErr()) {
     process.exit(1)
-  })
+  }
+  process.exit(0)
+}
+
+runSeed()

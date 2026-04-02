@@ -22,6 +22,8 @@ import {
   ToolNotAvailableError,
   ToolNotFoundError,
   ToolValidationError,
+  UserCreditsNotFoundError,
+  UserNotFoundError,
   ValidationError,
 } from "./procedure-errors"
 
@@ -37,6 +39,10 @@ export function handleProcedureError<E>(result: Result<unknown, E>): never {
   }
 
   if (ReviewNotFoundError.is(error) || SettingsNotFoundError.is(error)) {
+    throw new ORPCError("NOT_FOUND", { message: error.message })
+  }
+
+  if (UserNotFoundError.is(error) || UserCreditsNotFoundError.is(error)) {
     throw new ORPCError("NOT_FOUND", { message: error.message })
   }
 

@@ -1086,16 +1086,16 @@ function fetchOpenAIModels(
 ): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
   return Result.tryPromise({
     try: async () => {
-      const response = await fetch("https://api.openai.com/v1/models", {
+      const res = await fetch("https://api.openai.com/v1/models", {
         headers: { Authorization: `Bearer ${apiKey}` },
       })
-      if (!response.ok) {
+      if (!res.ok) {
         throw new ModelFetchError({
           provider: "openai",
-          message: `API request failed with status ${response.status}`,
+          message: `API request failed with status ${res.status}`,
         })
       }
-      const data = await response.json()
+      const data = await res.json()
       return (
         data.data?.map((m: { id: string }) => ({
           id: m.id,
@@ -1119,16 +1119,16 @@ function fetchOpenRouterModels(
 ): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
   return Result.tryPromise({
     try: async () => {
-      const response = await fetch("https://openrouter.ai/api/v1/models", {
+      const res = await fetch("https://openrouter.ai/api/v1/models", {
         headers: { Authorization: `Bearer ${apiKey}` },
       })
-      if (!response.ok) {
+      if (!res.ok) {
         throw new ModelFetchError({
           provider: "openrouter",
-          message: `API request failed with status ${response.status}`,
+          message: `API request failed with status ${res.status}`,
         })
       }
-      const data = await response.json()
+      const data = await res.json()
       return (
         data.data?.map((m: { id: string; name?: string }) => ({
           id: m.id,

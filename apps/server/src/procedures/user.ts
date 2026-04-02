@@ -95,23 +95,28 @@ export const userRouter = {
   getCredits: protectedProcedure.handler(async ({ context }) => {
     const result = await Result.tryPromise({
       try: async () => {
-        const credits = await userService.getUserCredits(context.session.id)
-        if (!credits) {
-          throw new UserCreditsNotFoundError({ userId: context.session.id })
+        const data = await userService.getUserCredits(context.session.id)
+        if (!data) {
+          return Result.err(
+            new UserCreditsNotFoundError({ userId: context.session.id }),
+          )
         }
-        return credits
+        return Result.ok(data)
       },
-      catch: (e) =>
-        e instanceof UserCreditsNotFoundError
-          ? e
-          : new UserNotFoundError({ userId: context.session.id }),
+      catch: () =>
+        Result.err(new UserNotFoundError({ userId: context.session.id })),
     })
 
     if (result.isErr()) {
       return handleProcedureError(result)
     }
 
-    return result.value
+    const innerResult = result.value
+    if (innerResult.isErr()) {
+      return handleProcedureError(innerResult)
+    }
+
+    return innerResult.value
   }),
 
   getTransactions: protectedProcedure

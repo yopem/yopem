@@ -46,25 +46,30 @@ export const tagsRouter = {
       }),
     )
     .handler(async ({ input }) => {
-      const result = await Result.tryPromise({
-        try: async () => {
-          const tag = await updateTag({
-            id: input.id,
-            name: input.name,
-          })
-          if (!tag) {
-            throw new TagNotFoundError({ tagId: input.id })
-          }
-          return tag
-        },
-        catch: (error) => {
-          if (TagNotFoundError.is(error)) {
-            return error
-          }
-          return new TagValidationError({
-            message: `Failed to update tag: ${error instanceof Error ? error.message : String(error)}`,
-          })
-        },
+      const result = await Result.gen(async function* () {
+        const tag = yield* Result.await(
+          Result.tryPromise({
+            try: async () => {
+              const updated = await updateTag({
+                id: input.id,
+                name: input.name,
+              })
+              if (!updated) {
+                return Result.err(new TagNotFoundError({ tagId: input.id }))
+              }
+              return Result.ok(updated)
+            },
+            catch: (error) => {
+              return Result.err(
+                new TagValidationError({
+                  message: `Failed to update tag: ${error instanceof Error ? error.message : String(error)}`,
+                }),
+              )
+            },
+          }),
+        )
+
+        return Result.ok(tag)
       })
 
       if (result.isErr()) {
