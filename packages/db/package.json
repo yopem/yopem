@@ -56,24 +56,24 @@
     "db:seed": "bun run with-env bun run src/seed.ts"
   },
   "dependencies": {
-    "better-result": "catalog:",
-    "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
+    "better-result": "^2.7.0",
+    "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
     "env": "workspace:*",
     "logger": "workspace:*",
-    "pg": "catalog:",
+    "pg": "^8.20.0",
     "shared": "workspace:*",
-    "transliteration": "catalog:",
-    "zod": "catalog:"
+    "transliteration": "^2.6.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/pg": "catalog:",
-    "@yopem/typescript-config": "catalog:",
-    "drizzle-kit": "catalog:",
-    "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "oxlint-tsgolint": "catalog:",
-    "typescript": "catalog:"
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "@yopem/typescript-config": "^0.2.1",
+    "drizzle-kit": "^0.31.10",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
+    "oxlint-tsgolint": "^0.19.0",
+    "typescript": "^6.0.2"
   }
 }

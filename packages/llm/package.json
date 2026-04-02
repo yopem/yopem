@@ -19,19 +19,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/openai": "catalog:",
-    "@ai-sdk/openai-compatible": "catalog:",
-    "ai": "catalog:",
-    "better-result": "catalog:",
+    "@ai-sdk/openai": "^3.0.49",
+    "@ai-sdk/openai-compatible": "^2.0.37",
+    "ai": "^6.0.143",
+    "better-result": "^2.7.0",
     "logger": "workspace:*",
     "storage": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@yopem/typescript-config": "catalog:",
-    "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "oxlint-tsgolint": "catalog:",
-    "typescript": "catalog:"
+    "@types/node": "^25.5.0",
+    "@yopem/typescript-config": "^0.2.1",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
+    "oxlint-tsgolint": "^0.19.0",
+    "typescript": "^6.0.2"
   }
 }
