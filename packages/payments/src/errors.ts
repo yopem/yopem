@@ -80,6 +80,23 @@ export class WebhookMetricsError extends TaggedError("WebhookMetricsError")<{
   }
 }
 
+export class DatabaseTransactionError extends TaggedError(
+  "DatabaseTransactionError",
+)<{
+  operation: string
+  message: string
+  cause: unknown
+}>() {
+  constructor(args: { operation: string; cause: unknown }) {
+    const msg =
+      args.cause instanceof Error ? args.cause.message : String(args.cause)
+    super({
+      ...args,
+      message: `Database transaction ${args.operation} failed: ${msg}`,
+    })
+  }
+}
+
 export type PaymentError =
   | PaymentNotFoundError
   | PaymentAlreadyProcessedError
@@ -87,3 +104,4 @@ export type PaymentError =
   | WebhookExecutionError
   | AutoTopupError
   | WebhookMetricsError
+  | DatabaseTransactionError

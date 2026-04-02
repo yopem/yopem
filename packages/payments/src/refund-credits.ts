@@ -10,7 +10,11 @@ import {
 import { logger } from "logger"
 import { createCustomId } from "shared/custom-id"
 
-import { PaymentNotFoundError, RefundValidationError } from "./errors.ts"
+import {
+  DatabaseTransactionError,
+  PaymentNotFoundError,
+  RefundValidationError,
+} from "./errors.ts"
 
 interface RefundCreditsParams {
   polarPaymentId: string
@@ -25,19 +29,24 @@ export interface RefundCreditsResult {
 
 export async function refundCredits(
   params: RefundCreditsParams,
-): Promise<Result<RefundCreditsResult, Error>> {
+): Promise<
+  Result<
+    RefundCreditsResult,
+    PaymentNotFoundError | RefundValidationError | DatabaseTransactionError
+  >
+> {
   const { polarPaymentId, refundAmount } = params
 
-  try {
-    return await db.transaction(async (tx) => {
-      const [payment] = await tx
+  return await Result.tryPromise({
+    try: async () => {
+      const [payment] = await db
         .select()
         .from(polarPaymentsTable)
         .where(eq(polarPaymentsTable.polarPaymentId, polarPaymentId))
         .limit(1)
 
       if (!payment) {
-        return Result.err(new PaymentNotFoundError({ polarPaymentId }))
+        throw new PaymentNotFoundError({ polarPaymentId })
       }
 
       const totalAmount = Number.parseFloat(payment.amount)
@@ -45,11 +54,11 @@ export async function refundCredits(
 
       if (payment.status === "refunded") {
         logger.info(`Payment already fully refunded: ${polarPaymentId}`)
-        return Result.ok({
+        return {
           alreadyProcessed: true,
           creditsRefunded: 0,
           isPartialRefund: false,
-        })
+        }
       }
 
       const amountToRefund = refundAmount
@@ -60,22 +69,20 @@ export async function refundCredits(
         logger.info(
           `Payment refund already processed (cumulative): ${polarPaymentId}, currentRefunded=${currentRefundedAmount}, webhookRefunded=${refundAmount ? refundAmount / 100 : "N/A"}`,
         )
-        return Result.ok({
+        return {
           alreadyProcessed: true,
           creditsRefunded: 0,
           isPartialRefund: false,
-        })
+        }
       }
 
       const newRefundedAmount = currentRefundedAmount + amountToRefund
 
       if (newRefundedAmount > totalAmount) {
-        return Result.err(
-          new RefundValidationError({
-            polarPaymentId,
-            message: `Refund amount exceeds payment total: ${newRefundedAmount} > ${totalAmount}`,
-          }),
-        )
+        throw new RefundValidationError({
+          polarPaymentId,
+          message: `Refund amount exceeds payment total: ${newRefundedAmount} > ${totalAmount}`,
+        })
       }
 
       const isFullyRefunded = newRefundedAmount >= totalAmount
@@ -89,47 +96,59 @@ export async function refundCredits(
         )
       }
 
-      await tx
-        .update(polarPaymentsTable)
-        .set({
-          status: isFullyRefunded ? "refunded" : payment.status,
-          refundedAmount: newRefundedAmount.toFixed(2),
-          updatedAt: new Date(),
-        })
-        .where(eq(polarPaymentsTable.polarPaymentId, polarPaymentId))
-
-      if (creditsToDeduct > 0) {
+      await db.transaction(async (tx) => {
         await tx
-          .update(userCreditsTable)
+          .update(polarPaymentsTable)
           .set({
-            balance: sql`${userCreditsTable.balance} - ${creditsToDeduct}`,
+            status: isFullyRefunded ? "refunded" : payment.status,
+            refundedAmount: newRefundedAmount.toFixed(2),
             updatedAt: new Date(),
           })
-          .where(eq(userCreditsTable.userId, payment.userId))
+          .where(eq(polarPaymentsTable.polarPaymentId, polarPaymentId))
 
-        await tx.insert(creditTransactionsTable).values({
-          id: createCustomId(),
-          userId: payment.userId,
-          amount: String(-creditsToDeduct),
-          type: "refund",
-          description: `Refund ${isFullyRefunded ? "(Full)" : "(Partial)"} - Polar payment ${polarPaymentId}`,
-        })
-      }
+        if (creditsToDeduct > 0) {
+          await tx
+            .update(userCreditsTable)
+            .set({
+              balance: sql`${userCreditsTable.balance} - ${creditsToDeduct}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(userCreditsTable.userId, payment.userId))
+
+          await tx.insert(creditTransactionsTable).values({
+            id: createCustomId(),
+            userId: payment.userId,
+            amount: String(-creditsToDeduct),
+            type: "refund",
+            description: `Refund ${isFullyRefunded ? "(Full)" : "(Partial)"} - Polar payment ${polarPaymentId}`,
+          })
+        }
+      })
 
       logger.info(
         `Credits ${isFullyRefunded ? "fully" : "partially"} refunded successfully: userId=${payment.userId}, polarPaymentId=${polarPaymentId}, credits=${creditsToDeduct}, refundAmount=${amountToRefund}, totalRefunded=${newRefundedAmount}`,
       )
 
-      return Result.ok({
+      return {
         alreadyProcessed: false,
         creditsRefunded: creditsToDeduct,
         isPartialRefund: !isFullyRefunded,
+      }
+    },
+    catch: (e: unknown) => {
+      logger.error(
+        `Failed to refund credits: polarPaymentId=${polarPaymentId}, error=${e}`,
+      )
+      if (e instanceof PaymentNotFoundError) {
+        return e
+      }
+      if (e instanceof RefundValidationError) {
+        return e
+      }
+      return new DatabaseTransactionError({
+        operation: "refundCredits",
+        cause: e instanceof Error ? e : new Error(String(e)),
       })
-    })
-  } catch (e: unknown) {
-    logger.error(
-      `Failed to refund credits: polarPaymentId=${polarPaymentId}, error=${e}`,
-    )
-    return Result.err(e instanceof Error ? e : new Error(String(e)))
-  }
+    },
+  })
 }

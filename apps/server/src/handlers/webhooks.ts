@@ -1,5 +1,5 @@
 import { Webhooks } from "@polar-sh/hono"
-import { Result, TaggedError } from "better-result"
+import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { z } from "zod"
@@ -14,17 +14,7 @@ import { refundCredits } from "payments/refund-credits"
 import { WebhookMonitor } from "payments/webhook-monitor"
 import { createCustomId } from "shared/custom-id"
 
-class WebhookHandlerError extends TaggedError("WebhookHandlerError")<{
-  operation: string
-  message: string
-  cause: unknown
-}>() {
-  constructor(args: { operation: string; cause: unknown }) {
-    const msg =
-      args.cause instanceof Error ? args.cause.message : String(args.cause)
-    super({ ...args, message: `Webhook ${args.operation} failed: ${msg}` })
-  }
-}
+import { WebhookHandlerError } from "@/errors"
 
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),
