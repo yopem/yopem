@@ -1,24 +1,16 @@
 "use client"
 
-import { lazy, Suspense } from "react"
-
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
 
-const ResponsiveContainer = lazy(() =>
-  import("recharts").then((m) => ({ default: m.ResponsiveContainer })),
-)
-const LineChart = lazy(() =>
-  import("recharts").then((m) => ({ default: m.LineChart })),
-)
-const CartesianGrid = lazy(() =>
-  import("recharts").then((m) => ({ default: m.CartesianGrid })),
-)
-const XAxis = lazy(() => import("recharts").then((m) => ({ default: m.XAxis })))
-const YAxis = lazy(() => import("recharts").then((m) => ({ default: m.YAxis })))
-const Tooltip = lazy(() =>
-  import("recharts").then((m) => ({ default: m.Tooltip })),
-)
-const Line = lazy(() => import("recharts").then((m) => ({ default: m.Line })))
+import {
+  ResponsiveContainer,
+  LineChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Line,
+} from "@/components/charts/line-chart-wrapper"
 
 interface DataPoint {
   date: string
@@ -36,34 +28,30 @@ const WebhookProcessingChart = ({ data }: WebhookProcessingChartProps) => {
         <CardTitle>Processing Time Over Time</CardTitle>
       </CardHeader>
       <CardContent>
-        <Suspense
-          fallback={<div className="bg-muted h-75 animate-pulse rounded-md" />}
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(value) => new Date(value).toLocaleDateString()}
-              />
-              <YAxis />
-              <Tooltip
-                labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                formatter={(value) => [
-                  `${String(value ?? "")}ms`,
-                  "Processing Time",
-                ]}
-              />
-              <Line
-                type="monotone"
-                dataKey="avgProcessingTime"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                name="Processing Time (ms)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Suspense>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) => new Date(value).toLocaleDateString()}
+            />
+            <YAxis />
+            <Tooltip
+              labelFormatter={(value) => new Date(value).toLocaleDateString()}
+              formatter={(value) => [
+                `${String(value ?? "")}ms`,
+                "Processing Time",
+              ]}
+            />
+            <Line
+              type="monotone"
+              dataKey="avgProcessingTime"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              name="Processing Time (ms)"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   )
