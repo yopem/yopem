@@ -4,14 +4,14 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 
-const clientEnvDefines = Object.fromEntries(
-  Object.entries(process.env)
-    .filter(([key]) => key.startsWith("PUBLIC_") || key === "APP_ENV")
-    .flatMap(([key, value]) => [
-      [`process.env.${key}`, JSON.stringify(value)],
-      [`process.env["${key}"]`, JSON.stringify(value)],
-    ]),
-)
+const clientEnvDefines: Record<string, string> = {}
+
+const publicApiUrl = process.env["PUBLIC_API_URL"]
+if (publicApiUrl) {
+  clientEnvDefines["process.env.PUBLIC_API_URL"] = JSON.stringify(publicApiUrl)
+  clientEnvDefines['process.env["PUBLIC_API_URL"]'] =
+    JSON.stringify(publicApiUrl)
+}
 
 export default defineConfig({
   envPrefix: "PUBLIC_",
