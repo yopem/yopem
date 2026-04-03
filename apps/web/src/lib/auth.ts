@@ -33,14 +33,13 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 
     if (verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const isSecure =
-        !!cookieDomain || process.env["NODE_ENV"] === "production"
+      const isProd = process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
         maxAge: 86400,
-        secure: isSecure,
+        secure: isProd,
         ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)
@@ -66,14 +65,13 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
     })
     if (!verified.err && verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const isSecure =
-        !!cookieDomain || process.env["NODE_ENV"] === "production"
+      const isProd = process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
         maxAge: 86400,
-        secure: isSecure,
+        secure: isProd,
         ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)
@@ -87,15 +85,18 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
 
   const origin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
 
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
   setCookie("login_origin", origin, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     maxAge: 300,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
-  const apiUrl = process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
-  const { url } = await authClient.authorize(`${apiUrl}/auth/callback`, "code")
+  const callbackUrl =
+    process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
+  const { url } = await authClient.authorize(callbackUrl, "code")
   throw redirect({ href: url })
 })
 

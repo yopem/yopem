@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "dev": "dotenv -e ../../.env -- sh -c 'portless api.yopem --app-port ${SERVER_PORT:-4000} bun run with-env bun --watch src/index.ts'",
+    "dev": "dotenv -e ../../.env -- bun run with-env bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun run with-env bun run dist/index.js",
     "lint": "oxlint .",

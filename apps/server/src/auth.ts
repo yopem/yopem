@@ -34,7 +34,7 @@ const getCookieOptions = () => {
     return {
       domain: cookieDomain,
       sameSite: "lax" as const,
-      secure: true,
+      secure: false,
       httpOnly: true,
       path: "/",
       maxAge: 34560000,
@@ -60,6 +60,10 @@ export const authMiddleware: MiddlewareHandler<SessionEnv> = async (
 ) => {
   const accessToken = getCookie(c, "access_token")
   const refreshToken = getCookie(c, "refresh_token")
+
+  logger.info(
+    `Auth middleware: access_token=${accessToken ? "present" : "missing"}, refresh_token=${refreshToken ? "present" : "missing"}`,
+  )
 
   if (!accessToken) {
     c.set("session", null)

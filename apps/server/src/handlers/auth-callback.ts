@@ -4,7 +4,7 @@ import { getCookie, deleteCookie } from "hono/cookie"
 
 import { logger } from "logger"
 
-import { authClient, setTokenCookies } from "@/auth"
+import { authClient } from "@/auth"
 
 export class AuthCallbackError extends TaggedError("AuthCallbackError")<{
   message: string
@@ -23,19 +23,34 @@ const allowedOrigins =
         process.env["ADMIN_ORIGIN"] ?? "",
       ].filter(Boolean)
 const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
-const serverOrigin = process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
+const callbackUrl =
+  process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
 
 export const authCallbackRoute = new Hono()
 
 authCallbackRoute.get("/callback", async (c) => {
   const code = c.req.query("code")
+  const error = c.req.query("error")
+  const errorDescription = c.req.query("error_description")
   const redirectPath = c.req.query("redirect") ?? "/"
 
-  if (!code) {
-    return c.json({ error: "Missing code parameter" }, 400)
+  const fullUrl = c.req.url
+  logger.info(`Auth callback received: URL=${fullUrl}`)
+
+  if (error) {
+    logger.error(`OAuth error: ${error} - ${errorDescription}`)
+    return c.json(
+      { error: `OAuth error: ${error}`, description: errorDescription },
+      400,
+    )
   }
 
-  const callbackUrl = `${serverOrigin}/auth/callback`
+  if (!code) {
+    logger.error(
+      `Auth callback error: Missing code parameter. Query params: ${JSON.stringify(c.req.query())}`,
+    )
+    return c.json({ error: "Missing code parameter" }, 400)
+  }
 
   const exchanged = await authClient.exchange(code, callbackUrl)
 
@@ -46,14 +61,23 @@ authCallbackRoute.get("/callback", async (c) => {
     return c.json({ error: "Authentication failed" }, 500)
   }
 
-  setTokenCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
+  logger.info(
+    `Auth callback: Token exchange successful, redirecting to token exchange`,
+  )
 
   const loginOrigin = getCookie(c, "login_origin")
   const origin =
     loginOrigin && allowedOrigins.includes(loginOrigin)
       ? loginOrigin
       : defaultOrigin
-  deleteCookie(c, "login_origin", { path: "/" })
 
-  return c.redirect(`${origin}${redirectPath}`, 302)
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
+  deleteCookie(c, "login_origin", {
+    path: "/",
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  })
+
+  // Redirect to token exchange page with tokens in URL
+  const tokenExchangeUrl = `${origin}/auth/token?access=${encodeURIComponent(exchanged.tokens.access)}&refresh=${encodeURIComponent(exchanged.tokens.refresh)}&redirect=${encodeURIComponent(redirectPath)}`
+  return c.redirect(tokenExchangeUrl, 302)
 })
