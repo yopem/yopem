@@ -154,6 +154,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  a[href] {
+    cursor: pointer;
+  }
+  [onclick] {
+    cursor: pointer;
+  }
 }
 
 @keyframes indeterminate-progress {
