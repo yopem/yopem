@@ -1,6 +1,7 @@
 "use client"
 
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { Loader2 as Loader2Icon, Package as PackageIcon } from "lucide-react"
 import { lazy, Suspense } from "react"
 import { Shimmer } from "shimmer-from-structure"
@@ -13,15 +14,19 @@ import SearchBar from "@/components/marketplace/search-bar"
 const ToolCard = lazy(() => import("./tool-card"))
 
 const ToolCardSkeleton = () => (
-  <div className="bg-card rounded-2xl border p-6 shadow-sm">
-    <div className="space-y-4">
-      <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
-      <div className="space-y-2">
-        <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
-        <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
-        <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
+  <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
+    <div className="flex items-start gap-3">
+      <div className="bg-muted size-10 shrink-0 animate-pulse rounded-lg" />
+      <div className="flex-1 space-y-1.5">
+        <div className="bg-muted h-4 w-2/3 animate-pulse rounded-md" />
+        <div className="bg-muted h-3 w-1/3 animate-pulse rounded-md" />
       </div>
     </div>
+    <div className="space-y-1.5">
+      <div className="bg-muted h-3 w-full animate-pulse rounded-md" />
+      <div className="bg-muted h-3 w-4/5 animate-pulse rounded-md" />
+    </div>
+    <div className="bg-muted h-3 w-12 animate-pulse rounded-md" />
   </div>
 )
 
@@ -51,9 +56,7 @@ const MarketplaceGrid = ({
   initialSearch = "",
 }: MarketplaceGridProps) => {
   const search = initialSearch
-  const setSearch = (_value: string) => {
-    // Search updates are handled via URL in this component
-  }
+  const navigate = useNavigate()
 
   const queryKey = [
     "marketplace-tools",
@@ -92,7 +95,11 @@ const MarketplaceGrid = ({
   const tools = data?.pages.flatMap((page) => page.tools) ?? []
 
   const handleSearch = (query: string) => {
-    setSearch(query)
+    void navigate({
+      to: ".",
+      search: (prev) => ({ ...prev, search: query || undefined }),
+      replace: true,
+    })
   }
 
   const handleLoadMore = () => {
@@ -118,18 +125,9 @@ const MarketplaceGrid = ({
 
       <Shimmer loading={isLoading}>
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-2xl border p-6 shadow-sm">
-                <div className="space-y-4">
-                  <div className="bg-muted aspect-video w-full animate-pulse rounded-xl" />
-                  <div className="space-y-2">
-                    <div className="bg-muted h-5 w-2/3 animate-pulse rounded-md" />
-                    <div className="bg-muted h-4 w-full animate-pulse rounded-md" />
-                    <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
-                  </div>
-                </div>
-              </div>
+              <ToolCardSkeleton key={i} />
             ))}
           </div>
         ) : tools.length === 0 ? (
@@ -148,7 +146,7 @@ const MarketplaceGrid = ({
           </div>
         ) : (
           <div className="space-y-10">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {tools.map((tool) => (
                 <Suspense key={tool.id} fallback={<ToolCardSkeleton />}>
                   <ToolCard

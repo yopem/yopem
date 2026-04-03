@@ -2,7 +2,7 @@
 
 import { Link } from "@tanstack/react-router"
 import { Image } from "@unpic/react"
-import { Image as ImageIcon, StarIcon } from "lucide-react"
+import { StarIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Card } from "ui/card"
@@ -21,6 +21,35 @@ export interface ToolCardProps {
 
 const EMPTY_CATEGORIES: { id: string; name: string; slug: string }[] = []
 
+const ToolAvatar = ({
+  name,
+  thumbnail,
+}: {
+  name: string
+  thumbnail?: { id: string; url: string } | null
+}) => {
+  const [imageError, setImageError] = useState(false)
+
+  if (thumbnail && !imageError) {
+    return (
+      <Image
+        src={thumbnail.url}
+        alt={`${name} icon`}
+        width={40}
+        height={40}
+        className="size-10 rounded-lg object-cover"
+        onError={() => setImageError(true)}
+      />
+    )
+  }
+
+  return (
+    <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
+}
+
 const ToolCard = ({
   slug,
   name,
@@ -33,7 +62,6 @@ const ToolCard = ({
   reviewCount,
 }: ToolCardProps) => {
   const isFree = Number(costPerRun ?? 0) === 0
-  const [imageError, setImageError] = useState(false)
   const hasReviews = reviewCount && reviewCount > 0
 
   return (
@@ -42,61 +70,43 @@ const ToolCard = ({
       params={{ slug }}
       className="group block h-full outline-none"
     >
-      <Card className="border-border bg-card flex h-full flex-col overflow-hidden rounded-2xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-gray-300 hover:shadow-md dark:hover:border-gray-700">
-        <div className="bg-muted/30 relative aspect-video w-full overflow-hidden">
-          {thumbnail && !imageError ? (
-            <Image
-              src={thumbnail.url}
-              alt={`${name} thumbnail`}
-              layout="fullWidth"
-              className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center">
-              <ImageIcon className="text-muted-foreground/40 size-10" />
-            </div>
-          )}
-          {categories.length > 0 && (
-            <div className="absolute top-3 left-3 flex gap-1.5">
-              <span className="bg-background/95 border-border/50 rounded-md border px-2.5 py-1 text-[10px] font-medium tracking-wider uppercase shadow-sm backdrop-blur-sm">
+      <Card className="border-border bg-card flex h-full flex-col gap-3 rounded-xl border p-4 shadow-none transition-all duration-150 hover:border-gray-300 hover:shadow-sm dark:hover:border-gray-700">
+        <div className="flex items-start gap-3">
+          <ToolAvatar name={name} thumbnail={thumbnail} />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-foreground group-hover:text-primary line-clamp-1 text-sm font-semibold transition-colors">
+              {name}
+            </h3>
+            {categories.length > 0 && (
+              <span className="text-muted-foreground text-xs">
                 {categories[0].name}
               </span>
+            )}
+          </div>
+          {hasReviews && averageRating && (
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
+              <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+              <span>{averageRating.toFixed(1)}</span>
+              <span className="opacity-60">·</span>
+              <span className="opacity-60">{reviewCount}</span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col p-5">
-          <div className="mb-2 flex items-start justify-between gap-3">
-            <h3 className="text-foreground group-hover:text-primary line-clamp-1 text-lg font-semibold tracking-tight transition-colors">
-              {name}
-            </h3>
-            {hasReviews && averageRating && (
-              <div className="flex shrink-0 items-center gap-1 rounded-md bg-yellow-50 px-1.5 py-0.5 text-xs font-medium text-yellow-600 dark:bg-yellow-950/30 dark:text-yellow-500">
-                <StarIcon className="size-3 fill-current" />
-                <span>{averageRating.toFixed(1)}</span>
-              </div>
-            )}
-          </div>
+        <p className="text-muted-foreground line-clamp-2 flex-1 text-xs/relaxed">
+          {excerpt ?? description ?? "No description available"}
+        </p>
 
-          <p className="text-muted-foreground mb-4 line-clamp-2 flex-1 text-sm/relaxed">
-            {excerpt ?? description ?? "No description available"}
-          </p>
-
-          <div className="border-border/50 mt-auto flex items-center justify-between border-t pt-4">
-            <span
-              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                isFree
-                  ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {isFree ? "Free to use" : `${costPerRun} credits/run`}
-            </span>
-            <span className="text-primary -translate-x-2 text-sm font-medium opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
-              Try tool &rarr;
-            </span>
-          </div>
+        <div className="mt-auto">
+          <span
+            className={`text-xs font-medium ${
+              isFree
+                ? "text-green-600 dark:text-green-400"
+                : "text-muted-foreground"
+            }`}
+          >
+            {isFree ? "Free" : `${costPerRun} credits/run`}
+          </span>
         </div>
       </Card>
     </Link>
