@@ -74,7 +74,7 @@ const ToolCard = ({
         <div className="flex items-start gap-3">
           <ToolAvatar name={name} thumbnail={thumbnail} />
           <div className="min-w-0 flex-1">
-            <h3 className="text-foreground group-hover:text-primary line-clamp-1 text-sm font-semibold transition-colors">
+            <h3 className="text-foreground group-hover:text-primary line-clamp-3 text-sm font-semibold transition-colors">
               {name}
             </h3>
             {categories.length > 0 && (
@@ -83,21 +83,13 @@ const ToolCard = ({
               </span>
             )}
           </div>
-          {hasReviews && averageRating && (
-            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
-              <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-              <span>{averageRating.toFixed(1)}</span>
-              <span className="opacity-60">·</span>
-              <span className="opacity-60">{reviewCount}</span>
-            </div>
-          )}
         </div>
 
         <p className="text-muted-foreground line-clamp-2 flex-1 text-xs/relaxed">
           {excerpt ?? description ?? "No description available"}
         </p>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex items-center justify-between">
           <span
             className={`text-xs font-medium ${
               isFree
@@ -107,6 +99,14 @@ const ToolCard = ({
           >
             {isFree ? "Free" : `${costPerRun} credits/run`}
           </span>
+          {hasReviews && averageRating && (
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
+              <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+              <span>{averageRating.toFixed(1)}</span>
+              <span className="opacity-60">·</span>
+              <span className="opacity-60">{reviewCount}</span>
+            </div>
+          )}
         </div>
       </Card>
     </Link>
