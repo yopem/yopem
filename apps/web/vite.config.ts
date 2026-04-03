@@ -9,8 +9,6 @@ const clientEnvDefines: Record<string, string> = {}
 const publicApiUrl = process.env["PUBLIC_API_URL"]
 if (publicApiUrl) {
   clientEnvDefines["process.env.PUBLIC_API_URL"] = JSON.stringify(publicApiUrl)
-  clientEnvDefines['process.env["PUBLIC_API_URL"]'] =
-    JSON.stringify(publicApiUrl)
 }
 
 export default defineConfig({

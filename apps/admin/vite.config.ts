@@ -7,10 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 const clientEnvDefines = Object.fromEntries(
   Object.entries(process.env)
     .filter(([key]) => key.startsWith("PUBLIC_") || key === "APP_ENV")
-    .flatMap(([key, value]) => [
-      [`process.env.${key}`, JSON.stringify(value)],
-      [`process.env["${key}"]`, JSON.stringify(value)],
-    ]),
+    .map(([key, value]) => [`process.env.${key}`, JSON.stringify(value ?? "")]),
 )
 
 export default defineConfig({
