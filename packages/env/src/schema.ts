@@ -28,28 +28,28 @@ export const serverSchema = {
 export const clientSchema = {
   PUBLIC_API_URL: z.string().min(1),
 
-  PUBLIC_GA_MEASUREMENT_ID: z.string().min(1),
-  PUBLIC_UMAMI_TRACKING_ID: z.string().min(1).optional(),
+  PUBLIC_GA_MEASUREMENT_ID: z.string().default(""),
+  PUBLIC_UMAMI_TRACKING_ID: z.string().optional(),
 
-  PUBLIC_LOGO_URL: z.string().min(1),
-  PUBLIC_LOGO_OG_URL: z.string().min(1),
-  PUBLIC_LOGO_OG_WIDTH: z.string().min(1),
-  PUBLIC_LOGO_OG_HEIGHT: z.string().min(1),
+  PUBLIC_LOGO_URL: z.string().default(""),
+  PUBLIC_LOGO_OG_URL: z.string().default(""),
+  PUBLIC_LOGO_OG_WIDTH: z.string().default("1200"),
+  PUBLIC_LOGO_OG_HEIGHT: z.string().default("630"),
 
   PUBLIC_SITE_DESCRIPTION: z.string().min(1),
   PUBLIC_SITE_DOMAIN: z.string().min(1),
-  PUBLIC_ADMIN_URL: z.string().min(1).optional(),
+  PUBLIC_ADMIN_URL: z.string().optional(),
   PUBLIC_SITE_TAGLINE: z.string().min(1),
   PUBLIC_SITE_TITLE: z.string().min(1),
   PUBLIC_SITE_URL: z.string().min(1),
   PUBLIC_SUPPORT_EMAIL: z.string().min(1),
 
-  PUBLIC_FACEBOOK_USERNAME: z.string().min(1),
-  PUBLIC_INSTAGRAM_USERNAME: z.string().min(1),
-  PUBLIC_TIKTOK_USERNAME: z.string().min(1),
-  PUBLIC_WHATSAPP_CHANNEL_USERNAME: z.string().min(1),
-  PUBLIC_X_USERNAME: z.string().min(1),
-  PUBLIC_YOUTUBE_USERNAME: z.string().min(1),
+  PUBLIC_FACEBOOK_USERNAME: z.string().default(""),
+  PUBLIC_INSTAGRAM_USERNAME: z.string().default(""),
+  PUBLIC_TIKTOK_USERNAME: z.string().default(""),
+  PUBLIC_WHATSAPP_CHANNEL_USERNAME: z.string().default(""),
+  PUBLIC_X_USERNAME: z.string().default(""),
+  PUBLIC_YOUTUBE_USERNAME: z.string().default(""),
 }
 
 export const honoServerSchema = {
