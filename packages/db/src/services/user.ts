@@ -1,5 +1,5 @@
 import { Result } from "better-result"
-import { desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, gt, sql } from "drizzle-orm"
 
 import { createCustomId } from "shared/custom-id"
 
@@ -263,6 +263,7 @@ export const getPaymentHistory = (
 }
 
 export const getPendingCheckouts = (userId: string) => {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
   return db
     .select({
       id: polarCheckoutSessionsTable.id,
@@ -274,7 +275,13 @@ export const getPendingCheckouts = (userId: string) => {
       createdAt: polarCheckoutSessionsTable.createdAt,
     })
     .from(polarCheckoutSessionsTable)
-    .where(eq(polarCheckoutSessionsTable.userId, userId))
+    .where(
+      and(
+        eq(polarCheckoutSessionsTable.userId, userId),
+        eq(polarCheckoutSessionsTable.status, "pending"),
+        gt(polarCheckoutSessionsTable.createdAt, oneDayAgo),
+      ),
+    )
     .orderBy(desc(polarCheckoutSessionsTable.createdAt))
     .limit(10)
 }
