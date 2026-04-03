@@ -23,6 +23,7 @@ export const serverSchema = {
   R2_BUCKET: z.string().min(1),
   R2_DOMAIN: z.string().min(1),
   R2_REGION: z.string().min(1),
+  COOKIE_DOMAIN: z.string().optional(),
 }
 
 export const clientSchema = {
@@ -60,5 +61,6 @@ export const honoServerSchema = {
   WEB_ORIGIN: z.string().min(1).optional(),
   ADMIN_ORIGIN: z.string().min(1).optional(),
   SERVER_PORT: z.coerce.number().default(4000),
-  COOKIE_DOMAIN: z.string().optional(),
+  WEB_PORT: z.coerce.number().default(3000),
+  ADMIN_PORT: z.coerce.number().default(3001),
 }

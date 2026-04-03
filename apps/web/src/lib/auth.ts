@@ -6,9 +6,9 @@ import { subjects } from "auth/subjects"
 import { logger } from "logger"
 
 const getServerUtils = async () => {
-  const { getCookie, setCookie, deleteCookie, getRequestHeaders } =
+  const { getCookie, setCookie, deleteCookie } =
     await import("@tanstack/react-start/server")
-  return { getCookie, setCookie, deleteCookie, getRequestHeaders }
+  return { getCookie, setCookie, deleteCookie }
 }
 
 export const getSession = createServerFn({ method: "GET" }).handler(
@@ -55,7 +55,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 )
 
 export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { getCookie, setCookie, getRequestHeaders } = await getServerUtils()
+  const { getCookie, setCookie } = await getServerUtils()
 
   const accessToken = getCookie("access_token")
   const refreshToken = getCookie("refresh_token")
@@ -85,10 +85,7 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
     }
   }
 
-  const headers = getRequestHeaders()
-  const host = headers.get("host") ?? "localhost:3000"
-  const protocol = host.startsWith("localhost") ? "http" : "https"
-  const origin = `${protocol}://${host}`
+  const origin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
 
   setCookie("login_origin", origin, {
     httpOnly: true,

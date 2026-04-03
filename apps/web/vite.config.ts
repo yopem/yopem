@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 
+import { webPort } from "env/ports"
+
 const clientEnvDefines = Object.fromEntries(
   Object.entries(process.env)
     .filter(([key]) => key.startsWith("PUBLIC_") || key === "APP_ENV")
@@ -14,9 +16,8 @@ export default defineConfig({
   envPrefix: "PUBLIC_",
   define: clientEnvDefines,
   server: {
-    port:
-      Number(process.env["PORT"]) || Number(process.env["WEB_PORT"]) || 3000,
-    host: process.env["HOST"] || "localhost",
+    port: webPort,
+    host: "0.0.0.0",
   },
   ssr: {
     noExternal: [

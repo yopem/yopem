@@ -21,6 +21,7 @@ export const env = createEnv({
     REDIS_URL: process.env["REDIS_URL"],
     REDIS_KEY_PREFIX: process.env["REDIS_KEY_PREFIX"],
     AUTH_ISSUER: process.env["AUTH_ISSUER"],
+    COOKIE_DOMAIN: process.env["COOKIE_DOMAIN"],
     API_KEY_ENCRYPTION_SECRET: process.env["API_KEY_ENCRYPTION_SECRET"],
     POLAR_ACCESS_TOKEN: process.env["POLAR_ACCESS_TOKEN"],
     POLAR_WEBHOOK_SECRET: process.env["POLAR_WEBHOOK_SECRET"],

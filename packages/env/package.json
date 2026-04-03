@@ -23,6 +23,10 @@
     "./schema": {
       "types": "./src/schema.ts",
       "default": "./src/schema.ts"
+    },
+    "./ports": {
+      "types": "./src/ports.ts",
+      "default": "./src/ports.ts"
     }
   },
   "scripts": {

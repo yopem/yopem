@@ -3,6 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
+import { serverPort } from "env/hono"
 import { logger as pinoLogger } from "logger"
 
 import { authMiddleware } from "./auth"
@@ -15,8 +16,7 @@ import { webhooksRoute } from "./handlers/webhooks"
 const app = new Hono()
 
 const appEnv = process.env["APP_ENV"] ?? "development"
-const port =
-  Number(process.env["PORT"]) || Number(process.env["SERVER_PORT"]) || 4000
+const port = serverPort
 
 const allowedOrigins =
   appEnv === "development"
