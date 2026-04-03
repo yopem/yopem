@@ -19,10 +19,21 @@ interface SessionEnv {
 const appEnv = process.env["APP_ENV"] ?? "development"
 
 const getCookieOptions = () => {
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
   if (appEnv === "production") {
     return {
-      domain: process.env["COOKIE_DOMAIN"] ?? ".yopem.com",
+      domain: cookieDomain ?? ".yopem.com",
       sameSite: "none" as const,
+      secure: true,
+      httpOnly: true,
+      path: "/",
+      maxAge: 34560000,
+    }
+  }
+  if (cookieDomain) {
+    return {
+      domain: cookieDomain,
+      sameSite: "lax" as const,
       secure: true,
       httpOnly: true,
       path: "/",

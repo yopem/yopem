@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run with-env vite dev",
+    "dev": "portless admin.yopem bun run with-env vite dev",
     "build": "bun run with-env vite build",
     "start": "bun run with-env node .output/server/index.mjs",
     "lint": "oxlint .",

@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "dev": "bun run with-env bun --watch src/index.ts",
+    "dev": "portless api.yopem bun run with-env bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun run with-env bun run dist/index.js",
     "lint": "oxlint .",

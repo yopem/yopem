@@ -14,7 +14,9 @@ export default defineConfig({
   envPrefix: "PUBLIC_",
   define: clientEnvDefines,
   server: {
-    port: Number(process.env["ADMIN_PORT"]) || 3001,
+    port:
+      Number(process.env["PORT"]) || Number(process.env["ADMIN_PORT"]) || 3001,
+    host: process.env["HOST"] || "localhost",
   },
   ssr: {
     noExternal: [

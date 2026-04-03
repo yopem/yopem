@@ -14,16 +14,16 @@ export class AuthCallbackError extends TaggedError("AuthCallbackError")<{
 const appEnv = process.env["APP_ENV"] ?? "development"
 const allowedOrigins =
   appEnv === "development"
-    ? ["http://localhost:3000", "http://localhost:3001"]
+    ? [
+        process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
+        process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      ]
     : [
         process.env["WEB_ORIGIN"] ?? "",
         process.env["ADMIN_ORIGIN"] ?? "",
       ].filter(Boolean)
 const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
-const serverOrigin =
-  appEnv === "development"
-    ? "http://localhost:4000"
-    : (process.env["PUBLIC_API_URL"] ?? "")
+const serverOrigin = process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
 
 export const authCallbackRoute = new Hono()
 

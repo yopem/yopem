@@ -32,13 +32,16 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     }
 
     if (verified.tokens) {
-      const isProduction = process.env["NODE_ENV"] === "production"
+      const cookieDomain = process.env["COOKIE_DOMAIN"]
+      const isSecure =
+        !!cookieDomain || process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
         maxAge: 86400,
-        secure: isProduction,
+        secure: isSecure,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)
       setCookie("refresh_token", verified.tokens.refresh, {
@@ -62,13 +65,16 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
       refresh: refreshToken,
     })
     if (!verified.err && verified.tokens) {
-      const isProduction = process.env["NODE_ENV"] === "production"
+      const cookieDomain = process.env["COOKIE_DOMAIN"]
+      const isSecure =
+        !!cookieDomain || process.env["NODE_ENV"] === "production"
       const options = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
         maxAge: 86400,
-        secure: isProduction,
+        secure: isSecure,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)
       setCookie("refresh_token", verified.tokens.refresh, {
@@ -99,7 +105,11 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
   const { deleteCookie } = await getServerUtils()
 
-  deleteCookie("access_token")
-  deleteCookie("refresh_token")
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
+  const cookieOpts = cookieDomain
+    ? { path: "/", domain: cookieDomain }
+    : { path: "/" }
+  deleteCookie("access_token", cookieOpts)
+  deleteCookie("refresh_token", cookieOpts)
   throw redirect({ to: "/auth/login" })
 })

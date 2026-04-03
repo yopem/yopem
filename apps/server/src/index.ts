@@ -15,11 +15,15 @@ import { webhooksRoute } from "./handlers/webhooks"
 const app = new Hono()
 
 const appEnv = process.env["APP_ENV"] ?? "development"
-const port = Number(process.env["SERVER_PORT"]) || 4000
+const port =
+  Number(process.env["PORT"]) || Number(process.env["SERVER_PORT"]) || 4000
 
 const allowedOrigins =
   appEnv === "development"
-    ? ["http://localhost:3000", "http://localhost:3001"]
+    ? [
+        process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
+        process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      ]
     : [
         process.env["WEB_ORIGIN"] ?? "",
         process.env["ADMIN_ORIGIN"] ?? "",
