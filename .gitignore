@@ -56,3 +56,6 @@ opencode.jsonc
 AGENTS.md
 skills
 .gemini
+.agent/
+.github/prompts/
+.github/skills/
