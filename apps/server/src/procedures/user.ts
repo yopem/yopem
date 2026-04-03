@@ -22,7 +22,6 @@ import {
   ApiKeyValidationError,
   CryptoOperationError,
   RateLimitExceededError,
-  UserCreditsNotFoundError,
   UserNotFoundError,
   ValidationError,
 } from "./procedure-errors"
@@ -94,17 +93,8 @@ export const userRouter = {
 
   getCredits: protectedProcedure.handler(async ({ context }) => {
     const result = await Result.tryPromise({
-      try: async () => {
-        const data = await userService.getUserCredits(context.session.id)
-        if (!data) {
-          return Result.err(
-            new UserCreditsNotFoundError({ userId: context.session.id }),
-          )
-        }
-        return Result.ok(data)
-      },
-      catch: () =>
-        Result.err(new UserNotFoundError({ userId: context.session.id })),
+      try: () => userService.getUserCredits(context.session.id),
+      catch: () => new UserNotFoundError({ userId: context.session.id }),
     })
 
     if (result.isErr()) {
