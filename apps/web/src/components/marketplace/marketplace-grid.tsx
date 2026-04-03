@@ -108,20 +108,7 @@ const MarketplaceGrid = ({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="w-full sm:max-w-md">
-          <SearchBar onSearch={handleSearch} defaultValue={search} />
-        </div>
-        <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
-          {isLoading ? (
-            <div className="bg-muted h-5 w-24 animate-pulse rounded-full" />
-          ) : (
-            <div className="bg-muted/50 rounded-full px-3 py-1">
-              {tools.length} {tools.length === 1 ? "tool" : "tools"} available
-            </div>
-          )}
-        </div>
-      </div>
+      <SearchBar onSearch={handleSearch} defaultValue={search} />
 
       <Shimmer loading={isLoading}>
         {isLoading ? (

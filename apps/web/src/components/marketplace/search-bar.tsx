@@ -1,10 +1,7 @@
 "use client"
 
 import { Search as SearchIcon, X as XIcon } from "lucide-react"
-import { useState, type FormEvent } from "react"
-
-import { Button } from "ui/button"
-import { Input } from "ui/input"
+import { type FormEvent, useState } from "react"
 
 interface SearchBarProps {
   onSearch: (query: string) => void
@@ -12,8 +9,7 @@ interface SearchBarProps {
 }
 
 const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
-  const initialQuery = defaultValue
-  const [query, setQuery] = useState(initialQuery)
+  const [query, setQuery] = useState(defaultValue)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -27,36 +23,26 @@ const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="relative w-full">
-      <div className="relative flex items-stretch gap-2">
-        <div className="relative flex-1">
-          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2" />
-          <Input
-            id="marketplace-search"
-            type="search"
-            placeholder="Search tools by name or description..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search marketplace tools"
-            className="focus:border-foreground/20 placeholder:text-muted-foreground/70 h-11 px-10 text-sm transition-colors duration-200 [&_input]:h-full [&_input]:py-0"
-          />
-          {query ? (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 z-10 -translate-y-1/2 transition-colors duration-200"
-            >
-              <XIcon className="size-4" />
-              <span className="sr-only">Clear search</span>
-            </button>
-          ) : null}
-        </div>
-        <Button
-          type="submit"
-          className="flex h-11 shrink-0 items-center justify-center px-6 text-sm font-medium transition-colors duration-200 sm:h-11"
+      <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+      <input
+        id="marketplace-search"
+        type="text"
+        placeholder="Search tools..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        aria-label="Search marketplace tools"
+        className="bg-muted/50 border-border focus:bg-background focus:ring-ring w-full rounded-md border py-2 pr-8 pl-9 text-sm outline-none focus:ring-1"
+      />
+      {query ? (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
         >
-          Search
-        </Button>
-      </div>
+          <XIcon className="size-3.5" />
+          <span className="sr-only">Clear search</span>
+        </button>
+      ) : null}
     </form>
   )
 }
