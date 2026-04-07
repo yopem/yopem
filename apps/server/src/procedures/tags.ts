@@ -9,8 +9,14 @@ import { handleProcedureError } from "./error-handler"
 import { TagNotFoundError, TagValidationError } from "./procedure-errors"
 
 export const tagsRouter = {
-  list: publicProcedure.handler(() => {
-    return listTags()
+  list: publicProcedure.handler(async () => {
+    const result = await listTags()
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   create: adminProcedure

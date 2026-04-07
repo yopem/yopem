@@ -6,6 +6,7 @@ import {
 } from "server/orpc"
 import { z } from "zod"
 
+import { DatabaseOperationError } from "db/errors"
 import type { SelectAsset, SelectTool } from "db/schema"
 import { insertToolSchema, updateToolSchema } from "db/schema"
 import { getSetting } from "db/services/admin"
@@ -52,13 +53,11 @@ import {
   ApiKeyNotFoundError,
   AssetNotFoundError,
   AssetValidationError,
-  CategoryValidationError,
   CryptoOperationError,
   ForbiddenError,
   InsufficientCreditsError,
   ReviewNotFoundError,
   SettingsNotFoundError,
-  TagValidationError,
   ToolConfigurationError,
   ToolNotAvailableError,
   ToolNotFoundError,
@@ -124,19 +123,28 @@ async function getToolBySlugIdWithError(
   return result.mapError(() => new ToolNotFoundError({ slug }))
 }
 
-async function getReviewWithError(
-  reviewId: string,
-): Promise<
+async function getReviewWithError(reviewId: string): Promise<
   Result<
-    NonNullable<Awaited<ReturnType<typeof getToolReviewById>>>,
-    ReviewNotFoundError
+    {
+      id: string
+      createdAt: Date | null
+      updatedAt: Date | null
+      toolId: string
+      userId: string
+      userName: string | null
+      rating: number
+      reviewText: string | null
+    },
+    ReviewNotFoundError | DatabaseOperationError
   >
 > {
-  const review = await getToolReviewById(reviewId)
-  if (!review) {
-    return Result.err(new ReviewNotFoundError({ reviewId }))
-  }
-  return Result.ok(review)
+  const result = await getToolReviewById(reviewId)
+  return result.andThen((review) => {
+    if (!review) {
+      return Result.err(new ReviewNotFoundError({ reviewId }))
+    }
+    return Result.ok(review)
+  })
 }
 
 async function getAssetWithValidation(
@@ -273,10 +281,7 @@ export const toolsRouter = {
         .optional(),
     )
     .handler(async ({ input }) => {
-      const result = await Result.tryPromise({
-        try: () => listTools(input ?? undefined),
-        catch: (e) => new ToolConfigurationError({ message: String(e) }),
-      })
+      const result = await listTools(input ?? undefined)
 
       if (result.isErr()) {
         return handleProcedureError(result)
@@ -335,10 +340,7 @@ export const toolsRouter = {
   }),
 
   getCategories: publicProcedure.handler(async () => {
-    const result = await Result.tryPromise({
-      try: () => listCategories(),
-      catch: (e) => new CategoryValidationError({ message: String(e) }),
-    })
+    const result = await listCategories()
 
     if (result.isErr()) {
       return handleProcedureError(result)
@@ -348,10 +350,7 @@ export const toolsRouter = {
   }),
 
   getTags: publicProcedure.handler(async () => {
-    const result = await Result.tryPromise({
-      try: () => listTags(),
-      catch: (e) => new TagValidationError({ message: String(e) }),
-    })
+    const result = await listTags()
 
     if (result.isErr()) {
       return handleProcedureError(result)
@@ -648,7 +647,11 @@ export const toolsRouter = {
         }
 
         if (categoryIds && categoryIds.length > 0) {
-          const valid = await validateCategoryIds(categoryIds)
+          const validResult = await validateCategoryIds(categoryIds)
+          const valid = validResult.match({
+            ok: (v) => v,
+            err: () => false,
+          })
           if (!valid) {
             return Result.err(
               new ValidationError({
@@ -659,7 +662,11 @@ export const toolsRouter = {
         }
 
         if (tagIds && tagIds.length > 0) {
-          const valid = await validateTagIds(tagIds)
+          const validResult = await validateTagIds(tagIds)
+          const valid = validResult.match({
+            ok: (v) => v,
+            err: () => false,
+          })
           if (!valid) {
             return Result.err(
               new ValidationError({
@@ -669,7 +676,7 @@ export const toolsRouter = {
           }
         }
 
-        const tool = await createTool({
+        const tool = yield* await createTool({
           ...toolData,
           thumbnailId: thumbnailId ?? undefined,
           categoryIds,
@@ -704,7 +711,11 @@ export const toolsRouter = {
       }
 
       if (categoryIds && categoryIds.length > 0) {
-        const valid = await validateCategoryIds(categoryIds)
+        const validResult = await validateCategoryIds(categoryIds)
+        const valid = validResult.match({
+          ok: (v) => v,
+          err: () => false,
+        })
         if (!valid) {
           return Result.err(
             new ValidationError({
@@ -715,7 +726,11 @@ export const toolsRouter = {
       }
 
       if (tagIds && tagIds.length > 0) {
-        const valid = await validateTagIds(tagIds)
+        const validResult = await validateTagIds(tagIds)
+        const valid = validResult.match({
+          ok: (v) => v,
+          err: () => false,
+        })
         if (!valid) {
           return Result.err(
             new ValidationError({
@@ -725,7 +740,7 @@ export const toolsRouter = {
         }
       }
 
-      const tool = await updateTool(id, {
+      const tool = yield* await updateTool(id, {
         ...data,
         thumbnailId: thumbnailId ?? undefined,
         categoryIds,
@@ -745,7 +760,12 @@ export const toolsRouter = {
   delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      await deleteTool(input.id)
+      const result = await deleteTool(input.id)
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
       return { success: true }
     }),
 
@@ -771,8 +791,14 @@ export const toolsRouter = {
         status: z.enum(["draft", "active", "archived"]),
       }),
     )
-    .handler(({ input }) => {
-      return updateToolStatus(input.ids, input.status)
+    .handler(async ({ input }) => {
+      const result = await updateToolStatus(input.ids, input.status)
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   getReviews: publicProcedure
@@ -780,7 +806,7 @@ export const toolsRouter = {
     .handler(async ({ input }) => {
       const result = await Result.gen(async function* () {
         const tool = yield* await getToolBySlugIdWithError(input.slug)
-        const reviews = await getToolReviews(tool.id)
+        const reviews = yield* await getToolReviews(tool.id)
         return Result.ok({
           ...reviews,
           reviews: reviews.reviews.map(
@@ -808,7 +834,10 @@ export const toolsRouter = {
       const result = await Result.gen(async function* () {
         const tool = yield* await getToolBySlugIdWithError(input.slug)
 
-        const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
+        const hasUsed = yield* await hasUserUsedTool(
+          tool.id,
+          context.session.id,
+        )
 
         if (!hasUsed) {
           return Result.err(
@@ -819,7 +848,7 @@ export const toolsRouter = {
           )
         }
 
-        const review = await upsertToolReview(
+        const review = yield* await upsertToolReview(
           tool.id,
           context.session.id,
           context.session.username ??
@@ -860,7 +889,7 @@ export const toolsRouter = {
           )
         }
 
-        await updateToolReview(
+        yield* await updateToolReview(
           input.reviewId,
           input.rating,
           input.reviewText ?? null,
@@ -881,7 +910,7 @@ export const toolsRouter = {
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
         const tool = yield* await getToolBySlugIdWithError(input.slug)
-        const review = await getUserReview(tool.id, context.session.id)
+        const review = yield* await getUserReview(tool.id, context.session.id)
         return Result.ok(review)
       })
 
@@ -897,7 +926,10 @@ export const toolsRouter = {
     .handler(async ({ context, input }) => {
       const result = await Result.gen(async function* () {
         const tool = yield* await getToolBySlugIdWithError(input.slug)
-        const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
+        const hasUsed = yield* await hasUserUsedTool(
+          tool.id,
+          context.session.id,
+        )
         return Result.ok({ hasUsed })
       })
 
@@ -937,10 +969,14 @@ export const toolsRouter = {
         return { results: cached }
       }
 
-      const results = await searchTools(input.query, input.limit)
+      const result = await searchTools(input.query, input.limit)
 
-      void context.redis.setCache(cacheKey, results, 60)
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
 
-      return { results }
+      void context.redis.setCache(cacheKey, result.value, 60)
+
+      return { results: result.value }
     }),
 }

@@ -3,39 +3,51 @@ import { and, desc, eq, sql } from "drizzle-orm"
 
 import type { SelectAdminSettings } from "../schema/admin-settings.ts"
 
-import { NotFoundError } from "../errors.ts"
+import { DatabaseOperationError, NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import { adminSettingsTable, assetsTable } from "../schema/index.ts"
 
-export const listAssets = async (input: {
+export const listAssets = (input: {
   limit: number
   cursor?: string
   type?: "images" | "videos" | "documents" | "archives" | "others"
-}) => {
-  const conditions = []
+}): Promise<
+  Result<{ assets: SelectAsset[]; nextCursor?: string }, DatabaseOperationError>
+> => {
+  return Result.tryPromise({
+    try: async () => {
+      const conditions = []
 
-  if (input.type) {
-    conditions.push(eq(assetsTable.type, input.type))
-  }
+      if (input.type) {
+        conditions.push(eq(assetsTable.type, input.type))
+      }
 
-  if (input.cursor) {
-    conditions.push(sql`${assetsTable.id} < ${input.cursor}`)
-  }
+      if (input.cursor) {
+        conditions.push(sql`${assetsTable.id} < ${input.cursor}`)
+      }
 
-  const assets = await db
-    .select()
-    .from(assetsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(assetsTable.createdAt))
-    .limit(input.limit + 1)
+      const assets = await db
+        .select()
+        .from(assetsTable)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(assetsTable.createdAt))
+        .limit(input.limit + 1)
 
-  let nextCursor: string | undefined = undefined
-  if (assets.length > input.limit) {
-    const nextItem = assets.pop()
-    nextCursor = nextItem?.id
-  }
+      let nextCursor: string | undefined = undefined
+      if (assets.length > input.limit) {
+        const nextItem = assets.pop()
+        nextCursor = nextItem?.id
+      }
 
-  return { assets, nextCursor }
+      return { assets, nextCursor }
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "list",
+        table: "assets",
+        cause: e,
+      }),
+  })
 }
 
 import type { SelectAsset } from "../schema/assets.ts"
@@ -55,20 +67,46 @@ export const getAssetById = async (
   return Result.ok(asset)
 }
 
-export const insertAsset = async (data: {
+export const insertAsset = (data: {
   filename: string
   originalName: string
   type: "images" | "videos" | "documents" | "archives" | "others"
   size: number
   url: string
-}) => {
-  const [asset] = await db.insert(assetsTable).values(data).returning()
+}): Promise<Result<SelectAsset, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      const [asset] = await db.insert(assetsTable).values(data).returning()
 
-  return asset
+      if (!asset) {
+        throw new Error("Insert returned no rows")
+      }
+
+      return asset
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "insert",
+        table: "assets",
+        cause: e,
+      }),
+  })
 }
 
-export const deleteAsset = async (id: string) => {
-  await db.delete(assetsTable).where(eq(assetsTable.id, id))
+export const deleteAsset = (
+  id: string,
+): Promise<Result<void, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      await db.delete(assetsTable).where(eq(assetsTable.id, id))
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "delete",
+        table: "assets",
+        cause: e,
+      }),
+  })
 }
 
 export const getAdminUploadSizeSetting = async (

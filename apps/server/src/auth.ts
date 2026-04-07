@@ -16,35 +16,22 @@ interface SessionEnv {
   }
 }
 
-const appEnv = process.env["APP_ENV"] ?? "development"
+const isProduction = () => process.env["APP_ENV"] === "production"
+const isSecure = () => {
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
+  return !!cookieDomain || isProduction()
+}
 
 const getCookieOptions = () => {
   const cookieDomain = process.env["COOKIE_DOMAIN"]
-  if (appEnv === "production") {
-    return {
-      domain: cookieDomain ?? ".yopem.com",
-      sameSite: "none" as const,
-      secure: true,
-      httpOnly: true,
-      path: "/",
-      maxAge: 34560000,
-    }
-  }
-  if (cookieDomain) {
-    return {
-      domain: cookieDomain,
-      sameSite: "lax" as const,
-      secure: false,
-      httpOnly: true,
-      path: "/",
-      maxAge: 34560000,
-    }
-  }
+  const prod = isProduction()
   return {
-    sameSite: "lax" as const,
+    sameSite: (prod ? "none" : "lax") as "none" | "lax",
+    secure: isSecure(),
     httpOnly: true,
     path: "/",
     maxAge: 34560000,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
   }
 }
 

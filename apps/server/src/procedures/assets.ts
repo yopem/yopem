@@ -38,12 +38,18 @@ const deleteAssetInputSchema = z.object({
 export const assetsRouter = {
   list: protectedProcedure
     .input(listAssetsInputSchema.optional())
-    .handler(({ input }) => {
-      return listAssets({
+    .handler(async ({ input }) => {
+      const result = await listAssets({
         limit: input?.limit ?? 20,
         cursor: input?.cursor,
         type: input?.type,
       })
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
@@ -136,20 +142,19 @@ export const assetsRouter = {
         }
 
         const { url, type, size, key } = uploadResult.value
-        const asset = yield* await Result.tryPromise({
-          try: () =>
-            insertAsset({
-              filename: key.split("/").pop()!,
-              originalName: file.name,
-              type,
-              size,
-              url,
-            }),
-          catch: (e) =>
-            new AssetValidationError({
-              message: `Failed to insert asset: ${e instanceof Error ? e.message : "Unknown error"}`,
-            }),
+        const assetResult = await insertAsset({
+          filename: key.split("/").pop()!,
+          originalName: file.name,
+          type,
+          size,
+          url,
         })
+        const asset = yield* assetResult.mapError(
+          (e) =>
+            new AssetValidationError({
+              message: `Failed to insert asset: ${e.message}`,
+            }),
+        )
 
         return Result.ok(asset)
       })

@@ -8,15 +8,34 @@ import { db } from "../index.ts"
 import { tagsTable } from "../schema/index.ts"
 import { generateUniqueTagSlug } from "./slug.ts"
 
-export const listTags = () => {
-  return db
-    .select({
-      id: tagsTable.id,
-      name: tagsTable.name,
-      slug: tagsTable.slug,
-    })
-    .from(tagsTable)
-    .orderBy(asc(tagsTable.name))
+export const listTags = (): Promise<
+  Result<
+    {
+      id: string
+      name: string
+      slug: string
+    }[],
+    DatabaseOperationError
+  >
+> => {
+  return Result.tryPromise({
+    try: () => {
+      return db
+        .select({
+          id: tagsTable.id,
+          name: tagsTable.name,
+          slug: tagsTable.slug,
+        })
+        .from(tagsTable)
+        .orderBy(asc(tagsTable.name))
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "select",
+        table: "tags",
+        cause: e,
+      }),
+  })
 }
 
 export const createTag = async (input: {
@@ -67,15 +86,39 @@ export const updateTag = async (input: {
   return Result.ok(tag)
 }
 
-export const deleteTag = async (id: string) => {
-  await db.delete(tagsTable).where(eq(tagsTable.id, id))
+export const deleteTag = (
+  id: string,
+): Promise<Result<void, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      await db.delete(tagsTable).where(eq(tagsTable.id, id))
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "delete",
+        table: "tags",
+        cause: e,
+      }),
+  })
 }
 
-export const validateTagIds = async (ids: string[]) => {
-  if (ids.length === 0) return true
-  const found = await db
-    .select({ id: tagsTable.id })
-    .from(tagsTable)
-    .where(inArray(tagsTable.id, ids))
-  return found.length === ids.length
+export const validateTagIds = (
+  ids: string[],
+): Promise<Result<boolean, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      if (ids.length === 0) return true
+      const found = await db
+        .select({ id: tagsTable.id })
+        .from(tagsTable)
+        .where(inArray(tagsTable.id, ids))
+      return found.length === ids.length
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "select",
+        table: "tags",
+        cause: e,
+      }),
+  })
 }

@@ -1,6 +1,6 @@
 import { TaggedError } from "better-result"
 import { Hono } from "hono"
-import { getCookie, deleteCookie } from "hono/cookie"
+import { getCookie, deleteCookie, setCookie } from "hono/cookie"
 
 import { logger } from "logger"
 
@@ -26,13 +26,22 @@ const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
 const callbackUrl =
   process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
 
+const isValidRedirectPath = (path: string): boolean => {
+  if (!path.startsWith("/")) return false
+  if (path.startsWith("//")) return false
+  if (path.includes("://")) return false
+  return true
+}
+
 export const authCallbackRoute = new Hono()
 
 authCallbackRoute.get("/callback", async (c) => {
   const code = c.req.query("code")
   const error = c.req.query("error")
   const errorDescription = c.req.query("error_description")
-  const redirectPath = c.req.query("redirect") ?? "/"
+  const redirectPath = isValidRedirectPath(c.req.query("redirect") ?? "/")
+    ? (c.req.query("redirect") ?? "/")
+    : "/"
 
   const fullUrl = c.req.url
   logger.info(`Auth callback received: URL=${fullUrl}`)
@@ -72,12 +81,29 @@ authCallbackRoute.get("/callback", async (c) => {
       : defaultOrigin
 
   const cookieDomain = process.env["COOKIE_DOMAIN"]
+  const prod = appEnv === "production"
+  const isSecure = !!cookieDomain || prod
   deleteCookie(c, "login_origin", {
     path: "/",
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
-  // Redirect to token exchange page with tokens in URL
-  const tokenExchangeUrl = `${origin}/auth/token?access=${encodeURIComponent(exchanged.tokens.access)}&refresh=${encodeURIComponent(exchanged.tokens.refresh)}&redirect=${encodeURIComponent(redirectPath)}`
-  return c.redirect(tokenExchangeUrl, 302)
+  const cookieOptions = {
+    httpOnly: true,
+    sameSite: (prod ? "none" : "lax") as "none" | "lax",
+    secure: isSecure,
+    path: "/",
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  }
+
+  setCookie(c, "access_token", exchanged.tokens.access, {
+    ...cookieOptions,
+    maxAge: 86400,
+  })
+  setCookie(c, "refresh_token", exchanged.tokens.refresh, {
+    ...cookieOptions,
+    maxAge: 604800,
+  })
+
+  return c.redirect(`${origin}${redirectPath}`, 302)
 })

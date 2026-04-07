@@ -8,16 +8,36 @@ import { db } from "../index.ts"
 import { categoriesTable } from "../schema/index.ts"
 import { generateUniqueCategorySlug } from "./slug.ts"
 
-export const listCategories = () => {
-  return db
-    .select({
-      id: categoriesTable.id,
-      name: categoriesTable.name,
-      slug: categoriesTable.slug,
-      description: categoriesTable.description,
-    })
-    .from(categoriesTable)
-    .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
+export const listCategories = (): Promise<
+  Result<
+    {
+      id: string
+      name: string
+      slug: string
+      description: string | null
+    }[],
+    DatabaseOperationError
+  >
+> => {
+  return Result.tryPromise({
+    try: () => {
+      return db
+        .select({
+          id: categoriesTable.id,
+          name: categoriesTable.name,
+          slug: categoriesTable.slug,
+          description: categoriesTable.description,
+        })
+        .from(categoriesTable)
+        .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "select",
+        table: "categories",
+        cause: e,
+      }),
+  })
 }
 
 export const createCategory = async (input: {
@@ -70,15 +90,39 @@ export const updateCategory = async (input: {
   return Result.ok(category)
 }
 
-export const deleteCategory = async (id: string) => {
-  await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
+export const deleteCategory = (
+  id: string,
+): Promise<Result<void, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "delete",
+        table: "categories",
+        cause: e,
+      }),
+  })
 }
 
-export const validateCategoryIds = async (ids: string[]) => {
-  if (ids.length === 0) return true
-  const found = await db
-    .select({ id: categoriesTable.id })
-    .from(categoriesTable)
-    .where(inArray(categoriesTable.id, ids))
-  return found.length === ids.length
+export const validateCategoryIds = (
+  ids: string[],
+): Promise<Result<boolean, DatabaseOperationError>> => {
+  return Result.tryPromise({
+    try: async () => {
+      if (ids.length === 0) return true
+      const found = await db
+        .select({ id: categoriesTable.id })
+        .from(categoriesTable)
+        .where(inArray(categoriesTable.id, ids))
+      return found.length === ids.length
+    },
+    catch: (e) =>
+      new DatabaseOperationError({
+        operation: "select",
+        table: "categories",
+        cause: e,
+      }),
+  })
 }

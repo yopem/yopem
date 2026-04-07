@@ -60,6 +60,7 @@ export const honoServerSchema = {
   PUBLIC_SITE_DOMAIN: z.string().min(1).optional(),
   WEB_ORIGIN: z.string().min(1).optional(),
   ADMIN_ORIGIN: z.string().min(1).optional(),
+  AUTH_CALLBACK_URL: z.string().min(1).optional(),
   SERVER_PORT: z.coerce.number().default(4000),
   WEB_PORT: z.coerce.number().default(3000),
   ADMIN_PORT: z.coerce.number().default(3001),

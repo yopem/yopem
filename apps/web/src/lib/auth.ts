@@ -11,6 +11,12 @@ const getServerUtils = async () => {
   return { getCookie, setCookie, deleteCookie }
 }
 
+const isProduction = () => process.env["APP_ENV"] === "production"
+const isSecure = () => {
+  const cookieDomain = process.env["COOKIE_DOMAIN"]
+  return !!cookieDomain || isProduction()
+}
+
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
     const { getCookie, setCookie } = await getServerUtils()
@@ -33,13 +39,13 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 
     if (verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const isProd = process.env["NODE_ENV"] === "production"
+      const prod = isProduction()
       const options = {
         httpOnly: true,
-        sameSite: "lax" as const,
+        sameSite: (prod ? "none" : "lax") as "none" | "lax",
         path: "/",
         maxAge: 86400,
-        secure: isProd,
+        secure: isSecure(),
         ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)
@@ -65,13 +71,13 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
     })
     if (!verified.err && verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const isProd = process.env["NODE_ENV"] === "production"
+      const prod = isProduction()
       const options = {
         httpOnly: true,
-        sameSite: "lax" as const,
+        sameSite: (prod ? "none" : "lax") as "none" | "lax",
         path: "/",
         maxAge: 86400,
-        secure: isProd,
+        secure: isSecure(),
         ...(cookieDomain ? { domain: cookieDomain } : {}),
       }
       setCookie("access_token", verified.tokens.access, options)

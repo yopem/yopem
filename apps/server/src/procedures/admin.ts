@@ -372,7 +372,7 @@ export const adminRouter = {
         return cached
       }
 
-      const [settingsResult, rawStats] = await Promise.all([
+      const [settingsResult, rawStatsResult] = await Promise.all([
         adminService.getSetting(API_KEYS_SETTING_KEY),
         adminService.getApiKeyStats(),
       ])
@@ -384,6 +384,16 @@ export const adminRouter = {
 
       const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
       const activeKeys = apiKeys.filter((key) => key.status === "active").length
+
+      const rawStats = rawStatsResult.match({
+        ok: (s) => s,
+        err: () => ({
+          totalRequests: 0,
+          requestsThisMonth: 0,
+          monthlyCost: 0,
+          previousMonthCost: 0,
+        }),
+      })
 
       const {
         totalRequests,
@@ -730,16 +740,20 @@ export const adminRouter = {
         return cached
       }
 
-      const recentPayments = await adminService.getActivityFeed(10)
+      const recentPaymentsResult = await adminService.getActivityFeed(10)
 
-      const activities = recentPayments.map((payment) => {
-        const userIdentifier =
-          payment.userName ?? `User #${payment.userId.slice(0, 8)}`
-        return {
-          type: "payment",
-          message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
-          timestamp: payment.createdAt ?? new Date(),
-        }
+      const activities = recentPaymentsResult.match({
+        ok: (payments) =>
+          payments.map((payment) => {
+            const userIdentifier =
+              payment.userName ?? `User #${payment.userId.slice(0, 8)}`
+            return {
+              type: "payment",
+              message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
+              timestamp: payment.createdAt ?? new Date(),
+            }
+          }),
+        err: () => [],
       })
 
       void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
@@ -768,7 +782,12 @@ export const adminRouter = {
         return cached
       }
 
-      const rawMetrics = await adminService.getUptimeMetrics()
+      const rawMetricsResult = await adminService.getUptimeMetrics()
+
+      const rawMetrics = rawMetricsResult.match({
+        ok: (m) => m,
+        err: () => ({ totalDowntime: 0, downtimeCount: 0, lastDowntime: null }),
+      })
 
       const totalSeconds = 30 * 24 * 60 * 60
       const downtimeSeconds = rawMetrics.totalDowntime
@@ -831,18 +850,21 @@ export const adminRouter = {
         endDate: input.endDate,
       })
 
-      const result = {
-        logs: rawResult.logs.map((log) => ({
-          id: log.id,
-          timestamp: log.timestamp,
-          eventType: log.eventType,
-          severity: log.severity,
-          description: log.description,
-          metadata: log.metadata as Record<string, unknown> | null,
-        })),
-        nextCursor: rawResult.nextCursor,
-        totalCount: rawResult.totalCount,
-      }
+      const result = rawResult.match({
+        ok: (r) => ({
+          logs: r.logs.map((log) => ({
+            id: log.id,
+            timestamp: log.timestamp,
+            eventType: log.eventType,
+            severity: log.severity,
+            description: log.description,
+            metadata: log.metadata as Record<string, unknown> | null,
+          })),
+          nextCursor: r.nextCursor,
+          totalCount: r.totalCount,
+        }),
+        err: () => ({ logs: [], nextCursor: undefined, totalCount: 0 }),
+      })
 
       void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
@@ -894,14 +916,20 @@ export const adminRouter = {
         })
       }
 
-      const downtimeEvents = await adminService.getUptimeHistory({
+      const downtimeEventsResult = await adminService.getUptimeHistory({
         days,
         startDate,
         now,
       })
 
+      const downtimeEvents = downtimeEventsResult.match({
+        ok: (events) => events,
+        err: () => [],
+      })
+
       for (const event of downtimeEvents) {
-        const dateStr = event.startedAt.toISOString().split("T")[0]
+        const dateStr = event.startedAt?.toISOString().split("T")[0]
+        if (!dateStr) continue
         const existing = dataPointsMap.get(dateStr)
         if (existing) {
           const duration = event.durationSeconds ?? 0
@@ -947,7 +975,17 @@ export const adminRouter = {
         return cached
       }
 
-      const rawMetrics = await adminService.getSystemMetrics()
+      const rawMetricsResult = await adminService.getSystemMetrics()
+
+      const rawMetrics = rawMetricsResult.match({
+        ok: (m) => m,
+        err: () => ({
+          revenue: { current: 0, previous: 0 },
+          activeUsers: { current: 0, previous: 0 },
+          aiRequests: { current: 0, previous: 0 },
+          downtimeSeconds: 0,
+        }),
+      })
 
       const revenueChange = calculateTrend(
         rawMetrics.revenue.current,
@@ -1036,7 +1074,12 @@ export const adminRouter = {
         dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })
       }
 
-      const runs = await adminService.getAiRequestsHistory({ startDate })
+      const runsResult = await adminService.getAiRequestsHistory({ startDate })
+
+      const runs = runsResult.match({
+        ok: (r) => r,
+        err: () => [],
+      })
 
       for (const run of runs) {
         if (run.createdAt) {

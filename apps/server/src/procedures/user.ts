@@ -22,7 +22,6 @@ import {
   ApiKeyValidationError,
   CryptoOperationError,
   RateLimitExceededError,
-  UserNotFoundError,
   ValidationError,
 } from "./procedure-errors"
 
@@ -53,10 +52,7 @@ export const userRouter = {
     }),
 
   getStats: protectedProcedure.handler(async ({ context }) => {
-    const result = await Result.tryPromise({
-      try: () => userService.getUserStats(context.session.id),
-      catch: () => new UserNotFoundError({ userId: context.session.id }),
-    })
+    const result = await userService.getUserStats(context.session.id)
 
     if (result.isErr()) {
       return handleProcedureError(result)
@@ -75,13 +71,9 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await Result.tryPromise({
-        try: () =>
-          userService.getUserRuns(context.session.id, {
-            limit: input?.limit ?? 20,
-            cursor: input?.cursor,
-          }),
-        catch: () => new UserNotFoundError({ userId: context.session.id }),
+      const result = await userService.getUserRuns(context.session.id, {
+        limit: input?.limit ?? 20,
+        cursor: input?.cursor,
       })
 
       if (result.isErr()) {
@@ -92,21 +84,13 @@ export const userRouter = {
     }),
 
   getCredits: protectedProcedure.handler(async ({ context }) => {
-    const result = await Result.tryPromise({
-      try: () => userService.getUserCredits(context.session.id),
-      catch: () => new UserNotFoundError({ userId: context.session.id }),
-    })
+    const result = await userService.getUserCredits(context.session.id)
 
     if (result.isErr()) {
       return handleProcedureError(result)
     }
 
-    const innerResult = result.value
-    if (innerResult.isErr()) {
-      return handleProcedureError(innerResult)
-    }
-
-    return innerResult.value
+    return result.value
   }),
 
   getTransactions: protectedProcedure
@@ -118,12 +102,8 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await Result.tryPromise({
-        try: () =>
-          userService.getUserTransactions(context.session.id, {
-            limit: input?.limit ?? 20,
-          }),
-        catch: () => new UserNotFoundError({ userId: context.session.id }),
+      const result = await userService.getUserTransactions(context.session.id, {
+        limit: input?.limit ?? 20,
       })
 
       if (result.isErr()) {
@@ -142,12 +122,8 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await Result.tryPromise({
-        try: () =>
-          userService.getPaymentHistory(context.session.id, {
-            limit: input?.limit ?? 20,
-          }),
-        catch: () => new UserNotFoundError({ userId: context.session.id }),
+      const result = await userService.getPaymentHistory(context.session.id, {
+        limit: input?.limit ?? 20,
       })
 
       if (result.isErr()) {
@@ -158,10 +134,7 @@ export const userRouter = {
     }),
 
   getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
-    const result = await Result.tryPromise({
-      try: () => userService.getPendingCheckouts(context.session.id),
-      catch: () => new UserNotFoundError({ userId: context.session.id }),
-    })
+    const result = await userService.getPendingCheckouts(context.session.id)
 
     if (result.isErr()) {
       return handleProcedureError(result)
@@ -177,19 +150,16 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const result = await Result.tryPromise({
-        try: async () => {
-          await userService.addCredits(context.session.id, input.amount)
-          return { success: true, amount: input.amount }
-        },
-        catch: () => new UserNotFoundError({ userId: context.session.id }),
-      })
+      const result = await userService.addCredits(
+        context.session.id,
+        input.amount,
+      )
 
       if (result.isErr()) {
         return handleProcedureError(result)
       }
 
-      return result.value
+      return { success: true, amount: input.amount }
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {

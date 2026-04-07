@@ -16,8 +16,14 @@ import {
 } from "./procedure-errors"
 
 export const categoriesRouter = {
-  list: publicProcedure.handler(() => {
-    return listCategories()
+  list: publicProcedure.handler(async () => {
+    const result = await listCategories()
+
+    if (result.isErr()) {
+      return handleProcedureError(result)
+    }
+
+    return result.value
   }),
 
   create: adminProcedure
