@@ -3,7 +3,6 @@ import { adminProcedure } from "server/orpc"
 import { z } from "zod"
 
 import * as adminService from "db/services/admin"
-import { WebhookMetrics } from "payments/webhook-metrics"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
@@ -12,6 +11,8 @@ import {
 } from "shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
+
+import { WebhookMetrics } from "../payments/webhook-metrics"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

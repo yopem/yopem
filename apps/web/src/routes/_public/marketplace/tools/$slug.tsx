@@ -24,8 +24,39 @@ export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
         : Promise.resolve({ hasUsed: false }),
     ])
     return {
-      tool,
-      reviewsData,
+      tool: tool as {
+        id: string
+        name: string
+        slug: string
+        description: string | null
+        excerpt: string | null
+        status: "draft" | "active" | "archived"
+        inputVariable:
+          | {
+              variableName: string
+              description: string
+              type: string
+              options?: { label: string; value: string }[]
+            }[]
+          | null
+        costPerRun: string | null
+        createdAt: Date | null
+        categories: { id: string; name: string; slug: string }[]
+        tags: { id: string; name: string; slug: string }[]
+        averageRating?: number | null
+        reviewCount?: number
+      },
+      reviewsData: reviewsData as {
+        reviews: {
+          id: string
+          rating: number
+          reviewText: string | null
+          createdAt: Date | null
+          userName: string | null
+        }[]
+        averageRating: number | null
+        reviewCount: number
+      },
       slug: params.slug,
       hasUsedTool: hasUsedResult.hasUsed,
     }

@@ -1,4 +1,4 @@
-import { redisCache } from "cache"
+import { redisCache } from "../cache"
 
 const USAGE_ALERT_PREFIX = "usage_alert:"
 const ALERT_THRESHOLDS = [0.8, 0.9, 0.95, 1.0]

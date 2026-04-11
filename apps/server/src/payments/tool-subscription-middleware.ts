@@ -1,5 +1,5 @@
-import { checkQuota, type QuotaCheck } from "payments/quota-check"
-import { recordUsage } from "payments/usage-tracking"
+import { checkQuota, type QuotaCheck } from "./quota-check"
+import { recordUsage } from "./usage-tracking"
 
 export interface SubscriptionCheckResult {
   allowed: boolean

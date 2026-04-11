@@ -5,12 +5,6 @@ import { z } from "zod"
 
 import * as subscriptionService from "db/services/subscriptions"
 import * as userService from "db/services/user"
-import { getEntitlements } from "payments/entitlements"
-import {
-  createCustomerPortalSession,
-  createSubscriptionCheckout,
-} from "payments/subscription-checkout"
-import { getPlanConfig, listPlans } from "payments/subscription-plans"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -20,6 +14,13 @@ import {
 } from "shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
+
+import { getEntitlements } from "../payments/entitlements"
+import {
+  createCustomerPortalSession,
+  createSubscriptionCheckout,
+} from "../payments/subscription-checkout"
+import { getPlanConfig, listPlans } from "../payments/subscription-plans"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {

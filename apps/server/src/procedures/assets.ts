@@ -14,7 +14,8 @@ import {
   listAssets,
 } from "db/services/assets"
 import { r2Domain } from "env/hono"
-import { getR2Storage } from "storage"
+
+import { getR2Storage } from "../storage"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

@@ -7,7 +7,8 @@ import {
   insertCheckoutSession,
   upsertPolarCustomer,
 } from "db/services/user"
-import { validateTopupAmount } from "payments/credit-calculation"
+
+import { validateTopupAmount } from "../payments/credit-calculation"
 
 interface Env {
   Variables: {

@@ -1,9 +1,8 @@
-import { getR2Storage } from "storage"
-
 import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
 import type { ApiKeyProvider } from "./providers/base.ts"
 import type { AIProviderErrors } from "./providers/base.ts"
 
+import { getR2Storage } from "../storage"
 import { OpenAIProvider } from "./providers/openai.ts"
 import { OpenRouterProvider } from "./providers/openrouter.ts"
 

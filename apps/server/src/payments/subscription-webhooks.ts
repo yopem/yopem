@@ -5,10 +5,11 @@ import {
   getSubscription,
   updateSubscriptionByPolarId,
 } from "db/services/subscriptions"
-import { invalidateSubscriptionCache } from "payments/subscription-cache"
 import { createCustomId } from "shared/custom-id"
 
 import type { SubscriptionStatus, SubscriptionTier } from "./subscription-plans"
+
+import { invalidateSubscriptionCache } from "./subscription-cache"
 
 interface SubscriptionMetadata {
   userId: string
