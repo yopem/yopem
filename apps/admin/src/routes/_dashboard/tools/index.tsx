@@ -117,6 +117,7 @@ const ToolsIndexPage = () => {
       return await queryApi.tools.bulkUpdateStatus.call({ ids, status })
     },
     onSuccess: (data, variables) => {
+      if (!data) return
       toastManager.add({
         title: "Tools updated",
         description: `${data.count} tool(s) marked as ${variables.status}.`,

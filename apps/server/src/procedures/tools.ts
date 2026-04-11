@@ -6,7 +6,6 @@ import {
 } from "server/orpc"
 import { z } from "zod"
 
-import type { SelectAsset, SelectTool } from "db/schema"
 import { insertToolSchema, updateToolSchema } from "db/schema"
 import { getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
@@ -81,82 +80,6 @@ function projectPublicTool<T extends Record<string, unknown>>(
   return result
 }
 
-async function getToolWithError(toolId: string): Promise<SelectTool> {
-  const tool = await getToolById(toolId)
-  if (!tool) {
-    throw new ORPCError("NOT_FOUND", { message: `Tool not found: ${toolId}` })
-  }
-  return tool
-}
-
-async function getToolBySlugWithError(slug: string): Promise<SelectTool> {
-  const tool = await getToolBySlug(slug)
-  if (!tool) {
-    throw new ORPCError("NOT_FOUND", { message: `Tool not found: ${slug}` })
-  }
-  return tool
-}
-
-async function getToolBySlugIdWithError(slug: string): Promise<{ id: string }> {
-  const tool = await getToolBySlugId(slug)
-  if (!tool) {
-    throw new ORPCError("NOT_FOUND", { message: `Tool not found: ${slug}` })
-  }
-  return tool
-}
-
-async function getReviewWithError(reviewId: string): Promise<{
-  id: string
-  createdAt: Date | null
-  updatedAt: Date | null
-  toolId: string
-  userId: string
-  userName: string | null
-  rating: number
-  reviewText: string | null
-}> {
-  const review = await getToolReviewById(reviewId)
-  if (!review) {
-    throw new ORPCError("NOT_FOUND", {
-      message: `Review not found: ${reviewId}`,
-    })
-  }
-  return review
-}
-
-async function getAssetWithValidation(assetId: string): Promise<SelectAsset> {
-  try {
-    const asset = await getAssetById(assetId)
-    if (asset.type !== "images") {
-      throw new ORPCError("BAD_REQUEST", {
-        message: "Thumbnail must be an image asset",
-      })
-    }
-    return asset
-  } catch {
-    throw new ORPCError("NOT_FOUND", { message: `Asset not found: ${assetId}` })
-  }
-}
-
-async function getApiKeysWithError(redis: {
-  getCache: <T>(key: string) => Promise<T | null>
-}): Promise<ApiKeyConfig[]> {
-  const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-  const cached = await redis.getCache<ApiKeyConfig[]>(cacheKey)
-
-  if (cached) {
-    return cached
-  }
-
-  const settings = await getSetting(API_KEYS_SETTING_KEY)
-
-  if (!settings?.settingValue) {
-    throw new ORPCError("NOT_FOUND", { message: "No API keys configured" })
-  }
-
-  return settings.settingValue as ApiKeyConfig[]
-}
-
 function validateRequiredInputs(
   inputs: Record<string, string>,
   inputVariables: { variableName: string; isOptional?: boolean }[],
@@ -219,21 +142,37 @@ export const toolsRouter = {
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      const tool = await getToolWithError(input.id)
+      const tool = await getToolById(input.id)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.id}`,
+        })
+      }
       return projectPublicTool(tool)
     }),
 
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
     .handler(async ({ input }) => {
-      const tool = await getToolBySlugWithError(input.slug)
+      const tool = await getToolBySlug(input.slug)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.slug}`,
+        })
+      }
       return projectPublicTool(tool)
     }),
 
   adminGetById: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      return await getToolWithError(input.id)
+      const tool = await getToolById(input.id)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.id}`,
+        })
+      }
+      return tool
     }),
 
   getPopular: publicProcedure.handler(async () => {
@@ -256,7 +195,12 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const tool = await getToolWithError(input.toolId)
+      const tool = await getToolById(input.toolId)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.toolId}`,
+        })
+      }
 
       if (tool.status !== "active") {
         throw new ORPCError("BAD_REQUEST", {
@@ -270,7 +214,20 @@ export const toolsRouter = {
         })
       }
 
-      const apiKeys = await getApiKeysWithError(context.redis)
+      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
+      const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+      let apiKeys: ApiKeyConfig[]
+      if (cached) {
+        apiKeys = cached
+      } else {
+        const settings = await getSetting(API_KEYS_SETTING_KEY)
+        if (!settings?.settingValue) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "No API keys configured",
+          })
+        }
+        apiKeys = settings.settingValue as ApiKeyConfig[]
+      }
 
       const selectedKey = apiKeys.find((key) => key.id === tool.apiKeyId)
 
@@ -426,7 +383,20 @@ export const toolsRouter = {
       validateUserInstructionTemplate(input.userInstructionTemplate)
       validateApiKeyId(input.apiKeyId)
 
-      const apiKeys = await getApiKeysWithError(context.redis)
+      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
+      const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+      let apiKeys: ApiKeyConfig[]
+      if (cached) {
+        apiKeys = cached
+      } else {
+        const settings = await getSetting(API_KEYS_SETTING_KEY)
+        if (!settings?.settingValue) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "No API keys configured",
+          })
+        }
+        apiKeys = settings.settingValue as ApiKeyConfig[]
+      }
 
       const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
 
@@ -498,7 +468,17 @@ export const toolsRouter = {
       const { tagIds, categoryIds, thumbnailId, ...toolData } = input
 
       if (thumbnailId) {
-        await getAssetWithValidation(thumbnailId)
+        const asset = await getAssetById(thumbnailId)
+        if (!asset) {
+          throw new ORPCError("NOT_FOUND", {
+            message: `Asset not found: ${thumbnailId}`,
+          })
+        }
+        if (asset.type !== "images") {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Thumbnail must be an image asset",
+          })
+        }
       }
 
       if (categoryIds && categoryIds.length > 0) {
@@ -539,7 +519,17 @@ export const toolsRouter = {
     const { id, tagIds, categoryIds, thumbnailId, ...data } = input
 
     if (thumbnailId) {
-      await getAssetWithValidation(thumbnailId)
+      const asset = await getAssetById(thumbnailId)
+      if (!asset) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Asset not found: ${thumbnailId}`,
+        })
+      }
+      if (asset.type !== "images") {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Thumbnail must be an image asset",
+        })
+      }
     }
 
     if (categoryIds && categoryIds.length > 0) {
@@ -598,7 +588,12 @@ export const toolsRouter = {
   getReviews: publicProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ input }) => {
-      const tool = await getToolBySlugIdWithError(input.slug)
+      const tool = await getToolBySlugId(input.slug)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.slug}`,
+        })
+      }
       const reviews = await getToolReviews(tool.id)
       return {
         ...reviews,
@@ -617,7 +612,12 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const tool = await getToolBySlugIdWithError(input.slug)
+      const tool = await getToolBySlugId(input.slug)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.slug}`,
+        })
+      }
 
       const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
 
@@ -650,7 +650,12 @@ export const toolsRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const review = await getReviewWithError(input.reviewId)
+      const review = await getToolReviewById(input.reviewId)
+      if (!review) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Review not found: ${input.reviewId}`,
+        })
+      }
 
       if (review.userId !== context.session.id) {
         throw new ORPCError("FORBIDDEN", {
@@ -670,7 +675,12 @@ export const toolsRouter = {
   getUserReview: protectedProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ context, input }) => {
-      const tool = await getToolBySlugIdWithError(input.slug)
+      const tool = await getToolBySlugId(input.slug)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.slug}`,
+        })
+      }
       const review = await getUserReview(tool.id, context.session.id)
       return review
     }),
@@ -678,7 +688,12 @@ export const toolsRouter = {
   hasUsedTool: protectedProcedure
     .input(z.object({ slug: z.string() }))
     .handler(async ({ context, input }) => {
-      const tool = await getToolBySlugIdWithError(input.slug)
+      const tool = await getToolBySlugId(input.slug)
+      if (!tool) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Tool not found: ${input.slug}`,
+        })
+      }
       const hasUsed = await hasUserUsedTool(tool.id, context.session.id)
       return { hasUsed }
     }),

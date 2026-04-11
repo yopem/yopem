@@ -40,6 +40,7 @@ const AddToolPage = () => {
       return result
     },
     onSuccess: (data, variables) => {
+      if (!data) return
       toastManager.add({
         title: "Tool created successfully!",
         description: `${variables.name} has been created.`,

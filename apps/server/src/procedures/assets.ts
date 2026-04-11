@@ -132,26 +132,27 @@ export const assetsRouter = {
   delete: adminProcedure
     .input(deleteAssetInputSchema)
     .handler(async ({ input }) => {
-      try {
-        const asset = await getAssetById(input.id)
-        const r2 = getR2Storage()
-        const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+      const asset = await getAssetById(input.id)
 
-        try {
-          await r2.deleteFile(key)
-        } catch (error) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
-          })
-        }
-
-        await deleteAsset(input.id)
-
-        return { success: true }
-      } catch {
+      if (!asset) {
         throw new ORPCError("NOT_FOUND", {
           message: `Asset not found: ${input.id}`,
         })
       }
+
+      const r2 = getR2Storage()
+      const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+
+      try {
+        await r2.deleteFile(key)
+      } catch (error) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
+        })
+      }
+
+      await deleteAsset(input.id)
+
+      return { success: true }
     }),
 }

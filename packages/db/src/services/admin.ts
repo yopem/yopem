@@ -36,10 +36,6 @@ export const upsertSetting = async (
       .where(eq(adminSettingsTable.id, existing.id))
       .returning()
 
-    if (!updated) {
-      throw new Error("Update returned no rows")
-    }
-
     return updated
   }
 
@@ -47,10 +43,6 @@ export const upsertSetting = async (
     .insert(adminSettingsTable)
     .values({ settingKey: key, settingValue: value })
     .returning()
-
-  if (!created) {
-    throw new Error("Insert returned no rows")
-  }
 
   return created
 }

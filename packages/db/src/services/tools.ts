@@ -326,12 +326,19 @@ export const createTool = async (
     categoryIds?: string[]
     tagIds?: string[]
   },
-): Promise<{ id: string; slug: string }> => {
+): Promise<{ id: string; slug: string } | null> => {
   const { categoryIds, tagIds, ...toolData } = data
   const id = createCustomId()
   const slug = await generateUniqueToolSlug(toolData.name!)
 
-  await db.insert(toolsTable).values({ ...toolData, id, slug })
+  const [result] = await db
+    .insert(toolsTable)
+    .values({ ...toolData, id, slug })
+    .returning()
+
+  if (!result) {
+    return null
+  }
 
   if (categoryIds && categoryIds.length > 0) {
     await db
@@ -354,7 +361,7 @@ export const updateTool = async (
     categoryIds?: string[]
     tagIds?: string[]
   },
-): Promise<{ success: boolean }> => {
+): Promise<{ success: boolean } | null> => {
   const { categoryIds, tagIds, ...toolData } = data
 
   let slug: string | undefined
@@ -364,12 +371,16 @@ export const updateTool = async (
       .from(toolsTable)
       .where(eq(toolsTable.id, id))
 
-    if (existingTool && existingTool.name !== toolData.name) {
+    if (!existingTool) {
+      return null
+    }
+
+    if (existingTool.name !== toolData.name) {
       slug = await generateUniqueToolSlug(toolData.name)
     }
   }
 
-  await db
+  const [result] = await db
     .update(toolsTable)
     .set({
       ...toolData,
@@ -378,6 +389,11 @@ export const updateTool = async (
       updatedAt: new Date(),
     })
     .where(eq(toolsTable.id, id))
+    .returning()
+
+  if (!result) {
+    return null
+  }
 
   if (categoryIds !== undefined) {
     await db
@@ -404,8 +420,13 @@ export const updateTool = async (
   return { success: true }
 }
 
-export const deleteTool = async (id: string): Promise<void> => {
-  await db.delete(toolsTable).where(eq(toolsTable.id, id))
+export const deleteTool = async (id: string): Promise<boolean> => {
+  const [result] = await db
+    .delete(toolsTable)
+    .where(eq(toolsTable.id, id))
+    .returning()
+
+  return !!result
 }
 
 export const duplicateTool = async (
@@ -433,14 +454,21 @@ export const duplicateTool = async (
     ...toolData
   } = tool
 
-  await db.insert(toolsTable).values({
-    ...toolData,
-    id: newId,
-    name: duplicateName,
-    slug,
-    createdBy,
-    status: "draft",
-  })
+  const [result] = await db
+    .insert(toolsTable)
+    .values({
+      ...toolData,
+      id: newId,
+      name: duplicateName,
+      slug,
+      createdBy,
+      status: "draft",
+    })
+    .returning()
+
+  if (!result) {
+    return null
+  }
 
   return { id: newId }
 }
@@ -448,13 +476,18 @@ export const duplicateTool = async (
 export const updateToolStatus = async (
   ids: string[],
   status: "draft" | "active" | "archived",
-): Promise<{ success: boolean; count: number }> => {
-  await db
+): Promise<{ success: boolean; count: number } | null> => {
+  const result = await db
     .update(toolsTable)
     .set({ status, updatedAt: new Date() })
     .where(inArray(toolsTable.id, ids))
+    .returning()
 
-  return { success: true, count: ids.length }
+  if (!result || result.length === 0) {
+    return null
+  }
+
+  return { success: true, count: result.length }
 }
 
 export const getToolVersions = (
@@ -470,7 +503,7 @@ export const getToolVersions = (
 export const createToolVersion = async (
   toolId: string,
   data: Omit<InsertToolVersion, "id" | "toolId">,
-): Promise<typeof toolVersionsTable.$inferSelect> => {
+): Promise<typeof toolVersionsTable.$inferSelect | null> => {
   const [versions] = await db
     .select({
       maxVersion: sql<number>`COALESCE(MAX(${toolVersionsTable.version}), 0)`,
@@ -485,11 +518,7 @@ export const createToolVersion = async (
     .values({ ...data, toolId, version: nextVersion })
     .returning()
 
-  if (!version) {
-    throw new Error("Insert returned no rows")
-  }
-
-  return version
+  return version ?? null
 }
 
 export const getPopularTools = async (
@@ -541,11 +570,7 @@ export const getToolBySlugId = async (
     .from(toolsTable)
     .where(eq(toolsTable.slug, slug))
 
-  if (!tool) {
-    return null
-  }
-
-  return tool
+  return tool ?? null
 }
 
 export const getToolReviews = async (
@@ -618,35 +643,40 @@ export const upsertToolReview = async (
   userName: string | null,
   rating: number,
   reviewText: string | null,
-): Promise<{ existing: boolean }> => {
+): Promise<{ existing: boolean } | null> => {
   const existingResult = await getUserReview(toolId, userId)
 
   if (existingResult) {
-    await db
+    const [result] = await db
       .update(toolReviewsTable)
       .set({ rating, reviewText, updatedAt: new Date() })
       .where(eq(toolReviewsTable.id, existingResult.id))
+      .returning()
 
-    return { existing: true }
+    return result ? { existing: true } : null
   }
 
   const id = createCustomId()
-  await db
+  const [result] = await db
     .insert(toolReviewsTable)
     .values({ id, toolId, userId, userName, rating, reviewText })
+    .returning()
 
-  return { existing: false }
+  return result ? { existing: false } : null
 }
 
 export const updateToolReview = async (
   reviewId: string,
   rating: number,
   reviewText: string | null,
-): Promise<void> => {
-  await db
+): Promise<boolean> => {
+  const [result] = await db
     .update(toolReviewsTable)
     .set({ rating, reviewText, updatedAt: new Date() })
     .where(eq(toolReviewsTable.id, reviewId))
+    .returning()
+
+  return !!result
 }
 
 export const getToolReviewById = async (
@@ -687,12 +717,9 @@ export const insertToolRun = async (data: {
   status: "running" | "completed" | "failed"
   cost: string
   completedAt: Date
-}): Promise<typeof toolRunsTable.$inferSelect> => {
+}): Promise<typeof toolRunsTable.$inferSelect | null> => {
   const [run] = await db.insert(toolRunsTable).values(data).returning()
-  if (!run) {
-    throw new Error("Insert returned no rows")
-  }
-  return run
+  return run ?? null
 }
 
 export const updateToolRun = async (
@@ -702,16 +729,13 @@ export const updateToolRun = async (
     status: "running" | "completed" | "failed"
     completedAt: Date
   },
-): Promise<typeof toolRunsTable.$inferSelect> => {
+): Promise<typeof toolRunsTable.$inferSelect | null> => {
   const [run] = await db
     .update(toolRunsTable)
     .set(data)
     .where(eq(toolRunsTable.id, id))
     .returning()
-  if (!run) {
-    throw new Error("Update returned no rows")
-  }
-  return run
+  return run ?? null
 }
 
 export const searchTools = async (

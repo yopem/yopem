@@ -84,7 +84,7 @@ export const publicProcedure = o.use(timingMiddleware)
 
 export const protectedProcedure = publicProcedure.use(({ context, next }) => {
   if (!context.session || typeof context.session !== "object") {
-    throw new ORPCError("UNAUTHORIZED")
+    throw new ORPCError("UNAUTHORIZED", { message: "Authentication required" })
   }
 
   return next({

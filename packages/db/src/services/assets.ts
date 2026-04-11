@@ -43,10 +43,6 @@ export const getAssetById = async (id: string): Promise<SelectAsset> => {
     .from(assetsTable)
     .where(eq(assetsTable.id, id))
 
-  if (!asset) {
-    throw new Error(`Asset with id ${id} not found`)
-  }
-
   return asset
 }
 
@@ -58,10 +54,6 @@ export const insertAsset = async (data: {
   url: string
 }): Promise<SelectAsset> => {
   const [asset] = await db.insert(assetsTable).values(data).returning()
-
-  if (!asset) {
-    throw new Error("Insert returned no rows")
-  }
 
   return asset
 }
@@ -77,10 +69,6 @@ export const getAdminUploadSizeSetting = async (
     .select()
     .from(adminSettingsTable)
     .where(eq(adminSettingsTable.settingKey, key))
-
-  if (!settings) {
-    throw new Error(`AdminSettings with id ${key} not found`)
-  }
 
   return settings
 }
