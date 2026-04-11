@@ -1,6 +1,3 @@
-import { Result } from "better-result"
-
-import { logger } from "logger"
 import { checkQuota, type QuotaCheck } from "payments/quota-check"
 import { recordUsage } from "payments/usage-tracking"
 
@@ -13,48 +10,28 @@ export interface SubscriptionCheckResult {
 export const requireSubscriptionForTool = async (
   userId: string,
   estimatedTokens: number,
-): Promise<Result<SubscriptionCheckResult, Error>> => {
-  const quotaResult = await checkQuota(userId, estimatedTokens)
-
-  if (quotaResult.isErr()) {
-    logger.error(
-      { userId, error: quotaResult.error.message },
-      "Failed to check subscription quota",
-    )
-    return Result.err(quotaResult.error)
-  }
-
-  const quotaCheck = quotaResult.value
+): Promise<SubscriptionCheckResult> => {
+  const quotaCheck = await checkQuota(userId, estimatedTokens)
 
   if (!quotaCheck.allowed) {
-    return Result.ok({
+    return {
       allowed: false,
       reason: quotaCheck.reason,
       quotaCheck,
-    })
+    }
   }
 
-  return Result.ok({
+  return {
     allowed: true,
     quotaCheck,
-  })
+  }
 }
 
 export const trackToolExecution = async (
   userId: string,
   tokensUsed: number,
-): Promise<Result<void, Error>> => {
-  const recordResult = await recordUsage(userId, tokensUsed)
-
-  if (recordResult.isErr()) {
-    logger.error(
-      { userId, tokensUsed, error: recordResult.error.message },
-      "Failed to record tool usage",
-    )
-    return Result.err(recordResult.error)
-  }
-
-  return Result.ok()
+): Promise<void> => {
+  await recordUsage(userId, tokensUsed)
 }
 
 export const formatQuotaError = (reason: string): string => {

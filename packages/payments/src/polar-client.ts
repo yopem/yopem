@@ -1,5 +1,4 @@
 import { Polar } from "@polar-sh/sdk"
-import { Result } from "better-result"
 
 import type { SelectSubscription } from "db/schema"
 
@@ -28,37 +27,35 @@ export interface PolarSubscription {
 
 export const fetchPolarSubscription = async (
   polarSubscriptionId: string,
-): Promise<Result<PolarSubscription | null, Error>> => {
-  return Result.tryPromise({
-    try: async () => {
-      const subscription = await polar.subscriptions.get({
-        id: polarSubscriptionId,
-      })
+): Promise<PolarSubscription | null> => {
+  try {
+    const subscription = await polar.subscriptions.get({
+      id: polarSubscriptionId,
+    })
 
-      if (!subscription) {
-        return null
-      }
+    if (!subscription) {
+      return null
+    }
 
-      return {
-        id: subscription.id,
-        status: subscription.status,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        canceledAt: subscription.canceledAt ?? undefined,
-        productId: subscription.productId,
-        product: {
-          id: subscription.product.id,
-          name: subscription.product.name,
-          metadata: subscription.product.metadata ?? undefined,
-        },
-      }
-    },
-    catch: (error) =>
-      error instanceof Error
-        ? error
-        : new Error("Failed to fetch Polar subscription"),
-  })
+    return {
+      id: subscription.id,
+      status: subscription.status,
+      currentPeriodStart: subscription.currentPeriodStart,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      canceledAt: subscription.canceledAt ?? undefined,
+      productId: subscription.productId,
+      product: {
+        id: subscription.product.id,
+        name: subscription.product.name,
+        metadata: subscription.product.metadata ?? undefined,
+      },
+    }
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to fetch Polar subscription")
+  }
 }
 
 interface SubscriptionUpdateData {
@@ -71,23 +68,17 @@ interface SubscriptionUpdateData {
 
 export const syncSubscriptionFromPolar = async (
   subscription: SelectSubscription,
-): Promise<Result<SubscriptionUpdateData | null, Error>> => {
+): Promise<SubscriptionUpdateData | null> => {
   if (!subscription.polarSubscriptionId) {
-    return Result.ok(null)
+    return null
   }
 
-  const polarResult = await fetchPolarSubscription(
+  const polarData = await fetchPolarSubscription(
     subscription.polarSubscriptionId,
   )
 
-  if (polarResult.isErr()) {
-    return Result.err(polarResult.error)
-  }
-
-  const polarData = polarResult.value
-
   if (!polarData) {
-    return Result.ok(null)
+    return null
   }
 
   const updateData: SubscriptionUpdateData = {
@@ -100,7 +91,7 @@ export const syncSubscriptionFromPolar = async (
       : undefined,
   }
 
-  return Result.ok(updateData)
+  return updateData
 }
 
 const mapPolarStatus = (polarStatus: string): SelectSubscription["status"] => {

@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { redisCache } from "cache"
 
 const USAGE_ALERT_PREFIX = "usage_alert:"
@@ -12,67 +10,43 @@ const getAlertCacheKey = (userId: string, threshold: number): string => {
 export const shouldSendUsageAlert = async (
   userId: string,
   usagePercentage: number,
-): Promise<Result<boolean, Error>> => {
-  try {
-    for (const threshold of ALERT_THRESHOLDS) {
-      if (usagePercentage >= threshold * 100) {
-        const cacheKey = getAlertCacheKey(userId, threshold)
-        const existingAlert = await redisCache.getCache<string>(cacheKey)
+): Promise<boolean> => {
+  for (const threshold of ALERT_THRESHOLDS) {
+    if (usagePercentage >= threshold * 100) {
+      const cacheKey = getAlertCacheKey(userId, threshold)
+      const existingAlert = await redisCache.getCache<string>(cacheKey)
 
-        if (Result.isError(existingAlert) || !existingAlert.value) {
-          await redisCache.setCache(cacheKey, "1", 86400)
-          return Result.ok(true)
-        }
-
-        return Result.ok(false)
+      if (!existingAlert) {
+        await redisCache.setCache(cacheKey, "1", 86400)
+        return true
       }
-    }
 
-    return Result.ok(false)
-  } catch (e) {
-    return Result.err(
-      e instanceof Error ? e : new Error("Failed to check usage alert"),
-    )
+      return false
+    }
   }
+
+  return false
 }
 
-export const getPendingAlerts = async (
-  userId: string,
-): Promise<Result<number[], Error>> => {
-  try {
-    const pendingAlerts: number[] = []
+export const getPendingAlerts = async (userId: string): Promise<number[]> => {
+  const pendingAlerts: number[] = []
 
-    for (const threshold of ALERT_THRESHOLDS) {
-      const cacheKey = getAlertCacheKey(userId, threshold)
-      const exists = await redisCache.getCache<string>(cacheKey)
+  for (const threshold of ALERT_THRESHOLDS) {
+    const cacheKey = getAlertCacheKey(userId, threshold)
+    const exists = await redisCache.getCache<string>(cacheKey)
 
-      if (Result.isOk(exists) && exists.value) {
-        pendingAlerts.push(threshold)
-      }
+    if (exists) {
+      pendingAlerts.push(threshold)
     }
-
-    return Result.ok(pendingAlerts)
-  } catch (e) {
-    return Result.err(
-      e instanceof Error ? e : new Error("Failed to get pending alerts"),
-    )
   }
+
+  return pendingAlerts
 }
 
-export const clearUsageAlerts = async (
-  userId: string,
-): Promise<Result<void, Error>> => {
-  try {
-    for (const threshold of ALERT_THRESHOLDS) {
-      const cacheKey = getAlertCacheKey(userId, threshold)
-      await redisCache.deleteCache(cacheKey)
-    }
-
-    return Result.ok(undefined)
-  } catch (e) {
-    return Result.err(
-      e instanceof Error ? e : new Error("Failed to clear usage alerts"),
-    )
+export const clearUsageAlerts = async (userId: string): Promise<void> => {
+  for (const threshold of ALERT_THRESHOLDS) {
+    const cacheKey = getAlertCacheKey(userId, threshold)
+    await redisCache.deleteCache(cacheKey)
   }
 }
 

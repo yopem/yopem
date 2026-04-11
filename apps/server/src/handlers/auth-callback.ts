@@ -1,15 +1,7 @@
-import { TaggedError } from "better-result"
 import { Hono } from "hono"
 import { getCookie, deleteCookie, setCookie } from "hono/cookie"
 
-import { logger } from "logger"
-
-import { authClient } from "@/auth"
-
-export class AuthCallbackError extends TaggedError("AuthCallbackError")<{
-  message: string
-  cause?: unknown
-}>() {}
+import { authClient } from "auth/client"
 
 const appEnv = process.env["APP_ENV"] ?? "development"
 const allowedOrigins =
@@ -44,10 +36,10 @@ authCallbackRoute.get("/callback", async (c) => {
     : "/"
 
   const fullUrl = c.req.url
-  logger.info(`Auth callback received: URL=${fullUrl}`)
+  console.info(`Auth callback received: URL=${fullUrl}`)
 
   if (error) {
-    logger.error(`OAuth error: ${error} - ${errorDescription}`)
+    console.error(`OAuth error: ${error} - ${errorDescription}`)
     return c.json(
       { error: `OAuth error: ${error}`, description: errorDescription },
       400,
@@ -55,7 +47,7 @@ authCallbackRoute.get("/callback", async (c) => {
   }
 
   if (!code) {
-    logger.error(
+    console.error(
       `Auth callback error: Missing code parameter. Query params: ${JSON.stringify(c.req.query())}`,
     )
     return c.json({ error: "Missing code parameter" }, 400)
@@ -64,13 +56,13 @@ authCallbackRoute.get("/callback", async (c) => {
   const exchanged = await authClient.exchange(code, callbackUrl)
 
   if (exchanged.err) {
-    logger.error(
+    console.error(
       `Auth callback error: Token exchange failed: ${JSON.stringify(exchanged.err)}`,
     )
     return c.json({ error: "Authentication failed" }, 500)
   }
 
-  logger.info(
+  console.info(
     `Auth callback: Token exchange successful, redirecting to token exchange`,
   )
 

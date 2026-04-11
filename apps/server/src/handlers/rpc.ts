@@ -1,12 +1,9 @@
-import { LoggingHandlerPlugin } from "@orpc/experimental-pino"
 import { RPCHandler } from "@orpc/server/fetch"
-import { Result } from "better-result"
 import { Hono } from "hono"
 import { createRPCContext } from "server/orpc"
 import { appRouter } from "server/router"
 
 import type { SessionUser } from "auth/types"
-import { logger } from "logger"
 
 interface Env {
   Variables: {
@@ -17,29 +14,15 @@ interface Env {
 const handler = new RPCHandler(appRouter, {
   interceptors: [
     async ({ next }) => {
-      const result = await Result.tryPromise({
-        try: () => next(),
-        catch: (error) => {
-          logger.error(
-            `[RPC] Error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
-          )
-          return error
-        },
-      })
-
-      if (result.isErr()) {
-        throw result.error
+      try {
+        return await next()
+      } catch (error) {
+        console.error(
+          `[RPC] Error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+        )
+        throw error
       }
-
-      return result.value
     },
-  ],
-  plugins: [
-    new LoggingHandlerPlugin({
-      logger,
-      logRequestResponse: process.env["APP_ENV"] !== "production",
-      logRequestAbort: true,
-    }),
   ],
 })
 

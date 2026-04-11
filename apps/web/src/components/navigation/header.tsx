@@ -1,7 +1,6 @@
 "use client"
 
 import { Link } from "@tanstack/react-router"
-import { Result } from "better-result"
 import { useState } from "react"
 
 import type { SessionUser } from "auth/types"
@@ -14,7 +13,6 @@ import ThemeSwitcher from "ui/theme-switcher"
 
 import HeaderSearch from "@/components/navigation/header-search"
 import { loginFn, logoutFn } from "@/lib/auth"
-import { AuthRedirectError } from "@/lib/errors"
 
 interface HeaderProps {
   session: SessionUser | false
@@ -36,42 +34,25 @@ const Header = ({ session }: HeaderProps) => {
   const [imageError, setImageError] = useState(false)
 
   const handleLogin = async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        await loginFn()
-        return { success: true }
-      },
-      catch: (error) => {
-        if (error && typeof error === "object") {
-          const err = error as {
-            status?: number
-            href?: string
-            options?: { href?: string }
-          }
-          if (err.status === 307) {
-            const redirectUrl = err.href || err.options?.href
-            if (redirectUrl) {
-              return new AuthRedirectError({
-                message: `Redirect required to ${redirectUrl}`,
-                redirectUrl,
-              })
-            }
+    try {
+      await loginFn()
+    } catch (error) {
+      if (error && typeof error === "object") {
+        const err = error as {
+          status?: number
+          href?: string
+          options?: { href?: string }
+        }
+        if (err.status === 307) {
+          const redirectUrl = err.href || err.options?.href
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+            return
           }
         }
-        return error
-      },
-    })
-
-    result.match({
-      ok: () => void 0,
-      err: (error) => {
-        if (error instanceof AuthRedirectError) {
-          window.location.href = error.redirectUrl
-        } else {
-          throw error
-        }
-      },
-    })
+      }
+      throw error
+    }
   }
 
   return (

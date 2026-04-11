@@ -1,46 +1,31 @@
-import { Result } from "better-result"
 import { asc, eq, inArray } from "drizzle-orm"
 
 import type { SelectTag } from "../schema/tags.ts"
 
-import { DatabaseOperationError } from "../errors.ts"
 import { db } from "../index.ts"
 import { tagsTable } from "../schema/index.ts"
 import { generateUniqueTagSlug } from "./slug.ts"
 
 export const listTags = (): Promise<
-  Result<
-    {
-      id: string
-      name: string
-      slug: string
-    }[],
-    DatabaseOperationError
-  >
+  {
+    id: string
+    name: string
+    slug: string
+  }[]
 > => {
-  return Result.tryPromise({
-    try: () => {
-      return db
-        .select({
-          id: tagsTable.id,
-          name: tagsTable.name,
-          slug: tagsTable.slug,
-        })
-        .from(tagsTable)
-        .orderBy(asc(tagsTable.name))
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "tags",
-        cause: e,
-      }),
-  })
+  return db
+    .select({
+      id: tagsTable.id,
+      name: tagsTable.name,
+      slug: tagsTable.slug,
+    })
+    .from(tagsTable)
+    .orderBy(asc(tagsTable.name))
 }
 
 export const createTag = async (input: {
   name: string
-}): Promise<Result<SelectTag, DatabaseOperationError>> => {
+}): Promise<SelectTag> => {
   const slug = await generateUniqueTagSlug(input.name)
 
   const [tag] = await db
@@ -49,22 +34,16 @@ export const createTag = async (input: {
     .returning()
 
   if (!tag) {
-    return Result.err(
-      new DatabaseOperationError({
-        operation: "insert",
-        table: "tags",
-        cause: new Error("Insert returned no rows"),
-      }),
-    )
+    throw new Error("Insert returned no rows")
   }
 
-  return Result.ok(tag)
+  return tag
 }
 
 export const updateTag = async (input: {
   id: string
   name: string
-}): Promise<Result<SelectTag, DatabaseOperationError>> => {
+}): Promise<SelectTag> => {
   const slug = await generateUniqueTagSlug(input.name, input.id)
 
   const [tag] = await db
@@ -74,51 +53,21 @@ export const updateTag = async (input: {
     .returning()
 
   if (!tag) {
-    return Result.err(
-      new DatabaseOperationError({
-        operation: "update",
-        table: "tags",
-        cause: new Error("Update returned no rows"),
-      }),
-    )
+    throw new Error("Update returned no rows")
   }
 
-  return Result.ok(tag)
+  return tag
 }
 
-export const deleteTag = (
-  id: string,
-): Promise<Result<void, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      await db.delete(tagsTable).where(eq(tagsTable.id, id))
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "delete",
-        table: "tags",
-        cause: e,
-      }),
-  })
+export const deleteTag = async (id: string): Promise<void> => {
+  await db.delete(tagsTable).where(eq(tagsTable.id, id))
 }
 
-export const validateTagIds = (
-  ids: string[],
-): Promise<Result<boolean, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      if (ids.length === 0) return true
-      const found = await db
-        .select({ id: tagsTable.id })
-        .from(tagsTable)
-        .where(inArray(tagsTable.id, ids))
-      return found.length === ids.length
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "tags",
-        cause: e,
-      }),
-  })
+export const validateTagIds = async (ids: string[]): Promise<boolean> => {
+  if (ids.length === 0) return true
+  const found = await db
+    .select({ id: tagsTable.id })
+    .from(tagsTable)
+    .where(inArray(tagsTable.id, ids))
+  return found.length === ids.length
 }

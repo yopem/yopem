@@ -1,9 +1,8 @@
-import { Result } from "better-result"
+import { ORPCError } from "@orpc/server"
 import { adminProcedure } from "server/orpc"
 import { z } from "zod"
 
 import * as adminService from "db/services/admin"
-import { logger } from "logger"
 import { WebhookMetrics } from "payments/webhook-metrics"
 import {
   addApiKeyInputSchema,
@@ -13,14 +12,6 @@ import {
 } from "shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
-
-import { handleProcedureError } from "./error-handler"
-import {
-  ApiKeyNotFoundError,
-  CryptoOperationError,
-  ModelFetchError,
-  SettingsNotFoundError,
-} from "./procedure-errors"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
@@ -90,32 +81,21 @@ const uptimeHistoryOutputSchema = z.object({
 export const adminRouter = {
   getApiKeys: adminProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-    const cachedResult = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
-
-    const cached = cachedResult.match({
-      ok: (v) => v,
-      err: (e) => {
-        logger.error(`Failed to get cache: ${e.message}`)
-        return null
-      },
-    })
+    const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
 
     if (cached) {
       return cached.map((key) => ({
         ...key,
-        apiKey: decryptApiKey(key.apiKey).match({
-          ok: (v) => maskApiKey(v),
-          err: () => "Error: Failed to decrypt",
-        }),
+        apiKey: (() => {
+          const decrypted = decryptApiKey(key.apiKey)
+          return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
+        })(),
       }))
     }
 
-    const settingsResult = await adminService.getSetting(API_KEYS_SETTING_KEY)
+    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
-    const apiKeys = settingsResult.match({
-      ok: (settings) => settings.settingValue as ApiKeyConfig[],
-      err: () => null,
-    })
+    const apiKeys = settings?.settingValue as ApiKeyConfig[] | undefined
 
     if (!apiKeys) {
       return []
@@ -126,13 +106,10 @@ export const adminRouter = {
     return apiKeys.map((key) => {
       return {
         ...key,
-        apiKey: decryptApiKey(key.apiKey).match({
-          ok: (v) => maskApiKey(v),
-          err: (e) => {
-            logger.error(`Failed to decrypt API key ${key.id}: ${e.message}`)
-            return "Error: Failed to decrypt"
-          },
-        }),
+        apiKey: (() => {
+          const decrypted = decryptApiKey(key.apiKey)
+          return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
+        })(),
       }
     })
   }),
@@ -140,219 +117,136 @@ export const adminRouter = {
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const result = await Result.gen(async function* () {
-        const settingsResult =
-          await adminService.getSetting(API_KEYS_SETTING_KEY)
-        const settings = settingsResult.match({
-          ok: (s) => s,
-          err: () => null,
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
+
+      const encryptedKey = encryptApiKey(input.apiKey)
+      if (!encryptedKey) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to encrypt API key",
         })
-
-        const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
-
-        const encryptResult = encryptApiKey(input.apiKey)
-        if (Result.isError(encryptResult)) {
-          return Result.err(
-            new CryptoOperationError({
-              operation: "encrypt",
-              message: encryptResult.error.message,
-            }),
-          )
-        }
-
-        const newKey: ApiKeyConfig = {
-          id: createCustomId(),
-          provider: input.provider,
-          name: input.name,
-          description: input.description,
-          apiKey: encryptResult.value,
-          status: input.status ?? "active",
-          restrictions: input.restrictions,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-
-        const updatedKeys = [...existingKeys, newKey]
-
-        yield* await Result.tryPromise({
-          try: () =>
-            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to update settings: ${e}`,
-            }),
-        })
-
-        yield* await Result.tryPromise({
-          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
-          catch: () => null,
-        })
-
-        yield* await Result.tryPromise({
-          try: () =>
-            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
-          catch: () => null,
-        })
-
-        return Result.ok({ success: true, id: newKey.id })
-      })
-
-      if (Result.isError(result)) {
-        return handleProcedureError(result)
       }
 
-      return result.value
+      const newKey: ApiKeyConfig = {
+        id: createCustomId(),
+        provider: input.provider,
+        name: input.name,
+        description: input.description,
+        apiKey: encryptedKey,
+        status: input.status ?? "active",
+        restrictions: input.restrictions,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      const updatedKeys = [...existingKeys, newKey]
+
+      try {
+        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+      } catch (e) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `Failed to update settings: ${e}`,
+        })
+      }
+
+      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+
+      return { success: true, id: newKey.id }
     }),
 
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const result = await Result.gen(async function* () {
-        const settingsResult =
-          await adminService.getSetting(API_KEYS_SETTING_KEY)
-        const settings = settingsResult.match({
-          ok: (s) => s,
-          err: () => null,
-        })
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
-        if (!settings?.settingValue) {
-          return Result.err(
-            new ApiKeyNotFoundError({ message: "No API keys found" }),
-          )
-        }
-
-        const existingKeys = settings.settingValue as ApiKeyConfig[]
-        const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
-
-        if (keyIndex === -1) {
-          return Result.err(
-            new ApiKeyNotFoundError({
-              keyId: input.id,
-              message: "API key not found",
-            }),
-          )
-        }
-
-        let newApiKey: string | undefined
-        if (input.apiKey) {
-          const encryptResult = encryptApiKey(input.apiKey)
-          if (Result.isError(encryptResult)) {
-            return Result.err(
-              new CryptoOperationError({
-                operation: "encrypt",
-                message: encryptResult.error.message,
-              }),
-            )
-          }
-          newApiKey = encryptResult.value
-        }
-
-        const updatedKey: ApiKeyConfig = {
-          ...existingKeys[keyIndex],
-          ...(input.provider && { provider: input.provider }),
-          ...(input.name && { name: input.name }),
-          ...(input.description !== undefined && {
-            description: input.description,
-          }),
-          ...(newApiKey && { apiKey: newApiKey }),
-          ...(input.status && { status: input.status }),
-          ...(input.restrictions !== undefined && {
-            restrictions: input.restrictions,
-          }),
-          updatedAt: new Date().toISOString(),
-        }
-
-        const updatedKeys = [...existingKeys]
-        updatedKeys[keyIndex] = updatedKey
-
-        yield* await Result.tryPromise({
-          try: () =>
-            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to update settings: ${e}`,
-            }),
-        })
-
-        yield* await Result.tryPromise({
-          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
-          catch: () => null,
-        })
-
-        yield* await Result.tryPromise({
-          try: () =>
-            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
-          catch: () => null,
-        })
-
-        return Result.ok({ success: true })
-      })
-
-      if (Result.isError(result)) {
-        return handleProcedureError(result)
+      if (!settings?.settingValue) {
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
-      return result.value
+      const existingKeys = settings.settingValue as ApiKeyConfig[]
+      const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
+
+      if (keyIndex === -1) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `API key not found: ${input.id}`,
+        })
+      }
+
+      let newApiKey: string | undefined
+      if (input.apiKey) {
+        const encryptResult = encryptApiKey(input.apiKey)
+        if (!encryptResult) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "Failed to encrypt API key",
+          })
+        }
+        newApiKey = encryptResult
+      }
+
+      const updatedKey: ApiKeyConfig = {
+        ...existingKeys[keyIndex],
+        ...(input.provider && { provider: input.provider }),
+        ...(input.name && { name: input.name }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
+        ...(newApiKey && { apiKey: newApiKey }),
+        ...(input.status && { status: input.status }),
+        ...(input.restrictions !== undefined && {
+          restrictions: input.restrictions,
+        }),
+        updatedAt: new Date().toISOString(),
+      }
+
+      const updatedKeys = [...existingKeys]
+      updatedKeys[keyIndex] = updatedKey
+
+      try {
+        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+      } catch (e) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `Failed to update settings: ${e}`,
+        })
+      }
+
+      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+
+      return { success: true }
     }),
 
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const result = await Result.gen(async function* () {
-        const settingsResult =
-          await adminService.getSetting(API_KEYS_SETTING_KEY)
-        const settings = settingsResult.match({
-          ok: (s) => s,
-          err: () => null,
-        })
+      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
-        if (!settings?.settingValue) {
-          return Result.err(
-            new ApiKeyNotFoundError({ message: "No API keys found" }),
-          )
-        }
-
-        const existingKeys = settings.settingValue as ApiKeyConfig[]
-        const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
-
-        yield* await Result.tryPromise({
-          try: () =>
-            adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys),
-          catch: (e) =>
-            new SettingsNotFoundError({
-              key: API_KEYS_SETTING_KEY,
-              message: `Failed to update settings: ${e}`,
-            }),
-        })
-
-        yield* await Result.tryPromise({
-          try: () => context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`),
-          catch: () => null,
-        })
-
-        yield* await Result.tryPromise({
-          try: () =>
-            context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`),
-          catch: () => null,
-        })
-
-        return Result.ok({ success: true })
-      })
-
-      if (Result.isError(result)) {
-        return handleProcedureError(result)
+      if (!settings?.settingValue) {
+        throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
       }
 
-      return result.value
+      const existingKeys = settings.settingValue as ApiKeyConfig[]
+      const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
+
+      try {
+        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+      } catch (e) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `Failed to update settings: ${e}`,
+        })
+      }
+
+      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+
+      return { success: true }
     }),
 
   getApiKeyStats: adminProcedure
     .output(apiKeyStatsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:api_key_stats"
-      const cachedResult = await context.redis.getCache<{
+      const cached = await context.redis.getCache<{
         totalRequests: number
         activeKeys: number
         monthlyCost: number
@@ -360,40 +254,17 @@ export const adminRouter = {
         costChange: string
       }>(cacheKey)
 
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
-
       if (cached) {
         return cached
       }
 
-      const [settingsResult, rawStatsResult] = await Promise.all([
+      const [settings, rawStats] = await Promise.all([
         adminService.getSetting(API_KEYS_SETTING_KEY),
         adminService.getApiKeyStats(),
       ])
 
-      const settings = settingsResult.match({
-        ok: (s) => s,
-        err: () => null,
-      })
-
       const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
       const activeKeys = apiKeys.filter((key) => key.status === "active").length
-
-      const rawStats = rawStatsResult.match({
-        ok: (s) => s,
-        err: () => ({
-          totalRequests: 0,
-          requestsThisMonth: 0,
-          monthlyCost: 0,
-          previousMonthCost: 0,
-        }),
-      })
 
       const {
         totalRequests,
@@ -428,12 +299,7 @@ export const adminRouter = {
     }),
 
   getAvailableModels: adminProcedure.handler(async ({ context }) => {
-    const settingsResult = await adminService.getSetting(API_KEYS_SETTING_KEY)
-
-    const settings = settingsResult.match({
-      ok: (s) => s,
-      err: () => null,
-    })
+    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
 
     if (!settings?.settingValue) {
       return []
@@ -453,43 +319,32 @@ export const adminRouter = {
     const results = await Promise.all(
       entries.map(async ([provider, key]) => {
         const cacheKey = `${MODEL_CACHE_PREFIX}${provider}:${key.id}`
-        const cachedResult =
+        const cached =
           await context.redis.getCache<{ id: string; name: string }[]>(cacheKey)
-
-        const cached = cachedResult.match({
-          ok: (v) => v,
-          err: (e) => {
-            logger.error(`Failed to get cache: ${e.message}`)
-            return null
-          },
-        })
 
         if (cached) {
           return { provider, models: cached }
         }
 
-        const decryptResult = decryptApiKey(key.apiKey)
-        if (Result.isError(decryptResult)) {
-          logger.error(`Failed to decrypt API key for ${provider}`)
+        const decryptedKey = decryptApiKey(key.apiKey)
+        if (!decryptedKey) {
+          console.error(`Failed to decrypt API key for ${provider}`)
           return { provider, models: [] as { id: string; name: string }[] }
         }
         const result = await fetchModelsForProvider(
           provider as ApiKeyConfig["provider"],
-          decryptResult.value,
+          decryptedKey,
         )
-        if (Result.isOk(result)) {
-          void context.redis.setCache(cacheKey, result.value, MODEL_CACHE_TTL)
+        if (Array.isArray(result)) {
+          void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
         } else {
-          logger.error(
-            `Failed to fetch models for ${provider}: ${result.error.message}`,
+          console.error(
+            `Failed to fetch models for ${provider}: ${result?.error?.message ?? "Unknown error"}`,
           )
         }
         return {
           provider,
-          models: result.match({
-            ok: (models) => models,
-            err: () => [] as { id: string; name: string }[],
-          }),
+          models: Array.isArray(result) ? result : [],
         }
       }),
     )
@@ -506,23 +361,13 @@ export const adminRouter = {
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cachedResult = await context.redis.getCache<number>(cacheKey)
-
-    const cached = cachedResult.match({
-      ok: (v) => v,
-      err: () => null,
-    })
+    const cached = await context.redis.getCache<number>(cacheKey)
 
     if (cached !== null) {
       return { maxUploadSizeMB: cached }
     }
 
-    const settingsResult = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
-
-    const settings = settingsResult.match({
-      ok: (s) => s,
-      err: () => null,
-    })
+    const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
 
     const maxUploadSizeMB =
       settings && typeof settings.settingValue === "number"
@@ -554,20 +399,13 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const redisClientResult = await context.redis.getRedisClient()
-      const redisClient = redisClientResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get Redis client: ${e.message}`)
-          return null
-        },
-      })
+      const redis = await context.redis.getRedisClient()
 
-      if (!redisClient) {
+      if (!redis) {
         return { metrics: [] }
       }
 
-      const metricsTracker = new WebhookMetrics(redisClient)
+      const metricsTracker = new WebhookMetrics(redis)
 
       const eventTypes = input.eventType
         ? [input.eventType]
@@ -593,16 +431,9 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const redisClientResult = await context.redis.getRedisClient()
-      const redisClient = redisClientResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get Redis client: ${e.message}`)
-          return null
-        },
-      })
+      const redis = await context.redis.getRedisClient()
 
-      if (!redisClient) {
+      if (!redis) {
         return {
           dataPoints: [],
           summary: {
@@ -649,16 +480,16 @@ export const adminRouter = {
 
           const [successCount, failureCount, totalTime, totalCount] =
             await Promise.all([
-              redisClient
+              redis
                 .get(`webhook:metrics:${eventType}:success:${dateStr}`)
                 .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redisClient
+              redis
                 .get(`webhook:metrics:${eventType}:failure:${dateStr}`)
                 .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redisClient
+              redis
                 .get(`webhook:metrics:${eventType}:processing_time:${dateStr}`)
                 .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redisClient
+              redis
                 .get(`webhook:metrics:${eventType}:processing_count:${dateStr}`)
                 .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
             ])
@@ -720,7 +551,7 @@ export const adminRouter = {
     .output(activityFeedOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:activity_feed"
-      const cachedResult = await context.redis.getCache<
+      const cached = await context.redis.getCache<
         {
           type: string
           message: string
@@ -728,32 +559,20 @@ export const adminRouter = {
         }[]
       >(cacheKey)
 
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
-
       if (cached) {
         return cached
       }
 
-      const recentPaymentsResult = await adminService.getActivityFeed(10)
+      const recentPayments = await adminService.getActivityFeed(10)
 
-      const activities = recentPaymentsResult.match({
-        ok: (payments) =>
-          payments.map((payment) => {
-            const userIdentifier =
-              payment.userName ?? `User #${payment.userId.slice(0, 8)}`
-            return {
-              type: "payment",
-              message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
-              timestamp: payment.createdAt ?? new Date(),
-            }
-          }),
-        err: () => [],
+      const activities = recentPayments.map((payment) => {
+        const userIdentifier =
+          payment.userName ?? `User #${payment.userId.slice(0, 8)}`
+        return {
+          type: "payment",
+          message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
+          timestamp: payment.createdAt ?? new Date(),
+        }
       })
 
       void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
@@ -765,29 +584,16 @@ export const adminRouter = {
     .output(uptimeMetricsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:uptime:metrics"
-      const cachedResult =
+      const cached =
         await context.redis.getCache<z.infer<typeof uptimeMetricsOutputSchema>>(
           cacheKey,
         )
-
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
 
       if (cached) {
         return cached
       }
 
-      const rawMetricsResult = await adminService.getUptimeMetrics()
-
-      const rawMetrics = rawMetricsResult.match({
-        ok: (m) => m,
-        err: () => ({ totalDowntime: 0, downtimeCount: 0, lastDowntime: null }),
-      })
+      const rawMetrics = await adminService.getUptimeMetrics()
 
       const totalSeconds = 30 * 24 * 60 * 60
       const downtimeSeconds = rawMetrics.totalDowntime
@@ -824,18 +630,10 @@ export const adminRouter = {
     .output(activityLogsOutputSchema)
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:activity-logs:${input.eventType ?? "all"}:${input.severity ?? "all"}:${input.startDate?.toISOString() ?? "all"}:${input.endDate?.toISOString() ?? "all"}:${input.cursor ?? "initial"}`
-      const cachedResult =
+      const cached =
         await context.redis.getCache<z.infer<typeof activityLogsOutputSchema>>(
           cacheKey,
         )
-
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
 
       if (cached) {
         return cached
@@ -850,21 +648,18 @@ export const adminRouter = {
         endDate: input.endDate,
       })
 
-      const result = rawResult.match({
-        ok: (r) => ({
-          logs: r.logs.map((log) => ({
-            id: log.id,
-            timestamp: log.timestamp,
-            eventType: log.eventType,
-            severity: log.severity,
-            description: log.description,
-            metadata: log.metadata as Record<string, unknown> | null,
-          })),
-          nextCursor: r.nextCursor,
-          totalCount: r.totalCount,
-        }),
-        err: () => ({ logs: [], nextCursor: undefined, totalCount: 0 }),
-      })
+      const result = {
+        logs: rawResult.logs.map((log) => ({
+          id: log.id,
+          timestamp: log.timestamp,
+          eventType: log.eventType,
+          severity: log.severity,
+          description: log.description,
+          metadata: log.metadata as Record<string, unknown> | null,
+        })),
+        nextCursor: rawResult.nextCursor,
+        totalCount: rawResult.totalCount,
+      }
 
       void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
@@ -880,18 +675,10 @@ export const adminRouter = {
     .output(uptimeHistoryOutputSchema)
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:uptime:history:${input.timeRange}`
-      const cachedResult =
+      const cached =
         await context.redis.getCache<z.infer<typeof uptimeHistoryOutputSchema>>(
           cacheKey,
         )
-
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
 
       if (cached) {
         return cached
@@ -916,15 +703,10 @@ export const adminRouter = {
         })
       }
 
-      const downtimeEventsResult = await adminService.getUptimeHistory({
+      const downtimeEvents = await adminService.getUptimeHistory({
         days,
         startDate,
         now,
-      })
-
-      const downtimeEvents = downtimeEventsResult.match({
-        ok: (events) => events,
-        err: () => [],
       })
 
       for (const event of downtimeEvents) {
@@ -958,34 +740,16 @@ export const adminRouter = {
     .output(systemMetricsOutputSchema)
     .handler(async ({ context }) => {
       const cacheKey = "admin:metrics:system"
-      const cachedResult =
+      const cached =
         await context.redis.getCache<z.infer<typeof systemMetricsOutputSchema>>(
           cacheKey,
         )
-
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
 
       if (cached) {
         return cached
       }
 
-      const rawMetricsResult = await adminService.getSystemMetrics()
-
-      const rawMetrics = rawMetricsResult.match({
-        ok: (m) => m,
-        err: () => ({
-          revenue: { current: 0, previous: 0 },
-          activeUsers: { current: 0, previous: 0 },
-          aiRequests: { current: 0, previous: 0 },
-          downtimeSeconds: 0,
-        }),
-      })
+      const rawMetrics = await adminService.getSystemMetrics()
 
       const revenueChange = calculateTrend(
         rawMetrics.revenue.current,
@@ -1043,17 +807,9 @@ export const adminRouter = {
     )
     .handler(async ({ context, input }) => {
       const cacheKey = `admin:metrics:ai_requests_history:${input.timeRange}`
-      const cachedResult = await context.redis.getCache<{
+      const cached = await context.redis.getCache<{
         dataPoints: { date: string; requests: number }[]
       }>(cacheKey)
-
-      const cached = cachedResult.match({
-        ok: (v) => v,
-        err: (e) => {
-          logger.error(`Failed to get cache: ${e.message}`)
-          return null
-        },
-      })
 
       if (cached) {
         return cached
@@ -1074,12 +830,7 @@ export const adminRouter = {
         dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })
       }
 
-      const runsResult = await adminService.getAiRequestsHistory({ startDate })
-
-      const runs = runsResult.match({
-        ok: (r) => r,
-        err: () => [],
-      })
+      const runs = await adminService.getAiRequestsHistory({ startDate })
 
       for (const run of runs) {
         if (run.createdAt) {
@@ -1107,22 +858,15 @@ export const adminRouter = {
 
     const result = await migrateExistingCreditsToSubscriptions()
 
-    if (result.isErr()) {
-      logger.error(`Migration failed: ${result.error.message}`)
-      return handleProcedureError(result)
-    }
-
-    const { migratedCount, failedCount, errors } = result.value
-
-    logger.info(
-      `Migration completed: ${migratedCount} migrated, ${failedCount} failed`,
+    console.info(
+      `Migration completed: ${result.migratedCount} migrated, ${result.failedCount} failed`,
     )
 
     return {
-      success: failedCount === 0,
-      migratedCount,
-      failedCount,
-      errors: errors.slice(0, 10),
+      success: result.failedCount === 0,
+      migratedCount: result.migratedCount,
+      failedCount: result.failedCount,
+      errors: result.errors.slice(0, 10),
     }
   }),
 
@@ -1130,22 +874,14 @@ export const adminRouter = {
     const { getSubscriptionStats, getRevenueStats } =
       await import("db/services/subscription-admin")
 
-    const [statsResult, revenueResult] = await Promise.all([
+    const [stats, revenue] = await Promise.all([
       getSubscriptionStats(),
       getRevenueStats(),
     ])
 
-    if (statsResult.isErr()) {
-      return handleProcedureError(statsResult)
-    }
-
-    if (revenueResult.isErr()) {
-      return handleProcedureError(revenueResult)
-    }
-
     return {
-      ...statsResult.value,
-      revenue: revenueResult.value,
+      ...stats,
+      revenue,
     }
   }),
 
@@ -1166,11 +902,7 @@ export const adminRouter = {
 
       const result = await getSubscriptionsList(input)
 
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
-      return result.value
+      return result
     }),
 }
 
@@ -1185,79 +917,73 @@ function calculateTrend(current: number, previous: number): string {
 async function fetchModelsForProvider(
   provider: ApiKeyConfig["provider"],
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
+): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
   switch (provider) {
     case "openai":
       return await fetchOpenAIModels(apiKey)
     case "openrouter":
       return await fetchOpenRouterModels(apiKey)
     default:
-      return Result.ok([])
+      return []
   }
 }
 
-function fetchOpenAIModels(
+async function fetchOpenAIModels(
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
-  return Result.tryPromise({
-    try: async () => {
-      const res = await fetch("https://api.openai.com/v1/models", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      })
-      if (!res.ok) {
-        throw new ModelFetchError({
-          provider: "openai",
+): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
+    if (!res.ok) {
+      return {
+        error: {
           message: `API request failed with status ${res.status}`,
-        })
+        },
       }
-      const data = await res.json()
-      return (
-        data.data?.map((m: { id: string }) => ({
-          id: m.id,
-          name: m.id.toUpperCase().replace(/-/g, " "),
-        })) ?? []
-      )
-    },
-    catch: (e) =>
-      ModelFetchError.is(e)
-        ? e
-        : new ModelFetchError({
-            provider: "openai",
-            message: e instanceof Error ? e.message : "Unknown error occurred",
-            cause: e,
-          }),
-  })
+    }
+    const data = await res.json()
+    return (
+      data.data?.map((m: { id: string }) => ({
+        id: m.id,
+        name: m.id.toUpperCase().replace(/-/g, " "),
+      })) ?? []
+    )
+  } catch (e) {
+    return {
+      error: {
+        message: e instanceof Error ? e.message : "Unknown error occurred",
+      },
+    }
+  }
 }
 
-function fetchOpenRouterModels(
+async function fetchOpenRouterModels(
   apiKey: string,
-): Promise<Result<{ id: string; name: string }[], ModelFetchError>> {
-  return Result.tryPromise({
-    try: async () => {
-      const res = await fetch("https://openrouter.ai/api/v1/models", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      })
-      if (!res.ok) {
-        throw new ModelFetchError({
-          provider: "openrouter",
+): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
+    if (!res.ok) {
+      return {
+        error: {
           message: `API request failed with status ${res.status}`,
-        })
+        },
       }
-      const data = await res.json()
-      return (
-        data.data?.map((m: { id: string; name?: string }) => ({
-          id: m.id,
-          name: m.name ?? m.id,
-        })) ?? []
-      )
-    },
-    catch: (e) =>
-      ModelFetchError.is(e)
-        ? e
-        : new ModelFetchError({
-            provider: "openrouter",
-            message: e instanceof Error ? e.message : "Unknown error occurred",
-            cause: e,
-          }),
-  })
+    }
+    const data = await res.json()
+    return (
+      data.data?.map((m: { id: string; name?: string }) => ({
+        id: m.id,
+        name: m.name ?? m.id,
+      })) ?? []
+    )
+  } catch (e) {
+    return {
+      error: {
+        message: e instanceof Error ? e.message : "Unknown error occurred",
+      },
+    }
+  }
 }

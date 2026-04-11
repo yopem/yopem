@@ -1,279 +1,153 @@
-import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 
 import type { InsertSubscription, SelectSubscription } from "../schema/index.ts"
 
-import { DatabaseOperationError, NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import { subscriptionsTable } from "../schema/index.ts"
 
-export const getSubscription = (
+export const getSubscription = async (
   userId: string,
-): Promise<Result<SelectSubscription | null, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .select()
-        .from(subscriptionsTable)
-        .where(eq(subscriptionsTable.userId, userId))
+): Promise<SelectSubscription | null> => {
+  const [subscription] = await db
+    .select()
+    .from(subscriptionsTable)
+    .where(eq(subscriptionsTable.userId, userId))
 
-      return subscription ?? null
-    },
-    catch: (error) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "subscriptions",
-        cause: error,
-      }),
-  })
+  return subscription ?? null
 }
 
-export const getOrCreateSubscription = (
+export const getOrCreateSubscription = async (
   userId: string,
-): Promise<Result<SelectSubscription, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      const existing = await getSubscription(userId)
+): Promise<SelectSubscription> => {
+  const existing = await getSubscription(userId)
 
-      if (existing.isOk() && existing.value) {
-        return existing.value
-      }
+  if (existing) {
+    return existing
+  }
 
-      const [subscription] = await db
-        .insert(subscriptionsTable)
-        .values({
-          userId,
-          tier: "free",
-          status: "active",
-          source: "polar",
-        })
-        .returning()
+  const [subscription] = await db
+    .insert(subscriptionsTable)
+    .values({
+      userId,
+      tier: "free",
+      status: "active",
+      source: "polar",
+    })
+    .returning()
 
-      if (!subscription) {
-        throw new Error("Failed to create subscription")
-      }
+  if (!subscription) {
+    throw new Error("Failed to create subscription")
+  }
 
-      return subscription
-    },
-    catch: (error) =>
-      new DatabaseOperationError({
-        operation: "insert",
-        table: "subscriptions",
-        cause: error,
-      }),
-  })
+  return subscription
 }
 
-export const createSubscription = (
+export const createSubscription = async (
   data: InsertSubscription,
-): Promise<Result<SelectSubscription, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .insert(subscriptionsTable)
-        .values(data)
-        .returning()
+): Promise<SelectSubscription> => {
+  const [subscription] = await db
+    .insert(subscriptionsTable)
+    .values(data)
+    .returning()
 
-      if (!subscription) {
-        throw new Error("Failed to create subscription")
-      }
+  if (!subscription) {
+    throw new Error("Failed to create subscription")
+  }
 
-      return subscription
-    },
-    catch: (error) =>
-      new DatabaseOperationError({
-        operation: "insert",
-        table: "subscriptions",
-        cause: error,
-      }),
-  })
+  return subscription
 }
 
-export const updateSubscription = (
+export const updateSubscription = async (
   userId: string,
   data: Partial<Omit<InsertSubscription, "id" | "userId">>,
-): Promise<
-  Result<SelectSubscription, DatabaseOperationError | NotFoundError>
-> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .update(subscriptionsTable)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(subscriptionsTable.userId, userId))
-        .returning()
+): Promise<SelectSubscription> => {
+  const [subscription] = await db
+    .update(subscriptionsTable)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(subscriptionsTable.userId, userId))
+    .returning()
 
-      if (!subscription) {
-        throw new NotFoundError({
-          resource: "subscription",
-          id: userId,
-        })
-      }
+  if (!subscription) {
+    throw new Error(`Subscription not found for user ${userId}`)
+  }
 
-      return subscription
-    },
-    catch: (error) => {
-      if (error instanceof NotFoundError) {
-        return error
-      }
-      return new DatabaseOperationError({
-        operation: "update",
-        table: "subscriptions",
-        cause: error,
-      })
-    },
-  })
+  return subscription
 }
 
-export const updateSubscriptionByPolarId = (
+export const updateSubscriptionByPolarId = async (
   polarSubscriptionId: string,
   data: Partial<Omit<InsertSubscription, "id">>,
-): Promise<
-  Result<SelectSubscription, DatabaseOperationError | NotFoundError>
-> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .update(subscriptionsTable)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(subscriptionsTable.polarSubscriptionId, polarSubscriptionId))
-        .returning()
+): Promise<SelectSubscription> => {
+  const [subscription] = await db
+    .update(subscriptionsTable)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(subscriptionsTable.polarSubscriptionId, polarSubscriptionId))
+    .returning()
 
-      if (!subscription) {
-        throw new NotFoundError({
-          resource: "subscription",
-          id: polarSubscriptionId,
-        })
-      }
+  if (!subscription) {
+    throw new Error(
+      `Subscription not found for polar id ${polarSubscriptionId}`,
+    )
+  }
 
-      return subscription
-    },
-    catch: (error) => {
-      if (error instanceof NotFoundError) {
-        return error
-      }
-      return new DatabaseOperationError({
-        operation: "update",
-        table: "subscriptions",
-        cause: error,
-      })
-    },
-  })
+  return subscription
 }
 
-export const cancelSubscription = (
+export const cancelSubscription = async (
   userId: string,
-): Promise<
-  Result<SelectSubscription, DatabaseOperationError | NotFoundError>
-> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .update(subscriptionsTable)
-        .set({
-          status: "cancelled",
-          cancelAtPeriodEnd: true,
-          cancelledAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(subscriptionsTable.userId, userId))
-        .returning()
+): Promise<SelectSubscription> => {
+  const [subscription] = await db
+    .update(subscriptionsTable)
+    .set({
+      status: "cancelled",
+      cancelAtPeriodEnd: true,
+      cancelledAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(subscriptionsTable.userId, userId))
+    .returning()
 
-      if (!subscription) {
-        throw new NotFoundError({
-          resource: "subscription",
-          id: userId,
-        })
-      }
+  if (!subscription) {
+    throw new Error(`Subscription not found for user ${userId}`)
+  }
 
-      return subscription
-    },
-    catch: (error) => {
-      if (error instanceof NotFoundError) {
-        return error
-      }
-      return new DatabaseOperationError({
-        operation: "update",
-        table: "subscriptions",
-        cause: error,
-      })
-    },
-  })
+  return subscription
 }
 
-export const expireSubscription = (
+export const expireSubscription = async (
   userId: string,
-): Promise<
-  Result<SelectSubscription, DatabaseOperationError | NotFoundError>
-> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [subscription] = await db
-        .update(subscriptionsTable)
-        .set({
-          status: "expired",
-          tier: "free",
-          updatedAt: new Date(),
-        })
-        .where(eq(subscriptionsTable.userId, userId))
-        .returning()
+): Promise<SelectSubscription> => {
+  const [subscription] = await db
+    .update(subscriptionsTable)
+    .set({
+      status: "expired",
+      tier: "free",
+      updatedAt: new Date(),
+    })
+    .where(eq(subscriptionsTable.userId, userId))
+    .returning()
 
-      if (!subscription) {
-        throw new NotFoundError({
-          resource: "subscription",
-          id: userId,
-        })
-      }
+  if (!subscription) {
+    throw new Error(`Subscription not found for user ${userId}`)
+  }
 
-      return subscription
-    },
-    catch: (error) => {
-      if (error instanceof NotFoundError) {
-        return error
-      }
-      return new DatabaseOperationError({
-        operation: "update",
-        table: "subscriptions",
-        cause: error,
-      })
-    },
-  })
+  return subscription
 }
 
 export const getSubscriptionsByStatus = (
   status: SelectSubscription["status"],
-): Promise<Result<SelectSubscription[], DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      return db
-        .select()
-        .from(subscriptionsTable)
-        .where(eq(subscriptionsTable.status, status))
-    },
-    catch: (error) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "subscriptions",
-        cause: error,
-      }),
-  })
+): Promise<SelectSubscription[]> => {
+  return db
+    .select()
+    .from(subscriptionsTable)
+    .where(eq(subscriptionsTable.status, status))
 }
 
 export const getExpiringGrandfatheredSubscriptions = (
-  _daysThreshold: number = 7,
-): Promise<Result<SelectSubscription[], DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      return db
-        .select()
-        .from(subscriptionsTable)
-        .where(eq(subscriptionsTable.source, "grandfathered"))
-    },
-    catch: (error) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "subscriptions",
-        cause: error,
-      }),
-  })
+  _daysThreshold = 7,
+): Promise<SelectSubscription[]> => {
+  return db
+    .select()
+    .from(subscriptionsTable)
+    .where(eq(subscriptionsTable.source, "grandfathered"))
 }

@@ -1,61 +1,41 @@
 "use client"
 
-import { Result } from "better-result"
-
 import { cn } from "ui"
 import { Button } from "ui/button"
 
 import { loginFn } from "@/lib/auth"
-import { AuthRedirectError } from "@/lib/errors"
 
 const CTAButton = ({ className }: { className?: string }) => {
   const handleLogin = async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        const response = await loginFn()
-        return response as unknown
-      },
-      catch: (error) => {
-        if (error && typeof error === "object") {
-          const err = error as {
-            status?: number
-            href?: string
-            options?: { href?: string }
-          }
-          if (err.status === 307) {
-            const redirectUrl = err.href || err.options?.href
-            if (redirectUrl) {
-              return new AuthRedirectError({
-                message: `Redirect required to ${redirectUrl}`,
-                redirectUrl,
-              })
-            }
-          }
-        }
-        return error
-      },
-    })
+    try {
+      const response = await loginFn()
 
-    result.match({
-      ok: (response) => {
-        if (response && typeof response === "object") {
-          const res = response as {
-            status?: number
-            options?: { href?: string }
-          }
-          if (res.status === 307 && res.options?.href) {
-            window.location.href = res.options.href
+      if (response && typeof response === "object") {
+        const res = response as {
+          status?: number
+          options?: { href?: string }
+        }
+        if (res.status === 307 && res.options?.href) {
+          window.location.href = res.options.href
+        }
+      }
+    } catch (error) {
+      if (error && typeof error === "object") {
+        const err = error as {
+          status?: number
+          href?: string
+          options?: { href?: string }
+        }
+        if (err.status === 307) {
+          const redirectUrl = err.href || err.options?.href
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+            return
           }
         }
-      },
-      err: (error) => {
-        if (error instanceof AuthRedirectError) {
-          window.location.href = error.redirectUrl
-        } else {
-          throw error
-        }
-      },
-    })
+      }
+      throw error
+    }
   }
 
   return (

@@ -1,66 +1,61 @@
 import type { Redis } from "ioredis"
 
-import { Result } from "better-result"
-
 import { RateLimitError } from "./errors.ts"
 
 export async function checkRateLimit(
-  getRedisClient: () => Promise<Result<Redis | null, unknown>>,
+  getRedisClient: () => Promise<Redis | null>,
   key: string,
   maxRequests: number,
   windowMs: number,
   options?: { failClosed?: boolean },
-): Promise<Result<{ isLimited: boolean; remaining: number }, RateLimitError>> {
-  const redisResult = await getRedisClient()
-
-  if (redisResult.isErr()) {
-    if (options?.failClosed) {
-      return Result.ok({ isLimited: true, remaining: 0 })
-    }
-    return Result.ok({
-      isLimited: false,
-      remaining: maxRequests,
-    })
-  }
-
-  const redis = redisResult.value
+): Promise<{
+  ok: boolean
+  value?: { isLimited: boolean; remaining: number }
+  error?: RateLimitError
+}> {
+  const redis = await getRedisClient()
 
   if (!redis) {
     if (options?.failClosed) {
-      return Result.ok({ isLimited: true, remaining: 0 })
+      return { ok: true, value: { isLimited: true, remaining: 0 } }
     }
-    return Result.ok({
-      isLimited: false,
-      remaining: maxRequests,
-    })
+    return { ok: true, value: { isLimited: false, remaining: maxRequests } }
   }
 
   const now = Date.now()
   const windowStart = now - windowMs
   const redisKey = `ratelimit:${key}`
 
-  return Result.tryPromise({
-    try: async () => {
-      await redis.zremrangebyscore(redisKey, 0, windowStart)
-      const count = await redis.zcard(redisKey)
+  try {
+    await redis.zremrangebyscore(redisKey, 0, windowStart)
+    const count = await redis.zcard(redisKey)
 
-      if (count >= maxRequests) {
-        return {
+    if (count >= maxRequests) {
+      return {
+        ok: true,
+        value: {
           isLimited: true,
           remaining: 0,
-        }
+        },
       }
+    }
 
-      await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
-      await redis.pexpire(redisKey, windowMs)
+    await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
+    await redis.pexpire(redisKey, windowMs)
 
-      return {
+    return {
+      ok: true,
+      value: {
         isLimited: false,
         remaining: maxRequests - count - 1,
-      }
-    },
-    catch: (e) => new RateLimitError({ operation: "check", cause: e }),
-  })
+      },
+    }
+  } catch (e) {
+    return {
+      ok: false,
+      error: new RateLimitError({ operation: "check", cause: e }),
+    }
+  }
 }
 
 export const RATE_LIMITS = {

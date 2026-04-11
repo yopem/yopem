@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { getEntitlements, type Entitlements } from "./entitlements"
 import { getCurrentUsage, type UsageData } from "./usage-tracking"
 
@@ -17,22 +15,11 @@ export interface QuotaCheck {
 export const checkQuota = async (
   userId: string,
   requestedTokens: number,
-): Promise<Result<QuotaCheck, Error>> => {
-  const [usageResult, entitlementsResult] = await Promise.all([
+): Promise<QuotaCheck> => {
+  const [usage, entitlements] = await Promise.all([
     getCurrentUsage(userId),
     getEntitlements(userId),
   ])
-
-  if (usageResult.isErr()) {
-    return Result.err(usageResult.error)
-  }
-
-  if (entitlementsResult.isErr()) {
-    return Result.err(entitlementsResult.error)
-  }
-
-  const usage = usageResult.value
-  const entitlements = entitlementsResult.value
 
   const maxRequests = entitlements.limits.maxRequestsPerMonth
   const maxTokens = entitlements.limits.maxTokensPerRequest
@@ -53,7 +40,7 @@ export const checkQuota = async (
   if (entitlements.status === "expired") {
     quotaCheck.allowed = false
     quotaCheck.reason = "subscription_expired"
-    return Result.ok(quotaCheck)
+    return quotaCheck
   }
 
   if (entitlements.status === "past_due") {
@@ -64,7 +51,7 @@ export const checkQuota = async (
       if (new Date() > threeDaysFromEnd) {
         quotaCheck.allowed = false
         quotaCheck.reason = "payment_overdue"
-        return Result.ok(quotaCheck)
+        return quotaCheck
       }
     }
   }
@@ -72,27 +59,22 @@ export const checkQuota = async (
   if (usage.requestCount >= maxRequests) {
     quotaCheck.allowed = false
     quotaCheck.reason = "monthly_quota_exceeded"
-    return Result.ok(quotaCheck)
+    return quotaCheck
   }
 
   if (requestedTokens > maxTokens) {
     quotaCheck.allowed = false
     quotaCheck.reason = "token_limit_exceeded"
-    return Result.ok(quotaCheck)
+    return quotaCheck
   }
 
-  return Result.ok(quotaCheck)
+  return quotaCheck
 }
 
 export const canExecuteTool = async (
   userId: string,
   requestedTokens: number,
-): Promise<Result<boolean, Error>> => {
-  const checkResult = await checkQuota(userId, requestedTokens)
-
-  if (checkResult.isErr()) {
-    return Result.err(checkResult.error)
-  }
-
-  return Result.ok(checkResult.value.allowed)
+): Promise<boolean> => {
+  const check = await checkQuota(userId, requestedTokens)
+  return check.allowed
 }

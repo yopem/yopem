@@ -1,7 +1,3 @@
-import type { Result } from "better-result"
-
-import { TaggedError } from "better-result"
-
 export type ApiKeyProvider = "openai" | "openrouter"
 
 export interface ExecutionRequest {
@@ -25,29 +21,53 @@ export interface ProviderConfig {
   model: string
 }
 
-export class RateLimitError extends TaggedError("RateLimitError")<{
+export class RateLimitError extends Error {
   provider: ApiKeyProvider
-  message: string
-  cause?: unknown
-}>() {}
+  override cause?: unknown
 
-export class InvalidKeyError extends TaggedError("InvalidKeyError")<{
-  provider: ApiKeyProvider
-  message: string
-  cause?: unknown
-}>() {}
+  constructor(provider: ApiKeyProvider, message: string, cause?: unknown) {
+    super(message)
+    this.name = "RateLimitError"
+    this.provider = provider
+    this.cause = cause
+  }
+}
 
-export class ContextLengthError extends TaggedError("ContextLengthError")<{
+export class InvalidKeyError extends Error {
   provider: ApiKeyProvider
-  message: string
-  cause?: unknown
-}>() {}
+  override cause?: unknown
 
-export class AIProviderError extends TaggedError("AIProviderError")<{
+  constructor(provider: ApiKeyProvider, message: string, cause?: unknown) {
+    super(message)
+    this.name = "InvalidKeyError"
+    this.provider = provider
+    this.cause = cause
+  }
+}
+
+export class ContextLengthError extends Error {
   provider: ApiKeyProvider
-  message: string
-  cause?: unknown
-}>() {}
+  override cause?: unknown
+
+  constructor(provider: ApiKeyProvider, message: string, cause?: unknown) {
+    super(message)
+    this.name = "ContextLengthError"
+    this.provider = provider
+    this.cause = cause
+  }
+}
+
+export class AIProviderError extends Error {
+  provider: ApiKeyProvider
+  override cause?: unknown
+
+  constructor(provider: ApiKeyProvider, message: string, cause?: unknown) {
+    super(message)
+    this.name = "AIProviderError"
+    this.provider = provider
+    this.cause = cause
+  }
+}
 
 export type AIProviderErrors =
   | RateLimitError
@@ -56,7 +76,5 @@ export type AIProviderErrors =
   | AIProviderError
 
 export interface AIProvider {
-  execute(
-    request: ExecutionRequest,
-  ): Promise<Result<ExecutionResponse, AIProviderErrors>>
+  execute(request: ExecutionRequest): Promise<ExecutionResponse>
 }

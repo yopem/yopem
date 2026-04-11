@@ -1,11 +1,10 @@
-import { Result } from "better-result"
+import { ORPCError } from "@orpc/server"
 import { adminProcedure, protectedProcedure } from "server/orpc"
 import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
 import { z } from "zod"
 
 import * as subscriptionService from "db/services/subscriptions"
 import * as userService from "db/services/user"
-import { formatError, logger } from "logger"
 import { getEntitlements } from "payments/entitlements"
 import {
   createCustomerPortalSession,
@@ -21,15 +20,6 @@ import {
 } from "shared/api-keys-schema"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
-
-import { handleProcedureError } from "./error-handler"
-import {
-  ApiKeyNotFoundError,
-  ApiKeyValidationError,
-  CryptoOperationError,
-  RateLimitExceededError,
-  ValidationError,
-} from "./procedure-errors"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {
@@ -59,12 +49,7 @@ export const userRouter = {
 
   getStats: protectedProcedure.handler(async ({ context }) => {
     const result = await userService.getUserStats(context.session.id)
-
-    if (result.isErr()) {
-      return handleProcedureError(result)
-    }
-
-    return result.value
+    return result
   }),
 
   getRuns: protectedProcedure
@@ -81,30 +66,21 @@ export const userRouter = {
         limit: input?.limit ?? 20,
         cursor: input?.cursor,
       })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
-      return result.value
+      return result
     }),
 
   getCredits: protectedProcedure.handler(async ({ context }) => {
     const result = await userService.getUserCredits(context.session.id)
-
-    if (result.isErr()) {
-      return handleProcedureError(result)
-    }
-
-    return result.value
+    return result
   }),
 
   getSubscription: protectedProcedure.handler(async ({ context }) => {
-    const result = await getEntitlements(context.session.id)
-
-    if (result.isErr()) {
-      logger.error(
-        `Failed to get subscription for user ${context.session.id}: ${result.error.message}`,
+    try {
+      const result = await getEntitlements(context.session.id)
+      return result
+    } catch (error) {
+      console.error(
+        `Failed to get subscription for user ${context.session.id}: ${error instanceof Error ? error.message : String(error)}`,
       )
       const freePlan = getPlanConfig("free")
       return {
@@ -117,8 +93,6 @@ export const userRouter = {
         currentPeriodEnd: null,
       }
     }
-
-    return result.value
   }),
 
   getSubscriptionPlans: protectedProcedure.handler(() => {
@@ -141,92 +115,57 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const result = await createSubscriptionCheckout(
-        context.session.id,
-        context.session.email,
-        null,
-        input.tier,
-      )
-
-      if (result.isErr()) {
-        logger.error(
-          `Failed to create checkout for user ${context.session.id}: ${result.error.message}`,
+      try {
+        const result = await createSubscriptionCheckout(
+          context.session.id,
+          context.session.email,
+          null,
+          input.tier,
         )
-        return handleProcedureError(
-          Result.err(
-            new ValidationError({
-              field: "tier",
-              message: "Failed to create checkout session",
-            }),
-          ),
+        return {
+          url: result.url,
+          checkoutId: result.checkoutId,
+        }
+      } catch (error) {
+        console.error(
+          `Failed to create checkout for user ${context.session.id}: ${error instanceof Error ? error.message : String(error)}`,
         )
-      }
-
-      return {
-        url: result.value.url,
-        checkoutId: result.value.checkoutId,
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Failed to create checkout session",
+        })
       }
     }),
 
   createBillingPortal: protectedProcedure.handler(async ({ context }) => {
-    const subscriptionResult = await subscriptionService.getSubscription(
+    const subscription = await subscriptionService.getSubscription(
       context.session.id,
     )
 
-    if (subscriptionResult.isErr()) {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "subscription",
-            message: "No subscription found",
-          }),
-        ),
-      )
-    }
-
-    const subscription = subscriptionResult.value
-
     if (!subscription) {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "subscription",
-            message: "No subscription found",
-          }),
-        ),
-      )
+      throw new ORPCError("BAD_REQUEST", {
+        message: "No subscription found",
+      })
     }
 
     if (!subscription.polarCustomerId) {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "customer",
-            message: "No customer ID found",
-          }),
-        ),
-      )
+      throw new ORPCError("BAD_REQUEST", {
+        message: "No customer ID found",
+      })
     }
 
-    const result = await createCustomerPortalSession(
-      subscription.polarCustomerId,
-    )
-
-    if (result.isErr()) {
-      logger.error(
-        `Failed to create billing portal for user ${context.session.id}: ${result.error.message}`,
+    try {
+      const result = await createCustomerPortalSession(
+        subscription.polarCustomerId,
       )
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "portal",
-            message: "Failed to create billing portal",
-          }),
-        ),
+      return { url: result }
+    } catch (error) {
+      console.error(
+        `Failed to create billing portal for user ${context.session.id}: ${error instanceof Error ? error.message : String(error)}`,
       )
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Failed to create billing portal",
+      })
     }
-
-    return { url: result.value }
   }),
 
   getTransactions: protectedProcedure
@@ -241,12 +180,7 @@ export const userRouter = {
       const result = await userService.getUserTransactions(context.session.id, {
         limit: input?.limit ?? 20,
       })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
-      return result.value
+      return result
     }),
 
   getPurchases: protectedProcedure
@@ -261,22 +195,12 @@ export const userRouter = {
       const result = await userService.getPaymentHistory(context.session.id, {
         limit: input?.limit ?? 20,
       })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
-      return result.value
+      return result
     }),
 
   getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
     const result = await userService.getPendingCheckouts(context.session.id)
-
-    if (result.isErr()) {
-      return handleProcedureError(result)
-    }
-
-    return result.value
+    return result
   }),
 
   addCredits: protectedProcedure
@@ -286,52 +210,30 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const result = await userService.addCredits(
-        context.session.id,
-        input.amount,
-      )
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
+      await userService.addCredits(context.session.id, input.amount)
       return { success: true, amount: input.amount }
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const settingsResult = await userService.getUserSettings(context.session.id)
+    const settings = await userService.getUserSettings(context.session.id)
 
-    if (settingsResult.isErr()) {
+    if (!settings?.apiKeys) {
       return []
     }
 
-    const settings = settingsResult.value
-
-    if (!settings.apiKeys) {
+    let apiKeys: ApiKeyConfig[]
+    try {
+      apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+    } catch {
+      console.error("Error parsing API keys")
       return []
     }
-
-    const parseResult = Result.try({
-      try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
-      catch: (e) => {
-        logger.error(`Error parsing API keys: ${formatError(e)}`)
-        return []
-      },
-    })
-
-    if (parseResult.isErr()) {
-      return []
-    }
-
-    const apiKeys = parseResult.value
 
     const processedKeys = apiKeys.map((key) => {
-      const decryptResult = decryptApiKey(key.apiKey)
+      const decrypted = decryptApiKey(key.apiKey)
       return {
         ...key,
-        apiKey: Result.isOk(decryptResult)
-          ? maskApiKey(decryptResult.value)
-          : "Error: Failed to decrypt",
+        apiKey: decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt",
       }
     })
 
@@ -341,362 +243,223 @@ export const userRouter = {
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const result = await Result.gen(async function* () {
-        const rateLimitKey = `${context.session.id}:api-key:add`
-        const rateLimitResult = await checkRateLimit(
-          () => context.redis.getRedisClient(),
-          rateLimitKey,
-          RATE_LIMITS.API_KEY_ADD.maxRequests,
-          RATE_LIMITS.API_KEY_ADD.windowMs,
-        )
+      const rateLimitKey = `${context.session.id}:api-key:add`
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
+        rateLimitKey,
+        RATE_LIMITS.API_KEY_ADD.maxRequests,
+        RATE_LIMITS.API_KEY_ADD.windowMs,
+      )
 
-        const rateLimitCheck = rateLimitResult.match({
-          ok: (v) => v,
-          err: () => ({
-            isLimited: false,
-            remaining: RATE_LIMITS.API_KEY_ADD.maxRequests,
-          }),
+      const rateLimitCheck = rateLimitResult.ok
+        ? rateLimitResult.value
+        : { isLimited: false, remaining: RATE_LIMITS.API_KEY_ADD.maxRequests }
+
+      if (rateLimitCheck?.isLimited) {
+        throw new ORPCError("FORBIDDEN", {
+          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_ADD.windowMs / 60000)} minutes.`,
         })
-
-        if (rateLimitCheck.isLimited) {
-          return Result.err(
-            new RateLimitExceededError({
-              operation: "add-api-key",
-              remaining: rateLimitCheck.remaining,
-            }),
-          )
-        }
-
-        const settingsResult = await userService.getUserSettings(
-          context.session.id,
-        )
-
-        const settings = settingsResult.match({
-          ok: (v) => v,
-          err: () => null,
-        })
-
-        const encryptedKey = yield* encryptApiKey(input.apiKey).mapError(
-          () =>
-            new CryptoOperationError({
-              operation: "encrypt",
-              message: "Failed to encrypt API key",
-            }),
-        )
-
-        const newKey: ApiKeyConfig = {
-          id: createCustomId(),
-          provider: input.provider,
-          name: input.name,
-          description: input.description,
-          apiKey: encryptedKey,
-          status: input.status,
-          restrictions: input.restrictions,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-
-        let existingKeys: ApiKeyConfig[] = []
-
-        if (settings?.apiKeys) {
-          const parseResult = Result.try({
-            try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
-            catch: () => null,
-          })
-
-          if (parseResult.isOk() && parseResult.value) {
-            existingKeys = parseResult.value
-          } else {
-            logger.error("Error parsing existing API keys")
-          }
-        }
-
-        const updatedKeys = [...existingKeys, newKey]
-
-        const upsertResult = await userService.upsertUserSettings(
-          context.session.id,
-          {
-            apiKeys: updatedKeys,
-          },
-        )
-
-        if (upsertResult.isErr()) {
-          return Result.err(
-            new ApiKeyValidationError({
-              message: "Failed to save API key",
-            }),
-          )
-        }
-
-        return Result.ok({
-          ...newKey,
-          apiKey: maskApiKey(input.apiKey),
-        })
-      })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
       }
 
-      return result.value
+      const settings = await userService.getUserSettings(context.session.id)
+
+      const encryptedKey = encryptApiKey(input.apiKey)
+      if (!encryptedKey) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to encrypt API key",
+        })
+      }
+
+      const newKey: ApiKeyConfig = {
+        id: createCustomId(),
+        provider: input.provider,
+        name: input.name,
+        description: input.description,
+        apiKey: encryptedKey,
+        status: input.status,
+        restrictions: input.restrictions,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      let existingKeys: ApiKeyConfig[] = []
+
+      if (settings?.apiKeys) {
+        try {
+          existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+        } catch {
+          console.error("Error parsing existing API keys")
+        }
+      }
+
+      const updatedKeys = [...existingKeys, newKey]
+
+      await userService.upsertUserSettings(context.session.id, {
+        apiKeys: updatedKeys,
+      })
+
+      return {
+        ...newKey,
+        apiKey: maskApiKey(input.apiKey),
+      }
     }),
 
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      // eslint-disable-next-line require-yield
-      const result = await Result.gen(async function* () {
-        const rateLimitKey = `${context.session.id}:api-key:update`
-        const rateLimitResult = await checkRateLimit(
-          () => context.redis.getRedisClient(),
-          rateLimitKey,
-          RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-          RATE_LIMITS.API_KEY_UPDATE.windowMs,
-        )
+      const rateLimitKey = `${context.session.id}:api-key:update`
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
+        rateLimitKey,
+        RATE_LIMITS.API_KEY_UPDATE.maxRequests,
+        RATE_LIMITS.API_KEY_UPDATE.windowMs,
+      )
 
-        const rateLimitCheck = rateLimitResult.match({
-          ok: (v) => v,
-          err: () => ({
+      const rateLimitCheck = rateLimitResult.ok
+        ? rateLimitResult.value
+        : {
             isLimited: false,
             remaining: RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-          }),
-        })
-
-        if (rateLimitCheck.isLimited) {
-          return Result.err(
-            new RateLimitExceededError({
-              operation: "update-api-key",
-              remaining: rateLimitCheck.remaining,
-            }),
-          )
-        }
-
-        const settingsResult = await userService.getUserSettings(
-          context.session.id,
-        )
-
-        const settings = settingsResult.match({
-          ok: (v) => v,
-          err: () => null,
-        })
-
-        if (!settings?.apiKeys) {
-          return Result.err(
-            new ApiKeyNotFoundError({
-              message: "No API keys found",
-            }),
-          )
-        }
-
-        const existingKeys = Result.try({
-          try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
-          catch: (e) => {
-            logger.error(`Error parsing existing API keys: ${formatError(e)}`)
-            return Result.err(
-              new ApiKeyValidationError({
-                message: "Failed to parse existing API keys",
-              }),
-            )
-          },
-        })
-
-        if (existingKeys.isErr()) {
-          return Result.err(existingKeys.error)
-        }
-
-        const keyIndex = existingKeys.value.findIndex(
-          (key) => key.id === input.id,
-        )
-
-        if (keyIndex === -1) {
-          return Result.err(
-            new ApiKeyNotFoundError({
-              keyId: input.id,
-            }),
-          )
-        }
-
-        let encryptedApiKey: string = existingKeys.value[keyIndex].apiKey
-        if (input.apiKey) {
-          const encryptResult = encryptApiKey(input.apiKey)
-          if (encryptResult.isErr()) {
-            return Result.err(
-              new CryptoOperationError({
-                operation: "encrypt",
-                message: "Failed to encrypt API key",
-              }),
-            )
           }
-          encryptedApiKey = encryptResult.value
-        }
 
-        const updatedKey: ApiKeyConfig = {
-          ...existingKeys.value[keyIndex],
-          ...input,
-          apiKey: encryptedApiKey,
-          updatedAt: new Date().toISOString(),
-        }
-
-        const updatedKeys = [...existingKeys.value]
-        updatedKeys[keyIndex] = updatedKey
-
-        const upsertResult = await userService.upsertUserSettings(
-          context.session.id,
-          {
-            apiKeys: updatedKeys,
-          },
-        )
-
-        if (upsertResult.isErr()) {
-          return Result.err(
-            new ApiKeyValidationError({
-              message: "Failed to update API key",
-            }),
-          )
-        }
-
-        const decryptResult = decryptApiKey(
-          input.apiKey ?? existingKeys.value[keyIndex].apiKey,
-        )
-        const maskedKey = Result.isOk(decryptResult)
-          ? maskApiKey(decryptResult.value)
-          : "Error: Failed to decrypt"
-
-        return Result.ok({
-          ...updatedKey,
-          apiKey: maskedKey,
+      if (rateLimitCheck?.isLimited) {
+        throw new ORPCError("FORBIDDEN", {
+          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_UPDATE.windowMs / 60000)} minutes.`,
         })
-      })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
       }
 
-      return result.value
+      const settings = await userService.getUserSettings(context.session.id)
+
+      if (!settings?.apiKeys) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "No API keys found",
+        })
+      }
+
+      let existingKeys: ApiKeyConfig[]
+      try {
+        existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+      } catch (e) {
+        console.error(`Error parsing existing API keys:`, e)
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Failed to parse existing API keys",
+        })
+      }
+
+      const keyIndex = existingKeys.findIndex((key) => key.id === input.id)
+
+      if (keyIndex === -1) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `API key not found: ${input.id}`,
+        })
+      }
+
+      let encryptedApiKey: string = existingKeys[keyIndex].apiKey
+      if (input.apiKey) {
+        const encryptResult = encryptApiKey(input.apiKey)
+        if (!encryptResult) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "Failed to encrypt API key",
+          })
+        }
+        encryptedApiKey = encryptResult
+      }
+
+      const updatedKey: ApiKeyConfig = {
+        ...existingKeys[keyIndex],
+        ...input,
+        apiKey: encryptedApiKey,
+        updatedAt: new Date().toISOString(),
+      }
+
+      const updatedKeys = [...existingKeys]
+      updatedKeys[keyIndex] = updatedKey
+
+      await userService.upsertUserSettings(context.session.id, {
+        apiKeys: updatedKeys,
+      })
+
+      const decryptedKey = decryptApiKey(
+        input.apiKey ?? existingKeys[keyIndex].apiKey,
+      )
+      const maskedKey = decryptedKey
+        ? maskApiKey(decryptedKey)
+        : "Error: Failed to decrypt"
+
+      return {
+        ...updatedKey,
+        apiKey: maskedKey,
+      }
     }),
 
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      // eslint-disable-next-line require-yield
-      const result = await Result.gen(async function* () {
-        const rateLimitKey = `${context.session.id}:api-key:delete`
-        const rateLimitResult = await checkRateLimit(
-          () => context.redis.getRedisClient(),
-          rateLimitKey,
-          RATE_LIMITS.API_KEY_DELETE.maxRequests,
-          RATE_LIMITS.API_KEY_DELETE.windowMs,
-        )
+      const rateLimitKey = `${context.session.id}:api-key:delete`
+      const rateLimitResult = await checkRateLimit(
+        () => context.redis.getRedisClient(),
+        rateLimitKey,
+        RATE_LIMITS.API_KEY_DELETE.maxRequests,
+        RATE_LIMITS.API_KEY_DELETE.windowMs,
+      )
 
-        const rateLimitCheck = rateLimitResult.match({
-          ok: (v) => v,
-          err: () => ({
+      const rateLimitCheck = rateLimitResult.ok
+        ? rateLimitResult.value
+        : {
             isLimited: false,
             remaining: RATE_LIMITS.API_KEY_DELETE.maxRequests,
-          }),
+          }
+
+      if (rateLimitCheck?.isLimited) {
+        throw new ORPCError("FORBIDDEN", {
+          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_DELETE.windowMs / 60000)} minutes.`,
         })
-
-        if (rateLimitCheck.isLimited) {
-          return Result.err(
-            new RateLimitExceededError({
-              operation: "delete-api-key",
-              remaining: rateLimitCheck.remaining,
-            }),
-          )
-        }
-
-        const settingsResult = await userService.getUserSettings(
-          context.session.id,
-        )
-
-        const settings = settingsResult.match({
-          ok: (v) => v,
-          err: () => null,
-        })
-
-        if (!settings?.apiKeys) {
-          return Result.err(
-            new ApiKeyNotFoundError({
-              message: "No API keys found",
-            }),
-          )
-        }
-
-        const existingKeys = Result.try({
-          try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
-          catch: (e) => {
-            logger.error(`Error parsing API keys: ${formatError(e)}`)
-            return Result.err(
-              new ApiKeyValidationError({
-                message: "Failed to parse API keys",
-              }),
-            )
-          },
-        })
-
-        if (existingKeys.isErr()) {
-          return Result.err(existingKeys.error)
-        }
-
-        const updatedKeys = existingKeys.value.filter(
-          (key) => key.id !== input.id,
-        )
-
-        if (updatedKeys.length === existingKeys.value.length) {
-          return Result.err(
-            new ApiKeyNotFoundError({
-              keyId: input.id,
-            }),
-          )
-        }
-
-        const upsertResult = await userService.upsertUserSettings(
-          context.session.id,
-          {
-            apiKeys: updatedKeys,
-          },
-        )
-
-        if (upsertResult.isErr()) {
-          return Result.err(
-            new ApiKeyValidationError({
-              message: "Failed to delete API key",
-            }),
-          )
-        }
-
-        return Result.ok({ success: true, id: input.id })
-      })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
       }
 
-      return result.value
+      const settings = await userService.getUserSettings(context.session.id)
+
+      if (!settings?.apiKeys) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "No API keys found",
+        })
+      }
+
+      let existingKeys: ApiKeyConfig[]
+      try {
+        existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+      } catch (e) {
+        console.error(`Error parsing API keys:`, e)
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Failed to parse API keys",
+        })
+      }
+
+      const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
+
+      if (updatedKeys.length === existingKeys.length) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `API key not found: ${input.id}`,
+        })
+      }
+
+      await userService.upsertUserSettings(context.session.id, {
+        apiKeys: updatedKeys,
+      })
+
+      return { success: true, id: input.id }
     }),
 
   getApiKeyStats: adminProcedure.handler(async ({ context }) => {
-    const settingsResult = await userService.getUserSettings(context.session.id)
-
-    const settings = settingsResult.match({
-      ok: (v) => v,
-      err: () => null,
-    })
+    const settings = await userService.getUserSettings(context.session.id)
 
     let activeKeys = 0
 
     if (settings?.apiKeys) {
-      const parseResult = Result.try({
-        try: () => apiKeyConfigSchema.array().parse(settings.apiKeys),
-        catch: () => null,
-      })
-
-      if (parseResult.isOk() && parseResult.value) {
-        activeKeys = parseResult.value.filter(
-          (key) => key.status === "active",
-        ).length
-      } else {
-        logger.error("Error parsing API keys")
+      try {
+        const parsedKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+        activeKeys = parsedKeys.filter((key) => key.status === "active").length
+      } catch {
+        console.error("Error parsing API keys")
       }
     }
 
@@ -704,69 +467,50 @@ export const userRouter = {
   }),
 
   cancelSubscription: protectedProcedure.handler(async ({ context }) => {
-    const subscriptionResult = await subscriptionService.getSubscription(
+    const subscription = await subscriptionService.getSubscription(
       context.session.id,
     )
 
-    if (subscriptionResult.isErr()) {
-      return handleProcedureError(subscriptionResult)
-    }
-
-    const subscription = subscriptionResult.value
-
     if (!subscription || subscription.tier === "free") {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "subscription",
-            message: "No active paid subscription found",
-          }),
-        ),
-      )
+      throw new ORPCError("BAD_REQUEST", {
+        message: "No active paid subscription found",
+      })
     }
 
     if (subscription.status !== "active") {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "subscription",
-            message: `Subscription is already ${subscription.status}`,
-          }),
-        ),
-      )
+      throw new ORPCError("BAD_REQUEST", {
+        message: `Subscription is already ${subscription.status}`,
+      })
     }
 
     if (subscription.cancelAtPeriodEnd) {
-      return handleProcedureError(
-        Result.err(
-          new ValidationError({
-            field: "subscription",
-            message: "Subscription is already set to cancel at period end",
-          }),
-        ),
-      )
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Subscription is already set to cancel at period end",
+      })
     }
 
-    const cancelResult = await subscriptionService.cancelSubscription(
-      context.session.id,
-    )
-
-    if (cancelResult.isErr()) {
-      logger.error(
-        `Failed to cancel subscription for user ${context.session.id}: ${cancelResult.error.message}`,
+    try {
+      const cancelResult = await subscriptionService.cancelSubscription(
+        context.session.id,
       )
-      return handleProcedureError(cancelResult)
-    }
 
-    logger.info(
-      `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.value.currentPeriodEnd}`,
-    )
+      console.info(
+        `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.currentPeriodEnd}`,
+      )
 
-    return {
-      success: true,
-      message:
-        "Your subscription has been cancelled and will end at the end of the current billing period",
-      currentPeriodEnd: cancelResult.value.currentPeriodEnd,
+      return {
+        success: true,
+        message:
+          "Your subscription has been cancelled and will end at the end of the current billing period",
+        currentPeriodEnd: cancelResult.currentPeriodEnd,
+      }
+    } catch (error) {
+      console.error(
+        `Failed to cancel subscription for user ${context.session.id}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to cancel subscription",
+      })
     }
   }),
 }

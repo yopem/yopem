@@ -1,49 +1,34 @@
-import { Result } from "better-result"
 import { asc, eq, inArray } from "drizzle-orm"
 
 import type { SelectCategory } from "../schema/categories.ts"
 
-import { DatabaseOperationError } from "../errors.ts"
 import { db } from "../index.ts"
 import { categoriesTable } from "../schema/index.ts"
 import { generateUniqueCategorySlug } from "./slug.ts"
 
 export const listCategories = (): Promise<
-  Result<
-    {
-      id: string
-      name: string
-      slug: string
-      description: string | null
-    }[],
-    DatabaseOperationError
-  >
+  {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+  }[]
 > => {
-  return Result.tryPromise({
-    try: () => {
-      return db
-        .select({
-          id: categoriesTable.id,
-          name: categoriesTable.name,
-          slug: categoriesTable.slug,
-          description: categoriesTable.description,
-        })
-        .from(categoriesTable)
-        .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "categories",
-        cause: e,
-      }),
-  })
+  return db
+    .select({
+      id: categoriesTable.id,
+      name: categoriesTable.name,
+      slug: categoriesTable.slug,
+      description: categoriesTable.description,
+    })
+    .from(categoriesTable)
+    .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
 }
 
 export const createCategory = async (input: {
   name: string
   description?: string
-}): Promise<Result<SelectCategory, DatabaseOperationError>> => {
+}): Promise<SelectCategory> => {
   const slug = await generateUniqueCategorySlug(input.name)
 
   const [category] = await db
@@ -52,23 +37,17 @@ export const createCategory = async (input: {
     .returning()
 
   if (!category) {
-    return Result.err(
-      new DatabaseOperationError({
-        operation: "insert",
-        table: "categories",
-        cause: new Error("Insert returned no rows"),
-      }),
-    )
+    throw new Error("Insert returned no rows")
   }
 
-  return Result.ok(category)
+  return category
 }
 
 export const updateCategory = async (input: {
   id: string
   name: string
   description?: string
-}): Promise<Result<SelectCategory, DatabaseOperationError>> => {
+}): Promise<SelectCategory> => {
   const slug = await generateUniqueCategorySlug(input.name, input.id)
 
   const [category] = await db
@@ -78,51 +57,21 @@ export const updateCategory = async (input: {
     .returning()
 
   if (!category) {
-    return Result.err(
-      new DatabaseOperationError({
-        operation: "update",
-        table: "categories",
-        cause: new Error("Update returned no rows"),
-      }),
-    )
+    throw new Error("Update returned no rows")
   }
 
-  return Result.ok(category)
+  return category
 }
 
-export const deleteCategory = (
-  id: string,
-): Promise<Result<void, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "delete",
-        table: "categories",
-        cause: e,
-      }),
-  })
+export const deleteCategory = async (id: string): Promise<void> => {
+  await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
 }
 
-export const validateCategoryIds = (
-  ids: string[],
-): Promise<Result<boolean, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      if (ids.length === 0) return true
-      const found = await db
-        .select({ id: categoriesTable.id })
-        .from(categoriesTable)
-        .where(inArray(categoriesTable.id, ids))
-      return found.length === ids.length
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "select",
-        table: "categories",
-        cause: e,
-      }),
-  })
+export const validateCategoryIds = async (ids: string[]): Promise<boolean> => {
+  if (ids.length === 0) return true
+  const found = await db
+    .select({ id: categoriesTable.id })
+    .from(categoriesTable)
+    .where(inArray(categoriesTable.id, ids))
+  return found.length === ids.length
 }

@@ -1,9 +1,7 @@
-import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
 import { env } from "env"
-import { formatError, logger } from "logger"
 import { createCustomId } from "shared/custom-id"
 
 import {
@@ -16,7 +14,7 @@ import {
 
 const databaseUrl = env.DATABASE_URL
 if (!databaseUrl) {
-  logger.error("DATABASE_URL environment variable is not set")
+  console.error("DATABASE_URL environment variable is not set")
   process.exit(1)
 }
 
@@ -30,7 +28,7 @@ const createSlug = (name: string): string => {
 }
 
 async function clearExistingTools() {
-  logger.info("🗑️  Clearing existing demo tools...")
+  console.info("🗑️  Clearing existing demo tools...")
 
   const demoToolSlugs = [
     "article-summarizer",
@@ -46,42 +44,32 @@ async function clearExistingTools() {
     "comprehensive-content-generator",
   ]
 
-  const result = await Result.tryPromise({
-    try: async () => {
-      for (const slug of demoToolSlugs) {
-        const tools = await db
-          .select({ id: toolsTable.id })
-          .from(toolsTable)
-          .where(eq(toolsTable.slug, slug))
+  try {
+    for (const slug of demoToolSlugs) {
+      const tools = await db
+        .select({ id: toolsTable.id })
+        .from(toolsTable)
+        .where(eq(toolsTable.slug, slug))
 
-        for (const tool of tools) {
-          await db
-            .delete(toolCategoriesTable)
-            .where(eq(toolCategoriesTable.toolId, tool.id))
-          await db
-            .delete(toolTagsTable)
-            .where(eq(toolTagsTable.toolId, tool.id))
-        }
-
-        await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
+      for (const tool of tools) {
+        await db
+          .delete(toolCategoriesTable)
+          .where(eq(toolCategoriesTable.toolId, tool.id))
+        await db.delete(toolTagsTable).where(eq(toolTagsTable.toolId, tool.id))
       }
-      return "cleared"
-    },
-    catch: (error) => {
-      logger.warn(
-        `⚠️  No existing tools to clear or error occurred: ${formatError(error)}`,
-      )
-      return "failed"
-    },
-  })
 
-  if (result.isOk()) {
-    logger.info("✅ Cleared existing demo tools")
+      await db.delete(toolsTable).where(eq(toolsTable.slug, slug))
+    }
+    console.info("✅ Cleared existing demo tools")
+  } catch (error) {
+    console.warn(
+      `⚠️  No existing tools to clear or error occurred: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 
 async function seedCategories() {
-  logger.info("🌱 Seeding categories...")
+  console.info("🌱 Seeding categories...")
 
   const categories = [
     {
@@ -131,12 +119,12 @@ async function seedCategories() {
 
     if (existing) {
       createdCategories[category.slug] = existing.id
-      logger.info(`✓ Category exists: ${category.name}`)
+      console.info(`✓ Category exists: ${category.name}`)
     } else {
       const id = createCustomId()
       await db.insert(categoriesTable).values({ id, ...category })
       createdCategories[category.slug] = id
-      logger.info(`✅ Seeded category: ${category.name}`)
+      console.info(`✅ Seeded category: ${category.name}`)
     }
   }
 
@@ -144,7 +132,7 @@ async function seedCategories() {
 }
 
 async function seedTags() {
-  logger.info("🌱 Seeding tags...")
+  console.info("🌱 Seeding tags...")
 
   const tags = [
     { name: "Text Processing", slug: "text-processing" },
@@ -169,12 +157,12 @@ async function seedTags() {
 
     if (existing) {
       createdTags[tag.slug] = existing.id
-      logger.info(`✓ Tag exists: ${tag.name}`)
+      console.info(`✓ Tag exists: ${tag.name}`)
     } else {
       const id = createCustomId()
       await db.insert(tagsTable).values({ id, ...tag })
       createdTags[tag.slug] = id
-      logger.info(`✅ Seeded tag: ${tag.name}`)
+      console.info(`✅ Seeded tag: ${tag.name}`)
     }
   }
 
@@ -182,7 +170,7 @@ async function seedTags() {
 }
 
 async function seedTools() {
-  logger.info("🌱 Seeding tools...")
+  console.info("🌱 Seeding tools...")
 
   const categories = await seedCategories()
   const tags = await seedTags()
@@ -621,50 +609,40 @@ async function seedTools() {
     },
   ]
 
-  const result = await Result.tryPromise({
-    try: async () => {
-      await clearExistingTools()
+  try {
+    await clearExistingTools()
 
-      for (const tool of tools) {
-        await db.insert(toolsTable).values(tool)
-        logger.info(`✅ Seeded: ${tool.name}`)
-      }
+    for (const tool of tools) {
+      await db.insert(toolsTable).values(tool)
+      console.info(`✅ Seeded: ${tool.name}`)
+    }
 
-      logger.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
-      logger.info("\nTools created:")
-      tools.forEach((tool, index) => {
-        logger.info(
-          `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
-        )
-      })
-      return "success"
-    },
-    catch: (error) => {
-      logger.error(`❌ Error seeding tools: ${formatError(error)}`)
-      return error
-    },
-  })
-
-  return result
+    console.info(`\n🎉 Successfully seeded ${tools.length} tools!`)
+    console.info("\nTools created:")
+    tools.forEach((tool, index) => {
+      console.info(
+        `${index + 1}. ${tool.name} (${tool.inputVariable.map((v) => v.type).join(", ")} → ${tool.outputFormat})`,
+      )
+    })
+  } catch (error) {
+    console.error(
+      `❌ Error seeding tools: ${error instanceof Error ? error.message : String(error)}`,
+    )
+    throw error
+  }
 }
 
 async function runSeed() {
-  const result = await Result.tryPromise({
-    try: async () => {
-      await seedTools()
-      logger.info("\n✨ Seeding completed successfully!")
-      return "success"
-    },
-    catch: (error) => {
-      logger.error(`\n💥 Seeding failed: ${formatError(error)}`)
-      return error
-    },
-  })
-
-  if (result.isErr()) {
+  try {
+    await seedTools()
+    console.info("\n✨ Seeding completed successfully!")
+    process.exit(0)
+  } catch (error) {
+    console.error(
+      `\n💥 Seeding failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
     process.exit(1)
   }
-  process.exit(0)
 }
 
 runSeed()

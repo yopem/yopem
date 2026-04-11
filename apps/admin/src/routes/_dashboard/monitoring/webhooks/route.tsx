@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { Result } from "better-result"
 import { BarChartIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
 import { lazy, Suspense, useEffect, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
@@ -15,7 +14,6 @@ import TimeRangeToggle, {
 import WebhookFilterToggle, {
   type EventType,
 } from "@/components/monitoring/webhook-filter-toggle"
-import { WebhookMetricsError } from "@/lib/errors"
 
 const WebhookEventsChart = lazy(
   () => import("@/components/monitoring/webhook-events-chart"),
@@ -102,36 +100,25 @@ const WebhooksPage = () => {
       dispatch({ type: "FETCH_START" })
       const eventTypeParam = eventType === "all" ? undefined : eventType
 
-      const result = await Result.tryPromise({
-        try: async () => {
-          const data = await queryApi.admin.getWebhookMetricsHistory.call({
-            eventType: eventTypeParam,
-            timeRange,
+      try {
+        const data = await queryApi.admin.getWebhookMetricsHistory.call({
+          eventType: eventTypeParam,
+          timeRange,
+        })
+        if (!cancelled) {
+          dispatch({ type: "FETCH_SUCCESS", payload: data })
+        }
+      } catch (error) {
+        if (!cancelled) {
+          dispatch({
+            type: "FETCH_ERROR",
+            payload:
+              error instanceof Error
+                ? error.message
+                : "Failed to load webhook metrics",
           })
-          return data
-        },
-        catch: (error) =>
-          new WebhookMetricsError({
-            message: "Failed to load webhook metrics",
-            cause: error,
-          }),
-      })
-
-      result.match({
-        ok: (data) => {
-          if (!cancelled) {
-            dispatch({ type: "FETCH_SUCCESS", payload: data })
-          }
-        },
-        err: (error) => {
-          if (!cancelled) {
-            dispatch({
-              type: "FETCH_ERROR",
-              payload: error.message,
-            })
-          }
-        },
-      })
+        }
+      }
     }
 
     void loadMetrics()

@@ -2,7 +2,6 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
 import { appEnv, databaseUrl } from "env/hono"
-import { logger } from "logger"
 
 import * as schema from "./schema/index.ts"
 
@@ -14,13 +13,15 @@ const pool = new Pool({
 })
 
 pool.on("error", (error: Error) => {
-  logger.error(`Unexpected error on idle database connection: ${error.message}`)
+  console.error(
+    `Unexpected error on idle database connection: ${error.message}`,
+  )
   logPoolMetrics()
 })
 
 pool.on("connect", () => {
   if (appEnv === "development") {
-    logger.info("New database connection established")
+    console.info("New database connection established")
   }
 })
 
@@ -39,7 +40,7 @@ function getPoolMetrics() {
 
 function logPoolMetrics() {
   const metrics = getPoolMetrics()
-  logger.info(
+  console.info(
     `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,
   )
 }

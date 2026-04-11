@@ -1,5 +1,4 @@
 import { Webhooks } from "@polar-sh/hono"
-import { Result } from "better-result"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { z } from "zod"
@@ -7,7 +6,6 @@ import { z } from "zod"
 import { redisCache } from "cache"
 import { db } from "db"
 import { polarCheckoutSessionsTable, polarPaymentEventsTable } from "db/schema"
-import { logger } from "logger"
 import { calculateCreditsFromAmount } from "payments/credit-calculation"
 import { grantCredits } from "payments/grant-credits"
 import { refundCredits } from "payments/refund-credits"
@@ -34,9 +32,9 @@ let redisInitialized = false
 
 async function ensureRedisInitialized() {
   if (!redisInitialized) {
-    const redisResult = await redisCache.getRedisClient()
-    if (redisResult.isOk()) {
-      WebhookMonitor.setRedisClient(redisResult.value)
+    const redis = await redisCache.getRedisClient()
+    if (redis) {
+      WebhookMonitor.setRedisClient(redis)
       redisInitialized = true
     }
   }
@@ -61,87 +59,67 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
   await ensureRedisInitialized()
   const order = payload.data
 
-  const result = await Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "order.paid",
+      polarEventId: createCustomId(),
+      payload: JSON.stringify(payload),
+    })
+
+    const metadataParse = webhookOrderMetadataSchema.safeParse(order.metadata)
+    if (!metadataParse.success) {
+      console.error(
+        { orderId: order.id, error: metadataParse.error.format() },
+        "Invalid webhook order metadata",
+      )
+      return
+    }
+
+    const productId = order.productId ?? ""
+    const { userId, amount: amountFromMetadata, userName } = metadataParse.data
+
+    const amountInDollars = Number.parseFloat(amountFromMetadata)
+    const creditsGranted = calculateCreditsFromAmount(amountInDollars)
+
+    const grantResult = await grantCredits({
+      userId,
+      userName,
+      polarPaymentId: order.id,
+      polarCustomerId: order.customerId ?? undefined,
+      amount: String(order.totalAmount / 100),
+      currency: order.currency,
+      productId,
+      creditsGranted,
+    })
+
+    if ("alreadyProcessed" in grantResult && grantResult.alreadyProcessed) {
+      WebhookMonitor.detectDuplicateWebhook({
         eventType: "order.paid",
-        polarEventId: createCustomId(),
-        payload: JSON.stringify(payload),
+        orderId: order.id,
+        isProcessed: true,
       })
+      console.info(`Order already processed (idempotent): orderId=${order.id}`)
+      return
+    }
 
-      const metadataParse = webhookOrderMetadataSchema.safeParse(order.metadata)
-      if (!metadataParse.success) {
-        logger.error(
-          { orderId: order.id, error: metadataParse.error.format() },
-          "Invalid webhook order metadata",
-        )
-        return
-      }
+    if (order.checkoutId) {
+      await db
+        .update(polarCheckoutSessionsTable)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId))
+    }
 
-      const productId = order.productId ?? ""
-      const {
-        userId,
-        amount: amountFromMetadata,
-        userName,
-      } = metadataParse.data
-
-      const amountInDollars = Number.parseFloat(amountFromMetadata)
-      const creditsGranted = calculateCreditsFromAmount(amountInDollars)
-
-      const grantResult = await grantCredits({
-        userId,
-        userName,
-        polarPaymentId: order.id,
-        polarCustomerId: order.customerId ?? undefined,
-        amount: String(order.totalAmount / 100),
-        currency: order.currency,
-        productId,
-        creditsGranted,
-      })
-
-      await grantResult.match({
-        ok: async (result) => {
-          if (result.alreadyProcessed) {
-            WebhookMonitor.detectDuplicateWebhook({
-              eventType: "order.paid",
-              orderId: order.id,
-              isProcessed: true,
-            })
-            logger.info(
-              `Order already processed (idempotent): orderId=${order.id}`,
-            )
-            return
-          }
-
-          if (order.checkoutId) {
-            await db
-              .update(polarCheckoutSessionsTable)
-              .set({ status: "completed", updatedAt: new Date() })
-              .where(
-                eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId),
-              )
-          }
-
-          logger.info(
-            `Order paid processed successfully: orderId=${order.id}, userId=${userId}, credits=${creditsGranted}`,
-          )
-        },
-        err: (error) => {
-          throw error
-        },
-      })
-    },
-    catch: (error) =>
-      new WebhookHandlerError({
-        operation: "order.paid",
-        cause: error,
-      }),
-  })
-
-  if (Result.isError(result)) {
-    logger.error(
-      `Error processing order paid webhook: orderId=${order.id}, error=${result.error.message}`,
+    console.info(
+      `Order paid processed successfully: orderId=${order.id}, userId=${userId}, credits=${creditsGranted}`,
+    )
+  } catch (error) {
+    const err = new WebhookHandlerError({
+      operation: "order.paid",
+      cause: error,
+    })
+    console.error(
+      `Error processing order paid webhook: orderId=${order.id}, error=${err.message}`,
     )
   }
 }
@@ -150,60 +128,48 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
   await ensureRedisInitialized()
   const order = payload.data
 
-  const result = await Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "order.refunded",
+      polarEventId: createCustomId(),
+      payload: JSON.stringify(payload),
+    })
+
+    WebhookMonitor.detectAnomalousRefund({
+      refundAmount: (order.refundedAmount ?? 0) / 100,
+      totalAmount: order.totalAmount / 100,
+      orderId: order.id,
+    })
+
+    const refundResult = await refundCredits({
+      polarPaymentId: order.id,
+      refundAmount: order.refundedAmount ?? 0,
+    })
+
+    if (refundResult.alreadyProcessed) {
+      WebhookMonitor.detectDuplicateWebhook({
         eventType: "order.refunded",
-        polarEventId: createCustomId(),
-        payload: JSON.stringify(payload),
-      })
-
-      WebhookMonitor.detectAnomalousRefund({
-        refundAmount: (order.refundedAmount ?? 0) / 100,
-        totalAmount: order.totalAmount / 100,
         orderId: order.id,
+        isProcessed: true,
       })
+      console.info(
+        `Order refund already processed (idempotent): orderId=${order.id}`,
+      )
+      return
+    }
 
-      const refundResult = await refundCredits({
-        polarPaymentId: order.id,
-        refundAmount: order.refundedAmount ?? 0,
-      })
-
-      await refundResult.match({
-        ok: (result) => {
-          if (result.alreadyProcessed) {
-            WebhookMonitor.detectDuplicateWebhook({
-              eventType: "order.refunded",
-              orderId: order.id,
-              isProcessed: true,
-            })
-            logger.info(
-              `Order refund already processed (idempotent): orderId=${order.id}`,
-            )
-            return
-          }
-
-          const refundType = result.isPartialRefund ? "partial" : "full"
-          logger.info(
-            `Order ${refundType} refund processed successfully: orderId=${order.id}, credits=${result.creditsRefunded}`,
-          )
-        },
-        err: (error) => {
-          throw error
-        },
-      })
-    },
-    catch: (error) =>
-      new WebhookHandlerError({
-        operation: "order.refunded",
-        cause: error,
-      }),
-  })
-
-  if (Result.isError(result)) {
-    logger.error(
-      `Error processing order refunded webhook: orderId=${order.id}, error=${result.error.message}`,
+    const refundType = refundResult.isPartialRefund ? "partial" : "full"
+    console.info(
+      `Order ${refundType} refund processed successfully: orderId=${order.id}, credits=${refundResult.creditsRefunded}`,
+    )
+  } catch (error) {
+    const err = new WebhookHandlerError({
+      operation: "order.refunded",
+      cause: error,
+    })
+    console.error(
+      `Error processing order refunded webhook: orderId=${order.id}, error=${err.message}`,
     )
   }
 }

@@ -1,50 +1,30 @@
 "use client"
 
-import { Result } from "better-result"
-
 import { Button } from "ui/button"
 
 import { loginFn } from "@/lib/auth"
-import { AuthRedirectError } from "@/lib/errors"
 
 const LoginButton = () => {
   const handleLogin = async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        await loginFn()
-        return { success: true }
-      },
-      catch: (error) => {
-        if (error && typeof error === "object") {
-          const err = error as {
-            status?: number
-            href?: string
-            options?: { href?: string }
-          }
-          if (err.status === 307) {
-            const redirectUrl = err.href || err.options?.href
-            if (redirectUrl) {
-              return new AuthRedirectError({
-                message: `Redirect required to ${redirectUrl}`,
-                redirectUrl,
-              })
-            }
+    try {
+      await loginFn()
+    } catch (error) {
+      if (error && typeof error === "object") {
+        const err = error as {
+          status?: number
+          href?: string
+          options?: { href?: string }
+        }
+        if (err.status === 307) {
+          const redirectUrl = err.href || err.options?.href
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+            return
           }
         }
-        return error
-      },
-    })
-
-    result.match({
-      ok: () => void 0,
-      err: (error) => {
-        if (error instanceof AuthRedirectError) {
-          window.location.href = error.redirectUrl
-        } else {
-          throw error
-        }
-      },
-    })
+      }
+      throw error
+    }
   }
 
   return (

@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { getOrCreateSubscription } from "db/services/subscriptions"
 
 import type { SubscriptionTier } from "./subscription-plans"
@@ -22,14 +20,9 @@ export interface Entitlements {
 
 export const getEntitlements = async (
   userId: string,
-): Promise<Result<Entitlements, Error>> => {
-  const subscriptionResult = await getOrCreateSubscription(userId)
+): Promise<Entitlements> => {
+  const subscription = await getOrCreateSubscription(userId)
 
-  if (subscriptionResult.isErr()) {
-    return Result.err(subscriptionResult.error)
-  }
-
-  const subscription = subscriptionResult.value
   const planConfig = getPlanConfig(subscription.tier)
   const limits = getTierLimits(subscription.tier)
 
@@ -43,7 +36,7 @@ export const getEntitlements = async (
     currentPeriodEnd: subscription.currentPeriodEnd,
   }
 
-  return Result.ok(entitlements)
+  return entitlements
 }
 
 export const checkFeatureAccess = (

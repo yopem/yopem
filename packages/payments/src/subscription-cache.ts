@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { redisCache } from "cache"
 import type { SelectSubscription } from "db/schema"
 
@@ -11,7 +9,7 @@ const getSubscriptionCacheKey = (userId: string): string => {
 
 export const getCachedSubscription = async (
   userId: string,
-): Promise<Result<SelectSubscription | null, Error>> => {
+): Promise<SelectSubscription | null> => {
   const cacheKey = getSubscriptionCacheKey(userId)
   return await redisCache.getCache<SelectSubscription>(cacheKey)
 }
@@ -19,24 +17,18 @@ export const getCachedSubscription = async (
 export const setCachedSubscription = async (
   userId: string,
   subscription: SelectSubscription,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const cacheKey = getSubscriptionCacheKey(userId)
-  return await redisCache.setCache(
-    cacheKey,
-    subscription,
-    SUBSCRIPTION_CACHE_TTL,
-  )
+  await redisCache.setCache(cacheKey, subscription, SUBSCRIPTION_CACHE_TTL)
 }
 
 export const invalidateSubscriptionCache = async (
   userId: string,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const cacheKey = getSubscriptionCacheKey(userId)
-  return await redisCache.deleteCache(cacheKey)
+  await redisCache.deleteCache(cacheKey)
 }
 
-export const invalidateAllSubscriptionsCache = async (): Promise<
-  Result<void, Error>
-> => {
-  return await redisCache.invalidatePattern("subscription:*")
+export const invalidateAllSubscriptionsCache = async (): Promise<void> => {
+  await redisCache.invalidatePattern("subscription:*")
 }

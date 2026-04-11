@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { db } from "db"
 import { polarPaymentEventsTable } from "db/schema"
 import {
@@ -7,7 +5,6 @@ import {
   getSubscription,
   updateSubscriptionByPolarId,
 } from "db/services/subscriptions"
-import { logger } from "logger"
 import { invalidateSubscriptionCache } from "payments/subscription-cache"
 import { createCustomId } from "shared/custom-id"
 
@@ -82,193 +79,154 @@ const tierFromProductId = (productId: string): SubscriptionTier => {
 
 export const handleSubscriptionCreated = async (
   payload: SubscriptionWebhookPayload,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const subscription = payload.data
 
-  return Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
-        eventType: "subscription.created",
-        polarEventId: subscription.id,
-        payload: JSON.stringify(payload),
-      })
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "subscription.created",
+      polarEventId: subscription.id,
+      payload: JSON.stringify(payload),
+    })
 
-      const metadata = parseSubscriptionMetadata(subscription.metadata)
-      if (!metadata) {
-        logger.error(
-          { subscriptionId: subscription.id },
-          "Missing userId in subscription metadata",
-        )
-        return
-      }
-
-      const existingResult = await getSubscription(metadata.userId)
-      if (existingResult.isOk() && existingResult.value) {
-        const existing = existingResult.value
-        if (existing.polarSubscriptionId === subscription.id) {
-          logger.info(
-            `Subscription already exists: subscriptionId=${subscription.id}`,
-          )
-          return
-        }
-      }
-
-      const tier = metadata.tier ?? tierFromProductId(subscription.productId)
-
-      const createResult = await createSubscription({
-        userId: metadata.userId,
-        polarSubscriptionId: subscription.id,
-        polarCustomerId: subscription.customerId,
-        tier,
-        status: mapPolarStatus(subscription.status),
-        currentPeriodStart: new Date(subscription.currentPeriodStart),
-        currentPeriodEnd: new Date(subscription.currentPeriodEnd),
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        cancelledAt: subscription.canceledAt
-          ? new Date(subscription.canceledAt)
-          : null,
-        source: "polar",
-      })
-
-      if (createResult.isErr()) {
-        throw createResult.error
-      }
-
-      await invalidateSubscriptionCache(metadata.userId)
-
-      logger.info(
-        `Subscription created: subscriptionId=${subscription.id}, userId=${metadata.userId}, tier=${tier}`,
+    const metadata = parseSubscriptionMetadata(subscription.metadata)
+    if (!metadata) {
+      console.error(
+        { subscriptionId: subscription.id },
+        "Missing userId in subscription metadata",
       )
-    },
-    catch: (error) =>
-      error instanceof Error
-        ? error
-        : new Error("Failed to create subscription"),
-  })
+      return
+    }
+
+    const existing = await getSubscription(metadata.userId)
+    if (existing && existing.polarSubscriptionId === subscription.id) {
+      console.info(
+        `Subscription already exists: subscriptionId=${subscription.id}`,
+      )
+      return
+    }
+
+    const tier = metadata.tier ?? tierFromProductId(subscription.productId)
+
+    await createSubscription({
+      userId: metadata.userId,
+      polarSubscriptionId: subscription.id,
+      polarCustomerId: subscription.customerId,
+      tier,
+      status: mapPolarStatus(subscription.status),
+      currentPeriodStart: new Date(subscription.currentPeriodStart),
+      currentPeriodEnd: new Date(subscription.currentPeriodEnd),
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      cancelledAt: subscription.canceledAt
+        ? new Date(subscription.canceledAt)
+        : null,
+      source: "polar",
+    })
+
+    await invalidateSubscriptionCache(metadata.userId)
+
+    console.info(
+      `Subscription created: subscriptionId=${subscription.id}, userId=${metadata.userId}, tier=${tier}`,
+    )
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to create subscription")
+  }
 }
 
 export const handleSubscriptionUpdated = async (
   payload: SubscriptionWebhookPayload,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const subscription = payload.data
 
-  return Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
-        eventType: "subscription.updated",
-        polarEventId: subscription.id,
-        payload: JSON.stringify(payload),
-      })
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "subscription.updated",
+      polarEventId: subscription.id,
+      payload: JSON.stringify(payload),
+    })
 
-      const updateResult = await updateSubscriptionByPolarId(subscription.id, {
-        status: mapPolarStatus(subscription.status),
-        currentPeriodStart: new Date(subscription.currentPeriodStart),
-        currentPeriodEnd: new Date(subscription.currentPeriodEnd),
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        cancelledAt: subscription.canceledAt
-          ? new Date(subscription.canceledAt)
-          : null,
-      })
+    const updated = await updateSubscriptionByPolarId(subscription.id, {
+      status: mapPolarStatus(subscription.status),
+      currentPeriodStart: new Date(subscription.currentPeriodStart),
+      currentPeriodEnd: new Date(subscription.currentPeriodEnd),
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      cancelledAt: subscription.canceledAt
+        ? new Date(subscription.canceledAt)
+        : null,
+    })
 
-      if (updateResult.isErr()) {
-        if (updateResult.error instanceof Error) {
-          throw updateResult.error
-        }
-        throw new Error("Failed to update subscription")
-      }
+    await invalidateSubscriptionCache(updated.userId)
 
-      const updated = updateResult.value
-      await invalidateSubscriptionCache(updated.userId)
-
-      logger.info(
-        `Subscription updated: subscriptionId=${subscription.id}, status=${subscription.status}`,
-      )
-    },
-    catch: (error) =>
-      error instanceof Error
-        ? error
-        : new Error("Failed to update subscription"),
-  })
+    console.info(
+      `Subscription updated: subscriptionId=${subscription.id}, status=${subscription.status}`,
+    )
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to update subscription")
+  }
 }
 
 export const handleSubscriptionCancelled = async (
   payload: SubscriptionWebhookPayload,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const subscription = payload.data
 
-  return Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
-        eventType: "subscription.cancelled",
-        polarEventId: subscription.id,
-        payload: JSON.stringify(payload),
-      })
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "subscription.cancelled",
+      polarEventId: subscription.id,
+      payload: JSON.stringify(payload),
+    })
 
-      const updateResult = await updateSubscriptionByPolarId(subscription.id, {
-        status: "cancelled",
-        cancelAtPeriodEnd: true,
-        cancelledAt: subscription.canceledAt
-          ? new Date(subscription.canceledAt)
-          : new Date(),
-      })
+    const updated = await updateSubscriptionByPolarId(subscription.id, {
+      status: "cancelled",
+      cancelAtPeriodEnd: true,
+      cancelledAt: subscription.canceledAt
+        ? new Date(subscription.canceledAt)
+        : new Date(),
+    })
 
-      if (updateResult.isErr()) {
-        if (updateResult.error instanceof Error) {
-          throw updateResult.error
-        }
-        throw new Error("Failed to cancel subscription")
-      }
+    await invalidateSubscriptionCache(updated.userId)
 
-      const updated = updateResult.value
-      await invalidateSubscriptionCache(updated.userId)
-
-      logger.info(`Subscription cancelled: subscriptionId=${subscription.id}`)
-    },
-    catch: (error) =>
-      error instanceof Error
-        ? error
-        : new Error("Failed to cancel subscription"),
-  })
+    console.info(`Subscription cancelled: subscriptionId=${subscription.id}`)
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to cancel subscription")
+  }
 }
 
 export const handleSubscriptionPaymentFailed = async (
   payload: SubscriptionWebhookPayload,
-): Promise<Result<void, Error>> => {
+): Promise<void> => {
   const subscription = payload.data
 
-  return Result.tryPromise({
-    try: async () => {
-      await db.insert(polarPaymentEventsTable).values({
-        id: createCustomId(),
-        eventType: "subscription.payment_failed",
-        polarEventId: subscription.id,
-        payload: JSON.stringify(payload),
-      })
+  try {
+    await db.insert(polarPaymentEventsTable).values({
+      id: createCustomId(),
+      eventType: "subscription.payment_failed",
+      polarEventId: subscription.id,
+      payload: JSON.stringify(payload),
+    })
 
-      const updateResult = await updateSubscriptionByPolarId(subscription.id, {
-        status: "past_due",
-      })
+    const updated = await updateSubscriptionByPolarId(subscription.id, {
+      status: "past_due",
+    })
 
-      if (updateResult.isErr()) {
-        if (updateResult.error instanceof Error) {
-          throw updateResult.error
-        }
-        throw new Error("Failed to update subscription payment status")
-      }
+    await invalidateSubscriptionCache(updated.userId)
 
-      const updated = updateResult.value
-      await invalidateSubscriptionCache(updated.userId)
-
-      logger.warn(
-        `Subscription payment failed: subscriptionId=${subscription.id}, userId=${updated.userId}`,
-      )
-    },
-    catch: (error) =>
-      error instanceof Error
-        ? error
-        : new Error("Failed to handle payment failure"),
-  })
+    console.warn(
+      `Subscription payment failed: subscriptionId=${subscription.id}, userId=${updated.userId}`,
+    )
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to handle payment failure")
+  }
 }

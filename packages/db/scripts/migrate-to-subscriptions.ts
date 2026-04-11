@@ -11,52 +11,38 @@ import {
   migrateExistingCreditsToSubscriptions,
   migrateSingleUser,
 } from "db/services/grandfathered-migration"
-import { logger } from "logger"
 
 const args = process.argv.slice(2)
 const isSingleUser = args.includes("--single-user")
 const userIdIndex = args.indexOf("--single-user")
 
 async function main() {
-  logger.info("Starting grandfathered migration...")
+  console.info("Starting grandfathered migration...")
 
   try {
     if (isSingleUser && userIdIndex !== -1 && args[userIdIndex + 1]) {
       const userId = args[userIdIndex + 1]
-      logger.info(`Migrating single user: ${userId}`)
+      console.info(`Migrating single user: ${userId}`)
 
       const result = await migrateSingleUser(userId)
 
-      if (result.isErr()) {
-        logger.error(
-          `Failed to migrate user ${userId}: ${result.error.message}`,
-        )
-        process.exit(1)
-      }
-
-      logger.info(`Successfully migrated user ${userId}:`)
-      logger.info(`  Tier: ${result.value.tier}`)
-      logger.info(`  Expires: ${result.value.expiresAt.toISOString()}`)
+      console.info(`Successfully migrated user ${userId}:`)
+      console.info(`  Tier: ${result.tier}`)
+      console.info(`  Expires: ${result.expiresAt.toISOString()}`)
     } else {
-      logger.info("Running batch migration for all users with credits...")
+      console.info("Running batch migration for all users with credits...")
 
-      const result = await migrateExistingCreditsToSubscriptions()
+      const { migratedCount, failedCount, errors } =
+        await migrateExistingCreditsToSubscriptions()
 
-      if (result.isErr()) {
-        logger.error(`Migration failed: ${result.error.message}`)
-        process.exit(1)
-      }
-
-      const { migratedCount, failedCount, errors } = result.value
-
-      logger.info("Migration complete!")
-      logger.info(`  Migrated: ${migratedCount} users`)
-      logger.info(`  Failed: ${failedCount} users`)
+      console.info("Migration complete!")
+      console.info(`  Migrated: ${migratedCount} users`)
+      console.info(`  Failed: ${failedCount} users`)
 
       if (errors.length > 0) {
-        logger.warn("Errors encountered:")
+        console.warn("Errors encountered:")
         for (const error of errors) {
-          logger.warn(`  User ${error.userId}: ${error.error}`)
+          console.warn(`  User ${error.userId}: ${error.error}`)
         }
       }
 
@@ -65,11 +51,11 @@ async function main() {
       }
     }
 
-    logger.info("Migration completed successfully!")
+    console.info("Migration completed successfully!")
     process.exit(0)
   } catch (error) {
-    logger.error(
-      `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
     )
     process.exit(1)
   }

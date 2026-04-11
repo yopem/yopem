@@ -1,12 +1,5 @@
 import type { Redis } from "ioredis"
 
-import { Result } from "better-result"
-
-import { logger } from "logger"
-
-import type { WebhookExecutionError } from "./errors.ts"
-
-import { WebhookMetricsError } from "./errors.ts"
 import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics.ts"
 
 interface WebhookMonitorMetrics {
@@ -34,28 +27,28 @@ export class WebhookMonitor {
     }
 
     if (metrics.status === "failure") {
-      logger.error(logData, `Webhook processing failed: ${metrics.eventType}`)
+      console.error(logData, `Webhook processing failed: ${metrics.eventType}`)
     } else if (metrics.status === "anomaly") {
-      logger.warn(logData, `Webhook anomaly detected: ${metrics.eventType}`)
+      console.warn(logData, `Webhook anomaly detected: ${metrics.eventType}`)
     } else {
-      logger.info(
+      console.info(
         logData,
         `Webhook processed successfully: ${metrics.eventType}`,
       )
     }
   }
 
-  static async trackWebhookExecution<T, E>(
+  static async trackWebhookExecution<T>(
     eventType: string,
     metadata: Record<string, unknown>,
-    handler: () => Promise<Result<T, E>>,
-  ): Promise<Result<T, E | WebhookExecutionError | WebhookMetricsError>> {
+    handler: () => Promise<T>,
+  ): Promise<T> {
     const startTime = Date.now()
 
-    const result = await handler()
-    const processingTimeMs = Date.now() - startTime
+    try {
+      const result = await handler()
+      const processingTimeMs = Date.now() - startTime
 
-    if (result.isOk()) {
       this.logWebhookEvent({
         eventType,
         status: "success",
@@ -64,52 +57,43 @@ export class WebhookMonitor {
       })
 
       if (this.metricsTracker) {
-        const metricsResult = await Result.tryPromise({
-          try: () =>
-            this.metricsTracker!.recordWebhookEvent(
-              eventType,
-              "success",
-              processingTimeMs,
-            ),
-          catch: (e) =>
-            new WebhookMetricsError({ operation: "record", cause: e }),
-        })
-
-        if (metricsResult.isErr()) {
-          return Result.err(metricsResult.error)
+        try {
+          await this.metricsTracker.recordWebhookEvent(
+            eventType,
+            "success",
+            processingTimeMs,
+          )
+        } catch (e) {
+          console.error("Failed to record webhook metrics:", e)
         }
       }
 
       return result
-    }
+    } catch (error) {
+      const processingTimeMs = Date.now() - startTime
 
-    const error = result.error
-    this.logWebhookEvent({
-      eventType,
-      status: "failure",
-      processingTimeMs,
-      errorMessage: String(error),
-      metadata,
-    })
+      this.logWebhookEvent({
+        eventType,
+        status: "failure",
+        processingTimeMs,
+        errorMessage: String(error),
+        metadata,
+      })
 
-    if (this.metricsTracker) {
-      const metricsResult = await Result.tryPromise({
-        try: () =>
-          this.metricsTracker!.recordWebhookEvent(
+      if (this.metricsTracker) {
+        try {
+          await this.metricsTracker.recordWebhookEvent(
             eventType,
             "failure",
             processingTimeMs,
-          ),
-        catch: (e) =>
-          new WebhookMetricsError({ operation: "record", cause: e }),
-      })
-
-      if (metricsResult.isErr()) {
-        return Result.err(metricsResult.error)
+          )
+        } catch (e) {
+          console.error("Failed to record webhook metrics:", e)
+        }
       }
-    }
 
-    return result
+      throw error
+    }
   }
 
   static detectAnomalousRefund(params: {
@@ -153,7 +137,7 @@ export class WebhookMonitor {
     const { eventType, orderId, isProcessed } = params
 
     if (isProcessed) {
-      logger.info(
+      console.info(
         { eventType, orderId },
         `Duplicate webhook detected (idempotent): ${eventType} for ${orderId}`,
       )

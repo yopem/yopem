@@ -4,7 +4,6 @@ import {
   S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3"
-import { Result, TaggedError } from "better-result"
 import { nanoid } from "nanoid"
 import sharp from "sharp"
 import { transliterate as tr } from "transliteration"
@@ -27,26 +26,32 @@ interface R2Config {
   publicUrl: string
 }
 
-export class StorageValidationError extends TaggedError(
-  "StorageValidationError",
-)<{
-  message: string
-}>() {}
+export class StorageValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "StorageValidationError"
+  }
+}
 
-export class StorageUploadError extends TaggedError("StorageUploadError")<{
-  message: string
+export class StorageUploadError extends Error {
   cause?: unknown
-}>() {}
 
-export class StorageDeleteError extends TaggedError("StorageDeleteError")<{
-  message: string
+  constructor(message: string, cause?: unknown) {
+    super(message)
+    this.name = "StorageUploadError"
+    this.cause = cause
+  }
+}
+
+export class StorageDeleteError extends Error {
   cause?: unknown
-}>() {}
 
-export type StorageError =
-  | StorageValidationError
-  | StorageUploadError
-  | StorageDeleteError
+  constructor(message: string, cause?: unknown) {
+    super(message)
+    this.name = "StorageDeleteError"
+    this.cause = cause
+  }
+}
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024
@@ -85,69 +90,39 @@ class R2Storage {
     this.publicUrl = config.publicUrl
   }
 
-  uploadImage(
-    buffer: Buffer,
-    _contentType: string,
-  ): Promise<Result<string, StorageValidationError | StorageUploadError>> {
+  async uploadImage(buffer: Buffer, _contentType: string): Promise<string> {
     if (buffer.length > MAX_IMAGE_SIZE) {
-      return Promise.resolve(
-        Result.err(
-          new StorageValidationError({
-            message: `Image size exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
-          }),
-        ),
+      throw new StorageValidationError(
+        `Image size exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
       )
     }
 
     const extension = this.validateImageMagicBytes(buffer)
     if (!extension) {
-      return Promise.resolve(
-        Result.err(
-          new StorageValidationError({ message: "Invalid image file type" }),
-        ),
-      )
+      throw new StorageValidationError("Invalid image file type")
     }
 
-    return Result.gen(
-      async function* (this: R2Storage) {
-        const processed = yield* await this.processImage(buffer)
-        const key = this.generateUniqueKey("images", "webp")
-        yield* await this.uploadWithRetry(processed, key, "image/webp")
-        return Result.ok(`${this.publicUrl}/${key}`)
-      }.bind(this),
-    )
+    const processed = await this.processImage(buffer)
+    const key = this.generateUniqueKey("images", "webp")
+    await this.uploadWithRetry(processed, key, "image/webp")
+    return `${this.publicUrl}/${key}`
   }
 
-  uploadVideo(
-    buffer: Buffer,
-    contentType: string,
-  ): Promise<Result<string, StorageValidationError | StorageUploadError>> {
+  async uploadVideo(buffer: Buffer, contentType: string): Promise<string> {
     if (buffer.length > MAX_VIDEO_SIZE) {
-      return Promise.resolve(
-        Result.err(
-          new StorageValidationError({
-            message: `Video size exceeds maximum allowed size of ${MAX_VIDEO_SIZE / 1024 / 1024}MB`,
-          }),
-        ),
+      throw new StorageValidationError(
+        `Video size exceeds maximum allowed size of ${MAX_VIDEO_SIZE / 1024 / 1024}MB`,
       )
     }
 
     const extension = this.validateVideoMagicBytes(buffer)
     if (!extension) {
-      return Promise.resolve(
-        Result.err(
-          new StorageValidationError({ message: "Invalid video file type" }),
-        ),
-      )
+      throw new StorageValidationError("Invalid video file type")
     }
 
-    return Result.gen(
-      async function* (this: R2Storage) {
-        const key = this.generateUniqueKey("videos", extension)
-        yield* await this.uploadWithRetry(buffer, key, contentType)
-        return Result.ok(`${this.publicUrl}/${key}`)
-      }.bind(this),
-    )
+    const key = this.generateUniqueKey("videos", extension)
+    await this.uploadWithRetry(buffer, key, contentType)
+    return `${this.publicUrl}/${key}`
   }
 
   private generateUniqueKey(
@@ -195,71 +170,55 @@ class R2Storage {
     return signature.every((byte, index) => buffer[index] === byte)
   }
 
-  private processImage(
-    buffer: Buffer,
-  ): Promise<Result<Buffer, StorageUploadError>> {
-    return Result.tryPromise({
-      try: () =>
-        sharp(buffer)
-          .resize({ width: 1920, withoutEnlargement: true })
-          .webp({ quality: 80 })
-          .toBuffer(),
-      catch: (e) =>
-        new StorageUploadError({
-          message: `Failed to process image: ${e instanceof Error ? e.message : "Unknown error"}`,
-          cause: e,
-        }),
-    })
+  private async processImage(buffer: Buffer): Promise<Buffer> {
+    try {
+      return await sharp(buffer)
+        .resize({ width: 1920, withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer()
+    } catch (e) {
+      throw new StorageUploadError(
+        `Failed to process image: ${e instanceof Error ? e.message : "Unknown error"}`,
+        e,
+      )
+    }
   }
 
-  private uploadSingle(
+  private async uploadSingle(
     buffer: Buffer,
     key: string,
     contentType: string,
-  ): Promise<Result<void, StorageUploadError>> {
-    return Result.tryPromise({
-      try: async () => {
-        const command = new PutObjectCommand({
-          Bucket: this.bucketName,
-          Key: key,
-          Body: buffer,
-          ContentType: contentType,
-        })
-        await this.client.send(command)
-      },
-      catch: (e) =>
-        new StorageUploadError({
-          message: `Failed to upload to R2: ${e instanceof Error ? e.message : "Unknown error"}`,
-          cause: e,
-        }),
-    })
+  ): Promise<void> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+      })
+      await this.client.send(command)
+    } catch (e) {
+      throw new StorageUploadError(
+        `Failed to upload to R2: ${e instanceof Error ? e.message : "Unknown error"}`,
+        e,
+      )
+    }
   }
 
-  private uploadWithRetry(
+  private async uploadWithRetry(
     buffer: Buffer,
     key: string,
     contentType: string,
-  ): Promise<Result<void, StorageUploadError>> {
-    return Result.gen(
-      async function* (this: R2Storage) {
-        const firstAttempt = yield* await this.uploadSingle(
-          buffer,
-          key,
-          contentType,
-        )
-        if (firstAttempt === undefined) {
-          return Result.ok(undefined)
-        }
+  ): Promise<void> {
+    try {
+      await this.uploadSingle(buffer, key, contentType)
+      return
+    } catch {
+      console.warn(`Upload failed, retrying in ${RETRY_DELAY_MS}ms...`)
+    }
 
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
-        const retryResult = yield* await this.uploadSingle(
-          buffer,
-          key,
-          contentType,
-        )
-        return Result.ok(retryResult)
-      }.bind(this),
-    )
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+    await this.uploadSingle(buffer, key, contentType)
   }
 
   classifyFileType(mimeType: string, filename: string): AssetType {
@@ -315,67 +274,56 @@ class R2Storage {
     return "others"
   }
 
-  uploadAsset(
+  async uploadAsset(
     buffer: Buffer,
     originalFilename: string,
     mimeType: string,
-  ): Promise<
-    Result<
-      { url: string; type: AssetType; size: number; key: string },
-      StorageUploadError
-    >
-  > {
-    return Result.gen(
-      async function* (this: R2Storage) {
-        const type = this.classifyFileType(mimeType, originalFilename)
+  ): Promise<{ url: string; type: AssetType; size: number; key: string }> {
+    const type = this.classifyFileType(mimeType, originalFilename)
 
-        let uploadBuffer = buffer
-        let uploadMimeType = mimeType
-        let extension = originalFilename.split(".").pop() ?? "bin"
+    let uploadBuffer = buffer
+    let uploadMimeType = mimeType
+    let extension = originalFilename.split(".").pop() ?? "bin"
 
-        if (type === "images") {
-          uploadBuffer = yield* await this.processImage(buffer)
-          uploadMimeType = "image/webp"
-          extension = "webp"
-        }
+    if (type === "images") {
+      uploadBuffer = await this.processImage(buffer)
+      uploadMimeType = "image/webp"
+      extension = "webp"
+    }
 
-        const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
-        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
-        const uniqueId = nanoid(6)
-        const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
-        const key = `${type}/${filename}`
+    const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
+    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
+    const uniqueId = nanoid(6)
+    const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
+    const key = `${type}/${filename}`
 
-        yield* await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
+    await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
 
-        const publicUrlWithProtocol = this.publicUrl.startsWith("http")
-          ? this.publicUrl
-          : `https://${this.publicUrl}`
+    const publicUrlWithProtocol = this.publicUrl.startsWith("http")
+      ? this.publicUrl
+      : `https://${this.publicUrl}`
 
-        return Result.ok({
-          url: `${publicUrlWithProtocol}/${key}`,
-          type,
-          size: uploadBuffer.length,
-          key,
-        })
-      }.bind(this),
-    )
+    return {
+      url: `${publicUrlWithProtocol}/${key}`,
+      type,
+      size: uploadBuffer.length,
+      key,
+    }
   }
 
-  deleteFile(key: string): Promise<Result<void, StorageDeleteError>> {
-    return Result.tryPromise({
-      try: async () => {
-        const command = new DeleteObjectCommand({
-          Bucket: this.bucketName,
-          Key: key,
-        })
-        await this.client.send(command)
-      },
-      catch: (e) =>
-        new StorageDeleteError({
-          message: `Failed to delete from R2: ${e instanceof Error ? e.message : "Unknown error"}`,
-          cause: e,
-        }),
-    })
+  async deleteFile(key: string): Promise<void> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      })
+      await this.client.send(command)
+    } catch (e) {
+      throw new StorageDeleteError(
+        `Failed to delete from R2: ${e instanceof Error ? e.message : "Unknown error"}`,
+        e,
+      )
+    }
   }
 }
 

@@ -26,7 +26,7 @@ interface ToolsTableProps {
   onToggleTool: (toolId: string) => void
   onDelete: (tool: { id: string; name: string }) => void
   duplicateMutation: UseMutationResult<
-    { id: string } | undefined,
+    { id: string } | null,
     Error,
     string,
     unknown

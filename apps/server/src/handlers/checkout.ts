@@ -1,5 +1,4 @@
 import { Polar } from "@polar-sh/sdk"
-import { Result, TaggedError } from "better-result"
 import { Hono } from "hono"
 
 import type { SessionUser } from "auth/types"
@@ -8,20 +7,7 @@ import {
   insertCheckoutSession,
   upsertPolarCustomer,
 } from "db/services/user"
-import { logger } from "logger"
 import { validateTopupAmount } from "payments/credit-calculation"
-
-export class CheckoutError extends TaggedError("CheckoutError")<{
-  message: string
-  cause?: unknown
-}>() {}
-
-export class CustomerCreationError extends TaggedError(
-  "CustomerCreationError",
-)<{
-  message: string
-  cause?: unknown
-}>() {}
 
 interface Env {
   Variables: {
@@ -70,97 +56,67 @@ checkoutRoute.get("/", async (c) => {
     }
 
     if (!priceId) {
-      logger.error(`Price ID not configured for tier: ${tier}`)
+      console.error(`Price ID not configured for tier: ${tier}`)
       return c.text("Subscription tier not available", 500)
     }
 
-    const customerResult = await Result.tryPromise({
-      try: async () => {
-        const userSettingsResult = await getUserSettings(session.id)
+    let polarCustomerId: string
+    try {
+      const userSettings = await getUserSettings(session.id)
 
-        if (Result.isOk(userSettingsResult)) {
-          const userSettings = userSettingsResult.value
-          if (userSettings.polarCustomerId) {
-            return { polarCustomerId: userSettings.polarCustomerId }
-          }
-        }
-
+      if (userSettings?.polarCustomerId) {
+        polarCustomerId = userSettings.polarCustomerId
+      } else {
         const customer = await polar.customers.create({
           email: session.email,
           metadata: { externalId: session.id },
         })
 
         await upsertPolarCustomer(session.id, customer.id)
-        return { polarCustomerId: customer.id }
-      },
-      catch: (error) =>
-        new CustomerCreationError({
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create customer",
-          cause: error,
-        }),
-    })
-
-    if (Result.isError(customerResult)) {
-      logger.error(
-        `Failed to create/get Polar customer: userId=${session.id}, error=${customerResult.error.message}`,
+        polarCustomerId = customer.id
+      }
+    } catch (error) {
+      console.error(
+        `Failed to create/get Polar customer: userId=${session.id}, error=${error instanceof Error ? error.message : String(error)}`,
       )
       return c.text("Internal Server Error", 500)
     }
 
-    const checkoutResult = await Result.tryPromise({
-      try: async () => {
-        const checkout = await polar.checkouts.create({
-          products: [priceId],
-          successUrl,
-          customerId: customerResult.value.polarCustomerId,
-          metadata: {
-            userId: session.id,
-            userName: session.username ?? session.name ?? session.email,
-            tier,
-            billingCycle,
-            type: "subscription",
-          },
-        })
-
-        const checkoutUrl = checkout.url
-        if (!checkoutUrl) {
-          return Result.err(
-            new CheckoutError({ message: "Checkout URL not available" }),
-          )
-        }
-
-        await insertCheckoutSession({
+    let checkoutUrl: string
+    try {
+      const checkout = await polar.checkouts.create({
+        products: [priceId],
+        successUrl,
+        customerId: polarCustomerId,
+        metadata: {
           userId: session.id,
-          checkoutId: checkout.id,
-          productId: priceId,
-          checkoutUrl,
-          amount: "0",
-        })
+          userName: session.username ?? session.name ?? session.email,
+          tier,
+          billingCycle,
+          type: "subscription",
+        },
+      })
 
-        return Result.ok(checkoutUrl)
-      },
-      catch: (error) =>
-        new CheckoutError({
-          message: error instanceof Error ? error.message : "Checkout failed",
-          cause: error,
-        }),
-    })
+      if (!checkout.url) {
+        throw new Error("Checkout URL not available")
+      }
+      checkoutUrl = checkout.url
 
-    if (Result.isError(checkoutResult)) {
-      logger.error(`Checkout error: ${checkoutResult.error.message}`)
+      await insertCheckoutSession({
+        userId: session.id,
+        checkoutId: checkout.id,
+        productId: priceId,
+        checkoutUrl,
+        amount: "0",
+      })
+    } catch (error) {
+      console.error(
+        `Checkout error: ${error instanceof Error ? error.message : String(error)}`,
+      )
       return c.text("Internal Server Error", 500)
     }
 
-    const urlResult = checkoutResult.value
-    if (Result.isError(urlResult)) {
-      logger.error(urlResult.error.message)
-      return c.text("Internal Server Error", 500)
-    }
-
-    return c.redirect(urlResult.value, 303)
+    return c.redirect(checkoutUrl, 303)
   }
 
   if (amount) {
@@ -174,93 +130,63 @@ checkoutRoute.get("/", async (c) => {
       return c.text(validation.error ?? "Invalid amount", 400)
     }
 
-    const customerResult = await Result.tryPromise({
-      try: async () => {
-        const userSettingsResult = await getUserSettings(session.id)
+    let polarCustomerId: string
+    try {
+      const userSettings = await getUserSettings(session.id)
 
-        if (Result.isOk(userSettingsResult)) {
-          const userSettings = userSettingsResult.value
-          if (userSettings.polarCustomerId) {
-            return { polarCustomerId: userSettings.polarCustomerId }
-          }
-        }
-
+      if (userSettings?.polarCustomerId) {
+        polarCustomerId = userSettings.polarCustomerId
+      } else {
         const customer = await polar.customers.create({
           email: session.email,
           metadata: { externalId: session.id },
         })
 
         await upsertPolarCustomer(session.id, customer.id)
-        return { polarCustomerId: customer.id }
-      },
-      catch: (error) =>
-        new CustomerCreationError({
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to create customer",
-          cause: error,
-        }),
-    })
-
-    if (Result.isError(customerResult)) {
-      logger.error(
-        `Failed to create/get Polar customer: userId=${session.id}, error=${customerResult.error.message}`,
+        polarCustomerId = customer.id
+      }
+    } catch (error) {
+      console.error(
+        `Failed to create/get Polar customer: userId=${session.id}, error=${error instanceof Error ? error.message : String(error)}`,
       )
       return c.text("Internal Server Error", 500)
     }
 
-    const checkoutResult = await Result.tryPromise({
-      try: async () => {
-        const checkout = await polar.checkouts.create({
-          products: [polarProductId],
-          amount: Math.round(amountNum * 100),
-          successUrl,
-          customerId: customerResult.value.polarCustomerId,
-          metadata: {
-            userId: session.id,
-            userName: session.username ?? session.name ?? session.email,
-            amount: String(amountNum),
-            auto_topup: String(autoTopup),
-          },
-        })
-
-        const checkoutUrl = checkout.url
-        if (!checkoutUrl) {
-          return Result.err(
-            new CheckoutError({ message: "Checkout URL not available" }),
-          )
-        }
-
-        await insertCheckoutSession({
+    let checkoutUrl: string
+    try {
+      const checkout = await polar.checkouts.create({
+        products: [polarProductId],
+        amount: Math.round(amountNum * 100),
+        successUrl,
+        customerId: polarCustomerId,
+        metadata: {
           userId: session.id,
-          checkoutId: checkout.id,
-          productId: polarProductId,
-          checkoutUrl,
+          userName: session.username ?? session.name ?? session.email,
           amount: String(amountNum),
-        })
+          auto_topup: String(autoTopup),
+        },
+      })
 
-        return Result.ok(checkoutUrl)
-      },
-      catch: (error) =>
-        new CheckoutError({
-          message: error instanceof Error ? error.message : "Checkout failed",
-          cause: error,
-        }),
-    })
+      if (!checkout.url) {
+        throw new Error("Checkout URL not available")
+      }
+      checkoutUrl = checkout.url
 
-    if (Result.isError(checkoutResult)) {
-      logger.error(`Checkout error: ${checkoutResult.error.message}`)
+      await insertCheckoutSession({
+        userId: session.id,
+        checkoutId: checkout.id,
+        productId: polarProductId,
+        checkoutUrl,
+        amount: String(amountNum),
+      })
+    } catch (error) {
+      console.error(
+        `Checkout error: ${error instanceof Error ? error.message : String(error)}`,
+      )
       return c.text("Internal Server Error", 500)
     }
 
-    const urlResult = checkoutResult.value
-    if (Result.isError(urlResult)) {
-      logger.error(urlResult.error.message)
-      return c.text("Internal Server Error", 500)
-    }
-
-    return c.redirect(urlResult.value, 303)
+    return c.redirect(checkoutUrl, 303)
   }
 
   return c.text("Missing required parameter: 'tier' or 'amount'", 400)

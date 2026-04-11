@@ -51,10 +51,6 @@
     "./services/subscription-admin": {
       "types": "./src/services/subscription-admin.ts",
       "default": "./src/services/subscription-admin.ts"
-    },
-    "./errors": {
-      "types": "./src/errors.ts",
-      "default": "./src/errors.ts"
     }
   },
   "scripts": {
@@ -69,11 +65,9 @@
     "db:migrate-subscriptions": "bun run with-env bun run scripts/migrate-to-subscriptions.ts"
   },
   "dependencies": {
-    "better-result": "^2.7.0",
     "drizzle-orm": "^0.45.2",
     "drizzle-zod": "^0.8.3",
     "env": "workspace:*",
-    "logger": "workspace:*",
     "pg": "^8.20.0",
     "shared": "workspace:*",
     "transliteration": "^2.6.1",

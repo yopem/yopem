@@ -1,125 +1,86 @@
-import { Result } from "better-result"
 import { and, desc, eq, sql } from "drizzle-orm"
 
 import type { SelectAdminSettings } from "../schema/admin-settings.ts"
+import type { SelectAsset } from "../schema/assets.ts"
 
-import { DatabaseOperationError, NotFoundError } from "../errors.ts"
 import { db } from "../index.ts"
 import { adminSettingsTable, assetsTable } from "../schema/index.ts"
 
-export const listAssets = (input: {
+export const listAssets = async (input: {
   limit: number
   cursor?: string
   type?: "images" | "videos" | "documents" | "archives" | "others"
-}): Promise<
-  Result<{ assets: SelectAsset[]; nextCursor?: string }, DatabaseOperationError>
-> => {
-  return Result.tryPromise({
-    try: async () => {
-      const conditions = []
+}): Promise<{ assets: SelectAsset[]; nextCursor?: string }> => {
+  const conditions = []
 
-      if (input.type) {
-        conditions.push(eq(assetsTable.type, input.type))
-      }
+  if (input.type) {
+    conditions.push(eq(assetsTable.type, input.type))
+  }
 
-      if (input.cursor) {
-        conditions.push(sql`${assetsTable.id} < ${input.cursor}`)
-      }
+  if (input.cursor) {
+    conditions.push(sql`${assetsTable.id} < ${input.cursor}`)
+  }
 
-      const assets = await db
-        .select()
-        .from(assetsTable)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(assetsTable.createdAt))
-        .limit(input.limit + 1)
+  const assets = await db
+    .select()
+    .from(assetsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(assetsTable.createdAt))
+    .limit(input.limit + 1)
 
-      let nextCursor: string | undefined = undefined
-      if (assets.length > input.limit) {
-        const nextItem = assets.pop()
-        nextCursor = nextItem?.id
-      }
+  let nextCursor: string | undefined = undefined
+  if (assets.length > input.limit) {
+    const nextItem = assets.pop()
+    nextCursor = nextItem?.id
+  }
 
-      return { assets, nextCursor }
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "list",
-        table: "assets",
-        cause: e,
-      }),
-  })
+  return { assets, nextCursor }
 }
 
-import type { SelectAsset } from "../schema/assets.ts"
-
-export const getAssetById = async (
-  id: string,
-): Promise<Result<SelectAsset, NotFoundError>> => {
+export const getAssetById = async (id: string): Promise<SelectAsset> => {
   const [asset] = await db
     .select()
     .from(assetsTable)
     .where(eq(assetsTable.id, id))
 
   if (!asset) {
-    return Result.err(new NotFoundError({ resource: "Asset", id }))
+    throw new Error(`Asset with id ${id} not found`)
   }
 
-  return Result.ok(asset)
+  return asset
 }
 
-export const insertAsset = (data: {
+export const insertAsset = async (data: {
   filename: string
   originalName: string
   type: "images" | "videos" | "documents" | "archives" | "others"
   size: number
   url: string
-}): Promise<Result<SelectAsset, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      const [asset] = await db.insert(assetsTable).values(data).returning()
+}): Promise<SelectAsset> => {
+  const [asset] = await db.insert(assetsTable).values(data).returning()
 
-      if (!asset) {
-        throw new Error("Insert returned no rows")
-      }
+  if (!asset) {
+    throw new Error("Insert returned no rows")
+  }
 
-      return asset
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "insert",
-        table: "assets",
-        cause: e,
-      }),
-  })
+  return asset
 }
 
-export const deleteAsset = (
-  id: string,
-): Promise<Result<void, DatabaseOperationError>> => {
-  return Result.tryPromise({
-    try: async () => {
-      await db.delete(assetsTable).where(eq(assetsTable.id, id))
-    },
-    catch: (e) =>
-      new DatabaseOperationError({
-        operation: "delete",
-        table: "assets",
-        cause: e,
-      }),
-  })
+export const deleteAsset = async (id: string): Promise<void> => {
+  await db.delete(assetsTable).where(eq(assetsTable.id, id))
 }
 
 export const getAdminUploadSizeSetting = async (
   key: string,
-): Promise<Result<SelectAdminSettings, NotFoundError>> => {
+): Promise<SelectAdminSettings> => {
   const [settings] = await db
     .select()
     .from(adminSettingsTable)
     .where(eq(adminSettingsTable.settingKey, key))
 
   if (!settings) {
-    return Result.err(new NotFoundError({ resource: "AdminSettings", id: key }))
+    throw new Error(`AdminSettings with id ${key} not found`)
   }
 
-  return Result.ok(settings)
+  return settings
 }

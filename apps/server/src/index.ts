@@ -4,7 +4,6 @@ import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
 import { serverPort } from "env/hono"
-import { logger as pinoLogger } from "logger"
 
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"
@@ -43,7 +42,7 @@ app.use("*", async (c, next) => {
   const start = Date.now()
   await next()
   const elapsed = Date.now() - start
-  pinoLogger.info(`${c.req.method} ${c.req.path} ${c.res.status} ${elapsed}ms`)
+  console.info(`${c.req.method} ${c.req.path} ${c.res.status} ${elapsed}ms`)
 })
 
 app.use("*", authMiddleware)
@@ -60,11 +59,11 @@ app.route("/webhooks", webhooksRoute)
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    pinoLogger.error(`HTTPException: ${err.status} ${err.message}`)
+    console.error(`HTTPException: ${err.status} ${err.message}`)
     return c.json({ error: err.message }, err.status)
   }
 
-  pinoLogger.error(
+  console.error(
     `Unhandled error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
   )
   return c.json({ error: "Internal Server Error" }, 500)
@@ -76,6 +75,6 @@ serve(
     port,
   },
   () => {
-    pinoLogger.info(`Hono server listening on port ${port}`)
+    console.info(`Hono server listening on port ${port}`)
   },
 )

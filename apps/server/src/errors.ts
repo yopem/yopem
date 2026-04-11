@@ -1,50 +1,60 @@
-import { TaggedError } from "better-result"
-
-export class RateLimitError extends TaggedError("RateLimitError")<{
+export class RateLimitError extends Error {
+  readonly tag = "RateLimitError" as const
   operation: string
-  message: string
   cause: unknown
-}>() {
+
   constructor(args: { operation: string; cause: unknown }) {
     const msg =
       args.cause instanceof Error ? args.cause.message : String(args.cause)
-    super({ ...args, message: `Rate limit ${args.operation} failed: ${msg}` })
+    super(`Rate limit ${args.operation} failed: ${msg}`)
+    this.operation = args.operation
+    this.cause = args.cause
+    this.name = "RateLimitError"
   }
 }
 
-export class WebhookHandlerError extends TaggedError("WebhookHandlerError")<{
+export class WebhookHandlerError extends Error {
+  readonly tag = "WebhookHandlerError" as const
   operation: string
-  message: string
   cause: unknown
-}>() {
+
   constructor(args: { operation: string; cause: unknown }) {
     const msg =
       args.cause instanceof Error ? args.cause.message : String(args.cause)
-    super({ ...args, message: `Webhook ${args.operation} failed: ${msg}` })
+    super(`Webhook ${args.operation} failed: ${msg}`)
+    this.operation = args.operation
+    this.cause = args.cause
+    this.name = "WebhookHandlerError"
   }
 }
 
-export class CheckoutHandlerError extends TaggedError("CheckoutHandlerError")<{
+export class CheckoutHandlerError extends Error {
+  readonly tag = "CheckoutHandlerError" as const
   operation: string
-  message: string
   cause: unknown
-}>() {
+
   constructor(args: { operation: string; cause: unknown }) {
     const msg =
       args.cause instanceof Error ? args.cause.message : String(args.cause)
-    super({ ...args, message: `Checkout ${args.operation} failed: ${msg}` })
+    super(`Checkout ${args.operation} failed: ${msg}`)
+    this.operation = args.operation
+    this.cause = args.cause
+    this.name = "CheckoutHandlerError"
   }
 }
 
-export class PortalHandlerError extends TaggedError("PortalHandlerError")<{
+export class PortalHandlerError extends Error {
+  readonly tag = "PortalHandlerError" as const
   operation: string
-  message: string
   cause: unknown
-}>() {
+
   constructor(args: { operation: string; cause: unknown }) {
     const msg =
       args.cause instanceof Error ? args.cause.message : String(args.cause)
-    super({ ...args, message: `Portal ${args.operation} failed: ${msg}` })
+    super(`Portal ${args.operation} failed: ${msg}`)
+    this.operation = args.operation
+    this.cause = args.cause
+    this.name = "PortalHandlerError"
   }
 }
 

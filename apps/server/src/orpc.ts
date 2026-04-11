@@ -1,10 +1,8 @@
 import { ORPCError, os } from "@orpc/server"
-import { Result } from "better-result"
 
 import type { SessionUser } from "auth/types"
 import { redisCache } from "cache"
 import { db } from "db"
-import { logger } from "logger"
 
 export async function createRPCContext(opts: {
   headers: Headers
@@ -33,34 +31,21 @@ export async function createRPCContext(opts: {
     const refreshToken = cookies.get("refresh_token")
 
     if (accessToken) {
-      const result = await Result.tryPromise({
-        try: async () => {
-          const { authClient } = await import("auth/client")
-          const { subjects } = await import("auth/subjects")
+      try {
+        const { authClient } = await import("auth/client")
+        const { subjects } = await import("auth/subjects")
 
-          const verified = await authClient.verify(
-            subjects,
-            accessToken.value,
-            {
-              refresh: refreshToken?.value,
-            },
-          )
+        const verified = await authClient.verify(subjects, accessToken.value, {
+          refresh: refreshToken?.value,
+        })
 
-          if (!verified.err) {
-            return verified.subject.properties
-          }
-          return null
-        },
-        catch: (err) => {
-          logger.error(
-            `[createRPCContext] token verification threw unexpectedly: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
-          )
-          return null
-        },
-      })
-
-      if (result.isOk() && result.value) {
-        session = result.value
+        if (!verified.err) {
+          session = verified.subject.properties
+        }
+      } catch (err) {
+        console.error(
+          `[createRPCContext] token verification threw unexpectedly: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`,
+        )
       }
     }
   }
@@ -80,18 +65,18 @@ const o = os.$context<Awaited<ReturnType<typeof createRPCContext>>>()
 const timingMiddleware = o.middleware(async ({ next, path }) => {
   const start = Date.now()
 
-  const result = await Result.tryPromise({
-    try: async () => await next(),
-    catch: (error: unknown) => error,
-  })
-
-  logger.info(`[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`)
-
-  if (result.isErr()) {
-    throw result.error
+  try {
+    const result = await next()
+    console.info(
+      `[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`,
+    )
+    return result
+  } catch (error) {
+    console.info(
+      `[oRPC] ${String(path)} took ${Date.now() - start}ms to execute`,
+    )
+    throw error
   }
-
-  return result.value
 })
 
 export const publicProcedure = o.use(timingMiddleware)

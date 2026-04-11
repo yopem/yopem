@@ -22,7 +22,8 @@ import {
   xUsername,
 } from "env/client"
 import { appEnv } from "env/client"
-import { formatError, logger } from "logger"
+const formatError = (error: unknown): string =>
+  error instanceof Error ? (error.stack ?? error.message) : String(error)
 import { Button } from "ui/button"
 
 import AnalyticsScripts from "@/components/analytics-scripts"
@@ -109,7 +110,7 @@ function ErrorComponent({
   reset?: () => void
 }) {
   useEffect(() => {
-    logger.error(`Route error: ${formatError(error)}`)
+    console.error(`Route error: ${formatError(error)}`)
   }, [error])
 
   return (

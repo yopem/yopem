@@ -3,8 +3,6 @@ import { createServerFn } from "@tanstack/react-start"
 
 import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
-import { logger } from "logger"
-
 const getServerUtils = async () => {
   const { getCookie, setCookie, deleteCookie } =
     await import("@tanstack/react-start/server")
@@ -33,7 +31,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     })
 
     if (verified.err) {
-      logger.error(`Error verifying token: ${JSON.stringify(verified.err)}`)
+      console.error(`Error verifying token: ${JSON.stringify(verified.err)}`)
       return false
     }
 

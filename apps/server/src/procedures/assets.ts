@@ -1,4 +1,4 @@
-import { Result } from "better-result"
+import { ORPCError } from "@orpc/server"
 import {
   adminProcedure,
   protectedProcedure,
@@ -15,9 +15,6 @@ import {
 } from "db/services/assets"
 import { r2Domain } from "env/hono"
 import { getR2Storage } from "storage"
-
-import { handleProcedureError } from "./error-handler"
-import { AssetNotFoundError, AssetValidationError } from "./procedure-errors"
 
 const MAX_UPLOAD_SIZE_MB = 50
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
@@ -39,27 +36,16 @@ export const assetsRouter = {
   list: protectedProcedure
     .input(listAssetsInputSchema.optional())
     .handler(async ({ input }) => {
-      const result = await listAssets({
+      return await listAssets({
         limit: input?.limit ?? 20,
         cursor: input?.cursor,
         type: input?.type,
       })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
-      }
-
-      return result.value
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cachedResult = await context.redis.getCache<number>(cacheKey)
-
-    const cached = cachedResult.match({
-      ok: (v) => v,
-      err: () => null,
-    })
+    const cached = await context.redis.getCache<number>(cacheKey)
 
     if (cached !== null) {
       return {
@@ -68,15 +54,12 @@ export const assetsRouter = {
       }
     }
 
-    const settingsResult = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+    const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
 
-    const maxSizeMB = settingsResult.match({
-      ok: (settings) =>
-        typeof settings.settingValue === "number"
-          ? settings.settingValue
-          : MAX_UPLOAD_SIZE_MB,
-      err: () => MAX_UPLOAD_SIZE_MB,
-    })
+    const maxSizeMB =
+      settings && typeof settings.settingValue === "number"
+        ? settings.settingValue
+        : MAX_UPLOAD_SIZE_MB
 
     void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
 
@@ -89,111 +72,85 @@ export const assetsRouter = {
   upload: adminProcedure
     .input(z.instanceof(File))
     .handler(async ({ context, input: file }) => {
-      const result = await Result.gen(async function* () {
-        const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-        const maxSizeMBResult = await context.redis.getCache<number>(cacheKey)
+      const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
+      let maxSizeMB = await context.redis.getCache<number>(cacheKey)
 
-        let maxSizeMB = maxSizeMBResult.match({
-          ok: (v) => v,
-          err: () => null,
+      if (maxSizeMB === null) {
+        const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+
+        maxSizeMB =
+          settings && typeof settings.settingValue === "number"
+            ? settings.settingValue
+            : MAX_UPLOAD_SIZE_MB
+
+        void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+      }
+
+      const maxSizeBytes = maxSizeMB * 1024 * 1024
+
+      if (file.size > maxSizeBytes) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: `File size exceeds ${maxSizeMB}MB limit`,
         })
+      }
 
-        if (maxSizeMB === null) {
-          const settingsResult =
-            await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
 
-          maxSizeMB = settingsResult.match({
-            ok: (settings) =>
-              typeof settings.settingValue === "number"
-                ? settings.settingValue
-                : MAX_UPLOAD_SIZE_MB,
-            err: () => MAX_UPLOAD_SIZE_MB,
-          })
-
-          void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
-        }
-
-        const maxSizeBytes = maxSizeMB * 1024 * 1024
-
-        if (file.size > maxSizeBytes) {
-          return Result.err(
-            new AssetValidationError({
-              message: `File size exceeds ${maxSizeMB}MB limit`,
-            }),
-          )
-        }
-
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-
-        const r2 = getR2Storage()
-        const uploadResult = await r2.uploadAsset(
+      const r2 = getR2Storage()
+      let uploadResult: {
+        url: string
+        type: "images" | "videos" | "documents" | "archives" | "others"
+        size: number
+        key: string
+      }
+      try {
+        uploadResult = await r2.uploadAsset(
           buffer,
           file.name,
           file.type || "application/octet-stream",
         )
-
-        if (Result.isError(uploadResult)) {
-          return Result.err(
-            new AssetValidationError({
-              message: `Failed to upload asset: ${uploadResult.error.message}`,
-            }),
-          )
-        }
-
-        const { url, type, size, key } = uploadResult.value
-        const assetResult = await insertAsset({
-          filename: key.split("/").pop()!,
-          originalName: file.name,
-          type,
-          size,
-          url,
+      } catch (error) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Failed to upload asset: ${error instanceof Error ? error.message : String(error)}`,
         })
-        const asset = yield* assetResult.mapError(
-          (e) =>
-            new AssetValidationError({
-              message: `Failed to insert asset: ${e.message}`,
-            }),
-        )
-
-        return Result.ok(asset)
-      })
-
-      if (result.isErr()) {
-        return handleProcedureError(result)
       }
 
-      return result.value
+      const { url, type, size, key } = uploadResult
+      const asset = await insertAsset({
+        filename: key.split("/").pop()!,
+        originalName: file.name,
+        type,
+        size,
+        url,
+      })
+
+      return asset
     }),
 
   delete: adminProcedure
     .input(deleteAssetInputSchema)
     .handler(async ({ input }) => {
-      const assetResult = await getAssetById(input.id)
+      try {
+        const asset = await getAssetById(input.id)
+        const r2 = getR2Storage()
+        const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
 
-      if (assetResult.isErr()) {
-        return handleProcedureError(
-          Result.err(new AssetNotFoundError({ assetId: input.id })),
-        )
+        try {
+          await r2.deleteFile(key)
+        } catch (error) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
+          })
+        }
+
+        await deleteAsset(input.id)
+
+        return { success: true }
+      } catch {
+        throw new ORPCError("NOT_FOUND", {
+          message: `Asset not found: ${input.id}`,
+        })
       }
-
-      const asset = assetResult.value
-      const r2 = getR2Storage()
-      const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
-
-      const deleteResult = await r2.deleteFile(key)
-      if (Result.isError(deleteResult)) {
-        return handleProcedureError(
-          Result.err(
-            new AssetValidationError({
-              message: `Failed to delete asset from storage: ${deleteResult.error.message}`,
-            }),
-          ),
-        )
-      }
-
-      await deleteAsset(input.id)
-
-      return { success: true }
     }),
 }

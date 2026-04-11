@@ -4,8 +4,6 @@ import type { appRouter } from "server/router"
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 
-import { logger } from "logger"
-
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {
     return process.env["PUBLIC_API_URL"] ?? ""
@@ -36,11 +34,11 @@ export const createORPCLink = (
           (error.name === "AbortError" ||
             error.message === "signal is aborted without reason")
         if (isAbortError) {
-          logger.info("Fetch aborted as expected")
+          console.info("Fetch aborted as expected")
         } else {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
-          logger.error(errorMessage)
+          console.error(errorMessage)
         }
       }),
     ],

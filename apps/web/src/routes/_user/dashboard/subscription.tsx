@@ -133,9 +133,9 @@ function SubscriptionPage() {
                 disabled={isPortalLoading}
               >
                 {isPortalLoading ? (
-                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2Icon className="mr-2 size-4 animate-spin" />
                 ) : (
-                  <CreditCardIcon className="mr-2 h-4 w-4" />
+                  <CreditCardIcon className="mr-2 size-4" />
                 )}
                 Manage Billing
               </Button>
@@ -168,7 +168,7 @@ function SubscriptionPage() {
       <div className="grid gap-6 md:grid-cols-3">
         {isPlansLoading ? (
           <div className="col-span-3 flex items-center justify-center py-12">
-            <Loader2Icon className="text-muted-foreground h-8 w-8 animate-spin" />
+            <Loader2Icon className="text-muted-foreground size-8 animate-spin" />
           </div>
         ) : (
           plans?.map((plan) => {
@@ -185,9 +185,9 @@ function SubscriptionPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {plan.tier === "free" ? (
-                      <SparklesIcon className="text-muted-foreground h-5 w-5" />
+                      <SparklesIcon className="text-muted-foreground size-5" />
                     ) : (
-                      <CreditCardIcon className="text-primary h-5 w-5" />
+                      <CreditCardIcon className="text-primary size-5" />
                     )}
                     {plan.name}
                   </CardTitle>
@@ -208,7 +208,7 @@ function SubscriptionPage() {
 
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-sm">
-                      <CheckIcon className="h-4 w-4 text-green-600" />
+                      <CheckIcon className="size-4 text-green-600" />
                       {plan.limits.maxRequestsPerMonth ===
                       Number.POSITIVE_INFINITY
                         ? "Unlimited"
@@ -216,20 +216,20 @@ function SubscriptionPage() {
                       requests/month
                     </li>
                     <li className="flex items-center gap-2 text-sm">
-                      <CheckIcon className="h-4 w-4 text-green-600" />
+                      <CheckIcon className="size-4 text-green-600" />
                       {plan.limits.maxTokensPerRequest.toLocaleString()}{" "}
                       tokens/request
                     </li>
                     {plan.limits.maxCustomTools !== null && (
                       <li className="flex items-center gap-2 text-sm">
-                        <CheckIcon className="h-4 w-4 text-green-600" />
+                        <CheckIcon className="size-4 text-green-600" />
                         {plan.limits.maxCustomTools} custom tools
                       </li>
                     )}
                     {plan.limits.maxCustomTools === null &&
                       plan.tier !== "free" && (
                         <li className="flex items-center gap-2 text-sm">
-                          <CheckIcon className="h-4 w-4 text-green-600" />
+                          <CheckIcon className="size-4 text-green-600" />
                           Unlimited custom tools
                         </li>
                       )}
@@ -243,7 +243,7 @@ function SubscriptionPage() {
                           key={feature}
                           className="text-muted-foreground flex items-center gap-2 text-xs"
                         >
-                          <CheckIcon className="h-3 w-3 text-green-600" />
+                          <CheckIcon className="size-3 text-green-600" />
                           {feature.replace(/_/g, " ")}
                         </li>
                       ))}
@@ -266,7 +266,7 @@ function SubscriptionPage() {
                       disabled={isCheckoutLoading}
                     >
                       {isCheckoutLoading ? (
-                        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2Icon className="mr-2 size-4 animate-spin" />
                       ) : null}
                       Upgrade to {plan.name}
                     </Button>

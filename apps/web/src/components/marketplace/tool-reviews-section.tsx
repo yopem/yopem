@@ -1,13 +1,11 @@
 "use client"
 
-import { Result } from "better-result"
 import { useState } from "react"
 
 import { clientApi } from "rpc/client"
 
 import LoginButton from "@/components/auth/login-button"
 import ToolReviewsList from "@/components/marketplace/tool-reviews-list"
-import { ReviewLoadError } from "@/lib/errors"
 
 interface Review {
   id: string
@@ -40,27 +38,13 @@ const ToolReviewsSection = ({
     reviews.some((r) => r.userName === currentUserName)
 
   const handleReviewSubmit = async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        const data = await clientApi.tools.getReviews({ slug })
-        return data.reviews
-      },
-      catch: (error) =>
-        new ReviewLoadError({
-          message: "Failed to load reviews",
-          cause: error,
-        }),
-    })
-
-    result.match({
-      ok: (newReviews) => {
-        setReviews(newReviews as Review[])
-        setEditorOpen(false)
-      },
-      err: () => {
-        // ignore error
-      },
-    })
+    try {
+      const data = await clientApi.tools.getReviews({ slug })
+      setReviews(data.reviews as Review[])
+      setEditorOpen(false)
+    } catch {
+      // ignore error
+    }
   }
 
   return (

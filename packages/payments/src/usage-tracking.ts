@@ -1,5 +1,3 @@
-import { Result } from "better-result"
-
 import { redisCache } from "cache"
 
 const USAGE_CACHE_TTL = 35 * 24 * 60 * 60
@@ -21,14 +19,14 @@ export interface UsageData {
 
 export const incrementRequestCount = async (
   userId: string,
-): Promise<Result<number, Error>> => {
+): Promise<number> => {
   const cacheKey = getCurrentUsageKey(userId)
 
-  const existingResult = await redisCache.getCache<UsageData>(cacheKey)
+  const existing = await redisCache.getCache<UsageData>(cacheKey)
 
   let data: UsageData
-  if (existingResult.isOk() && existingResult.value) {
-    data = existingResult.value
+  if (existing) {
+    data = existing
     data.requestCount += 1
     data.lastUpdated = new Date().toISOString()
   } else {
@@ -39,26 +37,22 @@ export const incrementRequestCount = async (
     }
   }
 
-  const setResult = await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
+  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
 
-  if (setResult.isErr()) {
-    return Result.err(setResult.error)
-  }
-
-  return Result.ok(data.requestCount)
+  return data.requestCount
 }
 
 export const incrementTokenCount = async (
   userId: string,
   tokens: number,
-): Promise<Result<number, Error>> => {
+): Promise<number> => {
   const cacheKey = getCurrentUsageKey(userId)
 
-  const existingResult = await redisCache.getCache<UsageData>(cacheKey)
+  const existing = await redisCache.getCache<UsageData>(cacheKey)
 
   let data: UsageData
-  if (existingResult.isOk() && existingResult.value) {
-    data = existingResult.value
+  if (existing) {
+    data = existing
     data.tokenCount += tokens
     data.lastUpdated = new Date().toISOString()
   } else {
@@ -69,26 +63,22 @@ export const incrementTokenCount = async (
     }
   }
 
-  const setResult = await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
+  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
 
-  if (setResult.isErr()) {
-    return Result.err(setResult.error)
-  }
-
-  return Result.ok(data.tokenCount)
+  return data.tokenCount
 }
 
 export const recordUsage = async (
   userId: string,
   tokens: number,
-): Promise<Result<UsageData, Error>> => {
+): Promise<UsageData> => {
   const cacheKey = getCurrentUsageKey(userId)
 
-  const existingResult = await redisCache.getCache<UsageData>(cacheKey)
+  const existing = await redisCache.getCache<UsageData>(cacheKey)
 
   let data: UsageData
-  if (existingResult.isOk() && existingResult.value) {
-    data = existingResult.value
+  if (existing) {
+    data = existing
     data.requestCount += 1
     data.tokenCount += tokens
     data.lastUpdated = new Date().toISOString()
@@ -100,32 +90,22 @@ export const recordUsage = async (
     }
   }
 
-  const setResult = await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
+  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
 
-  if (setResult.isErr()) {
-    return Result.err(setResult.error)
-  }
-
-  return Result.ok(data)
+  return data
 }
 
-export const getCurrentUsage = async (
-  userId: string,
-): Promise<Result<UsageData, Error>> => {
+export const getCurrentUsage = async (userId: string): Promise<UsageData> => {
   const cacheKey = getCurrentUsageKey(userId)
 
   const result = await redisCache.getCache<UsageData>(cacheKey)
 
-  if (result.isErr()) {
-    return Result.err(result.error)
-  }
-
-  return Result.ok(
-    result.value ?? {
+  return (
+    result ?? {
       requestCount: 0,
       tokenCount: 0,
       lastUpdated: new Date().toISOString(),
-    },
+    }
   )
 }
 
@@ -133,27 +113,21 @@ export const getUsageForMonth = async (
   userId: string,
   year: number,
   month: number,
-): Promise<Result<UsageData, Error>> => {
+): Promise<UsageData> => {
   const cacheKey = getUsageKey(userId, year, month)
 
   const result = await redisCache.getCache<UsageData>(cacheKey)
 
-  if (result.isErr()) {
-    return Result.err(result.error)
-  }
-
-  return Result.ok(
-    result.value ?? {
+  return (
+    result ?? {
       requestCount: 0,
       tokenCount: 0,
       lastUpdated: new Date().toISOString(),
-    },
+    }
   )
 }
 
-export const resetUsage = async (
-  userId: string,
-): Promise<Result<void, Error>> => {
+export const resetUsage = async (userId: string): Promise<void> => {
   const cacheKey = getCurrentUsageKey(userId)
-  return await redisCache.deleteCache(cacheKey)
+  await redisCache.deleteCache(cacheKey)
 }

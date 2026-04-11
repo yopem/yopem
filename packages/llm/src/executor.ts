@@ -1,5 +1,3 @@
-import { Result, TaggedError } from "better-result"
-
 import { getR2Storage } from "storage"
 
 import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
@@ -9,11 +7,17 @@ import type { AIProviderErrors } from "./providers/base.ts"
 import { OpenAIProvider } from "./providers/openai.ts"
 import { OpenRouterProvider } from "./providers/openrouter.ts"
 
-export class UploadError extends TaggedError("UploadError")<{
+export class UploadError extends Error {
   format: "image" | "video"
-  message: string
-  cause?: unknown
-}>() {}
+  override cause?: unknown
+
+  constructor(format: "image" | "video", message: string, cause?: unknown) {
+    super(message)
+    this.name = "UploadError"
+    this.format = format
+    this.cause = cause
+  }
+}
 
 export type AIExecutionError = AIProviderErrors | UploadError
 
@@ -55,11 +59,11 @@ function getProviderInstance(
 }
 
 function wrapStorageError(format: "image" | "video", e: unknown): UploadError {
-  return new UploadError({
+  return new UploadError(
     format,
-    message: `Failed to upload ${format}: ${e instanceof Error ? e.message : "Unknown error"}`,
-    cause: e,
-  })
+    `Failed to upload ${format}: ${e instanceof Error ? e.message : "Unknown error"}`,
+    e,
+  )
 }
 
 async function doUpload(
@@ -67,19 +71,23 @@ async function doUpload(
   outputFormat: "image" | "video",
   buffer: Buffer,
   contentType: string,
-): Promise<Result<string, UploadError>> {
-  const uploadResult =
-    outputFormat === "image"
-      ? await r2.uploadImage(buffer, contentType)
-      : await r2.uploadVideo(buffer, contentType)
-  return uploadResult.mapError((e) => wrapStorageError(outputFormat, e))
+): Promise<string> {
+  try {
+    const url =
+      outputFormat === "image"
+        ? await r2.uploadImage(buffer, contentType)
+        : await r2.uploadVideo(buffer, contentType)
+    return url
+  } catch (e) {
+    throw wrapStorageError(outputFormat, e)
+  }
 }
 
 async function uploadMediaOutput(
   output: string,
   outputFormat: "image" | "video",
   usage: ExecutionResponse["usage"],
-): Promise<Result<ExecutionResponse, UploadError>> {
+): Promise<ExecutionResponse> {
   const base64Regex = /^data:([^;]+);base64,(.+)$/
   const base64Match = base64Regex.exec(output)
 
@@ -88,63 +96,55 @@ async function uploadMediaOutput(
     const base64Data = base64Match[2]
     const buffer = Buffer.from(base64Data, "base64")
     const r2 = getR2Storage()
-    const urlResult = await doUpload(r2, outputFormat, buffer, contentType)
-    if (Result.isError(urlResult)) return urlResult
-    return Result.ok({ output: urlResult.value, usage })
+    const url = await doUpload(r2, outputFormat, buffer, contentType)
+    return { output: url, usage }
   }
 
   if (output.startsWith("http://") || output.startsWith("https://")) {
-    return Result.ok({ output, usage })
+    return { output, usage }
   }
 
   const buffer = Buffer.from(output, "utf8")
   const r2 = getR2Storage()
   const contentType = outputFormat === "image" ? "image/png" : "video/mp4"
-  const urlResult = await doUpload(r2, outputFormat, buffer, contentType)
-  if (Result.isError(urlResult)) return urlResult
-  return Result.ok({ output: urlResult.value, usage })
+  const url = await doUpload(r2, outputFormat, buffer, contentType)
+  return { output: url, usage }
 }
 
-export function executeAITool(
+export async function executeAITool(
   params: ExecuteAIToolParams,
-): Promise<Result<ExecutionResponse, AIExecutionError>> {
-  return Result.gen(async function* () {
-    const systemRole = replaceVariables(params.systemRole, params.inputs)
-    const userInstruction = replaceVariables(
-      params.userInstructionTemplate,
-      params.inputs,
-    )
+): Promise<ExecutionResponse> {
+  const systemRole = replaceVariables(params.systemRole, params.inputs)
+  const userInstruction = replaceVariables(
+    params.userInstructionTemplate,
+    params.inputs,
+  )
 
-    const maxOutputTokens = Math.min(
-      4096,
-      Math.max(
-        512,
-        Math.ceil((systemRole.length + userInstruction.length) / 4),
-      ),
-    )
+  const maxOutputTokens = Math.min(
+    4096,
+    Math.max(512, Math.ceil((systemRole.length + userInstruction.length) / 4)),
+  )
 
-    const provider = getProviderInstance(
-      params.provider,
-      params.apiKey,
-      params.config.modelEngine,
-    )
+  const provider = getProviderInstance(
+    params.provider,
+    params.apiKey,
+    params.config.modelEngine,
+  )
 
-    const response = yield* await provider.execute({
-      systemRole,
-      userInstruction,
-      maxOutputTokens,
-      outputFormat: params.outputFormat,
-    })
-
-    if (params.outputFormat === "image" || params.outputFormat === "video") {
-      const uploaded = yield* await uploadMediaOutput(
-        response.output,
-        params.outputFormat,
-        response.usage,
-      )
-      return Result.ok(uploaded)
-    }
-
-    return Result.ok(response)
+  const response = await provider.execute({
+    systemRole,
+    userInstruction,
+    maxOutputTokens,
+    outputFormat: params.outputFormat,
   })
+
+  if (params.outputFormat === "image" || params.outputFormat === "video") {
+    return uploadMediaOutput(
+      response.output,
+      params.outputFormat,
+      response.usage,
+    )
+  }
+
+  return response
 }
