@@ -1100,6 +1100,78 @@ export const adminRouter = {
 
       return result
     }),
+
+  migrateToSubscriptions: adminProcedure.handler(async () => {
+    const { migrateExistingCreditsToSubscriptions } =
+      await import("db/services/grandfathered-migration")
+
+    const result = await migrateExistingCreditsToSubscriptions()
+
+    if (result.isErr()) {
+      logger.error(`Migration failed: ${result.error.message}`)
+      return handleProcedureError(result)
+    }
+
+    const { migratedCount, failedCount, errors } = result.value
+
+    logger.info(
+      `Migration completed: ${migratedCount} migrated, ${failedCount} failed`,
+    )
+
+    return {
+      success: failedCount === 0,
+      migratedCount,
+      failedCount,
+      errors: errors.slice(0, 10),
+    }
+  }),
+
+  getSubscriptionStats: adminProcedure.handler(async () => {
+    const { getSubscriptionStats, getRevenueStats } =
+      await import("db/services/subscription-admin")
+
+    const [statsResult, revenueResult] = await Promise.all([
+      getSubscriptionStats(),
+      getRevenueStats(),
+    ])
+
+    if (statsResult.isErr()) {
+      return handleProcedureError(statsResult)
+    }
+
+    if (revenueResult.isErr()) {
+      return handleProcedureError(revenueResult)
+    }
+
+    return {
+      ...statsResult.value,
+      revenue: revenueResult.value,
+    }
+  }),
+
+  getSubscriptionsList: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(20),
+        cursor: z.string().optional(),
+        status: z
+          .enum(["active", "cancelled", "past_due", "expired"])
+          .optional(),
+        tier: z.enum(["free", "pro", "enterprise"]).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const { getSubscriptionsList } =
+        await import("db/services/subscription-admin")
+
+      const result = await getSubscriptionsList(input)
+
+      if (result.isErr()) {
+        return handleProcedureError(result)
+      }
+
+      return result.value
+    }),
 }
 
 function calculateTrend(current: number, previous: number): string {

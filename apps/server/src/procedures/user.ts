@@ -3,9 +3,15 @@ import { adminProcedure, protectedProcedure } from "server/orpc"
 import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
 import { z } from "zod"
 
+import * as subscriptionService from "db/services/subscriptions"
 import * as userService from "db/services/user"
 import { formatError, logger } from "logger"
-import { MAX_TOPUP_AMOUNT, MIN_TOPUP_AMOUNT } from "payments/credit-calculation"
+import { getEntitlements } from "payments/entitlements"
+import {
+  createCustomerPortalSession,
+  createSubscriptionCheckout,
+} from "payments/subscription-checkout"
+import { getPlanConfig, listPlans } from "payments/subscription-plans"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -91,6 +97,136 @@ export const userRouter = {
     }
 
     return result.value
+  }),
+
+  getSubscription: protectedProcedure.handler(async ({ context }) => {
+    const result = await getEntitlements(context.session.id)
+
+    if (result.isErr()) {
+      logger.error(
+        `Failed to get subscription for user ${context.session.id}: ${result.error.message}`,
+      )
+      const freePlan = getPlanConfig("free")
+      return {
+        tier: "free" as const,
+        status: "active" as const,
+        limits: freePlan.limits,
+        features: freePlan.features,
+        isPaid: false,
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+      }
+    }
+
+    return result.value
+  }),
+
+  getSubscriptionPlans: protectedProcedure.handler(() => {
+    const plans = listPlans()
+    return plans.map((plan) => ({
+      tier: plan.tier,
+      name: plan.displayName,
+      description: plan.description,
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      limits: plan.limits,
+      features: plan.features,
+    }))
+  }),
+
+  createSubscriptionCheckout: protectedProcedure
+    .input(
+      z.object({
+        tier: z.enum(["pro", "enterprise"]),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const result = await createSubscriptionCheckout(
+        context.session.id,
+        context.session.email,
+        null,
+        input.tier,
+      )
+
+      if (result.isErr()) {
+        logger.error(
+          `Failed to create checkout for user ${context.session.id}: ${result.error.message}`,
+        )
+        return handleProcedureError(
+          Result.err(
+            new ValidationError({
+              field: "tier",
+              message: "Failed to create checkout session",
+            }),
+          ),
+        )
+      }
+
+      return {
+        url: result.value.url,
+        checkoutId: result.value.checkoutId,
+      }
+    }),
+
+  createBillingPortal: protectedProcedure.handler(async ({ context }) => {
+    const subscriptionResult = await subscriptionService.getSubscription(
+      context.session.id,
+    )
+
+    if (subscriptionResult.isErr()) {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "subscription",
+            message: "No subscription found",
+          }),
+        ),
+      )
+    }
+
+    const subscription = subscriptionResult.value
+
+    if (!subscription) {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "subscription",
+            message: "No subscription found",
+          }),
+        ),
+      )
+    }
+
+    if (!subscription.polarCustomerId) {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "customer",
+            message: "No customer ID found",
+          }),
+        ),
+      )
+    }
+
+    const result = await createCustomerPortalSession(
+      subscription.polarCustomerId,
+    )
+
+    if (result.isErr()) {
+      logger.error(
+        `Failed to create billing portal for user ${context.session.id}: ${result.error.message}`,
+      )
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "portal",
+            message: "Failed to create billing portal",
+          }),
+        ),
+      )
+    }
+
+    return { url: result.value }
   }),
 
   getTransactions: protectedProcedure
@@ -567,87 +703,70 @@ export const userRouter = {
     return { activeKeys }
   }),
 
-  getAutoTopupSettings: protectedProcedure.handler(async ({ context }) => {
-    const creditsResult = await userService.getUserCredits(context.session.id)
-
-    const credits = creditsResult.match({
-      ok: (v) => v,
-      err: () => null,
-    })
-
-    return credits
-      ? {
-          enabled: credits.autoTopupEnabled,
-          threshold: credits.autoTopupThreshold
-            ? Number(credits.autoTopupThreshold)
-            : null,
-          amount: credits.autoTopupAmount
-            ? Number(credits.autoTopupAmount)
-            : null,
-        }
-      : {
-          enabled: false,
-          threshold: null,
-          amount: null,
-        }
-  }),
-
-  updateAutoTopupSettings: protectedProcedure
-    .input(
-      z.object({
-        enabled: z.boolean(),
-        threshold: z
-          .number()
-          .min(MIN_TOPUP_AMOUNT)
-          .max(MAX_TOPUP_AMOUNT)
-          .optional(),
-        amount: z
-          .number()
-          .min(MIN_TOPUP_AMOUNT)
-          .max(MAX_TOPUP_AMOUNT)
-          .optional(),
-      }),
+  cancelSubscription: protectedProcedure.handler(async ({ context }) => {
+    const subscriptionResult = await subscriptionService.getSubscription(
+      context.session.id,
     )
-    .handler(async ({ context, input }) => {
-      if (input.enabled && (!input.threshold || !input.amount)) {
-        return handleProcedureError(
-          Result.err(
-            new ValidationError({
-              field: "enabled",
-              message:
-                "Both threshold and amount are required when enabling auto-topup",
-            }),
-          ),
-        )
-      }
 
-      if (
-        input.enabled &&
-        input.threshold &&
-        input.amount &&
-        input.threshold >= input.amount
-      ) {
-        return handleProcedureError(
-          Result.err(
-            new ValidationError({
-              field: "threshold",
-              message: "Threshold must be less than top-up amount",
-            }),
-          ),
-        )
-      }
+    if (subscriptionResult.isErr()) {
+      return handleProcedureError(subscriptionResult)
+    }
 
-      await userService.updateAutoTopup(context.session.id, {
-        enabled: input.enabled,
-        threshold: input.threshold,
-        amount: input.amount,
-      })
+    const subscription = subscriptionResult.value
 
-      return {
-        success: true,
-        enabled: input.enabled,
-        threshold: input.threshold ?? null,
-        amount: input.amount ?? null,
-      }
-    }),
+    if (!subscription || subscription.tier === "free") {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "subscription",
+            message: "No active paid subscription found",
+          }),
+        ),
+      )
+    }
+
+    if (subscription.status !== "active") {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "subscription",
+            message: `Subscription is already ${subscription.status}`,
+          }),
+        ),
+      )
+    }
+
+    if (subscription.cancelAtPeriodEnd) {
+      return handleProcedureError(
+        Result.err(
+          new ValidationError({
+            field: "subscription",
+            message: "Subscription is already set to cancel at period end",
+          }),
+        ),
+      )
+    }
+
+    const cancelResult = await subscriptionService.cancelSubscription(
+      context.session.id,
+    )
+
+    if (cancelResult.isErr()) {
+      logger.error(
+        `Failed to cancel subscription for user ${context.session.id}: ${cancelResult.error.message}`,
+      )
+      return handleProcedureError(cancelResult)
+    }
+
+    logger.info(
+      `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.value.currentPeriodEnd}`,
+    )
+
+    return {
+      success: true,
+      message:
+        "Your subscription has been cancelled and will end at the end of the current billing period",
+      currentPeriodEnd: cancelResult.value.currentPeriodEnd,
+    }
+  }),
 }

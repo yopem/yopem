@@ -11,6 +11,11 @@ import { logger } from "logger"
 import { calculateCreditsFromAmount } from "payments/credit-calculation"
 import { grantCredits } from "payments/grant-credits"
 import { refundCredits } from "payments/refund-credits"
+import {
+  handleSubscriptionCancelled,
+  handleSubscriptionCreated,
+  handleSubscriptionUpdated,
+} from "payments/subscription-webhooks"
 import { WebhookMonitor } from "payments/webhook-monitor"
 import { createCustomId } from "shared/custom-id"
 
@@ -203,6 +208,18 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
   }
 }
 
+async function handleSubscriptionCreatedWrapper(payload: unknown) {
+  await handleSubscriptionCreated({ data: payload as never })
+}
+
+async function handleSubscriptionUpdatedWrapper(payload: unknown) {
+  await handleSubscriptionUpdated({ data: payload as never })
+}
+
+async function handleSubscriptionCanceledWrapper(payload: unknown) {
+  await handleSubscriptionCancelled({ data: payload as never })
+}
+
 const webhooksRoute = new Hono()
 
 webhooksRoute.post(
@@ -211,6 +228,9 @@ webhooksRoute.post(
     webhookSecret: polarWebhookSecret,
     onOrderPaid: handleOrderPaid,
     onOrderRefunded: handleOrderRefunded,
+    onSubscriptionCreated: handleSubscriptionCreatedWrapper,
+    onSubscriptionUpdated: handleSubscriptionUpdatedWrapper,
+    onSubscriptionCanceled: handleSubscriptionCanceledWrapper,
   }),
 )
 

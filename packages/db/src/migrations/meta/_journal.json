@@ -162,6 +162,13 @@
       "when": 1771704381227,
       "tag": "0022_pretty_master_chief",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775555323758,
+      "tag": "0023_elite_maverick",
+      "breakpoints": true
     }
   ]
 }

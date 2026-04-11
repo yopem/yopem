@@ -15,10 +15,9 @@ const Hero = ({ session }: { session: SessionUser | false }) => {
           Your AI Tools Hub
         </h1>
         <p className="text-muted-foreground mb-10 max-w-160 text-lg/relaxed md:text-xl">
-          Access powerful AI tools with simple credit-based pricing.{" "}
+          Access powerful AI tools with flexible subscription plans.{" "}
           <br className="hidden sm:block" />
-          No subscriptions, no complexity, just use the tools you need to work
-          smarter.
+          Start free, upgrade when you need more. Simple, transparent pricing.
         </p>
         <div className="flex w-full flex-wrap items-center justify-center gap-4">
           {session ? (

@@ -40,6 +40,18 @@
       "types": "./src/services/admin.ts",
       "default": "./src/services/admin.ts"
     },
+    "./services/subscriptions": {
+      "types": "./src/services/subscriptions.ts",
+      "default": "./src/services/subscriptions.ts"
+    },
+    "./services/grandfathered-migration": {
+      "types": "./src/services/grandfathered-migration.ts",
+      "default": "./src/services/grandfathered-migration.ts"
+    },
+    "./services/subscription-admin": {
+      "types": "./src/services/subscription-admin.ts",
+      "default": "./src/services/subscription-admin.ts"
+    },
     "./errors": {
       "types": "./src/errors.ts",
       "default": "./src/errors.ts"
@@ -53,7 +65,8 @@
     "db:generate": "bun run with-env drizzle-kit generate",
     "db:migrate": "bun run with-env drizzle-kit migrate",
     "db:studio": "bun run with-env drizzle-kit studio",
-    "db:seed": "bun run with-env bun run src/seed.ts"
+    "db:seed": "bun run with-env bun run src/seed.ts",
+    "db:migrate-subscriptions": "bun run with-env bun run scripts/migrate-to-subscriptions.ts"
   },
   "dependencies": {
     "better-result": "^2.7.0",

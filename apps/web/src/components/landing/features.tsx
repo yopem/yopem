@@ -1,6 +1,6 @@
 import {
   CheckCircleIcon,
-  CreditCardIcon,
+  LayersIcon,
   LayoutDashboardIcon,
   NetworkIcon,
   RocketIcon,
@@ -26,9 +26,9 @@ const Features = () => {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <FeatureCard
-            icon={<CreditCardIcon className="size-5" />}
-            title="Pay As You Go"
-            description="Buy credits once and use them anytime. No recurring charges, no subscriptions—just simple, flexible pricing that scales with your needs."
+            icon={<LayersIcon className="size-5" />}
+            title="Flexible Plans"
+            description="Start free and upgrade when you need more. Our tiered subscription plans grow with you, from individual users to enterprise teams."
           />
           <FeatureCard
             icon={<ZapIcon className="size-5" />}

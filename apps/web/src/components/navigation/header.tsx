@@ -122,8 +122,8 @@ const Header = ({ session }: HeaderProps) => {
                   <MenuItem render={<Link to="/dashboard/runs" />}>
                     Logs
                   </MenuItem>
-                  <MenuItem render={<Link to="/dashboard/credits" />}>
-                    Credits
+                  <MenuItem render={<Link to="/dashboard/subscription" />}>
+                    Subscription
                   </MenuItem>
                   <MenuItem render={<Link to="/dashboard/profile" />}>
                     Settings

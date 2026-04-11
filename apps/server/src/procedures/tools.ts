@@ -33,7 +33,6 @@ import {
   updateToolStatus,
   upsertToolReview,
 } from "db/services/tools"
-import { deductCreditsForRun, getUserCredits } from "db/services/user"
 import { executeAITool } from "llm/executor"
 import {
   ContextLengthError,
@@ -41,7 +40,11 @@ import {
   RateLimitError,
 } from "llm/providers"
 import { formatError, logger } from "logger"
-import { checkAndTriggerAutoTopup } from "payments/auto-topup"
+import {
+  formatQuotaError,
+  requireSubscriptionForTool,
+  trackToolExecution,
+} from "payments/tool-subscription-middleware"
 import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { decryptApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
@@ -55,9 +58,9 @@ import {
   AssetValidationError,
   CryptoOperationError,
   ForbiddenError,
-  InsufficientCreditsError,
   ReviewNotFoundError,
   SettingsNotFoundError,
+  SubscriptionQuotaExceededError,
   ToolConfigurationError,
   ToolNotAvailableError,
   ToolNotFoundError,
@@ -406,17 +409,21 @@ export const toolsRouter = {
         }
 
         const cost = Number(tool.costPerRun ?? 0)
+        const estimatedTokens = 1000
 
-        const creditsResult = await getUserCredits(context.session.id)
-        const credits = yield* creditsResult.mapError(
-          () => new Error("Failed to get credits"),
+        const subCheckResult = await requireSubscriptionForTool(
+          context.session.id,
+          estimatedTokens,
+        )
+        const subCheck = yield* subCheckResult.mapError(
+          () => new Error("Failed to check subscription"),
         )
 
-        if (Number(credits.balance) < cost) {
+        if (!subCheck.allowed) {
           return Result.err(
-            new InsufficientCreditsError({
-              required: cost,
-              available: Number(credits.balance),
+            new SubscriptionQuotaExceededError({
+              reason: subCheck.reason ?? "quota_exceeded",
+              message: formatQuotaError(subCheck.reason ?? "quota_exceeded"),
             }),
           )
         }
@@ -486,18 +493,21 @@ export const toolsRouter = {
           completedAt: new Date(),
         })
 
-        await deductCreditsForRun(context.session.id, cost, runId, tool.name)
-
         void Result.tryPromise({
-          try: () =>
-            checkAndTriggerAutoTopup(
+          try: async () => {
+            const trackResult = await trackToolExecution(
               context.session.id,
-              context.session.email,
-              context.session.username ?? context.session.name,
-            ),
+              estimatedTokens,
+            )
+            if (trackResult.isErr()) {
+              logger.warn(
+                `Failed to track tool usage for user ${context.session.id}: ${formatError(trackResult.error)}`,
+              )
+            }
+          },
           catch: (error) => {
             logger.warn(
-              `Auto-topup check failed for user ${context.session.id}: ${formatError(error)}`,
+              `Failed to track tool usage for user ${context.session.id}: ${formatError(error)}`,
             )
             return undefined
           },

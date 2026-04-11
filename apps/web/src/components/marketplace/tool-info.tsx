@@ -2,8 +2,8 @@ import {
   CalendarIcon,
   FolderIcon,
   TagIcon,
-  CreditCardIcon,
   StarIcon,
+  ZapIcon,
 } from "lucide-react"
 
 import { Badge } from "ui/badge"
@@ -58,12 +58,15 @@ const ToolInfo = ({ tool }: ToolInfoProps) => {
 
         <div className="flex items-center justify-between text-sm">
           <div className="text-muted-foreground flex items-center gap-2">
-            <CreditCardIcon className="size-4" />
-            <span>Cost per run</span>
+            <ZapIcon className="size-4" />
+            <span>Availability</span>
           </div>
-          <span className="text-foreground font-medium">
-            {cost > 0 ? `${cost} credits` : "Free"}
-          </span>
+          <Badge
+            variant={cost > 0 ? "secondary" : "default"}
+            className="text-xs"
+          >
+            {cost > 0 ? "Pro & Enterprise" : "All plans"}
+          </Badge>
         </div>
 
         <div className="flex items-center justify-between text-sm">

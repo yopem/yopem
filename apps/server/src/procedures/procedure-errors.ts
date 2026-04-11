@@ -178,6 +178,20 @@ export class InsufficientCreditsError extends TaggedError(
   }
 }
 
+export class SubscriptionQuotaExceededError extends TaggedError(
+  "SubscriptionQuotaExceededError",
+)<{
+  reason: string
+  message: string
+}>() {
+  constructor(args: { reason: string; message?: string }) {
+    super({
+      reason: args.reason,
+      message: args.message ?? "Subscription quota exceeded",
+    })
+  }
+}
+
 export class AutoTopupValidationError extends TaggedError(
   "AutoTopupValidationError",
 )<{
@@ -329,6 +343,7 @@ export type ToolProcedureError =
   | TagNotFoundError
   | TagValidationError
   | InsufficientCreditsError
+  | SubscriptionQuotaExceededError
   | CryptoOperationError
   | AiExecutionError
   | ForbiddenError

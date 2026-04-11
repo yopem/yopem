@@ -1,10 +1,19 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangleIcon, CopyIcon, LockIcon, PlayIcon } from "lucide-react"
+import { Link } from "@tanstack/react-router"
+import {
+  AlertTriangleIcon,
+  CopyIcon,
+  CrownIcon,
+  LockIcon,
+  PlayIcon,
+  SparklesIcon,
+} from "lucide-react"
 import { useRef, useState } from "react"
 
 import { queryApi } from "rpc/query"
+import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Field, FieldLabel } from "ui/field"
 import { Textarea } from "ui/textarea"
@@ -39,16 +48,24 @@ export default function ToolExecuteForm({
   const fileReaderRef = useRef<FileReader | null>(null)
 
   const cost = Number(costPerRun ?? 0)
+  const requiresPaidPlan = cost > 0
 
   const queryClient = useQueryClient()
 
-  const { data: creditsData } = useQuery({
-    ...queryApi.user.getCredits.queryOptions(),
+  const { data: subscription } = useQuery({
+    ...queryApi.user.getSubscription.queryOptions(),
     enabled: isAuthenticated,
-  }) as { data: { balance: string } | undefined | null }
+  }) as {
+    data:
+      | {
+          tier: "free" | "pro" | "enterprise"
+          isPaid: boolean
+        }
+      | undefined
+      | null
+  }
 
-  const balance = Number(creditsData?.balance ?? 0)
-  const hasInsufficientCredits = cost > 0 && balance < cost
+  const hasAccess = !requiresPaidPlan || (subscription?.isPaid ?? false)
 
   const executeMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
@@ -62,7 +79,7 @@ export default function ToolExecuteForm({
       setOutput(data.output)
       setError(null)
       void queryClient.invalidateQueries({
-        queryKey: queryApi.user.getCredits.queryOptions().queryKey,
+        queryKey: queryApi.user.getSubscription.queryOptions().queryKey,
       })
     },
     onError: (error: Error) => {
@@ -144,32 +161,32 @@ export default function ToolExecuteForm({
           </div>
         )}
 
-        {cost > 0 && (
+        {requiresPaidPlan && (
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Execution cost</span>
-              <span className="text-foreground font-medium">
-                {cost} credits
-              </span>
-            </div>
-            {creditsData && (
-              <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Your balance</span>
-                <span
-                  className={
-                    hasInsufficientCredits
-                      ? "text-destructive font-medium"
-                      : "text-foreground font-medium"
-                  }
-                >
-                  {balance} credits
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CrownIcon className="size-4 text-amber-500" />
+                <span className="text-foreground text-sm font-medium">
+                  Premium Tool
                 </span>
               </div>
-            )}
-            {hasInsufficientCredits && (
-              <div className="text-destructive mt-3 flex items-center gap-2 text-sm">
-                <AlertTriangleIcon className="size-4" />
-                <span>Insufficient credits to run this tool</span>
+              <Badge variant="secondary" className="text-xs">
+                Pro & Enterprise
+              </Badge>
+            </div>
+            {!hasAccess && subscription && (
+              <div className="border-border/50 mt-3 border-t pt-3">
+                <div className="text-muted-foreground text-sm">
+                  Upgrade to Pro to use this tool
+                </div>
+                <Button
+                  size="sm"
+                  className="mt-2"
+                  render={<Link to="/dashboard/subscription" />}
+                >
+                  <SparklesIcon className="mr-1.5 size-3.5" />
+                  Upgrade Now
+                </Button>
               </div>
             )}
           </div>
@@ -193,7 +210,7 @@ export default function ToolExecuteForm({
           ) : (
             <Button
               onClick={handleExecute}
-              disabled={executeMutation.isPending || hasInsufficientCredits}
+              disabled={executeMutation.isPending || !hasAccess}
               className="w-full"
             >
               {executeMutation.isPending ? (
@@ -204,7 +221,7 @@ export default function ToolExecuteForm({
               ) : (
                 <>
                   <PlayIcon className="mr-2 size-4" />
-                  {cost > 0 ? `Run tool (${cost} credits)` : "Run tool"}
+                  Run tool
                 </>
               )}
             </Button>

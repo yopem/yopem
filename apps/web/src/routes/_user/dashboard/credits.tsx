@@ -1,19 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { queryApi } from "rpc/query"
 
-import AutoTopupSettings from "@/components/user/credits/auto-topup-settings"
 import CreditStats from "@/components/user/credits/credit-stats"
 import PurchaseCredits from "@/components/user/credits/purchase-credits"
 import TransactionHistory from "@/components/user/credits/transaction-history"
-
-interface AutoTopupState {
-  enabled: boolean
-  threshold: string
-  amount: string
-}
 
 export const Route = createFileRoute("/_user/dashboard/credits")({
   component: CreditsPage,
@@ -28,12 +21,6 @@ function CreditsPage() {
     refetchOnWindowFocus: false,
   })
 
-  const { data: autoTopupSettings } = useQuery({
-    ...queryApi.user.getAutoTopupSettings.queryOptions(),
-    retry: false,
-    refetchOnWindowFocus: false,
-  })
-
   const { data: transactionsData } = useQuery({
     ...queryApi.user.getTransactions.queryOptions({ input: { limit: 20 } }),
     retry: false,
@@ -44,30 +31,6 @@ function CreditsPage() {
     ...queryApi.user.getPendingCheckouts.queryOptions(),
     retry: false,
     refetchOnWindowFocus: false,
-  })
-
-  const [autoTopup, setAutoTopup] = useState<AutoTopupState>(() => ({
-    enabled: autoTopupSettings?.enabled ?? false,
-    threshold: autoTopupSettings?.threshold
-      ? String(autoTopupSettings.threshold)
-      : "",
-    amount: autoTopupSettings?.amount ? String(autoTopupSettings.amount) : "",
-  }))
-
-  const updateAutoTopupMutation = useMutation({
-    mutationFn: (settings: {
-      enabled: boolean
-      threshold?: number
-      amount?: number
-    }) => {
-      return queryApi.user.updateAutoTopupSettings.call(settings)
-    },
-    onSuccess: () => {
-      alert("Auto-topup settings updated successfully")
-    },
-    onError: (error: Error) => {
-      alert(`Failed to update auto-topup settings: ${error.message}`)
-    },
   })
 
   const purchaseMutation = useMutation({
@@ -111,38 +74,6 @@ function CreditsPage() {
     purchaseMutation.mutate(amount)
   }
 
-  const handleSaveAutoTopup = () => {
-    if (autoTopup.enabled) {
-      const threshold = Number.parseFloat(autoTopup.threshold)
-      const amount = Number.parseFloat(autoTopup.amount)
-
-      if (Number.isNaN(threshold) || Number.isNaN(amount)) {
-        alert("Please enter valid numbers for threshold and amount")
-        return
-      }
-
-      if (threshold < 1 || amount < 1) {
-        alert("Threshold and amount must be at least $1")
-        return
-      }
-
-      if (threshold >= amount) {
-        alert("Threshold must be less than auto-topup amount")
-        return
-      }
-
-      updateAutoTopupMutation.mutate({
-        enabled: true,
-        threshold,
-        amount,
-      })
-    } else {
-      updateAutoTopupMutation.mutate({
-        enabled: false,
-      })
-    }
-  }
-
   const calculateCredits = (amount: number) => {
     return Math.floor(amount * 10)
   }
@@ -157,6 +88,12 @@ function CreditsPage() {
         <h1 className="text-3xl font-bold">Credits</h1>
         <p className="text-muted-foreground mt-2">
           Manage your credits and view transaction history.
+        </p>
+        <p className="mt-4 text-sm text-amber-600">
+          We&apos;ve moved to a new subscription-based pricing model.{" "}
+          <Link to="/dashboard/subscription" className="underline">
+            Check out the new plans
+          </Link>
         </p>
       </div>
 
@@ -173,22 +110,6 @@ function CreditsPage() {
         purchaseMutation={purchaseMutation}
         onAmountChange={handleCustomAmountChange}
         onPurchase={handlePurchase}
-        calculateCredits={calculateCredits}
-      />
-
-      <AutoTopupSettings
-        autoTopup={autoTopup}
-        updateMutation={updateAutoTopupMutation}
-        onEnabledChange={(enabled) =>
-          setAutoTopup((prev) => ({ ...prev, enabled }))
-        }
-        onThresholdChange={(value) =>
-          setAutoTopup((prev) => ({ ...prev, threshold: value }))
-        }
-        onAmountChange={(value) =>
-          setAutoTopup((prev) => ({ ...prev, amount: value }))
-        }
-        onSave={handleSaveAutoTopup}
         calculateCredits={calculateCredits}
       />
 
