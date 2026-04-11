@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e ../../.env -- sh -c 'portless admin.yopem --app-port ${ADMIN_PORT:-3001} bun run with-env vite dev'",
+    "dev": "bun run with-env vite dev --port ${ADMIN_PORT:-3001}",
     "build": "bun run with-env vite build",
     "start": "bun run with-env node .output/server/index.mjs",
     "lint": "oxlint .",
