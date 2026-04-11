@@ -1,7 +1,7 @@
 "use client"
 
 import { Image } from "@unpic/react"
-import { ImageIcon, XIcon } from "lucide-react"
+import { ImageIcon, LinkIcon, XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 import {
@@ -12,12 +12,28 @@ import {
   DialogPanel,
   DialogPopup,
 } from "ui/dialog"
+import { toastManager } from "ui/toast"
 
 import type { Asset } from "./asset-card"
 
 interface AssetPreviewDialogProps {
   asset: Asset | null
   onClose: () => void
+}
+
+const handleCopyUrl = async (url: string) => {
+  try {
+    await navigator.clipboard.writeText(url)
+    toastManager.add({
+      title: "URL copied to clipboard",
+      type: "success",
+    })
+  } catch {
+    toastManager.add({
+      title: "Failed to copy URL",
+      type: "error",
+    })
+  }
 }
 
 function formatFileSize(bytes: number): string {
@@ -63,6 +79,14 @@ export function AssetPreviewDialog({
               )}
             </DialogPanel>
             <DialogFooter variant="bare">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCopyUrl(asset.url)}
+              >
+                <LinkIcon className="mr-2 size-4" />
+                Copy URL
+              </Button>
               <Button variant="outline" size="sm" onClick={onClose}>
                 <XIcon className="mr-2 size-4" />
                 Close

@@ -1,13 +1,14 @@
 "use client"
 
 import { Image } from "@unpic/react"
-import { ImageIcon, Trash2Icon } from "lucide-react"
+import { ImageIcon, LinkIcon, Trash2Icon } from "lucide-react"
 import { memo } from "react"
 
 import { formatDateOnly } from "shared/format-date"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader } from "ui/card"
+import { toastManager } from "ui/toast"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
@@ -25,6 +26,21 @@ interface AssetCardProps {
   asset: Asset
   onPreview: (asset: Asset) => void
   onDelete: (asset: Asset) => void
+}
+
+const handleCopyUrl = async (url: string) => {
+  try {
+    await navigator.clipboard.writeText(url)
+    toastManager.add({
+      title: "URL copied to clipboard",
+      type: "success",
+    })
+  } catch {
+    toastManager.add({
+      title: "Failed to copy URL",
+      type: "error",
+    })
+  }
 }
 
 function formatFileSize(bytes: number): string {
@@ -57,6 +73,16 @@ function AssetCardComponent({ asset, onPreview, onDelete }: AssetCardProps) {
           </div>
         )}
         <div className="absolute inset-0 flex items-start justify-end gap-1 bg-linear-to-b from-black/50 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleCopyUrl(asset.url)
+            }}
+          >
+            <LinkIcon className="size-4" />
+          </Button>
           <Button
             variant="destructive"
             size="icon-sm"
