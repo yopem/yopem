@@ -52,7 +52,10 @@ const ToolActions = ({
         <MenuGroup>
           <MenuItem
             render={
-              <Link href={`/tools/edit/${tool.id}`}>
+              <Link
+                className="text-foreground hover:bg-accent"
+                href={`/tools/edit/${tool.id}`}
+              >
                 <PencilIcon className="size-4" />
                 Edit
               </Link>
