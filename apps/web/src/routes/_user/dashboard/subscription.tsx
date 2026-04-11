@@ -209,24 +209,24 @@ function SubscriptionPage() {
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-sm">
                       <CheckIcon className="size-4 text-green-600" />
-                      {plan.limits.maxRequestsPerMonth ===
+                      {plan.limits?.maxRequestsPerMonth ===
                       Number.POSITIVE_INFINITY
                         ? "Unlimited"
-                        : plan.limits.maxRequestsPerMonth.toLocaleString()}{" "}
+                        : plan.limits?.maxRequestsPerMonth?.toLocaleString()}{" "}
                       requests/month
                     </li>
                     <li className="flex items-center gap-2 text-sm">
                       <CheckIcon className="size-4 text-green-600" />
-                      {plan.limits.maxTokensPerRequest.toLocaleString()}{" "}
+                      {plan.limits?.maxTokensPerRequest?.toLocaleString()}{" "}
                       tokens/request
                     </li>
-                    {plan.limits.maxCustomTools !== null && (
+                    {plan.limits?.maxCustomTools !== null && (
                       <li className="flex items-center gap-2 text-sm">
                         <CheckIcon className="size-4 text-green-600" />
-                        {plan.limits.maxCustomTools} custom tools
+                        {plan.limits?.maxCustomTools} custom tools
                       </li>
                     )}
-                    {plan.limits.maxCustomTools === null &&
+                    {plan.limits?.maxCustomTools === null &&
                       plan.tier !== "free" && (
                         <li className="flex items-center gap-2 text-sm">
                           <CheckIcon className="size-4 text-green-600" />

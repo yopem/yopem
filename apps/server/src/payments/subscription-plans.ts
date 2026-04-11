@@ -26,7 +26,7 @@ const plans: Record<SubscriptionTier, PlanConfig> = {
     monthlyPrice: null,
     yearlyPrice: null,
     limits: {
-      maxRequestsPerMonth: 50,
+      maxRequestsPerMonth: 10,
       maxTokensPerRequest: 1000,
       maxCustomTools: 0,
     },

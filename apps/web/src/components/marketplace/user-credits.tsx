@@ -38,7 +38,7 @@ export default function UserCredits() {
           cancelAtPeriodEnd: boolean
           currentPeriodEnd: string | null
           limits: {
-            maxRequests: number
+            maxRequestsPerMonth: number
           }
         }
       | undefined
@@ -80,7 +80,8 @@ export default function UserCredits() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Monthly limit</span>
             <span className="text-foreground font-medium">
-              {subscription.limits.maxRequests.toLocaleString()} requests
+              {subscription.limits.maxRequestsPerMonth.toLocaleString()}{" "}
+              requests
             </span>
           </div>
           {subscription.isPaid && subscription.currentPeriodEnd && (

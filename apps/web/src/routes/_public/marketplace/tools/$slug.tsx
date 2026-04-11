@@ -4,7 +4,7 @@ import { ArrowLeftIcon } from "lucide-react"
 import { Suspense } from "react"
 
 import { siteTitle } from "env/client"
-import { queryApi } from "rpc/query"
+import { serverApi } from "rpc/server"
 import { Badge } from "ui/badge"
 import { Separator } from "ui/separator"
 import { Skeleton } from "ui/skeleton"
@@ -17,10 +17,10 @@ import UserCredits from "@/components/marketplace/user-credits"
 export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
   loader: async ({ params, context }) => {
     const [tool, reviewsData, hasUsedResult] = await Promise.all([
-      queryApi.tools.getBySlug.call({ slug: params.slug }),
-      queryApi.tools.getReviews.call({ slug: params.slug }),
+      serverApi.tools.getBySlug({ slug: params.slug }),
+      serverApi.tools.getReviews({ slug: params.slug }),
       context.session
-        ? queryApi.tools.hasUsedTool.call({ slug: params.slug })
+        ? serverApi.tools.hasUsedTool({ slug: params.slug })
         : Promise.resolve({ hasUsed: false }),
     ])
     return {
