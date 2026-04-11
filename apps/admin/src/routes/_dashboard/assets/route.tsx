@@ -190,6 +190,10 @@ const AssetsPage = () => {
         <AssetPreviewDialog
           asset={previewAsset}
           onClose={() => setPreviewAsset(null)}
+          onDelete={(asset) => {
+            setPreviewAsset(null)
+            setDeleteAsset(asset)
+          }}
         />
 
         <DeleteAssetDialog

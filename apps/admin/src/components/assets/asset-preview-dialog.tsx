@@ -1,7 +1,7 @@
 "use client"
 
 import { Image } from "@unpic/react"
-import { ImageIcon, LinkIcon, XIcon } from "lucide-react"
+import { ImageIcon, LinkIcon, Trash2Icon, XIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 import {
@@ -19,6 +19,7 @@ import type { Asset } from "./asset-card"
 interface AssetPreviewDialogProps {
   asset: Asset | null
   onClose: () => void
+  onDelete?: (asset: Asset) => void
 }
 
 const handleCopyUrl = async (url: string) => {
@@ -47,6 +48,7 @@ function formatFileSize(bytes: number): string {
 export function AssetPreviewDialog({
   asset,
   onClose,
+  onDelete,
 }: AssetPreviewDialogProps) {
   const isImage = asset?.type === "images"
 
@@ -87,6 +89,19 @@ export function AssetPreviewDialog({
                 <LinkIcon className="mr-2 size-4" />
                 Copy URL
               </Button>
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    onClose()
+                    onDelete(asset)
+                  }}
+                >
+                  <Trash2Icon className="mr-2 size-4" />
+                  Delete
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={onClose}>
                 <XIcon className="mr-2 size-4" />
                 Close
