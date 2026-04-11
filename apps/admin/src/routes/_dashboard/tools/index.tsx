@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 
@@ -7,7 +8,6 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { toastManager } from "ui/toast"
 
-import Link from "@/components/link"
 import DeleteDialog from "@/components/tools/delete-dialog"
 import ToolsTable from "@/components/tools/tools-table"
 
@@ -200,7 +200,7 @@ const ToolsIndexPage = () => {
               </Button>
             </>
           )}
-          <Link href="/tools/add">
+          <Link to="/tools/add">
             <Button>
               <PlusIcon className="size-4" />
               <span>Create Tool</span>

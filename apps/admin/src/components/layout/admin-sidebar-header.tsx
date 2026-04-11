@@ -1,6 +1,6 @@
-import Logo from "ui/logo"
+import { Link } from "@tanstack/react-router"
 
-import Link from "@/components/link"
+import Logo from "ui/logo"
 
 interface AdminSidebarHeaderProps {
   title: string
@@ -11,12 +11,12 @@ const AdminSidebarHeader = ({ title, subtitle }: AdminSidebarHeaderProps) => {
   return (
     <div className="flex items-center gap-3">
       <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
-        <Link href="/">
+        <Link to="/">
           <Logo className="size-5" />
         </Link>
       </div>
       <div className="flex flex-col">
-        <Link href="/">
+        <Link to="/">
           <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">
             {title}
           </h1>

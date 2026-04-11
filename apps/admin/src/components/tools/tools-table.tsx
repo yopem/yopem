@@ -2,6 +2,8 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
+import { Link } from "@tanstack/react-router"
+
 import { formatDateOnly } from "shared/format-date"
 import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
@@ -13,8 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "ui/table"
-
-import Link from "@/components/link"
 
 import ToolActions, { type Tool } from "./tool-actions"
 
@@ -87,7 +87,7 @@ const ToolsTable = ({
           <TableRow>
             <TableCell colSpan={6} className="py-8 text-center">
               <p className="text-muted-foreground">No tools found</p>
-              <Link href="/tools/add" className="mt-2 inline-block">
+              <Link to="/tools/add" className="mt-2 inline-block">
                 <Button variant="outline" size="sm">
                   Create your first tool
                 </Button>
@@ -105,7 +105,8 @@ const ToolsTable = ({
               </TableCell>
               <TableCell>
                 <Link
-                  href={`/tools/edit/${tool.id}`}
+                  to="/tools/edit/$toolId"
+                  params={{ toolId: tool.id }}
                   className="font-medium hover:underline"
                 >
                   {tool.name}

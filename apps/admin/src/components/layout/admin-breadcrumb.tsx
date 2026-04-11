@@ -1,4 +1,4 @@
-import Link from "@/components/link"
+import { Link } from "@tanstack/react-router"
 
 interface BreadcrumbItem {
   label: string
@@ -16,7 +16,7 @@ const AdminBreadcrumb = ({ items }: AdminBreadcrumbProps) => {
         <div key={item.label} className="flex items-center gap-2">
           {item.href ? (
             <Link
-              href={item.href}
+              to={item.href}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               {item.label}

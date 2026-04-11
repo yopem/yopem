@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import {
   ActivityIcon,
   BarChartIcon,
@@ -10,7 +11,6 @@ import {
 
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
 import AdminPageHeader from "@/components/layout/admin-page-header"
-import Link from "@/components/link"
 
 const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Monitoring" }]
 
@@ -67,7 +67,7 @@ const MonitoringIndexPage = () => {
         {monitoringLinks.map(({ href, title, description, icon: Icon }) => (
           <Link
             key={href}
-            href={href}
+            to={href}
             className="border-border bg-card hover:bg-accent flex flex-col gap-3 rounded-lg border p-6 transition-colors"
           >
             <div className="bg-muted flex size-10 items-center justify-center rounded-md">

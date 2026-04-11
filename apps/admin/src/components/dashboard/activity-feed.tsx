@@ -1,8 +1,7 @@
+import { Link } from "@tanstack/react-router"
 import { type ReactNode } from "react"
 
 import { Card } from "ui/card"
-
-import Link from "@/components/link"
 
 import ActivityFeedItem from "./activity-feed-item"
 
@@ -23,7 +22,7 @@ const ActivityFeed = ({ items, maxHeight = "350px" }: ActivityFeedProps) => {
       <div className="border-border flex items-center justify-between border-b p-6">
         <p className="text-foreground text-base font-bold">Recent Activity</p>
         <Link
-          href="/monitoring/activity"
+          to="/monitoring/activity"
           className="text-muted-foreground hover:text-foreground text-xs font-medium"
         >
           View All

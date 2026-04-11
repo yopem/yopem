@@ -2,6 +2,7 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
+import { Link } from "@tanstack/react-router"
 import {
   CopyIcon,
   MoreHorizontalIcon,
@@ -11,8 +12,6 @@ import {
 
 import { Button } from "ui/button"
 import { Menu, MenuGroup, MenuItem, MenuPopup, MenuTrigger } from "ui/menu"
-
-import Link from "@/components/link"
 
 interface Tool {
   id: string
@@ -54,7 +53,8 @@ const ToolActions = ({
             render={
               <Link
                 className="text-foreground hover:bg-accent"
-                href={`/tools/edit/${tool.id}`}
+                to="/tools/edit/$toolId"
+                params={{ toolId: tool.id }}
               >
                 <PencilIcon className="size-4" />
                 Edit

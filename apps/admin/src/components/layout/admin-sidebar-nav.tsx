@@ -1,10 +1,9 @@
 "use client"
 
 import { useLocation } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { ChevronRightIcon } from "lucide-react"
 import { type ReactNode, useState } from "react"
-
-import Link from "@/components/link"
 
 interface NavSubItem {
   label: string
@@ -76,7 +75,7 @@ const AdminSidebarNav = ({ items }: AdminSidebarNavProps) => {
               </button>
             ) : (
               <Link
-                href={item.href}
+                to={item.href}
                 className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -99,7 +98,7 @@ const AdminSidebarNav = ({ items }: AdminSidebarNavProps) => {
                   return (
                     <Link
                       key={sub.href}
-                      href={sub.href}
+                      to={sub.href}
                       className={`rounded-md px-2 py-1.5 text-sm transition-all ${
                         isSubActive
                           ? "text-sidebar-accent-foreground font-medium"
