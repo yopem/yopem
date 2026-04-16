@@ -4,7 +4,19 @@ import { redisKeyPrefix, redisUrl } from "env/hono"
 
 export function createRedisCache() {
   let redis: Redis | null = null
-  const prefix = redisKeyPrefix
+  const prefix = redisKeyPrefix || ""
+
+  const toPattern = (pattern: string) => {
+    return `${prefix}${pattern}`
+  }
+
+  const fromRedisKey = (key: string) => {
+    if (!prefix || !key.startsWith(prefix)) {
+      return key
+    }
+
+    return key.slice(prefix.length)
+  }
 
   async function initRedis(): Promise<Redis | null> {
     if (redis) return redis
@@ -16,7 +28,9 @@ export function createRedisCache() {
 
     try {
       const { default: RedisClient } = await import("ioredis")
-      const client = new RedisClient(redisUrl)
+      const client = new RedisClient(redisUrl, {
+        keyPrefix: prefix || undefined,
+      })
 
       client.on("error", (error: Error) => {
         console.error(`Redis connection error: ${error.message}`)
@@ -65,8 +79,7 @@ export function createRedisCache() {
     try {
       const processedValue = markDatesForSerialization(value)
       const serialized = JSON.stringify(processedValue)
-      const prefixedKey = `${prefix}${key}`
-      await client.setex(prefixedKey, ttlSeconds, serialized)
+      await client.setex(key, ttlSeconds, serialized)
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       throw new Error(`Cache set failed for key ${key}: ${msg}`)
@@ -78,8 +91,7 @@ export function createRedisCache() {
     if (!client) return null
 
     try {
-      const prefixedKey = `${prefix}${key}`
-      const value = await client.get(prefixedKey)
+      const value = await client.get(key)
       if (!value) return null
 
       return JSON.parse(value, (_key, val) => {
@@ -99,11 +111,37 @@ export function createRedisCache() {
     if (!client) return
 
     try {
-      const prefixedKey = `${prefix}${key}`
-      await client.del(prefixedKey)
+      await client.del(key)
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       throw new Error(`Cache delete failed for key ${key}: ${msg}`)
+    }
+  }
+
+  async function hasCache(key: string): Promise<boolean> {
+    const client = await getRedisClient()
+    if (!client) return false
+
+    try {
+      return (await client.exists(key)) > 0
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      throw new Error(`Cache exists failed for key ${key}: ${msg}`)
+    }
+  }
+
+  async function expireCache(
+    key: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const client = await getRedisClient()
+    if (!client) return false
+
+    try {
+      return (await client.expire(key, ttlSeconds)) > 0
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      throw new Error(`Cache expire failed for key ${key}: ${msg}`)
     }
   }
 
@@ -112,10 +150,27 @@ export function createRedisCache() {
     if (!client) return
 
     try {
-      const prefixedPattern = `${prefix}${pattern}`
-      const keys = await client.keys(prefixedPattern)
+      const keys = await new Promise<string[]>((resolve, reject) => {
+        const matchedKeys: string[] = []
+        const stream = client.scanStream({ match: toPattern(pattern) })
+
+        stream.on("data", (resultKeys: string[]) => {
+          matchedKeys.push(...resultKeys)
+        })
+
+        stream.on("end", () => {
+          resolve(matchedKeys)
+        })
+
+        stream.on("error", (error: Error) => {
+          reject(error)
+        })
+      })
+
       if (keys.length > 0) {
-        await client.del(...keys)
+        await client
+          .pipeline(keys.map((redisKey) => ["unlink", fromRedisKey(redisKey)]))
+          .exec()
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -158,6 +213,8 @@ export function createRedisCache() {
     setCache,
     getCache,
     deleteCache,
+    hasCache,
+    expireCache,
     invalidatePattern,
     getRedisClient,
     close,
