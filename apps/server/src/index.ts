@@ -34,7 +34,8 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "x-orpc-procedure"],
+    exposeHeaders: ["Content-Disposition"],
   }),
 )
 

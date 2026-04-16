@@ -4,6 +4,7 @@ import { useCallback, useEffect, useReducer } from "react"
 
 import { queryApi } from "rpc/query"
 import { Dialog, DialogPopup } from "ui/dialog"
+import { toastManager } from "ui/toast"
 
 import AssetLibrary from "./asset-library"
 import ThumbnailDisplay from "./thumbnail-display"
@@ -179,6 +180,13 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         dispatch({ type: "CLOSE_DIALOG" })
       } catch (error) {
         console.error("Upload failed:", error)
+        const message =
+          error instanceof Error ? error.message : "Unknown error occurred"
+        toastManager.add({
+          title: "Upload failed",
+          description: message,
+          type: "error",
+        })
       }
 
       dispatch({ type: "SET_UPLOADING", payload: false })

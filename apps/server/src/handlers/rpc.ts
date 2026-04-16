@@ -27,44 +27,60 @@ const handler = new RPCHandler(appRouter, {
 })
 
 const proxyRequestBody = (original: Request): Request => {
-  let cachedArrayBuffer: ArrayBuffer | null = null
+  let cachedBody: ArrayBuffer | FormData | null = null
+  let bodyType: "arraybuffer" | "formdata" | null = null
 
   const cloneBody = async () => {
-    if (cachedArrayBuffer === null) {
-      cachedArrayBuffer = await original.arrayBuffer()
+    if (cachedBody === null) {
+      const contentType = original.headers.get("content-type") || ""
+      if (contentType.includes("multipart/form-data")) {
+        cachedBody = await original.formData()
+        bodyType = "formdata"
+      } else {
+        cachedBody = await original.arrayBuffer()
+        bodyType = "arraybuffer"
+      }
     }
-    return cachedArrayBuffer
+    return cachedBody
   }
 
   return new Proxy(original, {
     get(target, prop, receiver) {
       if (prop === "json") {
         return async () => {
-          const buf = await cloneBody()
-          const text = new TextDecoder().decode(buf)
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as JSON")
+          }
+          const text = new TextDecoder().decode(body as ArrayBuffer)
           return JSON.parse(text)
         }
       }
       if (prop === "text") {
         return async () => {
-          const buf = await cloneBody()
-          return new TextDecoder().decode(buf)
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as text")
+          }
+          return new TextDecoder().decode(body as ArrayBuffer)
         }
       }
       if (prop === "arrayBuffer") {
         return async () => {
-          const buf = await cloneBody()
-          return buf.slice(0)
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot convert FormData to ArrayBuffer")
+          }
+          return (body as ArrayBuffer).slice(0)
         }
       }
       if (prop === "formData") {
         return async () => {
-          const buf = await cloneBody()
-          const blob = new Blob([buf], {
-            type: target.headers.get("content-type") ?? "",
-          })
-          const response = new Response(blob)
-          return response.formData()
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            return body as FormData
+          }
+          throw new Error("Body is not FormData")
         }
       }
       if (prop === "body") {

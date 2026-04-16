@@ -27,6 +27,9 @@ export const createORPCLink = (
           credentials: "include",
         })
       }),
+    headers: () => ({
+      Accept: "application/json",
+    }),
     interceptors: [
       onError((error) => {
         const isAbortError =
