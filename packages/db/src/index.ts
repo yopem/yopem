@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
-import { appEnv, databaseUrl } from "env/hono"
+import { appEnv, databaseUrl } from "env/server"
 
 import * as schema from "./schema/index.ts"
 

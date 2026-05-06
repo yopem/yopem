@@ -169,6 +169,13 @@
       "when": 1775555323758,
       "tag": "0023_elite_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1778055200960,
+      "tag": "0024_silky_shiver_man",
+      "breakpoints": true
     }
   ]
 }

@@ -13,7 +13,6 @@ export interface SubscriptionStats {
   proTierCount: number
   enterpriseTierCount: number
   polarSourceCount: number
-  grandfatheredSourceCount: number
   newThisMonth: number
   cancelingThisMonth: number
 }
@@ -29,7 +28,6 @@ export const getSubscriptionStats = async (): Promise<SubscriptionStats> => {
     proResult,
     enterpriseResult,
     polarResult,
-    grandfatheredResult,
     newThisMonthResult,
     cancelingResult,
   ] = await Promise.all([
@@ -69,10 +67,6 @@ export const getSubscriptionStats = async (): Promise<SubscriptionStats> => {
     db
       .select({ count: count() })
       .from(subscriptionsTable)
-      .where(eq(subscriptionsTable.source, "grandfathered")),
-    db
-      .select({ count: count() })
-      .from(subscriptionsTable)
       .where(
         gte(subscriptionsTable.createdAt, sql`DATE_TRUNC('month', NOW())`),
       ),
@@ -101,7 +95,6 @@ export const getSubscriptionStats = async (): Promise<SubscriptionStats> => {
     proTierCount: proResult[0]?.count ?? 0,
     enterpriseTierCount: enterpriseResult[0]?.count ?? 0,
     polarSourceCount: polarResult[0]?.count ?? 0,
-    grandfatheredSourceCount: grandfatheredResult[0]?.count ?? 0,
     newThisMonth: newThisMonthResult[0]?.count ?? 0,
     cancelingThisMonth: cancelingResult[0]?.count ?? 0,
   }

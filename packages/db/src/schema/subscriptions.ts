@@ -23,10 +23,7 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "expired",
 ])
 
-export const subscriptionSourceEnum = pgEnum("subscription_source", [
-  "polar",
-  "grandfathered",
-])
+export const subscriptionSourceEnum = pgEnum("subscription_source", ["polar"])
 
 export const subscriptionsTable = pgTable(
   "subscriptions",

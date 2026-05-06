@@ -3,7 +3,12 @@ import { eq } from "drizzle-orm"
 
 import { db } from "db"
 import { userCreditsTable, userSettingsTable } from "db/schema"
-import { appEnv, polarAccessToken, polarProductId, siteDomain } from "env/hono"
+import {
+  appEnv,
+  polarAccessToken,
+  polarProductId,
+  siteDomain,
+} from "env/server"
 import { createCustomId } from "shared/custom-id"
 
 interface AutoTopupResult {

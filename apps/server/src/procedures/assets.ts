@@ -13,7 +13,7 @@ import {
   insertAsset,
   listAssets,
 } from "db/services/assets"
-import { r2Domain } from "env/hono"
+import { r2Domain } from "env/server"
 
 import { getR2Storage } from "../storage"
 

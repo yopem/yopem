@@ -283,20 +283,6 @@ function SubscriptionPage() {
           })
         )}
       </div>
-
-      {/* Legacy Credits Link */}
-      <Separator />
-      <div className="text-center">
-        <p className="text-muted-foreground text-sm">
-          Looking for your credit balance?{" "}
-          <Link
-            to="/dashboard/credits"
-            className="text-primary hover:underline"
-          >
-            View legacy credits page
-          </Link>
-        </p>
-      </div>
     </div>
   )
 }

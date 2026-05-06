@@ -142,12 +142,3 @@ export const getSubscriptionsByStatus = (
     .from(subscriptionsTable)
     .where(eq(subscriptionsTable.status, status))
 }
-
-export const getExpiringGrandfatheredSubscriptions = (
-  _daysThreshold = 7,
-): Promise<SelectSubscription[]> => {
-  return db
-    .select()
-    .from(subscriptionsTable)
-    .where(eq(subscriptionsTable.source, "grandfathered"))
-}

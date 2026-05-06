@@ -2,7 +2,7 @@ export type SubscriptionTier = "free" | "pro" | "enterprise"
 
 export type SubscriptionStatus = "active" | "cancelled" | "past_due" | "expired"
 
-export type SubscriptionSource = "polar" | "grandfathered"
+export type SubscriptionSource = "polar"
 
 export interface PlanConfig {
   tier: SubscriptionTier

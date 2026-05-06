@@ -853,24 +853,6 @@ export const adminRouter = {
       return result
     }),
 
-  migrateToSubscriptions: adminProcedure.handler(async () => {
-    const { migrateExistingCreditsToSubscriptions } =
-      await import("db/services/grandfathered-migration")
-
-    const result = await migrateExistingCreditsToSubscriptions()
-
-    console.info(
-      `Migration completed: ${result.migratedCount} migrated, ${result.failedCount} failed`,
-    )
-
-    return {
-      success: result.failedCount === 0,
-      migratedCount: result.migratedCount,
-      failedCount: result.failedCount,
-      errors: result.errors.slice(0, 10),
-    }
-  }),
-
   getSubscriptionStats: adminProcedure.handler(async () => {
     const { getSubscriptionStats, getRevenueStats } =
       await import("db/services/subscription-admin")

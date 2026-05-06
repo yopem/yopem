@@ -14,7 +14,7 @@ import {
   r2Bucket,
   r2Domain,
   r2SecretKey,
-} from "env/hono"
+} from "env/server"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
