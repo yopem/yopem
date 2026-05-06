@@ -1,0 +1,1 @@
+ALTER TABLE "user_credits" ADD COLUMN "overflow_balance" numeric(10, 2) DEFAULT '0' NOT NULL;

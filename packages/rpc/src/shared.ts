@@ -43,6 +43,7 @@ export const createORPCLink = (
             error instanceof Error ? error.message : String(error)
           console.error(errorMessage)
         }
+        throw error
       }),
     ],
   })

@@ -21,6 +21,7 @@ import {
 } from "ui/card"
 import { Separator } from "ui/separator"
 
+import OverflowPacks from "@/components/user/subscription/overflow-packs"
 import UsageStats from "@/components/user/subscription/usage-stats"
 
 export const Route = createFileRoute("/_user/dashboard/subscription")({
@@ -33,6 +34,12 @@ function SubscriptionPage() {
 
   const { data: subscription } = useQuery({
     ...queryApi.user.getSubscription.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+
+  const { data: stats } = useQuery({
+    ...queryApi.user.getStats.queryOptions(),
     retry: false,
     refetchOnWindowFocus: false,
   })
@@ -152,10 +159,26 @@ function SubscriptionPage() {
             }
             cancelAtPeriodEnd={subscription?.cancelAtPeriodEnd}
           />
+          {Number(stats?.overflowBalance ?? 0) > 0 && (
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">
+                Extra runs available:
+              </span>
+              <span className="font-medium">
+                {stats?.overflowBalance ?? "0"}
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Separator />
+      {isPaid && (
+        <>
+          <Separator />
+          <OverflowPacks overflowBalance={stats?.overflowBalance ?? "0"} />
+          <Separator />
+        </>
+      )}
 
       {/* Available Plans */}
       <div>

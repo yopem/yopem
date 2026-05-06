@@ -9,6 +9,7 @@ import { createCustomId } from "shared/custom-id"
 
 import { redisCache } from "../cache"
 import { WebhookHandlerError } from "../errors"
+import { addOverflowCredits } from "../payments/add-overflow-credits"
 import { calculateCreditsFromAmount } from "../payments/credit-calculation"
 import { grantCredits } from "../payments/grant-credits"
 import { refundCredits } from "../payments/refund-credits"
@@ -21,8 +22,13 @@ import { WebhookMonitor } from "../payments/webhook-monitor"
 
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),
-  amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  amount: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .optional(),
   userName: z.string().optional(),
+  type: z.enum(["subscription", "overflow_credits", "credit_topup"]).optional(),
+  packSize: z.string().optional(),
 })
 
 const polarWebhookSecret = process.env["POLAR_WEBHOOK_SECRET"] ?? ""
@@ -76,9 +82,58 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
     }
 
     const productId = order.productId ?? ""
-    const { userId, amount: amountFromMetadata, userName } = metadataParse.data
+    const {
+      userId,
+      amount: amountFromMetadata,
+      userName,
+      type,
+    } = metadataParse.data
 
-    const amountInDollars = Number.parseFloat(amountFromMetadata)
+    const creditsToGrant = metadataParse.data.packSize
+      ? Number.parseInt(metadataParse.data.packSize)
+      : 0
+
+    if (type === "overflow_credits") {
+      const overflowResult = await addOverflowCredits({
+        userId,
+        userName,
+        polarPaymentId: order.id,
+        polarCustomerId: order.customerId ?? undefined,
+        amount: String(order.totalAmount / 100),
+        currency: order.currency,
+        productId,
+        creditsGranted: creditsToGrant,
+      })
+
+      if (
+        "alreadyProcessed" in overflowResult &&
+        overflowResult.alreadyProcessed
+      ) {
+        WebhookMonitor.detectDuplicateWebhook({
+          eventType: "order.paid",
+          orderId: order.id,
+          isProcessed: true,
+        })
+        console.info(
+          `Overflow order already processed (idempotent): orderId=${order.id}`,
+        )
+        return
+      }
+
+      if (order.checkoutId) {
+        await db
+          .update(polarCheckoutSessionsTable)
+          .set({ status: "completed", updatedAt: new Date() })
+          .where(eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId))
+      }
+
+      console.info(
+        `Overflow credits granted: orderId=${order.id}, userId=${userId}, packSize=${metadataParse.data.packSize}, credits=${creditsToGrant}`,
+      )
+      return
+    }
+
+    const amountInDollars = Number.parseFloat(amountFromMetadata ?? "0")
     const creditsGranted = calculateCreditsFromAmount(amountInDollars)
 
     const grantResult = await grantCredits({

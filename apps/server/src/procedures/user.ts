@@ -16,6 +16,7 @@ import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
 import { createCustomId } from "shared/custom-id"
 
 import { getEntitlements } from "../payments/entitlements"
+import { createOverflowCreditCheckout } from "../payments/overflow-checkout"
 import {
   createCustomerPortalSession,
   createSubscriptionCheckout,
@@ -168,6 +169,38 @@ export const userRouter = {
       })
     }
   }),
+
+  createOverflowCreditCheckout: protectedProcedure
+    .input(
+      z.object({
+        packSize: z.enum(["100", "500"]),
+      }),
+    )
+    .handler(async ({ context, input }) => {
+      const subscription = await subscriptionService.getSubscription(
+        context.session.id,
+      )
+
+      try {
+        const result = await createOverflowCreditCheckout(
+          context.session.id,
+          context.session.email,
+          subscription?.polarCustomerId ?? null,
+          input.packSize,
+        )
+        return {
+          url: result.url,
+          checkoutId: result.checkoutId,
+        }
+      } catch (error) {
+        console.error(
+          `Failed to create overflow credit checkout: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Failed to create overflow credit checkout",
+        })
+      }
+    }),
 
   getTransactions: protectedProcedure
     .input(

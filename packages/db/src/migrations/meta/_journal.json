@@ -183,6 +183,13 @@
       "when": 1778056020831,
       "tag": "0025_dazzling_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1778058321841,
+      "tag": "0026_chilly_invaders",
+      "breakpoints": true
     }
   ]
 }

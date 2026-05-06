@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
-import { CreditCardIcon, PlayIcon, ZapIcon } from "lucide-react"
+import { CoinsIcon, CreditCardIcon, PlayIcon, ZapIcon } from "lucide-react"
 import { memo } from "react"
 
 import { queryApi } from "rpc/query"
@@ -77,7 +77,7 @@ function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Current Plan"
           value={currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
@@ -102,6 +102,14 @@ function DashboardPage() {
           icon={CreditCardIcon}
           description="Monthly usage"
         />
+        {Number(stats?.overflowBalance ?? 0) > 0 && (
+          <StatCard
+            title="Extra Runs"
+            value={stats?.overflowBalance ?? "0"}
+            icon={CoinsIcon}
+            description="Available for over-quota runs"
+          />
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

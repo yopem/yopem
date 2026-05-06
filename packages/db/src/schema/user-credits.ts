@@ -16,6 +16,12 @@ export const userCreditsTable = pgTable("user_credits", {
     scale: 2,
   }).default("0"),
   totalUsed: decimal("total_used", { precision: 10, scale: 2 }).default("0"),
+  overflowBalance: decimal("overflow_balance", {
+    precision: 10,
+    scale: 2,
+  })
+    .default("0")
+    .notNull(),
   lastResetAt: timestamp("last_reset_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

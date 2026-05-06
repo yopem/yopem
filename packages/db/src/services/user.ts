@@ -24,6 +24,7 @@ export const getUserStats = async (
   userId: string,
 ): Promise<{
   balance: string
+  overflowBalance: string
   totalUsed: string | null
   totalPurchased: string | null
   totalRuns: number
@@ -31,6 +32,7 @@ export const getUserStats = async (
   const [credits] = await db
     .select({
       balance: userCreditsTable.balance,
+      overflowBalance: userCreditsTable.overflowBalance,
       totalUsed: userCreditsTable.totalUsed,
       totalPurchased: userCreditsTable.totalPurchased,
     })
@@ -44,6 +46,7 @@ export const getUserStats = async (
 
   return {
     balance: credits ? credits.balance : "0",
+    overflowBalance: credits ? credits.overflowBalance : "0",
     totalUsed: credits ? credits.totalUsed : "0",
     totalPurchased: credits ? credits.totalPurchased : "0",
     totalRuns: Number(runsResult ? runsResult.count : 0),
@@ -314,6 +317,29 @@ export const deductCreditsForRun = async (
     type: "usage" as const,
     description: `Tool execution: ${toolName}`,
     toolRunId,
+  })
+}
+
+export const deductOverflowCredit = async (
+  userId: string,
+  toolName: string,
+  toolRunId?: string,
+): Promise<void> => {
+  await db
+    .update(userCreditsTable)
+    .set({
+      overflowBalance: sql`${userCreditsTable.overflowBalance} - 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(userCreditsTable.userId, userId))
+
+  await db.insert(creditTransactionsTable).values({
+    id: createCustomId(),
+    userId,
+    amount: "-1",
+    type: "overflow_usage",
+    description: `Overflow usage: ${toolName}`,
+    toolRunId: toolRunId ?? null,
   })
 }
 

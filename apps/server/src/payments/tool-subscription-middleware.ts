@@ -1,10 +1,12 @@
+import { getUserCredits, deductOverflowCredit } from "db/services/user"
+
 import { checkQuota, type QuotaCheck } from "./quota-check"
 import { recordUsage } from "./usage-tracking"
 
 export interface SubscriptionCheckResult {
   allowed: boolean
   reason?: string
-  quotaCheck: QuotaCheck
+  quotaCheck?: QuotaCheck
 }
 
 export const requireSubscriptionForTool = async (
@@ -14,6 +16,27 @@ export const requireSubscriptionForTool = async (
   const quotaCheck = await checkQuota(userId, estimatedTokens)
 
   if (!quotaCheck.allowed) {
+    if (quotaCheck.reason === "monthly_quota_exceeded") {
+      const credits = await getUserCredits(userId)
+      const overflowBalance = Number(credits?.overflowBalance ?? 0)
+
+      if (overflowBalance > 0) {
+        await deductOverflowCredit(userId, "tool-run")
+
+        return {
+          allowed: true,
+          reason: "overflow_credit_used",
+          quotaCheck,
+        }
+      }
+
+      return {
+        allowed: false,
+        reason: "overflow_credits_exhausted",
+        quotaCheck,
+      }
+    }
+
     return {
       allowed: false,
       reason: quotaCheck.reason,
@@ -44,6 +67,8 @@ export const formatQuotaError = (reason: string): string => {
       return "You have reached your monthly usage limit. Upgrade your plan for more requests."
     case "token_limit_exceeded":
       return "This request exceeds your plan's token limit. Try a shorter input or upgrade your plan."
+    case "overflow_credits_exhausted":
+      return "You have used all your extra runs. Purchase more or upgrade your plan for additional monthly requests."
     default:
       return "Subscription check failed. Please contact support."
   }

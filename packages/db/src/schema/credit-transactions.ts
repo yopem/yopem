@@ -8,6 +8,8 @@ export const creditTransactionTypeEnum = [
   "usage",
   "refund",
   "bonus",
+  "overflow_purchase",
+  "overflow_usage",
 ] as const
 export type CreditTransactionType = (typeof creditTransactionTypeEnum)[number]
 
