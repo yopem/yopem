@@ -22,7 +22,6 @@ import { WebhookMonitor } from "../payments/webhook-monitor"
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),
   amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  auto_topup: z.string().optional(),
   userName: z.string().optional(),
 })
 

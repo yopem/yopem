@@ -194,43 +194,6 @@ export const insertCheckoutSession = async (data: {
   return session
 }
 
-export const updateAutoTopup = async (
-  userId: string,
-  settings: {
-    enabled: boolean
-    threshold?: number | null
-    amount?: number | null
-  },
-): Promise<void> => {
-  const creditsResult = await getUserCredits(userId)
-
-  if (creditsResult) {
-    await db
-      .update(userCreditsTable)
-      .set({
-        autoTopupEnabled: settings.enabled,
-        autoTopupThreshold: settings.threshold
-          ? String(settings.threshold)
-          : null,
-        autoTopupAmount: settings.amount ? String(settings.amount) : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(userCreditsTable.userId, userId))
-    return
-  }
-
-  await db.insert(userCreditsTable).values({
-    id: createCustomId(),
-    userId,
-    balance: "0",
-    totalPurchased: "0",
-    totalUsed: "0",
-    autoTopupEnabled: settings.enabled,
-    autoTopupThreshold: settings.threshold ? String(settings.threshold) : null,
-    autoTopupAmount: settings.amount ? String(settings.amount) : null,
-  })
-}
-
 export const getPaymentHistory = (
   userId: string,
   input: { limit: number; cursor?: string },

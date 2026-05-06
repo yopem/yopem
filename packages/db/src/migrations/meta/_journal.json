@@ -176,6 +176,13 @@
       "when": 1778055200960,
       "tag": "0024_silky_shiver_man",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1778056020831,
+      "tag": "0025_dazzling_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

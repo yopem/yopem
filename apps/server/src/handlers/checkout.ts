@@ -40,8 +40,6 @@ checkoutRoute.get("/", async (c) => {
   const tier = c.req.query("tier")
   const billingCycle = c.req.query("billing") ?? "monthly"
   const amount = c.req.query("amount")
-  const autoTopup = c.req.query("auto_topup") === "true"
-
   if (tier) {
     const successUrl =
       c.req.query("successUrl") ??
@@ -164,7 +162,6 @@ checkoutRoute.get("/", async (c) => {
           userId: session.id,
           userName: session.username ?? session.name ?? session.email,
           amount: String(amountNum),
-          auto_topup: String(autoTopup),
         },
       })
 
