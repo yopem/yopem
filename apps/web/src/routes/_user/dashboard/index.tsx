@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
-import { CreditCardIcon, DollarSignIcon, PlayIcon } from "lucide-react"
+import { CreditCardIcon, PlayIcon, ZapIcon } from "lucide-react"
 import { memo } from "react"
 
 import { queryApi } from "rpc/query"
@@ -47,12 +47,26 @@ function DashboardPage() {
   const { data: stats } = useQuery({
     ...queryApi.user.getStats.queryOptions(),
   })
-  const { data: credits } = useQuery({
-    ...queryApi.user.getCredits.queryOptions(),
+  const { data: subscription } = useQuery({
+    ...queryApi.user.getSubscription.queryOptions(),
+    retry: false,
+    refetchOnWindowFocus: false,
   })
   const { data: runsData } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 5 } }),
   })
+
+  const currentTier = subscription?.tier ?? "free"
+  const isPaid = subscription?.isPaid ?? false
+  const status = subscription?.status ?? "active"
+  const limits = subscription?.limits
+
+  const requestsUsed = stats?.totalRuns ?? 0
+  const requestsLimit = limits?.maxRequestsPerMonth ?? 0
+  const requestsText =
+    requestsLimit === Number.POSITIVE_INFINITY
+      ? "Unlimited"
+      : `${requestsUsed} / ${requestsLimit.toLocaleString()}`
 
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
@@ -65,22 +79,28 @@ function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Credit Balance"
-          value={credits?.balance ?? "0"}
-          icon={CreditCardIcon}
-          description="Available credits"
+          title="Current Plan"
+          value={currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
+          icon={ZapIcon}
+          description={
+            isPaid && status === "active"
+              ? "Active subscription"
+              : status === "cancelled"
+                ? "Cancelled"
+                : "Free plan"
+          }
         />
         <StatCard
           title="Total Runs"
-          value={stats?.totalRuns ?? 0}
+          value={requestsUsed}
           icon={PlayIcon}
           description="Tool executions"
         />
         <StatCard
-          title="Credits Used"
-          value={stats?.totalUsed ?? "0"}
-          icon={DollarSignIcon}
-          description="Total spent"
+          title="Requests"
+          value={requestsText}
+          icon={CreditCardIcon}
+          description="Monthly usage"
         />
       </div>
 
@@ -117,9 +137,11 @@ function DashboardPage() {
                       >
                         {run.status}
                       </span>
-                      <span className="text-muted-foreground text-sm">
-                        {run.cost ?? 0} credits
-                      </span>
+                      {run.cost ? (
+                        <span className="text-muted-foreground text-sm">
+                          {run.cost} credits
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 ))}
@@ -149,7 +171,9 @@ function DashboardPage() {
             <Button
               variant="outline"
               className="w-full"
-              render={<Link to="/dashboard/credits">Purchase Credits</Link>}
+              render={
+                <Link to="/dashboard/subscription">Manage Subscription</Link>
+              }
             />
           </CardContent>
         </Card>

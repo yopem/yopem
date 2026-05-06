@@ -51,8 +51,8 @@ function DashboardLayout() {
     },
     {
       icon: <CreditCardIcon className="size-4.5" />,
-      label: "Credits",
-      href: "/dashboard/credits",
+      label: "Subscription",
+      href: "/dashboard/subscription",
     },
   ]
 
