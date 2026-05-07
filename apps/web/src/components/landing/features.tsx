@@ -14,8 +14,8 @@ import FeatureCard from "./feature-card"
 const Features = () => {
   return (
     <section className="bg-background w-full py-24">
-      <div className="container mx-auto max-w-[1200px] px-4 md:px-6">
-        <div className="mb-16 flex max-w-[800px] flex-col items-start gap-4">
+      <div className="container mx-auto max-w-300 px-4 md:px-6">
+        <div className="mb-16 flex max-w-200 flex-col items-start gap-4">
           <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
             Why Choose Yopem?
           </h2>
@@ -41,7 +41,7 @@ const Features = () => {
             description="Manage all your AI operations from one clean interface. Monitor usage, track costs, and access powerful tools without the hassle."
           />
         </div>
-        <div className="mt-6 grid h-auto grid-cols-1 gap-6 md:grid-cols-2 lg:h-[420px] lg:grid-cols-3">
+        <div className="mt-6 grid h-auto grid-cols-1 gap-6 md:grid-cols-2 lg:h-105 lg:grid-cols-3">
           <div className="bg-card border-border/50 relative flex flex-col overflow-hidden rounded-2xl border md:col-span-2 md:flex-row">
             <Badge
               variant="secondary"
@@ -49,7 +49,7 @@ const Features = () => {
             >
               Coming Soon
             </Badge>
-            <div className="relative z-10 flex max-w-[480px] flex-col justify-center p-10">
+            <div className="relative z-10 flex max-w-120 flex-col justify-center p-10">
               <h3 className="text-foreground mb-4 text-2xl font-semibold tracking-tight">
                 Multi-Model Support
               </h3>
@@ -72,9 +72,9 @@ const Features = () => {
                 </li>
               </ul>
             </div>
-            <div className="bg-muted/30 border-border/50 relative min-h-[240px] flex-1 overflow-hidden border-l md:min-h-full">
+            <div className="bg-muted/30 border-border/50 relative min-h-60 flex-1 overflow-hidden border-l md:min-h-full">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="border-border/50 relative flex size-[220px] items-center justify-center rounded-full border">
+                <div className="border-border/50 relative flex size-55 items-center justify-center rounded-full border">
                   <div className="bg-card border-border/50 absolute -top-4 rounded-md border px-2.5 py-1 font-mono text-[10px] font-medium shadow-sm">
                     GPT-4
                   </div>
