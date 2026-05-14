@@ -21,8 +21,8 @@
     "db:generate": "bun run with-env drizzle-kit generate",
     "db:migrate": "bun run with-env drizzle-kit migrate",
     "db:studio": "bun run with-env drizzle-kit studio",
-    "lint": "oxlint --config .oxlintrc.json .",
-    "lint:fix": "oxlint --config .oxlintrc.json --fix .",
+    "lint": "vp lint .",
+    "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

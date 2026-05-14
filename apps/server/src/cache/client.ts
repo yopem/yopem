@@ -183,9 +183,7 @@ export function createRedisCache() {
       return null
     }
 
-    if (!redis) {
-      redis = await initRedis()
-    }
+    redis ??= await initRedis()
 
     return redis
   }

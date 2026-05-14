@@ -38,8 +38,8 @@
     }
   },
   "scripts": {
-    "lint": "oxlint .",
-    "lint:fix": "oxlint --fix .",
+    "lint": "vp lint .",
+    "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -55,10 +55,8 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@yopem/typescript-config": "^0.2.1",
-    "oxfmt": "^0.43.0",
-    "oxlint": "^1.58.0",
-    "oxlint-tsgolint": "^0.19.0",
     "server": "workspace:*",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vite-plus": "catalog:"
   }
 }

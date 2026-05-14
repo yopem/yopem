@@ -39,9 +39,10 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     if (verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
       const prod = isProduction()
+      const sameSite: "none" | "lax" = prod ? "none" : "lax"
       const options = {
         httpOnly: true,
-        sameSite: (prod ? "none" : "lax") as "none" | "lax",
+        sameSite,
         path: "/",
         maxAge: 86400,
         secure: isSecure(),
@@ -71,9 +72,10 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
     if (!verified.err && verified.tokens) {
       const cookieDomain = process.env["COOKIE_DOMAIN"]
       const prod = isProduction()
+      const sameSite: "none" | "lax" = prod ? "none" : "lax"
       const options = {
         httpOnly: true,
-        sameSite: (prod ? "none" : "lax") as "none" | "lax",
+        sameSite,
         path: "/",
         maxAge: 86400,
         secure: isSecure(),

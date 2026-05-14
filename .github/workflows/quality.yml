@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  lint:
-    name: Lint
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -19,52 +19,5 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
-      - name: Cache turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-lint-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-lint-${{ runner.os }}-
-
-      - name: Run lint
-        run: bun run lint
-
-  format-check:
-    name: Format Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Install
-        uses: ./.github/composite-actions/install
-
-      - name: Cache turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-format-check-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-format-check-${{ runner.os }}-
-
-      - name: Run format check
-        run: bun run format:check
-
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Install
-        uses: ./.github/composite-actions/install
-
-      - name: Cache turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-typecheck-${{ runner.os }}-
-
-      - name: Run typecheck
-        run: bun run typecheck
+      - name: Run check
+        run: vp check

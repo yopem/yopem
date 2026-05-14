@@ -80,9 +80,10 @@ authCallbackRoute.get("/callback", async (c) => {
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
+  const sameSite: "none" | "lax" = prod ? "none" : "lax"
   const cookieOptions = {
     httpOnly: true,
-    sameSite: (prod ? "none" : "lax") as "none" | "lax",
+    sameSite,
     secure: isSecure,
     path: "/",
     ...(cookieDomain ? { domain: cookieDomain } : {}),

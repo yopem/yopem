@@ -16,7 +16,7 @@ const LoginButton = () => {
           options?: { href?: string }
         }
         if (err.status === 307) {
-          const redirectUrl = err.href || err.options?.href
+          const redirectUrl = err.href ?? err.options?.href
           if (redirectUrl) {
             window.location.href = redirectUrl
             return

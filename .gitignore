@@ -15,20 +15,10 @@ node_modules
 # Testing
 coverage
 
-# Turbo
-.turbo
-
-# Vercel
-.vercel
-
-# Build Outputs
-.next/
-.output/
+# Build
+dist/
 out/
-build
-dist
-.tanstack/
-
+build/
 
 # Debug
 npm-debug.log*
@@ -41,6 +31,7 @@ yarn-error.log*
 tmp/
 PLAN.md
 TODO.md
+.turbo/
 
 # typescript
 tsconfig.tsbuildinfo

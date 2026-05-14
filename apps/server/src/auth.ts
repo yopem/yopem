@@ -23,8 +23,9 @@ const isSecure = () => {
 const getCookieOptions = () => {
   const cookieDomain = process.env["COOKIE_DOMAIN"]
   const prod = isProduction()
+  const sameSite: "none" | "lax" = prod ? "none" : "lax"
   return {
-    sameSite: (prod ? "none" : "lax") as "none" | "lax",
+    sameSite,
     secure: isSecure(),
     httpOnly: true,
     path: "/",

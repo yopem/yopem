@@ -1,23 +1,13 @@
-import tailwindCSS from "@tailwindcss/vite"
-import { tanstackStart } from "@tanstack/react-start/plugin/vite"
-import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite-plus"
-import tsconfigPaths from "vite-tsconfig-paths"
-
-import { webPort } from "env/ports"
-
-const clientEnvDefines = Object.fromEntries(
-  Object.entries(process.env)
-    .filter(([key]) => key.startsWith("PUBLIC_") || key === "APP_ENV")
-    .map(([key, value]) => [`process.env.${key}`, JSON.stringify(value ?? "")]),
-)
 
 export default defineConfig({
   lint: {
+    extends: ["../../.oxlintrc.json"],
     plugins: [
       "eslint",
       "import",
       "jsx-a11y",
+      "nextjs",
       "oxc",
       "promise",
       "react",
@@ -37,11 +27,13 @@ export default defineConfig({
       "better-tailwindcss/no-restricted-classes": "error",
       "better-tailwindcss/no-unknown-classes": "off",
       "better-tailwindcss/no-unnecessary-whitespace": "warn",
+      "import/no-relative-parent-imports": "off",
+      "nextjs/no-img-element": "error",
       "react/rules-of-hooks": "error",
     },
     settings: {
       "better-tailwindcss": {
-        entryPoint: "../../packages/ui/src/style.css",
+        entryPoint: "./src/style.css",
       },
     },
     options: {
@@ -49,27 +41,4 @@ export default defineConfig({
       typeCheck: true,
     },
   },
-  envDir: "../..",
-  envPrefix: "PUBLIC_",
-  define: clientEnvDefines,
-  server: {
-    port: webPort,
-    host: "0.0.0.0",
-  },
-  ssr: {
-    noExternal: [
-      "ui",
-      "auth",
-      "db",
-      "env",
-      "logger",
-      "orpc",
-      "shared",
-      "cache",
-      "ai",
-      "payments",
-      "storage",
-    ],
-  },
-  plugins: [tsconfigPaths(), tanstackStart(), react(), tailwindCSS()],
 })

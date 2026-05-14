@@ -329,7 +329,7 @@ export const createTool = async (
 ): Promise<{ id: string; slug: string } | null> => {
   const { categoryIds, tagIds, ...toolData } = data
   const id = createCustomId()
-  const slug = await generateUniqueToolSlug(toolData.name!)
+  const slug = await generateUniqueToolSlug(toolData.name)
 
   const [result] = await db
     .insert(toolsTable)

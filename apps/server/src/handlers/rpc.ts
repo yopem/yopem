@@ -32,7 +32,7 @@ const proxyRequestBody = (original: Request): Request => {
 
   const cloneBody = async () => {
     if (cachedBody === null) {
-      const contentType = original.headers.get("content-type") || ""
+      const contentType = original.headers.get("content-type") ?? ""
       if (contentType.includes("multipart/form-data")) {
         cachedBody = await original.formData()
         bodyType = "formdata"

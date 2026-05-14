@@ -1,19 +1,12 @@
 name: "Install"
-description: "Sets up Bun and runs install"
+description: "Sets up Vite+ and installs dependencies"
 
 runs:
   using: composite
   steps:
-    - uses: oven-sh/setup-bun@v2
-      with:
-        bun-version: latest
-
-    - name: Cache bun dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-        restore-keys: bun-${{ runner.os }}-
+    - name: Install vp
+      shell: bash
+      run: curl -fsSL https://vite.plus | bash
 
     - name: Setup Git User
       shell: bash
@@ -23,4 +16,4 @@ runs:
 
     - name: Install Dependencies
       shell: bash
-      run: bun install
+      run: vp install
