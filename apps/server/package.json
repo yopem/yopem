@@ -33,7 +33,7 @@
     "@hono/node-server": "^1.19.12",
     "@orpc/server": "^1.13.13",
     "@polar-sh/hono": "^0.5.5",
-    "@polar-sh/sdk": "^0.46.7",
+    "@polar-sh/sdk": "^0.47.0",
     "ai": "^6.0.143",
     "auth": "workspace:*",
     "db": "workspace:*",
