@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp dev --port ${WEB_PORT:-3000}",
-    "build": "vp build",
-    "start": "node .output/server/index.mjs",
+    "dev": "bun run with-env vp dev --port ${WEB_PORT:-3000}",
+    "build": "bun run with-env vp build",
+    "preview": "bun run with-env vp preview",
+    "start": "bun run with-env node .output/server/index.mjs",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@tanstack/react-form": "^1.28.6",

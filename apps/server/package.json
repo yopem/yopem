@@ -18,8 +18,8 @@
     }
   },
   "scripts": {
-    "dev": "dotenv -e ../../.env -- bun run with-env bun --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
+    "dev": "vp run with-env bun --watch src/index.ts",
+    "build": "vp run with-env build src/index.ts --outdir dist --target bun",
     "start": "bun run with-env bun run dist/index.js",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
