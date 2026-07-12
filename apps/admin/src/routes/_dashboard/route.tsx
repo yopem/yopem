@@ -65,7 +65,7 @@ const DashboardLayout = () => {
   ]
 
   const user = {
-    name: session.name!,
+    name: session.name ?? session.email,
     email: session.email,
     avatar: session.image ?? undefined,
   }

@@ -21,12 +21,14 @@ export const requireSubscriptionForTool = async (
       const overflowBalance = Number(credits?.overflowBalance ?? 0)
 
       if (overflowBalance > 0) {
-        await deductOverflowCredit(userId, "tool-run")
+        const deducted = await deductOverflowCredit(userId, "tool-run")
 
-        return {
-          allowed: true,
-          reason: "overflow_credit_used",
-          quotaCheck,
+        if (deducted) {
+          return {
+            allowed: true,
+            reason: "overflow_credit_used",
+            quotaCheck,
+          }
         }
       }
 

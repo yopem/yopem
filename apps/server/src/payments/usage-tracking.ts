@@ -17,28 +17,64 @@ export interface UsageData {
   lastUpdated: string
 }
 
-export const incrementRequestCount = async (
-  userId: string,
-): Promise<number> => {
-  const cacheKey = getCurrentUsageKey(userId)
+const fromHash = (raw: Record<string, string>): UsageData => ({
+  requestCount: Number.parseInt(raw["requestCount"] ?? "0", 10),
+  tokenCount: Number.parseInt(raw["tokenCount"] ?? "0", 10),
+  lastUpdated: raw["lastUpdated"] ?? new Date().toISOString(),
+})
 
-  const existing = await redisCache.getCache<UsageData>(cacheKey)
-
-  let data: UsageData
-  if (existing) {
-    data = existing
-    data.requestCount += 1
-    data.lastUpdated = new Date().toISOString()
-  } else {
-    data = {
-      requestCount: 1,
-      tokenCount: 0,
+// Atomic increment using Redis HINCRBY. Avoids the lost-update race where
+// concurrent requests each read the same snapshot and overwrite each other.
+const atomicIncrement = async (
+  cacheKey: string,
+  requestDelta: number,
+  tokenDelta: number,
+): Promise<UsageData> => {
+  const client = await redisCache.getRedisClient()
+  if (!client) {
+    return {
+      requestCount: requestDelta,
+      tokenCount: tokenDelta,
       lastUpdated: new Date().toISOString(),
     }
   }
 
-  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
+  const now = new Date().toISOString()
+  const commands: ["requestCount" | "tokenCount", number][] = []
+  const pipeline = client.pipeline()
+  if (requestDelta) {
+    commands.push(["requestCount", requestDelta])
+    pipeline.hincrby(cacheKey, "requestCount", requestDelta)
+  }
+  if (tokenDelta) {
+    commands.push(["tokenCount", tokenDelta])
+    pipeline.hincrby(cacheKey, "tokenCount", tokenDelta)
+  }
+  pipeline.hset(cacheKey, "lastUpdated", now)
+  pipeline.expire(cacheKey, USAGE_CACHE_TTL)
+  const results = (await pipeline.exec()) ?? []
 
+  // results: [[err, val], ...] in the order commands were queued.
+  // hincrby returns the new field value after increment.
+  let requestCount = 0
+  let tokenCount = 0
+  commands.forEach(([_field, _delta], i) => {
+    const val = Number(results[i]?.[1] ?? 0)
+    if (_field === "requestCount") requestCount = val
+    else tokenCount = val
+  })
+
+  return {
+    requestCount,
+    tokenCount,
+    lastUpdated: now,
+  }
+}
+
+export const incrementRequestCount = async (
+  userId: string,
+): Promise<number> => {
+  const data = await atomicIncrement(getCurrentUsageKey(userId), 1, 0)
   return data.requestCount
 }
 
@@ -46,67 +82,38 @@ export const incrementTokenCount = async (
   userId: string,
   tokens: number,
 ): Promise<number> => {
-  const cacheKey = getCurrentUsageKey(userId)
-
-  const existing = await redisCache.getCache<UsageData>(cacheKey)
-
-  let data: UsageData
-  if (existing) {
-    data = existing
-    data.tokenCount += tokens
-    data.lastUpdated = new Date().toISOString()
-  } else {
-    data = {
-      requestCount: 0,
-      tokenCount: tokens,
-      lastUpdated: new Date().toISOString(),
-    }
-  }
-
-  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
-
+  const data = await atomicIncrement(getCurrentUsageKey(userId), 0, tokens)
   return data.tokenCount
 }
 
-export const recordUsage = async (
+export const recordUsage = (
   userId: string,
   tokens: number,
 ): Promise<UsageData> => {
-  const cacheKey = getCurrentUsageKey(userId)
-
-  const existing = await redisCache.getCache<UsageData>(cacheKey)
-
-  let data: UsageData
-  if (existing) {
-    data = existing
-    data.requestCount += 1
-    data.tokenCount += tokens
-    data.lastUpdated = new Date().toISOString()
-  } else {
-    data = {
-      requestCount: 1,
-      tokenCount: tokens,
-      lastUpdated: new Date().toISOString(),
-    }
-  }
-
-  await redisCache.setCache(cacheKey, data, USAGE_CACHE_TTL)
-
-  return data
+  return atomicIncrement(getCurrentUsageKey(userId), 1, tokens)
 }
 
 export const getCurrentUsage = async (userId: string): Promise<UsageData> => {
   const cacheKey = getCurrentUsageKey(userId)
-
-  const result = await redisCache.getCache<UsageData>(cacheKey)
-
-  return (
-    result ?? {
+  const client = await redisCache.getRedisClient()
+  if (!client) {
+    return {
       requestCount: 0,
       tokenCount: 0,
       lastUpdated: new Date().toISOString(),
     }
-  )
+  }
+
+  const raw = await client.hgetall(cacheKey)
+  if (!raw || Object.keys(raw).length === 0) {
+    return {
+      requestCount: 0,
+      tokenCount: 0,
+      lastUpdated: new Date().toISOString(),
+    }
+  }
+
+  return fromHash(raw)
 }
 
 export const getUsageForMonth = async (
@@ -115,16 +122,25 @@ export const getUsageForMonth = async (
   month: number,
 ): Promise<UsageData> => {
   const cacheKey = getUsageKey(userId, year, month)
-
-  const result = await redisCache.getCache<UsageData>(cacheKey)
-
-  return (
-    result ?? {
+  const client = await redisCache.getRedisClient()
+  if (!client) {
+    return {
       requestCount: 0,
       tokenCount: 0,
       lastUpdated: new Date().toISOString(),
     }
-  )
+  }
+
+  const raw = await client.hgetall(cacheKey)
+  if (!raw || Object.keys(raw).length === 0) {
+    return {
+      requestCount: 0,
+      tokenCount: 0,
+      lastUpdated: new Date().toISOString(),
+    }
+  }
+
+  return fromHash(raw)
 }
 
 export const resetUsage = async (userId: string): Promise<void> => {

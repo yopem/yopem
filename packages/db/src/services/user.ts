@@ -143,9 +143,9 @@ export const upsertUserSettings = async (
   userId: string,
   data: Partial<InsertUserSettings>,
 ): Promise<SelectUserSettings> => {
-  const creditsResult = await getUserCredits(userId)
+  const existing = await getUserSettings(userId)
 
-  if (creditsResult) {
+  if (existing) {
     const [updated] = await db
       .update(userSettingsTable)
       .set({ ...data, updatedAt: new Date() })
@@ -324,14 +324,23 @@ export const deductOverflowCredit = async (
   userId: string,
   toolName: string,
   toolRunId?: string,
-): Promise<void> => {
-  await db
+): Promise<boolean> => {
+  const result = await db
     .update(userCreditsTable)
     .set({
       overflowBalance: sql`${userCreditsTable.overflowBalance} - 1`,
       updatedAt: new Date(),
     })
-    .where(eq(userCreditsTable.userId, userId))
+    .where(
+      and(
+        eq(userCreditsTable.userId, userId),
+        sql`${userCreditsTable.overflowBalance} > 0`,
+      ),
+    )
+
+  if (result.rowCount === 0) {
+    return false
+  }
 
   await db.insert(creditTransactionsTable).values({
     id: createCustomId(),
@@ -341,6 +350,8 @@ export const deductOverflowCredit = async (
     description: `Overflow usage: ${toolName}`,
     toolRunId: toolRunId ?? null,
   })
+
+  return true
 }
 
 export const addCredits = async (

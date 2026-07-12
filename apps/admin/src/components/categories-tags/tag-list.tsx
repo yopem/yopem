@@ -3,8 +3,17 @@
 import type { UseMutationResult } from "@tanstack/react-query"
 
 import { PencilIcon, Trash2Icon } from "lucide-react"
+import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "ui/alert-dialog"
 import { Button } from "ui/button"
 
 interface Tag {
@@ -27,6 +36,15 @@ const TagList = ({
   onDelete,
   deleteMutation,
 }: TagListProps) => {
+  const [pendingDelete, setPendingDelete] = useState<Tag | null>(null)
+
+  const handleConfirm = () => {
+    if (pendingDelete) {
+      onDelete(pendingDelete.id)
+      setPendingDelete(null)
+    }
+  }
+
   return (
     <div className="border-border rounded-lg border">
       <div className="divide-border divide-y">
@@ -59,8 +77,7 @@ const TagList = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete(tag.id)}
-                    disabled={deleteMutation.isPending}
+                    onClick={() => setPendingDelete(tag)}
                   >
                     <Trash2Icon className="size-4" />
                   </Button>
@@ -74,6 +91,34 @@ const TagList = ({
           )}
         </Shimmer>
       </div>
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+      >
+        <AlertDialogBackdrop />
+        <AlertDialogPopup>
+          <AlertDialogTitle>Delete Tag</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{pendingDelete?.name}"? This action
+            cannot be undone.
+          </AlertDialogDescription>
+          <div className="mt-4 flex justify-end gap-2">
+            <AlertDialogClose>
+              <Button variant="outline">Cancel</Button>
+            </AlertDialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleConfirm}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </AlertDialogPopup>
+      </AlertDialog>
     </div>
   )
 }

@@ -1,21 +1,15 @@
-import { Polar } from "@polar-sh/sdk"
 import { Hono } from "hono"
 
 import type { SessionUser } from "auth/types"
+import { getUserSettings } from "db/services/user"
+
+import { createCustomerPortalSession } from "@/payments/subscription-checkout"
 
 interface Env {
   Variables: {
     session: SessionUser | null
   }
 }
-
-const appEnv = process.env["APP_ENV"] ?? "development"
-const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
-
-const polar = new Polar({
-  accessToken: polarAccessToken,
-  server: appEnv === "development" ? "sandbox" : "production",
-})
 
 const portalRoute = new Hono<Env>()
 
@@ -27,10 +21,13 @@ portalRoute.get("/", async (c) => {
   }
 
   try {
-    const polarResult = await polar.customerSessions.create({
-      customerId: session.id,
-    })
-    return c.redirect(polarResult.customerPortalUrl, 303)
+    const settings = await getUserSettings(session.id)
+    if (!settings?.polarCustomerId) {
+      return c.text("No customer ID found", 400)
+    }
+
+    const url = await createCustomerPortalSession(settings.polarCustomerId)
+    return c.redirect(url, 303)
   } catch (error) {
     console.error(
       `Portal error: ${error instanceof Error ? error.message : String(error)}`,

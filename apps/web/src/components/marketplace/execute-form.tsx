@@ -19,12 +19,6 @@ import { Field, FieldLabel } from "ui/field"
 import { Textarea } from "ui/textarea"
 import ToolInputField, { type ToolInputVariable } from "ui/tool-input-field"
 
-interface ExecutionResult {
-  runId: string
-  output: string
-  cost: number
-}
-
 interface ToolExecuteFormProps {
   toolId: string
   costPerRun: string | null
@@ -73,7 +67,7 @@ export default function ToolExecuteForm({
         toolId,
         inputs: payload,
       })
-      return result as ExecutionResult
+      return result
     },
     onSuccess: (data) => {
       setOutput(data.output)

@@ -46,17 +46,7 @@ export const Route = createFileRoute("/_public/marketplace/tools/$slug")({
         averageRating?: number | null
         reviewCount?: number
       },
-      reviewsData: reviewsData as {
-        reviews: {
-          id: string
-          rating: number
-          reviewText: string | null
-          createdAt: Date | null
-          userName: string | null
-        }[]
-        averageRating: number | null
-        reviewCount: number
-      },
+      reviewsData,
       slug: params.slug,
       hasUsedTool: hasUsedResult.hasUsed,
     }

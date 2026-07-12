@@ -40,7 +40,7 @@ const ToolReviewsSection = ({
   const handleReviewSubmit = async () => {
     try {
       const data = await clientApi.tools.getReviews({ slug })
-      setReviews(data.reviews as Review[])
+      setReviews(data.reviews)
       setEditorOpen(false)
     } catch {
       // ignore error

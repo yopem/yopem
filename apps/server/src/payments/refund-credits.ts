@@ -49,8 +49,14 @@ export async function refundCredits(
       throw new PaymentNotFoundError(polarPaymentId)
     }
 
-    const totalAmount = Number.parseFloat(payment.amount)
-    const currentRefundedAmount = Number.parseFloat(payment.refundedAmount)
+    const totalAmount = Number.parseFloat(payment.amount) || 0
+    const currentRefundedAmount = Number.parseFloat(payment.refundedAmount) || 0
+
+    if (totalAmount <= 0) {
+      throw new RefundValidationError(
+        `Invalid payment amount: ${payment.amount}`,
+      )
+    }
 
     if (payment.status === "refunded") {
       console.info(`Payment already fully refunded: ${polarPaymentId}`)

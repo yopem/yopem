@@ -106,7 +106,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
         type: "images",
         limit: 100,
       })
-      dispatch({ type: "SET_ASSETS", payload: result.assets as Asset[] })
+      dispatch({ type: "SET_ASSETS", payload: result.assets })
     } catch (error) {
       console.error("Failed to load assets:", error)
     }
@@ -175,7 +175,7 @@ function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
 
       try {
         const asset = await queryApi.assets.upload.call(file)
-        dispatch({ type: "PREPEND_ASSET", payload: asset as Asset })
+        dispatch({ type: "PREPEND_ASSET", payload: asset })
         onChange(asset.id)
         dispatch({ type: "CLOSE_DIALOG" })
       } catch (error) {

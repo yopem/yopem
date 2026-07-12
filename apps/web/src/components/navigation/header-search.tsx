@@ -51,11 +51,7 @@ const HeaderSearch = () => {
         !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)
       ) {
         e.preventDefault()
-        if (mobileOpen) {
-          inputRef.current?.focus()
-        } else {
-          inputRef.current?.focus()
-        }
+        inputRef.current?.focus()
       }
       if (e.key === "Escape") {
         setQuery("")
@@ -66,7 +62,7 @@ const HeaderSearch = () => {
     }
     document.addEventListener("keydown", handler)
     return () => document.removeEventListener("keydown", handler)
-  }, [mobileOpen])
+  }, [])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

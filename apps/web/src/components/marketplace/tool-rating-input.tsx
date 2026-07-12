@@ -178,16 +178,16 @@ const ToolRatingInput = ({ slug, onSuccess }: ToolRatingInputProps) => {
       })
 
       dispatch({ type: "SUBMIT_SUCCESS" })
+
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       dispatch({
         type: "SUBMIT_ERROR",
         payload:
           error instanceof Error ? error.message : "Failed to submit review",
       })
-    }
-
-    if (onSuccess) {
-      onSuccess()
     }
   }
 

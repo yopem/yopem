@@ -385,7 +385,9 @@ export const updateTool = async (
     .set({
       ...toolData,
       ...(slug ? { slug } : {}),
-      thumbnailId: toolData.thumbnailId ?? null,
+      ...(toolData.thumbnailId !== undefined
+        ? { thumbnailId: toolData.thumbnailId }
+        : {}),
       updatedAt: new Date(),
     })
     .where(eq(toolsTable.id, id))
