@@ -18,9 +18,9 @@
     }
   },
   "scripts": {
-    "dev": "vp run with-env bun --watch src/index.ts",
-    "build": "vp run with-env build src/index.ts --outdir dist --target bun",
-    "start": "bun run with-env bun run dist/index.js",
+    "dev": "vp run with-env node --watch --experimental-strip-types src/index.ts",
+    "build": "vp run with-env tsdown src/index.ts --outdir dist",
+    "start": "with-env node dist/index.js",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit",
@@ -56,6 +56,7 @@
     "@yopem/typescript-config": "^0.2.1",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
+    "tsdown": "catalog:",
     "typescript": "^6.0.2",
     "vite-plus": "catalog:"
   }

@@ -1,20 +1,24 @@
-FROM oven/bun:alpine AS base
+FROM node:24-alpine AS base
 RUN apk add --no-cache libc6-compat
 
 FROM base AS pruner
 WORKDIR /app
-RUN bun add -g turbo@^2
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 COPY . .
+RUN pnpm add -g turbo@^2
 RUN turbo prune server --docker
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=pruner /app/out/json/ .
-RUN bun install --frozen-lockfile
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
-RUN bun build apps/server/src/index.ts --outdir dist --target bun --minify --external sharp
+RUN pnpm --filter server exec tsdown src/index.ts --outdir dist --minify --external sharp
 
-FROM oven/bun:alpine AS runner
+FROM node:24-alpine AS runner
 RUN apk add --no-cache libc6-compat vips
 
 WORKDIR /app
@@ -24,7 +28,9 @@ RUN addgroup --system --gid 1001 honojs && \
 
 COPY --from=builder /app/dist/index.js ./index.js
 
-RUN bun add sharp@^0.34.2
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+RUN pnpm add sharp@^0.34.2
 
 USER hono
 
@@ -35,4 +41,4 @@ EXPOSE 4000
 ENV SERVER_PORT=4000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "index.js"]
+CMD ["node", "index.js"]

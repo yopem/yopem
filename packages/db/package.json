@@ -18,9 +18,9 @@
     }
   },
   "scripts": {
-    "db:generate": "bun run with-env drizzle-kit generate",
-    "db:migrate": "bun run with-env drizzle-kit migrate",
-    "db:studio": "bun run with-env drizzle-kit studio",
+    "db:generate": "with-env drizzle-kit generate",
+    "db:migrate": "with-env drizzle-kit migrate",
+    "db:studio": "with-env drizzle-kit studio",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit",
