@@ -52,7 +52,6 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
-    "@types/sharp": "^0.32.0",
     "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "catalog:",
