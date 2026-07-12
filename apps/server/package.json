@@ -20,7 +20,7 @@
   "scripts": {
     "dev": "vp run with-env node --watch --experimental-strip-types src/index.ts",
     "build": "vp run with-env tsdown src/index.ts --outDir dist",
-    "start": "with-env node dist/index.js",
+    "start": "node dist/index.js",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit",
