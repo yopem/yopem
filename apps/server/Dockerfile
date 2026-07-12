@@ -16,7 +16,7 @@ RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
-RUN pnpm --filter server exec tsdown src/index.ts --outdir dist --minify --external sharp
+RUN pnpm --filter server exec tsdown src/index.ts --outDir dist --minify --external sharp
 
 FROM node:24-alpine AS runner
 RUN apk add --no-cache libc6-compat vips

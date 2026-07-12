@@ -38,7 +38,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
-    "@yopem/typescript-config": "^0.2.1",
+    "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:"

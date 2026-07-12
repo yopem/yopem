@@ -36,9 +36,9 @@
     "ui-add": "cd packages/ui && vpx shadcn@latest add"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
-    "@yopem/typescript-config": "^0.2.1",
-    "typescript": "^6.0.2",
+    "@types/node": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "overrides": {
