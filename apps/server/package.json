@@ -53,7 +53,7 @@
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "@yopem/typescript-config": "catalog:",
-    "dotenv-cli": "^11.0.0",
+    "dotenv-cli": "catalog:",
     "drizzle-kit": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",

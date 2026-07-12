@@ -39,6 +39,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@yopem/typescript-config": "catalog:",
+    "dotenv-cli": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
