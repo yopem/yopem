@@ -7,7 +7,7 @@
     "dev": "vp run with-env vp dev --port ${WEB_PORT:-3000}",
     "build": "vp run with-env vp build",
     "preview": "vp run with-env vp preview",
-    "start": "node .output/server/index.mjs",
+    "start": "node --env-file=../../.env .output/server/index.mjs",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit",
