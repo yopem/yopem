@@ -16,8 +16,8 @@
     "build:web": "vp build apps/web",
     "build:server": "vp run --filter server build",
     "dev": "vp run -r --parallel dev",
-    "dev:admin": "vp dev apps/admin",
-    "dev:web": "vp dev apps/web",
+    "dev:admin": "vp run --filter admin dev",
+    "dev:web": "vp run --filter web dev",
     "dev:server": "vp run --filter server dev",
     "start": "vp run -r start",
     "start:admin": "vp run --filter admin start",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
+    "dotenv-cli": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },

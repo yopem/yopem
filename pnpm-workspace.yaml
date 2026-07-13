@@ -2,9 +2,6 @@ packages:
   - apps/*
   - packages/*
 
-patchedDependencies:
-  "@tanstack/start-plugin-core@1.171.19": patches/@tanstack__start-plugin-core@1.171.19.patch
-
 catalog:
   "@ai-sdk/openai": ^4.0.11
   "@ai-sdk/openai-compatible": ^3.0.7
@@ -31,7 +28,7 @@ catalog:
   ai: ^7.0.22
   babel-plugin-react-compiler: ^1.0.0
   dayjs: ^1.11.21
-  dotenv-cli: ^11.0.0
+  dotenv-cli: 11.0.0
   drizzle-kit: ^0.31.10
   drizzle-orm: ^0.45.2
   drizzle-zod: ^0.8.3
@@ -53,5 +50,8 @@ catalog:
   typescript: ^7.0.2
   vite-plus: ^0.2.4
   vite-tsconfig-paths: ^6.1.1
-  vite: "npm:@voidzero-dev/vite-plus-core@0.2.1"
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.1
   zod: ^4.4.3
+
+patchedDependencies:
+  "@tanstack/start-plugin-core@1.171.19": patches/@tanstack__start-plugin-core@1.171.19.patch
