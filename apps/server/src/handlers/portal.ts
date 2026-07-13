@@ -1,9 +1,8 @@
 import { Hono } from "hono"
+import { createCustomerPortalSession } from "server/payments/subscription-checkout"
 
 import type { SessionUser } from "auth/types"
 import { getUserSettings } from "db/services/user"
-
-import { createCustomerPortalSession } from "@/payments/subscription-checkout"
 
 interface Env {
   Variables: {

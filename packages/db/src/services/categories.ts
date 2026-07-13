@@ -1,9 +1,9 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
-import type { SelectCategory } from "../schema/categories.ts"
+import { db } from "db"
+import { categoriesTable } from "db/schema"
+import type { SelectCategory } from "db/schema/categories"
 
-import { db } from "../index.ts"
-import { categoriesTable } from "../schema/index.ts"
 import { generateUniqueCategorySlug } from "./slug.ts"
 
 export const listCategories = (): Promise<

@@ -1,9 +1,9 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
-import type { SelectTag } from "../schema/tags.ts"
+import { db } from "db"
+import { tagsTable } from "db/schema"
+import type { SelectTag } from "db/schema/tags"
 
-import { db } from "../index.ts"
-import { tagsTable } from "../schema/index.ts"
 import { generateUniqueTagSlug } from "./slug.ts"
 
 export const listTags = (): Promise<

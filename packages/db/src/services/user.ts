@@ -1,15 +1,11 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm"
 
-import { createCustomId } from "shared/custom-id"
-
+import { db } from "db"
 import type {
   SelectPolarCheckoutSession,
   SelectUserCredits,
   SelectUserSettings,
-} from "../schema/index.ts"
-import type { InsertUserSettings } from "../schema/user-settings.ts"
-
-import { db } from "../index.ts"
+} from "db/schema"
 import {
   creditTransactionsTable,
   polarCheckoutSessionsTable,
@@ -18,7 +14,9 @@ import {
   toolsTable,
   userCreditsTable,
   userSettingsTable,
-} from "../schema/index.ts"
+} from "db/schema"
+import type { InsertUserSettings } from "db/schema/user-settings"
+import { createCustomId } from "shared/custom-id"
 
 export const getUserStats = async (
   userId: string,

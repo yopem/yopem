@@ -1,9 +1,8 @@
 import { eq } from "drizzle-orm"
 
-import type { InsertSubscription, SelectSubscription } from "../schema/index.ts"
-
-import { db } from "../index.ts"
-import { subscriptionsTable } from "../schema/index.ts"
+import { db } from "db"
+import type { InsertSubscription, SelectSubscription } from "db/schema"
+import { subscriptionsTable } from "db/schema"
 
 export const getSubscription = async (
   userId: string,

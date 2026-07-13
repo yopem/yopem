@@ -1,7 +1,7 @@
 import { and, count, eq, gte, lt, sql } from "drizzle-orm"
 
-import { db } from "../index.ts"
-import { subscriptionsTable } from "../schema/index.ts"
+import { db } from "db"
+import { subscriptionsTable } from "db/schema"
 
 export interface SubscriptionStats {
   totalSubscriptions: number

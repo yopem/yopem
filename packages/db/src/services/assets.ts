@@ -1,10 +1,9 @@
 import { and, desc, eq, sql } from "drizzle-orm"
 
-import type { SelectAdminSettings } from "../schema/admin-settings.ts"
-import type { SelectAsset } from "../schema/assets.ts"
-
-import { db } from "../index.ts"
-import { adminSettingsTable, assetsTable } from "../schema/index.ts"
+import { db } from "db"
+import { adminSettingsTable, assetsTable } from "db/schema"
+import type { SelectAdminSettings } from "db/schema/admin-settings"
+import type { SelectAsset } from "db/schema/assets"
 
 export const listAssets = async (input: {
   limit: number

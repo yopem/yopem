@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
 
+patchedDependencies:
+  "@tanstack/start-plugin-core@1.171.19": patches/@tanstack__start-plugin-core@1.171.19.patch
+
 catalog:
   "@ai-sdk/openai": ^4.0.11
   "@ai-sdk/openai-compatible": ^3.0.7
@@ -50,5 +53,5 @@ catalog:
   typescript: ^7.0.2
   vite-plus: ^0.2.4
   vite-tsconfig-paths: ^6.1.1
-  vite: 8.1.4
+  vite: "npm:@voidzero-dev/vite-plus-core@0.2.1"
   zod: ^4.4.3

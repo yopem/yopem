@@ -1,5 +1,6 @@
 import { Polar } from "@polar-sh/sdk"
 import { Hono } from "hono"
+import { validateTopupAmount } from "server/payments/credit-calculation"
 
 import type { SessionUser } from "auth/types"
 import {
@@ -7,8 +8,6 @@ import {
   insertCheckoutSession,
   upsertPolarCustomer,
 } from "db/services/user"
-
-import { validateTopupAmount } from "../payments/credit-calculation"
 
 interface Env {
   Variables: {

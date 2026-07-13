@@ -1,8 +1,8 @@
 import { and, eq, ne } from "drizzle-orm"
 import { transliterate as tr } from "transliteration"
 
-import { db } from "../index.ts"
-import { categoriesTable, tagsTable, toolsTable } from "../schema/index.ts"
+import { db } from "db"
+import { categoriesTable, tagsTable, toolsTable } from "db/schema"
 
 function slugify(text: string) {
   return tr(text)

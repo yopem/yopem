@@ -1,15 +1,14 @@
 import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
 
-import type { SelectAdminSettings } from "../schema/admin-settings.ts"
-
-import { db } from "../index.ts"
+import { db } from "db"
 import {
   activityLogsTable,
   adminSettingsTable,
   polarPaymentsTable,
   toolRunsTable,
   uptimeEventsTable,
-} from "../schema/index.ts"
+} from "db/schema"
+import type { SelectAdminSettings } from "db/schema/admin-settings"
 
 export const getSetting = async (
   key: string,

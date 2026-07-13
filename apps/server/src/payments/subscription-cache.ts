@@ -1,6 +1,6 @@
-import type { SelectSubscription } from "db/schema"
+import { redisCache } from "server/cache"
 
-import { redisCache } from "../cache"
+import type { SelectSubscription } from "db/schema"
 
 const SUBSCRIPTION_CACHE_TTL = 60
 
