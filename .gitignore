@@ -45,7 +45,6 @@ docs/
 .opencode/
 openspec/
 opencode.jsonc
-AGENTS.md
 skills
 .gemini
 .agent/
