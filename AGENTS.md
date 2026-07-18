@@ -121,5 +121,5 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - Server is built with **Vite** (`@hono/vite-build/node`), output to `apps/server/dist/index.js`. Web/admin also use Vite + TanStack Start.
 - A patched `@tanstack/start-plugin-core@1.171.19` exists in `patches/`. Run `vp install` after pulling to apply it.
 - `vp run with-env` loads `.env` from repo root — required for server, db, and build commands.
-- Docker builds set `CI=true` and require `PUBLIC_` ARGs; web runs `node .output/server/index.mjs` on `PORT 3000`.
+- Docker builds set `CI=true` and require `PUBLIC_` ARGs. Web/admin build output is `dist/{client,server}`; the `start` script runs `srvx` serving `dist/server/server.js` with `dist/client` as static assets (web on `WEB_PORT` default 3000, admin on `ADMIN_PORT` default 3001). The Dockerfile `CMD` is `node node_modules/srvx/bin/srvx.mjs serve --prod ... -s ../client dist/server/server.js`.
 - `AGENTS.md` is gitignored — edits won't show as uncommitted changes.

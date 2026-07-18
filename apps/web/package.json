@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port ${WEB_PORT:-3000}",
+    "generate-routes": "tsr generate",
     "build": "vp build",
     "preview": "vp preview",
-    "start": "node --env-file=../../.env .output/server/index.mjs",
+    "start": "node --env-file=../../.env node_modules/srvx/bin/srvx.mjs serve --prod --port ${WEB_PORT:-3000} --host 0.0.0.0 -s ../client dist/server/server.js",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
@@ -27,6 +28,7 @@
     "rpc": "workspace:*",
     "shared": "workspace:*",
     "shimmer-from-structure": "catalog:",
+    "srvx": "catalog:",
     "ui": "workspace:*",
     "zod": "catalog:"
   },

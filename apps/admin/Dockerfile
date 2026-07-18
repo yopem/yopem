@@ -37,8 +37,9 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 appgroup && \
   adduser --system --uid 1001 appuser
 
-COPY --from=builder --chown=appuser:appgroup /app/apps/admin/.output ./.output
+COPY --from=builder --chown=appuser:appgroup /app/apps/admin/dist ./dist
 COPY --from=builder --chown=appuser:appgroup /app/apps/admin/public ./public
+COPY --from=builder --chown=appuser:appgroup /app/apps/admin/node_modules/srvx ./node_modules/srvx
 
 USER appuser
 
@@ -46,4 +47,4 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "node_modules/srvx/bin/srvx.mjs", "serve", "--prod", "--port", "3001", "--host", "0.0.0.0", "-s", "dist/client", "dist/server/server.js"]

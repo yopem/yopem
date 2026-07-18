@@ -43,6 +43,7 @@ catalog:
   react: ^19.2.7
   server-only: ^0.0.1
   shimmer-from-structure: 2.4.5
+  srvx: ^0.11.22
   tailwind-merge: ^3.6.0
   tailwindcss: ^4.3.2
   transliteration: ^2.6.1

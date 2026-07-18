@@ -19,5 +19,10 @@ jobs:
       - name: Install
         uses: ./.github/composite-actions/install
 
+      - name: Generate routes
+        run: |
+          vp run --filter web generate-routes
+          vp run --filter admin generate-routes
+
       - name: Run check
         run: vp check
