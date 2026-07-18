@@ -36,7 +36,7 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 apps/
   web/       — public TanStack Start app (port 3000)
   admin/     — admin TanStack Start app (port 3001)
-  server/    — Hono API server, built with tsdown (not Vite)
+  server/    — Hono API server, built with Vite (`@hono/vite-build`)
 packages/
   db/        — Drizzle schema, migrations, services (data-access layer)
   auth/      — OpenAuth client + subjects
@@ -68,13 +68,13 @@ vp test                             # run tests
 vp run -r --parallel dev            # all apps
 vp run --filter web dev             # web only
 vp run --filter admin dev           # admin only
-vp run --filter server dev          # server only (tsdown watch + node)
+vp run --filter server dev          # server only (Vite dev server via @hono/vite-dev-server)
 
 # Build
 vp run -r build                     # all
 vp build apps/web                   # web (Vite)
 vp build apps/admin                 # admin (Vite)
-vp run --filter server build        # server (tsdown)
+vp run --filter server build        # server (Vite + @hono/vite-build)
 
 # DB
 vp run --filter db db:generate      # drizzle-kit generate
@@ -118,7 +118,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 
 ## Gotchas
 
-- Server is built with **tsdown**, not Vite. Web/admin use Vite + TanStack Start.
+- Server is built with **Vite** (`@hono/vite-build/node`), output to `apps/server/dist/index.js`. Web/admin also use Vite + TanStack Start.
 - A patched `@tanstack/start-plugin-core@1.171.19` exists in `patches/`. Run `vp install` after pulling to apply it.
 - `vp run with-env` loads `.env` from repo root — required for server, db, and build commands.
 - Docker builds set `CI=true` and require `PUBLIC_` ARGs; web runs `node .output/server/index.mjs` on `PORT 3000`.
