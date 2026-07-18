@@ -528,7 +528,7 @@ export const userRouter = {
       )
 
       console.info(
-        `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.currentPeriodEnd}`,
+        `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.currentPeriodEnd?.toISOString() ?? "null"}`,
       )
 
       return {

@@ -78,7 +78,7 @@ function AssetCardComponent({ asset, onPreview, onDelete }: AssetCardProps) {
             size="icon-sm"
             onClick={(e) => {
               e.stopPropagation()
-              handleCopyUrl(asset.url)
+              void handleCopyUrl(asset.url)
             }}
           >
             <LinkIcon className="size-4" />

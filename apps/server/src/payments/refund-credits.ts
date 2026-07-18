@@ -141,7 +141,7 @@ export async function refundCredits(
     }
   } catch (e) {
     console.error(
-      `Failed to refund credits: polarPaymentId=${polarPaymentId}, error=${e}`,
+      `Failed to refund credits: polarPaymentId=${polarPaymentId}, error=${String(e)}`,
     )
     throw e instanceof Error ? e : new Error(String(e))
   }

@@ -28,7 +28,7 @@ export class WebhookMetrics {
       await this.redis.incr(counterKey)
       await this.redis.expire(counterKey, 60 * 60 * 24 * 30)
     } catch (error) {
-      console.error(`Failed to increment webhook counter: ${error}`)
+      console.error(`Failed to increment webhook counter: ${String(error)}`)
     }
   }
 
@@ -48,7 +48,7 @@ export class WebhookMetrics {
       await this.redis.expire(timeKey, 60 * 60 * 24 * 30)
       await this.redis.expire(countKey, 60 * 60 * 24 * 30)
     } catch (error) {
-      console.error(`Failed to track processing time: ${error}`)
+      console.error(`Failed to track processing time: ${String(error)}`)
     }
   }
 
@@ -63,7 +63,7 @@ export class WebhookMetrics {
       await this.redis.zremrangebyscore(timestampKey, 0, now - 60 * 60 * 1000)
       await this.redis.expire(timestampKey, 60 * 60 * 2)
     } catch (error) {
-      console.error(`Failed to track event timestamp: ${error}`)
+      console.error(`Failed to track event timestamp: ${String(error)}`)
     }
   }
 
@@ -105,7 +105,7 @@ export class WebhookMetrics {
         lastHourRate: lastHourCount,
       }
     } catch (error) {
-      console.error(`Failed to get metrics summary: ${error}`)
+      console.error(`Failed to get metrics summary: ${String(error)}`)
       return {
         totalProcessed: 0,
         successCount: 0,

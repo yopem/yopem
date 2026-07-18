@@ -95,7 +95,7 @@ const ToolsIndexPage = () => {
         type: "success",
       })
       refetch()
-      navigate({ to: `/tools/edit/${data.id}` })
+      void navigate({ to: `/tools/edit/${data.id}` })
     },
     onError: (error: Error) => {
       toastManager.add({

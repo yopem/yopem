@@ -13,9 +13,9 @@ interface Env {
 
 const handler = new RPCHandler(appRouter, {
   interceptors: [
-    async ({ next }) => {
+    async (context) => {
       try {
-        return await next()
+        return await context.next()
       } catch (error) {
         console.error(
           `[RPC] Error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,

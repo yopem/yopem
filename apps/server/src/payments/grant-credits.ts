@@ -104,7 +104,7 @@ export async function grantCredits(
     })
   } catch (e) {
     console.error(
-      `Failed to grant credits: userId=${userId}, polarPaymentId=${polarPaymentId}, error=${e}`,
+      `Failed to grant credits: userId=${userId}, polarPaymentId=${polarPaymentId}, error=${String(e)}`,
     )
     throw e instanceof Error ? e : new Error(String(e))
   }

@@ -41,7 +41,7 @@ const ActivityPage = () => {
               {activityFeed && activityFeed.length > 0 ? (
                 activityFeed.map((activity) => (
                   <ActivityFeedItem
-                    key={`${activity.timestamp}-${activity.message}`}
+                    key={`${activity.timestamp.toISOString()}-${activity.message}`}
                     icon={
                       activity.type === "payment" ? (
                         <BadgeCheckIcon className="text-foreground size-4" />

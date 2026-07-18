@@ -145,7 +145,7 @@ export const adminRouter = {
         await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `Failed to update settings: ${e}`,
+          message: `Failed to update settings: ${String(e)}`,
         })
       }
 
@@ -206,7 +206,7 @@ export const adminRouter = {
         await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `Failed to update settings: ${e}`,
+          message: `Failed to update settings: ${String(e)}`,
         })
       }
 
@@ -232,7 +232,7 @@ export const adminRouter = {
         await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `Failed to update settings: ${e}`,
+          message: `Failed to update settings: ${String(e)}`,
         })
       }
 

@@ -46,7 +46,7 @@ const AddToolPage = () => {
         description: `${variables.name} has been created.`,
         type: "success",
       })
-      navigate({ to: `/tools/edit/${data.id}` })
+      void navigate({ to: `/tools/edit/${data.id}` })
     },
     onError: (error: Error) => {
       toastManager.add({

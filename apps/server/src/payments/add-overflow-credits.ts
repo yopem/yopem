@@ -104,7 +104,7 @@ export async function addOverflowCredits(
     })
   } catch (e) {
     console.error(
-      `Failed to grant overflow credits: userId=${userId}, polarPaymentId=${polarPaymentId}, error=${e}`,
+      `Failed to grant overflow credits: userId=${userId}, polarPaymentId=${polarPaymentId}, error=${String(e)}`,
     )
     throw e instanceof Error ? e : new Error(String(e))
   }
