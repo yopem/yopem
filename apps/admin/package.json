@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/router-cli": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
