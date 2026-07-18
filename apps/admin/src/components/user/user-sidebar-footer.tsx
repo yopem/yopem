@@ -47,7 +47,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
             className="flex items-center gap-3 p-2"
             id="user-sidebar-footer-trigger"
           >
-            <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-8 items-center justify-center rounded-full border text-xs font-bold">
+            <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-7 w-full items-center justify-center rounded-full border text-xs font-bold">
               {user.avatar ? (
                 <Image
                   src={user.avatar}
@@ -55,7 +55,7 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
                   layout="fixed"
                   width={32}
                   height={32}
-                  className="size-8 rounded-full object-cover"
+                  className="size-7 w-full rounded-full object-cover"
                 />
               ) : (
                 user.name
