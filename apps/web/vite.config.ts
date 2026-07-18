@@ -2,7 +2,6 @@ import tailwindCSS from "@tailwindcss/vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite-plus"
-import tsconfigPaths from "vite-tsconfig-paths"
 
 import { webPort } from "env/ports"
 
@@ -49,6 +48,9 @@ export default defineConfig({
     port: webPort,
     host: "0.0.0.0",
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
   ssr: {
     noExternal: [
       "ui",
@@ -64,5 +66,5 @@ export default defineConfig({
       "storage",
     ],
   },
-  plugins: [tsconfigPaths(), tanstackStart(), react(), tailwindCSS()],
+  plugins: [tanstackStart(), react(), tailwindCSS()],
 })
