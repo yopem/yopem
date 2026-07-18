@@ -48,7 +48,7 @@ catalog:
   transliteration: ^2.6.1
   tsdown: ^0.22.5
   typescript: ^7.0.2
-  vite-plus: ^0.2.4
+  vite-plus: ^0.2.5
   vite-tsconfig-paths: ^6.1.1
   vite: npm:@voidzero-dev/vite-plus-core@0.2.4
   zod: ^4.4.3
