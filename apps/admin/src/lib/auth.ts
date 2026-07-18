@@ -1,4 +1,3 @@
-import { redirect } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 
 import { authClient } from "auth/client"
@@ -9,7 +8,7 @@ const getServerUtils = async () => {
   return { getCookie, setCookie, deleteCookie }
 }
 
-const isProduction = () => process.env["APP_ENV"] === "production"
+const isProduction = () => !import.meta.env.DEV
 const isSecure = () => {
   const cookieDomain = process.env["COOKIE_DOMAIN"]
   return !!cookieDomain || isProduction()
@@ -85,7 +84,7 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
         ...options,
         maxAge: 604800,
       })
-      throw redirect({ to: "/" })
+      return { redirectTo: "/" }
     }
   }
 
@@ -103,7 +102,7 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
   const callbackUrl =
     process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
   const { url } = await authClient.authorize(callbackUrl, "code")
-  throw redirect({ href: url })
+  return { redirectTo: url }
 })
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
@@ -115,5 +114,5 @@ export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
     : { path: "/" }
   deleteCookie("access_token", cookieOpts)
   deleteCookie("refresh_token", cookieOpts)
-  throw redirect({ to: "/auth/login" })
+  return { redirectTo: "/auth/login" }
 })

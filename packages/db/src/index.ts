@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
-import { appEnv, databaseUrl } from "env/server"
+import { databaseUrl } from "env"
 
 import * as schema from "./schema/index.ts"
 
@@ -20,7 +20,7 @@ pool.on("error", (error: Error) => {
 })
 
 pool.on("connect", () => {
-  if (appEnv === "development") {
+  if (import.meta.env.DEV) {
     console.info("New database connection established")
   }
 })

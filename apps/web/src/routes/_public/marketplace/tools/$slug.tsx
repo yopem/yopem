@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { ArrowLeftIcon } from "lucide-react"
 import { Suspense } from "react"
 
-import { siteTitle } from "env/client"
+import { siteTitle } from "env"
 import { serverApi } from "rpc/server"
 import { Badge } from "ui/badge"
 import { Separator } from "ui/separator"

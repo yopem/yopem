@@ -1,12 +1,11 @@
 import { Polar } from "@polar-sh/sdk"
 
-const appEnv = process.env["APP_ENV"] ?? "development"
 const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
 const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
 
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: appEnv === "development" ? "sandbox" : "production",
+  server: import.meta.env.DEV ? "sandbox" : "production",
 })
 
 const PACK_SIZE_TO_PRODUCT_ID: Record<string, string | undefined> = {

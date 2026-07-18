@@ -4,7 +4,7 @@ import { Image } from "@unpic/react"
 import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
 
-import { siteUrl } from "env/client"
+import { siteUrl } from "env"
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 
 import { logoutFn } from "@/lib/auth"
@@ -27,7 +27,10 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
     setIsLoggingOut(true)
 
     try {
-      await logoutFn()
+      const result = await logoutFn()
+      if (result?.redirectTo) {
+        window.location.href = result.redirectTo
+      }
     } catch (error) {
       setIsLoggingOut(false)
       throw error

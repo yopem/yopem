@@ -15,7 +15,6 @@ interface Env {
   }
 }
 
-const appEnv = process.env["APP_ENV"] ?? "development"
 const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
 const polarProductId = process.env["POLAR_PRODUCT_ID"] ?? ""
 const polarProPriceId = process.env["POLAR_PRO_PRICE_ID"] ?? ""
@@ -24,7 +23,7 @@ const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
 
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: appEnv === "development" ? "sandbox" : "production",
+  server: import.meta.env.DEV ? "sandbox" : "production",
 })
 
 const checkoutRoute = new Hono<Env>()

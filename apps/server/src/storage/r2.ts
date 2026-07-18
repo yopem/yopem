@@ -8,13 +8,7 @@ import { nanoid } from "nanoid"
 import sharp from "sharp"
 import { transliterate as tr } from "transliteration"
 
-import {
-  cfAccountId,
-  r2AccessKey,
-  r2Bucket,
-  r2Domain,
-  r2SecretKey,
-} from "env/server"
+import { cfAccountId, r2AccessKey, r2Bucket, r2Domain, r2SecretKey } from "env"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 

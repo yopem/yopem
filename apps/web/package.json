@@ -4,14 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp run with-env vp dev --port ${WEB_PORT:-3000}",
-    "build": "vp run with-env vp build",
-    "preview": "vp run with-env vp preview",
+    "dev": "vp dev --port ${WEB_PORT:-3000}",
+    "build": "vp build",
+    "preview": "vp preview",
     "start": "node --env-file=../../.env .output/server/index.mjs",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
-    "typecheck": "tsc --noEmit",
-    "with-env": "dotenv -e ../../.env --"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-form": "catalog:",
@@ -38,7 +37,6 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@yopem/typescript-config": "catalog:",
-    "dotenv-cli": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",

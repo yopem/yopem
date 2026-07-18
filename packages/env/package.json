@@ -7,22 +7,6 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./server": {
-      "types": "./src/server.ts",
-      "default": "./src/server.ts"
-    },
-    "./client": {
-      "types": "./src/client.ts",
-      "default": "./src/client.ts"
-    },
-    "./schema": {
-      "types": "./src/schema.ts",
-      "default": "./src/schema.ts"
-    },
-    "./ports": {
-      "types": "./src/ports.ts",
-      "default": "./src/ports.ts"
     }
   },
   "scripts": {
@@ -31,7 +15,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@t3-oss/env-core": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

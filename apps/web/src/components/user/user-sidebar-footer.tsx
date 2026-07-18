@@ -28,7 +28,10 @@ const UserSidebarFooter = ({ user }: UserSidebarFooterProps) => {
     setIsLoggingOut(true)
 
     try {
-      await logoutFn()
+      const result = await logoutFn()
+      if (result?.redirectTo) {
+        window.location.href = result.redirectTo
+      }
     } catch (error) {
       setIsLoggingOut(false)
       throw error

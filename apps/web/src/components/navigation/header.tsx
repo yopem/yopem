@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 
 import type { SessionUser } from "auth/types"
-import { adminUrl } from "env/client"
+import { adminUrl } from "env"
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import { Button } from "ui/button"
 import Logo from "ui/logo"
@@ -34,24 +34,9 @@ const Header = ({ session }: HeaderProps) => {
   const [imageError, setImageError] = useState(false)
 
   const handleLogin = async () => {
-    try {
-      await loginFn()
-    } catch (error) {
-      if (error && typeof error === "object") {
-        const err = error as {
-          status?: number
-          href?: string
-          options?: { href?: string }
-        }
-        if (err.status === 307) {
-          const redirectUrl = err.href ?? err.options?.href
-          if (redirectUrl) {
-            window.location.href = redirectUrl
-            return
-          }
-        }
-      }
-      throw error
+    const result = await loginFn()
+    if (result?.redirectTo) {
+      window.location.href = result.redirectTo
     }
   }
 
@@ -114,7 +99,12 @@ const Header = ({ session }: HeaderProps) => {
                   )}
                   <MenuItem
                     className="text-destructive"
-                    onClick={() => logoutFn()}
+                    onClick={async () => {
+                      const result = await logoutFn()
+                      if (result?.redirectTo) {
+                        window.location.href = result.redirectTo
+                      }
+                    }}
                   >
                     Logout
                   </MenuItem>

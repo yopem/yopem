@@ -3,17 +3,14 @@ import { getCookie, deleteCookie, setCookie } from "hono/cookie"
 
 import { authClient } from "auth/client"
 
-const appEnv = process.env["APP_ENV"] ?? "development"
-const allowedOrigins =
-  appEnv === "development"
-    ? [
-        process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-        process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
-      ]
-    : [
-        process.env["WEB_ORIGIN"] ?? "",
-        process.env["ADMIN_ORIGIN"] ?? "",
-      ].filter(Boolean)
+const allowedOrigins = import.meta.env.DEV
+  ? [
+      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
+      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+    ]
+  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
+      Boolean,
+    )
 const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
 const callbackUrl =
   process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
@@ -73,14 +70,13 @@ authCallbackRoute.get("/callback", async (c) => {
       : defaultOrigin
 
   const cookieDomain = process.env["COOKIE_DOMAIN"]
-  const prod = appEnv === "production"
-  const isSecure = !!cookieDomain || prod
+  const isSecure = !!cookieDomain || !import.meta.env.DEV
   deleteCookie(c, "login_origin", {
     path: "/",
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
-  const sameSite: "none" | "lax" = prod ? "none" : "lax"
+  const sameSite: "none" | "lax" = import.meta.env.DEV ? "lax" : "none"
   const cookieOptions = {
     httpOnly: true,
     sameSite,

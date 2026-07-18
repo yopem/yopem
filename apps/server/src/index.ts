@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
-import { serverPort } from "env/server"
+import { serverPort } from "env"
 
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"
@@ -14,19 +14,16 @@ import { webhooksRoute } from "./handlers/webhooks"
 
 const app = new Hono()
 
-const appEnv = process.env["APP_ENV"] ?? "development"
 const port = serverPort
 
-const allowedOrigins =
-  appEnv === "development"
-    ? [
-        process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-        process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
-      ]
-    : [
-        process.env["WEB_ORIGIN"] ?? "",
-        process.env["ADMIN_ORIGIN"] ?? "",
-      ].filter(Boolean)
+const allowedOrigins = import.meta.env.DEV
+  ? [
+      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
+      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+    ]
+  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
+      Boolean,
+    )
 
 app.use(
   "*",
@@ -70,12 +67,16 @@ app.onError((err, c) => {
   return c.json({ error: "Internal Server Error" }, 500)
 })
 
-serve(
-  {
-    fetch: app.fetch,
-    port,
-  },
-  () => {
-    console.info(`Hono server listening on port ${port}`)
-  },
-)
+export default app
+
+if (!import.meta.env.DEV) {
+  serve(
+    {
+      fetch: app.fetch,
+      port,
+    },
+    () => {
+      console.info(`Hono server listening on port ${port}`)
+    },
+  )
+}

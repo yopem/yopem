@@ -14,7 +14,7 @@ interface SessionEnv {
   }
 }
 
-const isProduction = () => process.env["APP_ENV"] === "production"
+const isProduction = () => !import.meta.env.DEV
 const isSecure = () => {
   const cookieDomain = process.env["COOKIE_DOMAIN"]
   return !!cookieDomain || isProduction()

@@ -2,13 +2,12 @@ import { Polar } from "@polar-sh/sdk"
 
 import type { SubscriptionTier } from "./subscription-plans"
 
-const appEnv = process.env["APP_ENV"] ?? "development"
 const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
 const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
 
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: appEnv === "development" ? "sandbox" : "production",
+  server: import.meta.env.DEV ? "sandbox" : "production",
 })
 
 const TIER_TO_PRODUCT_ID: Record<SubscriptionTier, string | undefined> = {

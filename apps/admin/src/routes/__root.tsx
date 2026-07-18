@@ -12,8 +12,7 @@ import "@/globals.css"
 import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
 import { useEffect } from "react"
 
-import { siteTitle } from "env/client"
-import { appEnv } from "env/client"
+import { siteTitle } from "env"
 const formatError = (error: unknown): string =>
   error instanceof Error ? (error.stack ?? error.message) : String(error)
 import { Button } from "ui/button"
@@ -94,7 +93,7 @@ function ErrorComponent({
             We encountered an error while loading this page. Please try again or
             return to the homepage.
           </p>
-          {appEnv === "development" && (
+          {import.meta.env.DEV && (
             <details className="mt-4 rounded-lg border p-4 text-left">
               <summary className="text-muted-foreground cursor-pointer text-xs font-medium">
                 Error Details (Development)
