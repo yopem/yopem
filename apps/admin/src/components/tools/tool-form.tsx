@@ -3,11 +3,11 @@
 import { useImperativeHandle, type Ref } from "react"
 
 import type { SelectTool } from "db/schema"
-import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import { Separator } from "ui/separator"
 import { Textarea } from "ui/textarea"
+import type { ApiKeyConfig } from "utils/api-keys-schema"
 
 import ConfigurationPanel from "./configuration-panel"
 import InputVariableSection from "./input-variable-section"

@@ -16,7 +16,7 @@ import {
   userSettingsTable,
 } from "db/schema"
 import type { InsertUserSettings } from "db/schema/user-settings"
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 export const getUserStats = async (
   userId: string,

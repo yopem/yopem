@@ -18,9 +18,9 @@ import {
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "shared/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
-import { createCustomId } from "shared/custom-id"
+} from "utils/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "utils/crypto"
+import { createCustomId } from "utils/custom-id"
 
 export const userRouter = {
   getProfile: protectedProcedure.handler(({ context }) => {

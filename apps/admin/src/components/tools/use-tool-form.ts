@@ -7,12 +7,12 @@ import { z } from "zod"
 
 import { insertToolSchema, type SelectTool } from "db/schema"
 import { queryApi } from "rpc/query"
-import type { ApiKeyConfig } from "shared/api-keys-schema"
+import { toastManager } from "ui/toast"
+import type { ApiKeyConfig } from "utils/api-keys-schema"
 import {
   getProviderMismatchMessage,
   validateModelProviderMatch,
-} from "shared/model-provider-validation"
-import { toastManager } from "ui/toast"
+} from "utils/model-provider-validation"
 
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 

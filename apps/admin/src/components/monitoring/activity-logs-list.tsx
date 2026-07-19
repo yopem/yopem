@@ -6,7 +6,6 @@ import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
-import { formatDateTime } from "shared/format-date"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select"
+import { formatDateTime } from "utils/format-date"
 
 const severityColors: Record<
   string,

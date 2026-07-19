@@ -6,7 +6,7 @@ import {
   polarPaymentsTable,
   userCreditsTable,
 } from "db/schema"
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 interface AddOverflowCreditsParams {
   userId: string

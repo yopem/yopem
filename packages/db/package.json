@@ -34,8 +34,8 @@
     "drizzle-zod": "catalog:",
     "env": "workspace:*",
     "pg": "catalog:",
-    "shared": "workspace:*",
     "transliteration": "catalog:",
+    "utils": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

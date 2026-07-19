@@ -1,6 +1,5 @@
 "use client"
 
-import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { Button } from "ui/button"
 import {
   Dialog,
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "ui/select"
 import { Textarea } from "ui/textarea"
+import type { ApiKeyConfig } from "utils/api-keys-schema"
 
 interface EditProviderDialogProps {
   open: boolean

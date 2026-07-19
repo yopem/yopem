@@ -59,9 +59,9 @@
     "ioredis": "catalog:",
     "nanoid": "catalog:",
     "pg": "catalog:",
-    "shared": "workspace:*",
     "sharp": "^0.34.5",
     "transliteration": "catalog:",
+    "utils": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

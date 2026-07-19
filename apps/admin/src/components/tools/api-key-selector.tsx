@@ -1,6 +1,5 @@
 "use client"
 
-import type { ApiKeyConfig } from "shared/api-keys-schema"
 import { Label } from "ui/label"
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select"
+import type { ApiKeyConfig } from "utils/api-keys-schema"
 
 interface ApiKeySelectorProps {
   value?: string

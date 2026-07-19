@@ -4,11 +4,11 @@ import { Image } from "@unpic/react"
 import { ImageIcon, LinkIcon, Trash2Icon } from "lucide-react"
 import { memo } from "react"
 
-import { formatDateOnly } from "shared/format-date"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader } from "ui/card"
 import { toastManager } from "ui/toast"
+import { formatDateOnly } from "utils/format-date"
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 

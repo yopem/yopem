@@ -5,7 +5,7 @@ import {
   getSubscription,
   updateSubscriptionByPolarId,
 } from "db/services/subscriptions"
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 import type { SubscriptionStatus, SubscriptionTier } from "./subscription-plans"
 

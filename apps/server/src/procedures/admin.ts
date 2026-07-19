@@ -9,9 +9,9 @@ import {
   deleteApiKeyInputSchema,
   updateApiKeyInputSchema,
   type ApiKeyConfig,
-} from "shared/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "shared/crypto"
-import { createCustomId } from "shared/custom-id"
+} from "utils/api-keys-schema"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "utils/crypto"
+import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"

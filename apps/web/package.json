@@ -26,10 +26,10 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "rpc": "workspace:*",
-    "shared": "workspace:*",
     "shimmer-from-structure": "catalog:",
     "srvx": "catalog:",
     "ui": "workspace:*",
+    "utils": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -10,14 +10,14 @@ import { useCallback, useEffect, useReducer, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
+import { toastManager } from "ui/toast"
 import type {
   AddApiKeyInput,
   ApiKeyConfig,
   DeleteApiKeyInput,
   UpdateApiKeyInput,
-} from "shared/api-keys-schema"
-import { formatDateTime } from "shared/format-date"
-import { toastManager } from "ui/toast"
+} from "utils/api-keys-schema"
+import { formatDateTime } from "utils/format-date"
 
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"

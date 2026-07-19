@@ -5,9 +5,9 @@ import { CoinsIcon, CreditCardIcon, PlayIcon, ZapIcon } from "lucide-react"
 import { memo } from "react"
 
 import { queryApi } from "rpc/query"
-import { formatDateOnly } from "shared/format-date"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
+import { formatDateOnly } from "utils/format-date"
 
 export const Route = createFileRoute("/_user/dashboard/")({
   component: DashboardPage,

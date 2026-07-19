@@ -205,9 +205,6 @@ importers:
       rpc:
         specifier: workspace:*
         version: link:../../packages/rpc
-      shared:
-        specifier: workspace:*
-        version: link:../../packages/shared
       shimmer-from-structure:
         specifier: 'catalog:'
         version: 2.4.5(@angular/common@21.2.18(@angular/core@21.2.18(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.18(rxjs@7.8.2))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(solid-js@1.9.14)(svelte@5.56.4)(vue@3.5.39(typescript@7.0.2))
@@ -217,6 +214,9 @@ importers:
       ui:
         specifier: workspace:*
         version: link:../../packages/ui
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -311,15 +311,15 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.22.0
-      shared:
-        specifier: workspace:*
-        version: link:../../packages/shared
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
       transliteration:
         specifier: 'catalog:'
         version: 2.6.1
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -390,9 +390,6 @@ importers:
       rpc:
         specifier: workspace:*
         version: link:../../packages/rpc
-      shared:
-        specifier: workspace:*
-        version: link:../../packages/shared
       shimmer-from-structure:
         specifier: 'catalog:'
         version: 2.4.5(@angular/common@21.2.18(@angular/core@21.2.18(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.18(rxjs@7.8.2))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(solid-js@1.9.14)(svelte@5.56.4)(vue@3.5.39(typescript@7.0.2))
@@ -402,6 +399,9 @@ importers:
       ui:
         specifier: workspace:*
         version: link:../../packages/ui
+      utils:
+        specifier: workspace:*
+        version: link:../../packages/utils
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -485,12 +485,12 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.22.0
-      shared:
-        specifier: workspace:*
-        version: link:../shared
       transliteration:
         specifier: 'catalog:'
         version: 2.6.1
+      utils:
+        specifier: workspace:*
+        version: link:../utils
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -573,37 +573,6 @@ importers:
         specifier: 'catalog:'
         version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(svelte@5.56.4)(tsx@4.23.0)(typescript@7.0.2)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0))
 
-  packages/shared:
-    dependencies:
-      dayjs:
-        specifier: 'catalog:'
-        version: 1.11.21
-      env:
-        specifier: workspace:*
-        version: link:../env
-      nanoid:
-        specifier: 'catalog:'
-        version: 6.0.0
-      transliteration:
-        specifier: 'catalog:'
-        version: 2.6.1
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.1.1
-      '@yopem/typescript-config':
-        specifier: 'catalog:'
-        version: 0.2.1
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(svelte@5.56.4)(tsx@4.23.0)(typescript@7.0.2)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0))
-
   packages/ui:
     dependencies:
       '@base-ui/react':
@@ -652,6 +621,37 @@ importers:
       eslint-plugin-better-tailwindcss:
         specifier: 'catalog:'
         version: 4.6.1(oxlint@1.73.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(svelte@5.56.4)(tsx@4.23.0)(typescript@7.0.2)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0))))(tailwindcss@4.3.2)(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(svelte@5.56.4)(tsx@4.23.0)(typescript@7.0.2)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0))
+
+  packages/utils:
+    dependencies:
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.21
+      env:
+        specifier: workspace:*
+        version: link:../env
+      nanoid:
+        specifier: 'catalog:'
+        version: 6.0.0
+      transliteration:
+        specifier: 'catalog:'
+        version: 2.6.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.1.1
+      '@yopem/typescript-config':
+        specifier: 'catalog:'
+        version: 0.2.1
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

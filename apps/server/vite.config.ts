@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
         "env",
         "logger",
         "orpc",
-        "shared",
+        "utils",
         "cache",
         "ai",
         "payments",

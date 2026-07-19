@@ -9,7 +9,7 @@ import {
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 import { z } from "zod"
 
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 export const toolStatusEnum = ["draft", "active", "archived"] as const
 export type ToolStatus = (typeof toolStatusEnum)[number]

@@ -17,7 +17,7 @@ import { z } from "zod"
 
 import { db } from "db"
 import { polarCheckoutSessionsTable, polarPaymentEventsTable } from "db/schema"
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),

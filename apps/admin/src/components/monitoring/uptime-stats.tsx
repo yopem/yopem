@@ -10,7 +10,7 @@ import {
 import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
-import { formatDateTime } from "shared/format-date"
+import { formatDateTime } from "utils/format-date"
 
 import StatsCard from "@/components/dashboard/stats-card"
 

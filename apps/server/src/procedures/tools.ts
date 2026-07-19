@@ -37,9 +37,9 @@ import {
   updateToolStatus,
   upsertToolReview,
 } from "db/services/tools"
-import type { ApiKeyConfig } from "shared/api-keys-schema"
-import { decryptApiKey } from "shared/crypto"
-import { createCustomId } from "shared/custom-id"
+import type { ApiKeyConfig } from "utils/api-keys-schema"
+import { decryptApiKey } from "utils/crypto"
+import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 

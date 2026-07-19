@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
 
 import { queryApi } from "rpc/query"
-import { formatDateTime } from "shared/format-date"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "ui/table"
+import { formatDateTime } from "utils/format-date"
 
 const getStatusIcon = (status: string) => {
   switch (status) {

@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 export const toolRunStatusEnum = ["running", "completed", "failed"] as const
 export type ToolRunStatus = (typeof toolRunStatusEnum)[number]

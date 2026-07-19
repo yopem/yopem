@@ -1,6 +1,5 @@
 "use client"
 
-import type { AddApiKeyInput } from "shared/api-keys-schema"
 import { Button } from "ui/button"
 import {
   Dialog,
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "ui/select"
 import { Textarea } from "ui/textarea"
+import type { AddApiKeyInput } from "utils/api-keys-schema"
 
 interface AddProviderDialogProps {
   open: boolean

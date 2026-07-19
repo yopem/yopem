@@ -14,7 +14,7 @@ import {
 } from "db/schema"
 import type { InsertToolVersion } from "db/schema/tool-versions"
 import type { InsertTool, SelectTool } from "db/schema/tools"
-import { createCustomId } from "shared/custom-id"
+import { createCustomId } from "utils/custom-id"
 
 import { generateUniqueToolSlug } from "./slug.ts"
 
