@@ -89,6 +89,10 @@
       "types": "./src/components/drop-line.tsx",
       "default": "./src/components/drop-line.tsx"
     },
+    "./editor-kit": {
+      "types": "./src/components/editor-kit.tsx",
+      "default": "./src/components/editor-kit.tsx"
+    },
     "./editor": {
       "types": "./src/components/editor.tsx",
       "default": "./src/components/editor.tsx"

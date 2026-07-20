@@ -1,1 +1,1 @@
-console.info("index")
+export { Editor } from "./components/editor"
