@@ -81,6 +81,10 @@
       "types": "./src/components/inline-combobox.tsx",
       "default": "./src/components/inline-combobox.tsx"
     },
+    "./kbd-node": {
+      "types": "./src/components/kbd-node.tsx",
+      "default": "./src/components/kbd-node.tsx"
+    },
     "./link-toolbar-button": {
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"
