@@ -21,6 +21,10 @@
       "types": "./src/components/drag-handle.tsx",
       "default": "./src/components/drag-handle.tsx"
     },
+    "./drop-line": {
+      "types": "./src/components/drop-line.tsx",
+      "default": "./src/components/drop-line.tsx"
+    },
     "./heading-node": {
       "types": "./src/components/heading-node.tsx",
       "default": "./src/components/heading-node.tsx"
