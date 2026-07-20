@@ -13,6 +13,10 @@
       "types": "./src/components/autoformat-kit.tsx",
       "default": "./src/components/autoformat-kit.tsx"
     },
+    "./basic-blocks-kit": {
+      "types": "./src/components/basic-blocks-kit.tsx",
+      "default": "./src/components/basic-blocks-kit.tsx"
+    },
     "./block-context-menu": {
       "types": "./src/components/block-context-menu.tsx",
       "default": "./src/components/block-context-menu.tsx"
@@ -164,6 +168,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@platejs/basic-nodes": "^53.0.0",
     "@platejs/caption": "^53.0.0",
     "@platejs/combobox": "^53.0.0",
     "@platejs/dnd": "^53.1.0",
