@@ -41,7 +41,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@yopem/typescript-config": "catalog:",
-    "eslint-plugin-better-tailwindcss": "catalog:",
+    "oxlint-tailwindcss": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
