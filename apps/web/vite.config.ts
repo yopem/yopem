@@ -63,6 +63,7 @@ export default defineConfig(({ mode }) => {
         "env",
         "logger",
         "orpc",
+        "rpc",
         "utils",
         "cache",
         "ai",

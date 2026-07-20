@@ -4,12 +4,7 @@ import type { appRouter } from "server/router"
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    return process.env["PUBLIC_API_URL"] ?? ""
-  }
-  return process.env["PUBLIC_API_URL"] ?? "http://localhost:4000"
-}
+import { apiUrl } from "env"
 
 export const createORPCLink = (
   customFetch?: (
@@ -18,7 +13,7 @@ export const createORPCLink = (
   ) => Promise<Response>,
 ) => {
   return new RPCLink({
-    url: getBaseUrl() + "/rpc",
+    url: `${apiUrl}/rpc`,
     fetch:
       customFetch ??
       ((input, init) => {
