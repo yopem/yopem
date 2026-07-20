@@ -15,7 +15,6 @@ export function DropLine({ className, ...props }: ComponentProps<"div">) {
     <div
       {...props}
       className={cn(
-        "slate-dropLine",
         "pointer-events-none absolute inset-x-0 h-0.5 opacity-100 transition-opacity",
         "bg-primary/50",
         "z-50",
