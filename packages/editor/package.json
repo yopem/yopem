@@ -21,6 +21,10 @@
       "types": "./src/components/block-draggable.tsx",
       "default": "./src/components/block-draggable.tsx"
     },
+    "./block-list": {
+      "types": "./src/components/block-list.tsx",
+      "default": "./src/components/block-list.tsx"
+    },
     "./block-list-elements": {
       "types": "./src/components/block-list-elements.tsx",
       "default": "./src/components/block-list-elements.tsx"
