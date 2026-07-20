@@ -17,6 +17,10 @@
       "types": "./src/components/block-context-menu.tsx",
       "default": "./src/components/block-context-menu.tsx"
     },
+    "./block-draggable": {
+      "types": "./src/components/block-draggable.tsx",
+      "default": "./src/components/block-draggable.tsx"
+    },
     "./drag-handle": {
       "types": "./src/components/drag-handle.tsx",
       "default": "./src/components/drag-handle.tsx"
