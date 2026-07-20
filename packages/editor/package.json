@@ -141,6 +141,10 @@
       "types": "./src/components/link-toolbar.tsx",
       "default": "./src/components/link-toolbar.tsx"
     },
+    "./list-kit": {
+      "types": "./src/components/list-kit.tsx",
+      "default": "./src/components/list-kit.tsx"
+    },
     "./mark-toolbar-button": {
       "types": "./src/components/mark-toolbar-button.tsx",
       "default": "./src/components/mark-toolbar-button.tsx"
