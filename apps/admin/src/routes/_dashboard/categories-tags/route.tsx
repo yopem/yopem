@@ -4,7 +4,10 @@ import { PlusIcon } from "lucide-react"
 import { Suspense, useReducer } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Button } from "ui/button"
 import { toastManager } from "ui/toast"
 
@@ -133,38 +136,30 @@ function reducer(state: State, action: Action): State {
 }
 
 const CategoriesTagsContent = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const queryClient = useQueryClient()
 
   const { data: categories, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      return await queryApi.categories.list.call()
-    },
+    ...queryApi.categories.list.queryOptions(),
   })
 
   const { data: tags, isLoading: isLoadingTags } = useQuery({
-    queryKey: ["tags"],
-    queryFn: async () => {
-      return await queryApi.tags.list.call()
-    },
+    ...queryApi.tags.list.queryOptions(),
   })
 
   const createCategoryMutation = useMutation({
-    mutationFn: async () => {
-      return await queryApi.categories.create.call({
-        name: state.categoryDialog.name,
-        description: state.categoryDialog.description || undefined,
-      })
-    },
+    ...queryApi.categories.create.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Category created",
         description: `${state.categoryDialog.name} has been created successfully.`,
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.categories.list.queryKey(),
+      })
       dispatch({ type: "RESET_CATEGORY_FORM" })
     },
     onError: (error: Error) => {
@@ -177,21 +172,16 @@ const CategoriesTagsContent = () => {
   })
 
   const updateCategoryMutation = useMutation({
-    mutationFn: async () => {
-      if (!state.categoryDialog.editing) return
-      return await queryApi.categories.update.call({
-        id: state.categoryDialog.editing.id,
-        name: state.categoryDialog.name,
-        description: state.categoryDialog.description || undefined,
-      })
-    },
+    ...queryApi.categories.update.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Category updated",
         description: `${state.categoryDialog.name} has been updated successfully.`,
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.categories.list.queryKey(),
+      })
       dispatch({ type: "RESET_CATEGORY_FORM" })
     },
     onError: (error: Error) => {
@@ -204,16 +194,16 @@ const CategoriesTagsContent = () => {
   })
 
   const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await queryApi.categories.delete.call({ id })
-    },
+    ...queryApi.categories.delete.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Category deleted",
         description: "Category has been deleted successfully.",
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["categories"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.categories.list.queryKey(),
+      })
     },
     onError: (error: Error) => {
       toastManager.add({
@@ -225,18 +215,16 @@ const CategoriesTagsContent = () => {
   })
 
   const createTagMutation = useMutation({
-    mutationFn: async () => {
-      return await queryApi.tags.create.call({
-        name: state.tagDialog.name,
-      })
-    },
+    ...queryApi.tags.create.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Tag created",
         description: `${state.tagDialog.name} has been created successfully.`,
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.tags.list.queryKey(),
+      })
       dispatch({ type: "RESET_TAG_FORM" })
     },
     onError: (error: Error) => {
@@ -249,20 +237,16 @@ const CategoriesTagsContent = () => {
   })
 
   const updateTagMutation = useMutation({
-    mutationFn: async () => {
-      if (!state.tagDialog.editing) return
-      return await queryApi.tags.update.call({
-        id: state.tagDialog.editing.id,
-        name: state.tagDialog.name,
-      })
-    },
+    ...queryApi.tags.update.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Tag updated",
         description: `${state.tagDialog.name} has been updated successfully.`,
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.tags.list.queryKey(),
+      })
       dispatch({ type: "RESET_TAG_FORM" })
     },
     onError: (error: Error) => {
@@ -275,16 +259,16 @@ const CategoriesTagsContent = () => {
   })
 
   const deleteTagMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await queryApi.tags.delete.call({ id })
-    },
+    ...queryApi.tags.delete.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Tag deleted",
         description: "Tag has been deleted successfully.",
         type: "success",
       })
-      void queryClient.invalidateQueries({ queryKey: ["tags"] })
+      void queryClient.invalidateQueries({
+        queryKey: queryApi.tags.list.queryKey(),
+      })
     },
     onError: (error: Error) => {
       toastManager.add({
@@ -297,113 +281,129 @@ const CategoriesTagsContent = () => {
 
   const handleCategorySubmit = () => {
     if (state.categoryDialog.editing) {
-      updateCategoryMutation.mutate()
+      updateCategoryMutation.mutate({
+        id: state.categoryDialog.editing.id,
+        name: state.categoryDialog.name,
+        description: state.categoryDialog.description || undefined,
+      })
     } else {
-      createCategoryMutation.mutate()
+      createCategoryMutation.mutate({
+        name: state.categoryDialog.name,
+        description: state.categoryDialog.description || undefined,
+      })
     }
   }
 
   const handleTagSubmit = () => {
     if (state.tagDialog.editing) {
-      updateTagMutation.mutate()
+      updateTagMutation.mutate({
+        id: state.tagDialog.editing.id,
+        name: state.tagDialog.name,
+      })
     } else {
-      createTagMutation.mutate()
+      createTagMutation.mutate({
+        name: state.tagDialog.name,
+      })
     }
   }
 
   return (
-    <div className="flex flex-col gap-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Categories & Tags</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage categories and tags for organizing your products
-        </p>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Categories</h2>
-            <Button
-              size="sm"
-              onClick={() => dispatch({ type: "OPEN_CATEGORY_DIALOG" })}
-            >
-              <PlusIcon className="size-4" />
-              Add Category
-            </Button>
-          </div>
-          <CategoryList
-            categories={categories}
-            isLoading={isLoadingCategories}
-            onEdit={(category) =>
-              dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
-            }
-            onDelete={(id) => deleteCategoryMutation.mutate(id)}
-            deleteMutation={deleteCategoryMutation}
-          />
+    <HydrateClient state={dehydratedState}>
+      <div className="flex flex-col gap-8 p-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Categories & Tags
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Manage categories and tags for organizing your products
+          </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Tags</h2>
-            <Button
-              size="sm"
-              onClick={() => dispatch({ type: "OPEN_TAG_DIALOG" })}
-            >
-              <PlusIcon className="size-4" />
-              Add Tag
-            </Button>
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Categories</h2>
+              <Button
+                size="sm"
+                onClick={() => dispatch({ type: "OPEN_CATEGORY_DIALOG" })}
+              >
+                <PlusIcon className="size-4" />
+                Add Category
+              </Button>
+            </div>
+            <CategoryList
+              categories={categories}
+              isLoading={isLoadingCategories}
+              onEdit={(category) =>
+                dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
+              }
+              onDelete={(id) => deleteCategoryMutation.mutate({ id })}
+              deleteMutation={deleteCategoryMutation}
+            />
           </div>
-          <TagList
-            tags={tags}
-            isLoading={isLoadingTags}
-            onEdit={(tag) => dispatch({ type: "OPEN_TAG_DIALOG", tag })}
-            onDelete={(id) => deleteTagMutation.mutate(id)}
-            deleteMutation={deleteTagMutation}
-          />
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Tags</h2>
+              <Button
+                size="sm"
+                onClick={() => dispatch({ type: "OPEN_TAG_DIALOG" })}
+              >
+                <PlusIcon className="size-4" />
+                Add Tag
+              </Button>
+            </div>
+            <TagList
+              tags={tags}
+              isLoading={isLoadingTags}
+              onEdit={(tag) => dispatch({ type: "OPEN_TAG_DIALOG", tag })}
+              onDelete={(id) => deleteTagMutation.mutate({ id })}
+              deleteMutation={deleteTagMutation}
+            />
+          </div>
         </div>
+
+        <CategoryDialog
+          open={state.categoryDialog.open}
+          editing={state.categoryDialog.editing}
+          name={state.categoryDialog.name}
+          description={state.categoryDialog.description}
+          onOpenChange={(open) =>
+            open
+              ? dispatch({ type: "OPEN_CATEGORY_DIALOG" })
+              : dispatch({ type: "CLOSE_CATEGORY_DIALOG" })
+          }
+          onNameChange={(value) =>
+            dispatch({ type: "SET_CATEGORY_NAME", payload: value })
+          }
+          onDescriptionChange={(value) =>
+            dispatch({ type: "SET_CATEGORY_DESCRIPTION", payload: value })
+          }
+          onSubmit={handleCategorySubmit}
+          onCancel={() => dispatch({ type: "RESET_CATEGORY_FORM" })}
+          createMutation={createCategoryMutation}
+          updateMutation={updateCategoryMutation}
+        />
+
+        <TagDialog
+          open={state.tagDialog.open}
+          editing={state.tagDialog.editing}
+          name={state.tagDialog.name}
+          onOpenChange={(open) =>
+            open
+              ? dispatch({ type: "OPEN_TAG_DIALOG" })
+              : dispatch({ type: "CLOSE_TAG_DIALOG" })
+          }
+          onNameChange={(value) =>
+            dispatch({ type: "SET_TAG_NAME", payload: value })
+          }
+          onSubmit={handleTagSubmit}
+          onCancel={() => dispatch({ type: "RESET_TAG_FORM" })}
+          createMutation={createTagMutation}
+          updateMutation={updateTagMutation}
+        />
       </div>
-
-      <CategoryDialog
-        open={state.categoryDialog.open}
-        editing={state.categoryDialog.editing}
-        name={state.categoryDialog.name}
-        description={state.categoryDialog.description}
-        onOpenChange={(open) =>
-          open
-            ? dispatch({ type: "OPEN_CATEGORY_DIALOG" })
-            : dispatch({ type: "CLOSE_CATEGORY_DIALOG" })
-        }
-        onNameChange={(value) =>
-          dispatch({ type: "SET_CATEGORY_NAME", payload: value })
-        }
-        onDescriptionChange={(value) =>
-          dispatch({ type: "SET_CATEGORY_DESCRIPTION", payload: value })
-        }
-        onSubmit={handleCategorySubmit}
-        onCancel={() => dispatch({ type: "RESET_CATEGORY_FORM" })}
-        createMutation={createCategoryMutation}
-        updateMutation={updateCategoryMutation}
-      />
-
-      <TagDialog
-        open={state.tagDialog.open}
-        editing={state.tagDialog.editing}
-        name={state.tagDialog.name}
-        onOpenChange={(open) =>
-          open
-            ? dispatch({ type: "OPEN_TAG_DIALOG" })
-            : dispatch({ type: "CLOSE_TAG_DIALOG" })
-        }
-        onNameChange={(value) =>
-          dispatch({ type: "SET_TAG_NAME", payload: value })
-        }
-        onSubmit={handleTagSubmit}
-        onCancel={() => dispatch({ type: "RESET_TAG_FORM" })}
-        createMutation={createTagMutation}
-        updateMutation={updateTagMutation}
-      />
-    </div>
+    </HydrateClient>
   )
 }
 
@@ -443,5 +443,12 @@ const CategoriesTagsPage = () => {
 }
 
 export const Route = createFileRoute("/_dashboard/categories-tags")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.categories.list.queryOptions(),
+      serverQueryApi.tags.list.queryOptions(),
+    ])
+    return { dehydratedState }
+  },
   component: CategoriesTagsPage,
 })

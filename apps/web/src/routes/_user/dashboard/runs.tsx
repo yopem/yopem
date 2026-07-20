@@ -3,7 +3,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import { CheckCircle2Icon, ClockIcon, XCircleIcon } from "lucide-react"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card"
@@ -40,10 +43,17 @@ const getStatusBadge = (status: string) => {
 }
 
 export const Route = createFileRoute("/_user/dashboard/runs")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.user.getRuns.queryOptions({ input: { limit: 50 } }),
+    ])
+    return { dehydratedState }
+  },
   component: RunsPage,
 })
 
 function RunsPage() {
+  const { dehydratedState } = Route.useLoaderData()
   const { data: runsData, isLoading } = useQuery({
     ...queryApi.user.getRuns.queryOptions({ input: { limit: 50 } }),
     retry: false,
@@ -67,87 +77,92 @@ function RunsPage() {
   const runs = runsData?.runs ?? []
 
   return (
-    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold">My Runs</h1>
-        <p className="text-muted-foreground mt-2">
-          View your product execution history.
-        </p>
-      </div>
+    <HydrateClient state={dehydratedState}>
+      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
+        <div>
+          <h1 className="text-3xl font-bold">My Runs</h1>
+          <p className="text-muted-foreground mt-2">
+            View your product execution history.
+          </p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Executions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Status</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <ClockIcon className="text-muted-foreground size-4" />
-                        <span className="text-muted-foreground text-sm">
-                          Loading...
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground font-medium">
-                      Loading...
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">-</TableCell>
-                    <TableCell className="text-muted-foreground text-right">
-                      -
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : runs.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Executions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center">
-                    <p className="text-muted-foreground">
-                      No product runs yet. Visit the marketplace to get started!
-                    </p>
-                    <div className="mt-4">
-                      <Link to="/marketplace">
-                        <Button variant="outline">Browse Marketplace</Button>
-                      </Link>
-                    </div>
-                  </TableCell>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
                 </TableRow>
-              ) : (
-                runs.map((run) => (
-                  <TableRow key={run.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(run.status)}
-                        {getStatusBadge(run.status)}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <ClockIcon className="text-muted-foreground size-4" />
+                          <span className="text-muted-foreground text-sm">
+                            Loading...
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-medium">
+                        Loading...
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">-</TableCell>
+                      <TableCell className="text-muted-foreground text-right">
+                        -
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : runs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-8 text-center">
+                      <p className="text-muted-foreground">
+                        No product runs yet. Visit the marketplace to get
+                        started!
+                      </p>
+                      <div className="mt-4">
+                        <Link to="/marketplace">
+                          <Button variant="outline">Browse Marketplace</Button>
+                        </Link>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {run.productName ?? "Unknown Product"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(run.createdAt) || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {Number(run.cost ?? 0) > 0 ? `${run.cost} credits` : "-"}
-                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+                ) : (
+                  runs.map((run) => (
+                    <TableRow key={run.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(run.status)}
+                          {getStatusBadge(run.status)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {run.productName ?? "Unknown Product"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDateTime(run.createdAt) || "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {Number(run.cost ?? 0) > 0
+                          ? `${run.cost} credits`
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </HydrateClient>
   )
 }

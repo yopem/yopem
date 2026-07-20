@@ -2,7 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense, useCallback, useState } from "react"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { toastManager } from "ui/toast"
 
 import { AssetCard, type Asset } from "@/components/assets/asset-card"
@@ -42,6 +45,7 @@ function AssetsLoading() {
 }
 
 const AssetsPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const [selectedType, setSelectedType] = useState<AssetType | "all">("all")
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null)
@@ -68,9 +72,7 @@ const AssetsPage = () => {
   const assets = (assetsData?.assets as Asset[]) ?? []
 
   const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      return await queryApi.assets.upload.call(file)
-    },
+    ...queryApi.assets.upload.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "File uploaded",
@@ -89,9 +91,7 @@ const AssetsPage = () => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await queryApi.assets.delete.call({ id })
-    },
+    ...queryApi.assets.delete.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Asset deleted",
@@ -141,72 +141,85 @@ const AssetsPage = () => {
   )
 
   return (
-    <Suspense fallback={<AssetsLoading />}>
-      <div
-        className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
-        onPaste={handlePaste}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-            <p className="text-muted-foreground">
-              Manage and organize your uploaded files. Max size: {maxSizeMB}MB
-              per file.
-            </p>
+    <HydrateClient state={dehydratedState}>
+      <Suspense fallback={<AssetsLoading />}>
+        <div
+          className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
+          onPaste={handlePaste}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
+              <p className="text-muted-foreground">
+                Manage and organize your uploaded files. Max size: {maxSizeMB}MB
+                per file.
+              </p>
+            </div>
           </div>
+
+          <UploadDropzone onUpload={handleUpload} maxSizeMB={maxSizeMB} />
+
+          <UploadProgress isUploading={uploadMutation.isPending} />
+
+          <TypeFilter
+            selectedType={selectedType}
+            onTypeChange={setSelectedType}
+          />
+
+          {isLoading ? (
+            <AssetSkeleton />
+          ) : assets.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-16">
+              <p className="text-muted-foreground text-lg">No assets yet</p>
+              <p className="text-muted-foreground text-sm">
+                Upload your first file to get started.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
+              {assets.map((asset) => (
+                <AssetCard
+                  key={asset.id}
+                  asset={asset}
+                  onPreview={setPreviewAsset}
+                  onDelete={setDeleteAsset}
+                />
+              ))}
+            </div>
+          )}
+
+          <AssetPreviewDialog
+            asset={previewAsset}
+            onClose={() => setPreviewAsset(null)}
+            onDelete={(asset) => {
+              setPreviewAsset(null)
+              setDeleteAsset(asset)
+            }}
+          />
+
+          <DeleteAssetDialog
+            asset={deleteAsset}
+            onClose={() => setDeleteAsset(null)}
+            onConfirm={() =>
+              deleteAsset && deleteMutation.mutate({ id: deleteAsset.id })
+            }
+            isDeleting={deleteMutation.isPending}
+          />
         </div>
-
-        <UploadDropzone onUpload={handleUpload} maxSizeMB={maxSizeMB} />
-
-        <UploadProgress isUploading={uploadMutation.isPending} />
-
-        <TypeFilter
-          selectedType={selectedType}
-          onTypeChange={setSelectedType}
-        />
-
-        {isLoading ? (
-          <AssetSkeleton />
-        ) : assets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-16">
-            <p className="text-muted-foreground text-lg">No assets yet</p>
-            <p className="text-muted-foreground text-sm">
-              Upload your first file to get started.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
-            {assets.map((asset) => (
-              <AssetCard
-                key={asset.id}
-                asset={asset}
-                onPreview={setPreviewAsset}
-                onDelete={setDeleteAsset}
-              />
-            ))}
-          </div>
-        )}
-
-        <AssetPreviewDialog
-          asset={previewAsset}
-          onClose={() => setPreviewAsset(null)}
-          onDelete={(asset) => {
-            setPreviewAsset(null)
-            setDeleteAsset(asset)
-          }}
-        />
-
-        <DeleteAssetDialog
-          asset={deleteAsset}
-          onClose={() => setDeleteAsset(null)}
-          onConfirm={() => deleteAsset && deleteMutation.mutate(deleteAsset.id)}
-          isDeleting={deleteMutation.isPending}
-        />
-      </div>
-    </Suspense>
+      </Suspense>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/assets")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.assets.getUploadSettings.queryOptions(),
+      serverQueryApi.assets.list.queryOptions({
+        input: { limit: 50, type: undefined },
+      }),
+    ])
+    return { dehydratedState }
+  },
   component: AssetsPage,
 })

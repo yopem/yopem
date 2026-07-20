@@ -3,7 +3,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { DollarSignIcon, ServerIcon, UsersIcon, ZapIcon } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 
 import StatsCard from "@/components/dashboard/stats-card"
 import AdminBreadcrumb from "@/components/layout/admin-breadcrumb"
@@ -33,96 +36,105 @@ const formatCurrency = (amount: number): string => {
 }
 
 const OverviewPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const { data: systemMetrics, isLoading: systemLoading } = useQuery({
     ...queryApi.admin.getSystemMetrics.queryOptions(),
     staleTime: 30 * 1000,
   })
 
   return (
-    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-      <AdminBreadcrumb items={breadcrumbItems} />
+    <HydrateClient state={dehydratedState}>
+      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
+        <AdminBreadcrumb items={breadcrumbItems} />
 
-      <AdminPageHeader
-        title="System Overview"
-        description="Key platform metrics and performance indicators"
-      />
+        <AdminPageHeader
+          title="System Overview"
+          description="Key platform metrics and performance indicators"
+        />
 
-      <Shimmer loading={systemLoading}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Total Revenue"
-            value={formatCurrency(systemMetrics?.revenue ?? 0)}
-            change={
-              systemMetrics?.revenueChange
-                ? {
-                    value: systemMetrics.revenueChange,
-                    trend: systemMetrics.revenueChange.startsWith("+")
-                      ? "up"
-                      : systemMetrics.revenueChange.startsWith("-")
-                        ? "down"
-                        : "neutral",
-                  }
-                : undefined
-            }
-            icon={<DollarSignIcon className="size-4.5" />}
-            loading={systemLoading}
-          />
-          <StatsCard
-            title="Active Users"
-            value={formatNumber(systemMetrics?.activeUsers ?? 0)}
-            change={
-              systemMetrics?.activeUsersChange
-                ? {
-                    value: systemMetrics.activeUsersChange,
-                    trend: systemMetrics.activeUsersChange.startsWith("+")
-                      ? "up"
-                      : systemMetrics.activeUsersChange.startsWith("-")
-                        ? "down"
-                        : "neutral",
-                  }
-                : undefined
-            }
-            icon={<UsersIcon className="size-4.5" />}
-            loading={systemLoading}
-          />
-          <StatsCard
-            title="AI Requests"
-            value={formatNumber(systemMetrics?.aiRequests ?? 0)}
-            change={
-              systemMetrics?.aiRequestsChange
-                ? {
-                    value: systemMetrics.aiRequestsChange,
-                    trend: systemMetrics.aiRequestsChange.startsWith("+")
-                      ? "up"
-                      : systemMetrics.aiRequestsChange.startsWith("-")
-                        ? "down"
-                        : "neutral",
-                  }
-                : undefined
-            }
-            icon={<ZapIcon className="size-4.5" />}
-            loading={systemLoading}
-          />
-          <StatsCard
-            title="System Uptime"
-            value={systemMetrics?.systemUptime ?? "0.0%"}
-            change={
-              systemMetrics?.systemUptimeChange
-                ? {
-                    value: systemMetrics.systemUptimeChange,
-                    trend: "neutral",
-                  }
-                : undefined
-            }
-            icon={<ServerIcon className="size-4.5" />}
-            loading={systemLoading}
-          />
-        </div>
-      </Shimmer>
-    </div>
+        <Shimmer loading={systemLoading}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total Revenue"
+              value={formatCurrency(systemMetrics?.revenue ?? 0)}
+              change={
+                systemMetrics?.revenueChange
+                  ? {
+                      value: systemMetrics.revenueChange,
+                      trend: systemMetrics.revenueChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.revenueChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<DollarSignIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="Active Users"
+              value={formatNumber(systemMetrics?.activeUsers ?? 0)}
+              change={
+                systemMetrics?.activeUsersChange
+                  ? {
+                      value: systemMetrics.activeUsersChange,
+                      trend: systemMetrics.activeUsersChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.activeUsersChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<UsersIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="AI Requests"
+              value={formatNumber(systemMetrics?.aiRequests ?? 0)}
+              change={
+                systemMetrics?.aiRequestsChange
+                  ? {
+                      value: systemMetrics.aiRequestsChange,
+                      trend: systemMetrics.aiRequestsChange.startsWith("+")
+                        ? "up"
+                        : systemMetrics.aiRequestsChange.startsWith("-")
+                          ? "down"
+                          : "neutral",
+                    }
+                  : undefined
+              }
+              icon={<ZapIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+            <StatsCard
+              title="System Uptime"
+              value={systemMetrics?.systemUptime ?? "0.0%"}
+              change={
+                systemMetrics?.systemUptimeChange
+                  ? {
+                      value: systemMetrics.systemUptimeChange,
+                      trend: "neutral",
+                    }
+                  : undefined
+              }
+              icon={<ServerIcon className="size-4.5" />}
+              loading={systemLoading}
+            />
+          </div>
+        </Shimmer>
+      </div>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/monitoring/overview")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.admin.getSystemMetrics.queryOptions(),
+    ])
+    return { dehydratedState }
+  },
   component: OverviewPage,
 })

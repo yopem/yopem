@@ -1,8 +1,10 @@
+import type { QueryClient } from "@tanstack/react-query"
+
 import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
 } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 
@@ -19,7 +21,11 @@ import { Button } from "ui/button"
 
 import Providers from "@/components/providers"
 
-export const Route = createRootRoute({
+export interface RouterContext {
+  queryClient: QueryClient
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { title: `Admin - ${siteTitle}` },

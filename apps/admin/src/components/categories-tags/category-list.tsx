@@ -27,7 +27,10 @@ interface CategoryListProps {
   isLoading: boolean
   onEdit: (category: Category) => void
   onDelete: (id: string) => void
-  deleteMutation: UseMutationResult<unknown, Error, string, unknown>
+  deleteMutation: Pick<
+    UseMutationResult<unknown, Error, unknown, unknown>,
+    "isPending"
+  >
 }
 
 const CategoryList = ({

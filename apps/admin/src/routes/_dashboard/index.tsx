@@ -12,7 +12,10 @@ import {
 } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Button } from "ui/button"
 
 import ActivityFeed from "@/components/dashboard/activity-feed"
@@ -39,6 +42,7 @@ const formatCurrency = (amount: number): string => {
 }
 
 const AdminDashboardPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
@@ -64,96 +68,108 @@ const AdminDashboardPage = () => {
     })) ?? []
 
   return (
-    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-      <AdminBreadcrumb items={breadcrumbItems} />
+    <HydrateClient state={dehydratedState}>
+      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
+        <AdminBreadcrumb items={breadcrumbItems} />
 
-      <AdminPageHeader
-        title="Overview"
-        description="Welcome back, Admin. System status is operational."
-        action={
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold tracking-tight shadow-sm transition-colors"
-            render={
-              <Link to="/products/add">
-                <PlusIcon className="size-4.5" />
-                <span>Add New Product</span>
-              </Link>
-            }
-          />
-        }
-      />
+        <AdminPageHeader
+          title="Overview"
+          description="Welcome back, Admin. System status is operational."
+          action={
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold tracking-tight shadow-sm transition-colors"
+              render={
+                <Link to="/products/add">
+                  <PlusIcon className="size-4.5" />
+                  <span>Add New Product</span>
+                </Link>
+              }
+            />
+          }
+        />
 
-      <Shimmer loading={metricsLoading}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Total Revenue"
-            value={formatCurrency(metrics?.revenue ?? 0)}
-            change={{
-              value: metrics?.revenueChange ?? "N/A",
-              trend: metrics?.revenueChange?.startsWith("+")
-                ? "up"
-                : metrics?.revenueChange?.startsWith("-")
-                  ? "down"
-                  : "neutral",
-            }}
-            icon={<DollarSignIcon className="size-4.5" />}
-            loading={metricsLoading}
-          />
-          <StatsCard
-            title="Active Users"
-            value={formatNumber(metrics?.activeUsers ?? 0)}
-            change={{
-              value: metrics?.activeUsersChange ?? "N/A",
-              trend: metrics?.activeUsersChange?.startsWith("+")
-                ? "up"
-                : metrics?.activeUsersChange?.startsWith("-")
-                  ? "down"
-                  : "neutral",
-            }}
-            icon={<UsersIcon className="size-4.5" />}
-            loading={metricsLoading}
-          />
-          <StatsCard
-            title="AI Requests"
-            value={formatNumber(metrics?.aiRequests ?? 0)}
-            change={{
-              value: metrics?.aiRequestsChange ?? "N/A",
-              trend: metrics?.aiRequestsChange?.startsWith("+")
-                ? "up"
-                : metrics?.aiRequestsChange?.startsWith("-")
-                  ? "down"
-                  : "neutral",
-            }}
-            icon={<ZapIcon className="size-4.5" />}
-            loading={metricsLoading}
-          />
-          <StatsCard
-            title="System Uptime"
-            value={metrics?.systemUptime ?? "0.0%"}
-            change={{
-              value: metrics?.systemUptimeChange ?? "Stable",
-              trend: "neutral",
-            }}
-            icon={<ServerIcon className="size-4.5" />}
-            loading={metricsLoading}
-          />
-        </div>
-      </Shimmer>
+        <Shimmer loading={metricsLoading}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total Revenue"
+              value={formatCurrency(metrics?.revenue ?? 0)}
+              change={{
+                value: metrics?.revenueChange ?? "N/A",
+                trend: metrics?.revenueChange?.startsWith("+")
+                  ? "up"
+                  : metrics?.revenueChange?.startsWith("-")
+                    ? "down"
+                    : "neutral",
+              }}
+              icon={<DollarSignIcon className="size-4.5" />}
+              loading={metricsLoading}
+            />
+            <StatsCard
+              title="Active Users"
+              value={formatNumber(metrics?.activeUsers ?? 0)}
+              change={{
+                value: metrics?.activeUsersChange ?? "N/A",
+                trend: metrics?.activeUsersChange?.startsWith("+")
+                  ? "up"
+                  : metrics?.activeUsersChange?.startsWith("-")
+                    ? "down"
+                    : "neutral",
+              }}
+              icon={<UsersIcon className="size-4.5" />}
+              loading={metricsLoading}
+            />
+            <StatsCard
+              title="AI Requests"
+              value={formatNumber(metrics?.aiRequests ?? 0)}
+              change={{
+                value: metrics?.aiRequestsChange ?? "N/A",
+                trend: metrics?.aiRequestsChange?.startsWith("+")
+                  ? "up"
+                  : metrics?.aiRequestsChange?.startsWith("-")
+                    ? "down"
+                    : "neutral",
+              }}
+              icon={<ZapIcon className="size-4.5" />}
+              loading={metricsLoading}
+            />
+            <StatsCard
+              title="System Uptime"
+              value={metrics?.systemUptime ?? "0.0%"}
+              change={{
+                value: metrics?.systemUptimeChange ?? "Stable",
+                trend: "neutral",
+              }}
+              icon={<ServerIcon className="size-4.5" />}
+              loading={metricsLoading}
+            />
+          </div>
+        </Shimmer>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <AiRequestsChart totalRequests={metrics?.aiRequests ?? 0} />
-        </div>
-        <div className="lg:col-span-1">
-          <Shimmer loading={activityLoading}>
-            <ActivityFeed items={activityItems} />
-          </Shimmer>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <AiRequestsChart totalRequests={metrics?.aiRequests ?? 0} />
+          </div>
+          <div className="lg:col-span-1">
+            <Shimmer loading={activityLoading}>
+              <ActivityFeed items={activityItems} />
+            </Shimmer>
+          </div>
         </div>
       </div>
-    </div>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.admin.getSystemMetrics.queryOptions(),
+      serverQueryApi.admin.getActivityFeed.queryOptions(),
+      serverQueryApi.admin.getAiRequestsHistory.queryOptions({
+        input: { timeRange: "7d" },
+      }),
+    ])
+    return { dehydratedState }
+  },
   component: AdminDashboardPage,
 })

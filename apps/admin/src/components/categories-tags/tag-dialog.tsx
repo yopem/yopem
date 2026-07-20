@@ -15,8 +15,14 @@ interface TagDialogProps {
   onNameChange: (value: string) => void
   onSubmit: () => void
   onCancel: () => void
-  createMutation: UseMutationResult<unknown, Error, void, unknown>
-  updateMutation: UseMutationResult<unknown, Error, void, unknown>
+  createMutation: Pick<
+    UseMutationResult<unknown, Error, unknown, unknown>,
+    "isPending"
+  >
+  updateMutation: Pick<
+    UseMutationResult<unknown, Error, unknown, unknown>,
+    "isPending"
+  >
 }
 
 const TagDialog = ({

@@ -2,7 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Separator } from "ui/separator"
 import { toastManager } from "ui/toast"
 
@@ -15,6 +18,7 @@ import ProductForm, {
 import ProductPreviewSheet from "@/components/products/product-preview-sheet"
 
 const AddProductPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const navigate = useNavigate()
 
   const { data: apiKeys } = useQuery({
@@ -158,7 +162,7 @@ const AddProductPage = () => {
   }, [createProductMutation])
 
   return (
-    <>
+    <HydrateClient state={dehydratedState}>
       <FeatureBuilderHeader
         breadcrumbItems={[
           { label: "Features", href: "/products" },
@@ -191,10 +195,16 @@ const AddProductPage = () => {
         isExecuting={executePreviewMutation.isPending}
         result={previewResult}
       />
-    </>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/products/add")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.admin.getApiKeys.queryOptions(),
+    ])
+    return { dehydratedState }
+  },
   component: AddProductPage,
 })

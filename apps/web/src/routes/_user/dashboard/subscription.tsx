@@ -6,9 +6,11 @@ import {
   Loader2Icon,
   SparklesIcon,
 } from "lucide-react"
-import { useState } from "react"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import {
@@ -25,12 +27,19 @@ import OverflowPacks from "@/components/user/subscription/overflow-packs"
 import UsageStats from "@/components/user/subscription/usage-stats"
 
 export const Route = createFileRoute("/_user/dashboard/subscription")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.user.getSubscription.queryOptions(),
+      serverQueryApi.user.getStats.queryOptions(),
+      serverQueryApi.user.getSubscriptionPlans.queryOptions(),
+    ])
+    return { dehydratedState }
+  },
   component: SubscriptionPage,
 })
 
 function SubscriptionPage() {
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
-  const [isPortalLoading, setIsPortalLoading] = useState(false)
+  const { dehydratedState } = Route.useLoaderData()
 
   const { data: subscription } = useQuery({
     ...queryApi.user.getSubscription.queryOptions(),
@@ -51,37 +60,25 @@ function SubscriptionPage() {
   })
 
   const checkoutMutation = useMutation({
-    mutationFn: async (tier: "pro" | "enterprise") => {
-      setIsCheckoutLoading(true)
-      const result = await queryApi.user.createSubscriptionCheckout.call({
-        tier,
-      })
-      return result
-    },
+    ...queryApi.user.createSubscriptionCheckout.mutationOptions(),
     onSuccess: (data) => {
       if (data.url) {
         window.location.href = data.url
       }
     },
     onError: (error: Error) => {
-      setIsCheckoutLoading(false)
       alert(`Failed to create checkout: ${error.message}`)
     },
   })
 
   const portalMutation = useMutation({
-    mutationFn: async () => {
-      setIsPortalLoading(true)
-      const result = await queryApi.user.createBillingPortal.call()
-      return result
-    },
+    ...queryApi.user.createBillingPortal.mutationOptions(),
     onSuccess: (data) => {
       if (data.url) {
         window.location.href = data.url
       }
     },
     onError: (error: Error) => {
-      setIsPortalLoading(false)
       alert(`Failed to open billing portal: ${error.message}`)
     },
   })
@@ -101,211 +98,213 @@ function SubscriptionPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold">Subscription</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your subscription plan and billing.
-        </p>
-      </div>
+    <HydrateClient state={dehydratedState}>
+      <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
+        <div>
+          <h1 className="text-3xl font-bold">Subscription</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your subscription plan and billing.
+          </p>
+        </div>
 
-      {/* Current Plan Status */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                Current Plan
-                {isPaid && status === "active" && (
-                  <Badge variant="default" className="bg-green-600">
-                    Active
-                  </Badge>
-                )}
-                {status === "cancelled" && (
-                  <Badge variant="secondary">Cancelled</Badge>
-                )}
-                {status === "past_due" && (
-                  <Badge variant="destructive">Payment Failed</Badge>
-                )}
-              </CardTitle>
-              <CardDescription className="mt-1.5">
-                You are currently on the{" "}
-                <strong className="capitalize">{currentTier}</strong> plan
-              </CardDescription>
+        {/* Current Plan Status */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  Current Plan
+                  {isPaid && status === "active" && (
+                    <Badge variant="default" className="bg-green-600">
+                      Active
+                    </Badge>
+                  )}
+                  {status === "cancelled" && (
+                    <Badge variant="secondary">Cancelled</Badge>
+                  )}
+                  {status === "past_due" && (
+                    <Badge variant="destructive">Payment Failed</Badge>
+                  )}
+                </CardTitle>
+                <CardDescription className="mt-1.5">
+                  You are currently on the{" "}
+                  <strong className="capitalize">{currentTier}</strong> plan
+                </CardDescription>
+              </div>
+              {isPaid && (
+                <Button
+                  variant="outline"
+                  onClick={() => portalMutation.mutate(undefined)}
+                  disabled={portalMutation.isPending}
+                >
+                  {portalMutation.isPending ? (
+                    <Loader2Icon className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <CreditCardIcon className="mr-2 size-4" />
+                  )}
+                  Manage Billing
+                </Button>
+              )}
             </div>
-            {isPaid && (
-              <Button
-                variant="outline"
-                onClick={() => portalMutation.mutate()}
-                disabled={isPortalLoading}
-              >
-                {isPortalLoading ? (
-                  <Loader2Icon className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <CreditCardIcon className="mr-2 size-4" />
-                )}
-                Manage Billing
-              </Button>
+          </CardHeader>
+          <CardContent>
+            <UsageStats
+              limits={subscription?.limits}
+              currentPeriodEnd={
+                subscription?.currentPeriodEnd
+                  ? new Date(subscription.currentPeriodEnd).toISOString()
+                  : null
+              }
+              cancelAtPeriodEnd={subscription?.cancelAtPeriodEnd}
+            />
+            {Number(stats?.overflowBalance ?? 0) > 0 && (
+              <div className="mt-4 flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">
+                  Extra runs available:
+                </span>
+                <span className="font-medium">
+                  {stats?.overflowBalance ?? "0"}
+                </span>
+              </div>
             )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <UsageStats
-            limits={subscription?.limits}
-            currentPeriodEnd={
-              subscription?.currentPeriodEnd
-                ? new Date(subscription.currentPeriodEnd).toISOString()
-                : null
-            }
-            cancelAtPeriodEnd={subscription?.cancelAtPeriodEnd}
-          />
-          {Number(stats?.overflowBalance ?? 0) > 0 && (
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">
-                Extra runs available:
-              </span>
-              <span className="font-medium">
-                {stats?.overflowBalance ?? "0"}
-              </span>
+          </CardContent>
+        </Card>
+
+        {isPaid && (
+          <>
+            <Separator />
+            <OverflowPacks overflowBalance={stats?.overflowBalance ?? "0"} />
+            <Separator />
+          </>
+        )}
+
+        {/* Available Plans */}
+        <div>
+          <h2 className="text-2xl font-semibold">Choose Your Plan</h2>
+          <p className="text-muted-foreground mt-2">
+            Upgrade or downgrade your plan at any time.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {isPlansLoading ? (
+            <div className="col-span-3 flex items-center justify-center py-12">
+              <Loader2Icon className="text-muted-foreground size-8 animate-spin" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+          ) : (
+            plans?.map((plan) => {
+              const isCurrentPlan = plan.tier === currentTier
+              const canUpgrade = !isCurrentPlan && plan.tier !== "free"
 
-      {isPaid && (
-        <>
-          <Separator />
-          <OverflowPacks overflowBalance={stats?.overflowBalance ?? "0"} />
-          <Separator />
-        </>
-      )}
-
-      {/* Available Plans */}
-      <div>
-        <h2 className="text-2xl font-semibold">Choose Your Plan</h2>
-        <p className="text-muted-foreground mt-2">
-          Upgrade or downgrade your plan at any time.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-3">
-        {isPlansLoading ? (
-          <div className="col-span-3 flex items-center justify-center py-12">
-            <Loader2Icon className="text-muted-foreground size-8 animate-spin" />
-          </div>
-        ) : (
-          plans?.map((plan) => {
-            const isCurrentPlan = plan.tier === currentTier
-            const canUpgrade = !isCurrentPlan && plan.tier !== "free"
-
-            return (
-              <Card
-                key={plan.tier}
-                className={
-                  isCurrentPlan ? "border-primary ring-primary ring-1" : ""
-                }
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {plan.tier === "free" ? (
-                      <SparklesIcon className="text-muted-foreground size-5" />
-                    ) : (
-                      <CreditCardIcon className="text-primary size-5" />
-                    )}
-                    {plan.name}
-                  </CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="text-3xl font-bold">
-                      {formatPrice(plan.monthlyPrice)}
-                    </div>
-                    {plan.yearlyPrice && (
-                      <div className="text-muted-foreground text-sm">
-                        {formatYearlyPrice(plan.yearlyPrice)}{" "}
-                        <span className="text-green-600">(save 17%)</span>
+              return (
+                <Card
+                  key={plan.tier}
+                  className={
+                    isCurrentPlan ? "border-primary ring-primary ring-1" : ""
+                  }
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      {plan.tier === "free" ? (
+                        <SparklesIcon className="text-muted-foreground size-5" />
+                      ) : (
+                        <CreditCardIcon className="text-primary size-5" />
+                      )}
+                      {plan.name}
+                    </CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <div className="text-3xl font-bold">
+                        {formatPrice(plan.monthlyPrice)}
                       </div>
-                    )}
-                  </div>
+                      {plan.yearlyPrice && (
+                        <div className="text-muted-foreground text-sm">
+                          {formatYearlyPrice(plan.yearlyPrice)}{" "}
+                          <span className="text-green-600">(save 17%)</span>
+                        </div>
+                      )}
+                    </div>
 
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-sm">
-                      <CheckIcon className="size-4 text-green-600" />
-                      {plan.limits?.maxRequestsPerMonth ===
-                      Number.POSITIVE_INFINITY
-                        ? "Unlimited"
-                        : plan.limits?.maxRequestsPerMonth?.toLocaleString()}{" "}
-                      requests/month
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <CheckIcon className="size-4 text-green-600" />
-                      {plan.limits?.maxTokensPerRequest?.toLocaleString()}{" "}
-                      tokens/request
-                    </li>
-                    {plan.limits?.maxCustomProducts !== null && (
+                    <ul className="space-y-2">
                       <li className="flex items-center gap-2 text-sm">
                         <CheckIcon className="size-4 text-green-600" />
-                        {plan.limits?.maxCustomProducts} custom products
+                        {plan.limits?.maxRequestsPerMonth ===
+                        Number.POSITIVE_INFINITY
+                          ? "Unlimited"
+                          : plan.limits?.maxRequestsPerMonth?.toLocaleString()}{" "}
+                        requests/month
                       </li>
-                    )}
-                    {plan.limits?.maxCustomProducts === null &&
-                      plan.tier !== "free" && (
+                      <li className="flex items-center gap-2 text-sm">
+                        <CheckIcon className="size-4 text-green-600" />
+                        {plan.limits?.maxTokensPerRequest?.toLocaleString()}{" "}
+                        tokens/request
+                      </li>
+                      {plan.limits?.maxCustomProducts !== null && (
                         <li className="flex items-center gap-2 text-sm">
                           <CheckIcon className="size-4 text-green-600" />
-                          Unlimited custom products
+                          {plan.limits?.maxCustomProducts} custom products
                         </li>
                       )}
-                  </ul>
-
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">Features:</div>
-                    <ul className="space-y-1">
-                      {plan.features.map((feature: string) => (
-                        <li
-                          key={feature}
-                          className="text-muted-foreground flex items-center gap-2 text-xs"
-                        >
-                          <CheckIcon className="size-3 text-green-600" />
-                          {feature.replace(/_/g, " ")}
-                        </li>
-                      ))}
+                      {plan.limits?.maxCustomProducts === null &&
+                        plan.tier !== "free" && (
+                          <li className="flex items-center gap-2 text-sm">
+                            <CheckIcon className="size-4 text-green-600" />
+                            Unlimited custom products
+                          </li>
+                        )}
                     </ul>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {isCurrentPlan ? (
-                    <Button className="w-full" disabled variant="secondary">
-                      Current Plan
-                    </Button>
-                  ) : canUpgrade ? (
-                    <Button
-                      className="w-full"
-                      onClick={() =>
-                        checkoutMutation.mutate(
-                          plan.tier as "pro" | "enterprise",
-                        )
-                      }
-                      disabled={isCheckoutLoading}
-                    >
-                      {isCheckoutLoading ? (
-                        <Loader2Icon className="mr-2 size-4 animate-spin" />
-                      ) : null}
-                      Upgrade to {plan.name}
-                    </Button>
-                  ) : (
-                    <Link to="/dashboard/subscription" className="w-full">
-                      <Button className="w-full" variant="outline">
-                        Downgrade
+
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium">Features:</div>
+                      <ul className="space-y-1">
+                        {plan.features.map((feature: string) => (
+                          <li
+                            key={feature}
+                            className="text-muted-foreground flex items-center gap-2 text-xs"
+                          >
+                            <CheckIcon className="size-3 text-green-600" />
+                            {feature.replace(/_/g, " ")}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    {isCurrentPlan ? (
+                      <Button className="w-full" disabled variant="secondary">
+                        Current Plan
                       </Button>
-                    </Link>
-                  )}
-                </CardFooter>
-              </Card>
-            )
-          })
-        )}
+                    ) : canUpgrade ? (
+                      <Button
+                        className="w-full"
+                        onClick={() =>
+                          checkoutMutation.mutate({
+                            tier: plan.tier as "pro" | "enterprise",
+                          })
+                        }
+                        disabled={checkoutMutation.isPending}
+                      >
+                        {checkoutMutation.isPending ? (
+                          <Loader2Icon className="mr-2 size-4 animate-spin" />
+                        ) : null}
+                        Upgrade to {plan.name}
+                      </Button>
+                    ) : (
+                      <Link to="/dashboard/subscription" className="w-full">
+                        <Button className="w-full" variant="outline">
+                          Downgrade
+                        </Button>
+                      </Link>
+                    )}
+                  </CardFooter>
+                </Card>
+              )
+            })
+          )}
+        </div>
       </div>
-    </div>
+    </HydrateClient>
   )
 }

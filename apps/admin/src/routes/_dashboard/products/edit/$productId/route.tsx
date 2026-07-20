@@ -3,7 +3,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Separator } from "ui/separator"
 import { toastManager } from "ui/toast"
 
@@ -16,6 +19,7 @@ import ProductForm, {
 import ProductPreviewSheet from "@/components/products/product-preview-sheet"
 
 const EditProductPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const { productId } = Route.useParams()
 
   const { data: apiKeys } = useQuery({
@@ -40,10 +44,9 @@ const EditProductPage = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["products", productId],
-    queryFn: async () => {
-      return await queryApi.products.adminGetById.call({ id: productId })
-    },
+    ...queryApi.products.adminGetById.queryOptions({
+      input: { id: productId },
+    }),
   })
 
   const updateProductMutation = useMutation({
@@ -193,7 +196,7 @@ const EditProductPage = () => {
   }, [updateProductMutation])
 
   return (
-    <>
+    <HydrateClient state={dehydratedState}>
       <FeatureBuilderHeader
         breadcrumbItems={[
           { label: "Features", href: "/products" },
@@ -252,10 +255,19 @@ const EditProductPage = () => {
         isExecuting={executePreviewMutation.isPending}
         result={previewResult}
       />
-    </>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/products/edit/$productId")({
+  loader: async ({ context, params }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.admin.getApiKeys.queryOptions(),
+      serverQueryApi.products.adminGetById.queryOptions({
+        input: { id: params.productId },
+      }),
+    ])
+    return { dehydratedState }
+  },
   component: EditProductPage,
 })

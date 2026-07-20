@@ -20,6 +20,14 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
+    "./server-query": {
+      "types": "./src/server-query.ts",
+      "default": "./src/server-query.ts"
+    },
+    "./prefetch": {
+      "types": "./src/prefetch.ts",
+      "default": "./src/prefetch.ts"
+    },
     "./serializer": {
       "types": "./src/serializer.tsx",
       "default": "./src/serializer.tsx"

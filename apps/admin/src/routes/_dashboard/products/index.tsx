@@ -4,7 +4,10 @@ import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 
+import { HydrateClient } from "rpc/hydration"
+import { prefetchQueries } from "rpc/prefetch"
 import { queryApi } from "rpc/query"
+import { serverQueryApi } from "rpc/server-query"
 import { Button } from "ui/button"
 import { toastManager } from "ui/toast"
 
@@ -21,6 +24,7 @@ interface Product {
 }
 
 const ProductsIndexPage = () => {
+  const { dehydratedState } = Route.useLoaderData()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -179,65 +183,75 @@ const ProductsIndexPage = () => {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground">
-            Manage and create AI-powered products for your workflows.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {selectedProductIds.length > 0 && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => handleBulkUpdateStatus("active")}
-                disabled={bulkUpdateStatusMutation.isPending}
-              >
-                Mark Active ({selectedProductIds.length})
+    <HydrateClient state={dehydratedState}>
+      <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+            <p className="text-muted-foreground">
+              Manage and create AI-powered products for your workflows.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedProductIds.length > 0 && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => handleBulkUpdateStatus("active")}
+                  disabled={bulkUpdateStatusMutation.isPending}
+                >
+                  Mark Active ({selectedProductIds.length})
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleBulkUpdateStatus("archived")}
+                  disabled={bulkUpdateStatusMutation.isPending}
+                >
+                  Archive ({selectedProductIds.length})
+                </Button>
+              </>
+            )}
+            <Link to="/products/add">
+              <Button>
+                <PlusIcon className="size-4" />
+                <span>Create Product</span>
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleBulkUpdateStatus("archived")}
-                disabled={bulkUpdateStatusMutation.isPending}
-              >
-                Archive ({selectedProductIds.length})
-              </Button>
-            </>
-          )}
-          <Link to="/products/add">
-            <Button>
-              <PlusIcon className="size-4" />
-              <span>Create Product</span>
-            </Button>
-          </Link>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border">
-        <ProductsTable
-          products={products}
-          isLoading={isLoading}
-          selectedProductIds={selectedProductIds}
-          onToggleAll={handleToggleAll}
-          onToggleProduct={handleToggleProduct}
-          onDelete={handleDeleteClick}
-          duplicateMutation={duplicateProductMutation}
+        <div className="rounded-xl border">
+          <ProductsTable
+            products={products}
+            isLoading={isLoading}
+            selectedProductIds={selectedProductIds}
+            onToggleAll={handleToggleAll}
+            onToggleProduct={handleToggleProduct}
+            onDelete={handleDeleteClick}
+            duplicateMutation={duplicateProductMutation}
+          />
+        </div>
+
+        <DeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          productName={selectedProduct?.name}
+          onConfirm={handleConfirmDelete}
+          deleteMutation={deleteProductMutation}
         />
       </div>
-
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        productName={selectedProduct?.name}
-        onConfirm={handleConfirmDelete}
-        deleteMutation={deleteProductMutation}
-      />
-    </div>
+    </HydrateClient>
   )
 }
 
 export const Route = createFileRoute("/_dashboard/products/")({
+  loader: async ({ context }) => {
+    const dehydratedState = await prefetchQueries(context.queryClient, [
+      serverQueryApi.products.list.queryOptions({
+        input: { limit: 100, status: "all" },
+      }),
+    ])
+    return { dehydratedState }
+  },
   component: ProductsIndexPage,
 })
