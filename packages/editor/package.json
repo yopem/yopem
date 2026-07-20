@@ -61,6 +61,10 @@
       "types": "./src/components/heading-node.tsx",
       "default": "./src/components/heading-node.tsx"
     },
+    "./link-toolbar-button": {
+      "types": "./src/components/link-toolbar-button.tsx",
+      "default": "./src/components/link-toolbar-button.tsx"
+    },
     "./transform": {
       "types": "./src/components/transform.tsx",
       "default": "./src/components/transform.tsx"
