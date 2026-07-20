@@ -65,6 +65,10 @@
       "types": "./src/components/code-node.tsx",
       "default": "./src/components/code-node.tsx"
     },
+    "./dnd-kit": {
+      "types": "./src/components/dnd-kit.tsx",
+      "default": "./src/components/dnd-kit.tsx"
+    },
     "./drag-handle": {
       "types": "./src/components/drag-handle.tsx",
       "default": "./src/components/drag-handle.tsx"
@@ -201,6 +205,8 @@
     "lucide-react": "catalog:",
     "platejs": "^53.2.4",
     "react": "catalog:",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "catalog:",
     "react-lite-youtube-embed": "^3.6.0",
     "react-player": "^3.4.0",
