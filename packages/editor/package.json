@@ -125,6 +125,10 @@
       "types": "./src/components/media-toolbar.tsx",
       "default": "./src/components/media-toolbar.tsx"
     },
+    "./media-upload-toast": {
+      "types": "./src/components/media-upload-toast.tsx",
+      "default": "./src/components/media-upload-toast.tsx"
+    },
     "./resize-handle": {
       "types": "./src/components/resize-handle.tsx",
       "default": "./src/components/resize-handle.tsx"
