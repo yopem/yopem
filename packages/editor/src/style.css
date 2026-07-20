@@ -4,3 +4,38 @@
   --font-sans: var(--font-adwaita-sans);
   --font-mono: var(--font-adwaita-mono);
 }
+
+@utility toaster {
+  /* Sonner toaster root — styled via data-attributes */
+  @apply pointer-events-none;
+}
+
+@utility slate-dropLine {
+  /* Plate editor drop line indicator */
+  @apply pointer-events-none;
+}
+
+@utility slate-blockToolbarWrapper {
+  /* Plate editor block toolbar wrapper */
+  @apply flex;
+}
+
+@utility slate-blockToolbar {
+  /* Plate editor block toolbar */
+  @apply flex;
+}
+
+@utility slate-blockWrapper {
+  /* Plate editor block wrapper — marker class only, display via Tailwind */
+  isolation: isolate;
+}
+
+@utility slate-gutterLeft {
+  /* Plate editor gutter left */
+  @apply absolute;
+}
+
+@utility ignore-click-outside\/toolbar {
+  /* Prevents radix click-outside dismissal for toolbar popups */
+  @apply pointer-events-auto;
+}
