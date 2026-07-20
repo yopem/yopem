@@ -2,31 +2,9 @@ import { z } from "zod"
 
 declare global {
   interface ImportMetaEnv {
-    readonly DEV: boolean
-    readonly PROD: boolean
-    readonly MODE: string
-    readonly SSR: boolean
-    readonly BASE_URL: string
-    readonly PUBLIC_API_URL: string
-    readonly PUBLIC_GA_MEASUREMENT_ID: string
-    readonly PUBLIC_UMAMI_TRACKING_ID: string
-    readonly PUBLIC_LOGO_URL: string
-    readonly PUBLIC_LOGO_OG_URL: string
-    readonly PUBLIC_LOGO_OG_WIDTH: string
-    readonly PUBLIC_LOGO_OG_HEIGHT: string
-    readonly PUBLIC_SITE_DESCRIPTION: string
-    readonly PUBLIC_SITE_DOMAIN: string
-    readonly PUBLIC_ADMIN_URL: string
-    readonly PUBLIC_SITE_TAGLINE: string
-    readonly PUBLIC_SITE_TITLE: string
-    readonly PUBLIC_SITE_URL: string
-    readonly PUBLIC_SUPPORT_EMAIL: string
-    readonly PUBLIC_FACEBOOK_USERNAME: string
-    readonly PUBLIC_INSTAGRAM_USERNAME: string
-    readonly PUBLIC_TIKTOK_USERNAME: string
-    readonly PUBLIC_WHATSAPP_CHANNEL_USERNAME: string
-    readonly PUBLIC_X_USERNAME: string
-    readonly PUBLIC_YOUTUBE_USERNAME: string
+    DEV: boolean
+    PROD: boolean
+    [key: string]: string | boolean | undefined
   }
 
   interface ImportMeta {
@@ -93,27 +71,8 @@ const schema = z.object({
 
 const mergedEnv = {
   ...process.env,
-  PUBLIC_API_URL: import.meta.env.PUBLIC_API_URL,
-  PUBLIC_GA_MEASUREMENT_ID: import.meta.env.PUBLIC_GA_MEASUREMENT_ID,
-  PUBLIC_UMAMI_TRACKING_ID: import.meta.env.PUBLIC_UMAMI_TRACKING_ID,
-  PUBLIC_LOGO_URL: import.meta.env.PUBLIC_LOGO_URL,
-  PUBLIC_LOGO_OG_URL: import.meta.env.PUBLIC_LOGO_OG_URL,
-  PUBLIC_LOGO_OG_WIDTH: import.meta.env.PUBLIC_LOGO_OG_WIDTH,
-  PUBLIC_LOGO_OG_HEIGHT: import.meta.env.PUBLIC_LOGO_OG_HEIGHT,
-  PUBLIC_SITE_DESCRIPTION: import.meta.env.PUBLIC_SITE_DESCRIPTION,
-  PUBLIC_SITE_DOMAIN: import.meta.env.PUBLIC_SITE_DOMAIN,
-  PUBLIC_ADMIN_URL: import.meta.env.PUBLIC_ADMIN_URL,
-  PUBLIC_SITE_TAGLINE: import.meta.env.PUBLIC_SITE_TAGLINE,
-  PUBLIC_SITE_TITLE: import.meta.env.PUBLIC_SITE_TITLE,
+  ...import.meta.env,
   PUBLIC_SITE_URL: `${protocol}${import.meta.env.PUBLIC_SITE_DOMAIN}`,
-  PUBLIC_SUPPORT_EMAIL: import.meta.env.PUBLIC_SUPPORT_EMAIL,
-  PUBLIC_FACEBOOK_USERNAME: import.meta.env.PUBLIC_FACEBOOK_USERNAME,
-  PUBLIC_INSTAGRAM_USERNAME: import.meta.env.PUBLIC_INSTAGRAM_USERNAME,
-  PUBLIC_TIKTOK_USERNAME: import.meta.env.PUBLIC_TIKTOK_USERNAME,
-  PUBLIC_WHATSAPP_CHANNEL_USERNAME: import.meta.env
-    .PUBLIC_WHATSAPP_CHANNEL_USERNAME,
-  PUBLIC_X_USERNAME: import.meta.env.PUBLIC_X_USERNAME,
-  PUBLIC_YOUTUBE_USERNAME: import.meta.env.PUBLIC_YOUTUBE_USERNAME,
 }
 
 const isBrowser =
