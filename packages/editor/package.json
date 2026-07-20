@@ -65,6 +65,10 @@
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"
     },
+    "./mark-toolbar-button": {
+      "types": "./src/components/mark-toolbar-button.tsx",
+      "default": "./src/components/mark-toolbar-button.tsx"
+    },
     "./transform": {
       "types": "./src/components/transform.tsx",
       "default": "./src/components/transform.tsx"
