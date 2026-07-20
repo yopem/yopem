@@ -122,6 +122,10 @@
       "types": "./src/components/toggle.tsx",
       "default": "./src/components/toggle.tsx"
     },
+    "./toolbar": {
+      "types": "./src/components/toolbar.tsx",
+      "default": "./src/components/toolbar.tsx"
+    },
     "./tooltip": {
       "types": "./src/components/tooltip.tsx",
       "default": "./src/components/tooltip.tsx"
