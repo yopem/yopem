@@ -133,6 +133,10 @@
       "types": "./src/components/media-video-node.tsx",
       "default": "./src/components/media-video-node.tsx"
     },
+    "./paragraph-node": {
+      "types": "./src/components/paragraph-node.tsx",
+      "default": "./src/components/paragraph-node.tsx"
+    },
     "./resize-handle": {
       "types": "./src/components/resize-handle.tsx",
       "default": "./src/components/resize-handle.tsx"
