@@ -129,6 +129,10 @@
       "types": "./src/components/media-upload-toast.tsx",
       "default": "./src/components/media-upload-toast.tsx"
     },
+    "./media-video-node": {
+      "types": "./src/components/media-video-node.tsx",
+      "default": "./src/components/media-video-node.tsx"
+    },
     "./resize-handle": {
       "types": "./src/components/resize-handle.tsx",
       "default": "./src/components/resize-handle.tsx"
@@ -166,6 +170,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-lite-youtube-embed": "^3.6.0",
+    "react-player": "^3.4.0",
     "react-tweet": "^3.3.1",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "catalog:",
