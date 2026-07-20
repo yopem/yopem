@@ -150,6 +150,10 @@
       "types": "./src/components/theme-switcher.tsx",
       "default": "./src/components/theme-switcher.tsx"
     },
+    "./popover": {
+      "types": "./src/components/popover.tsx",
+      "default": "./src/components/popover.tsx"
+    },
     "./product-input-field": {
       "types": "./src/components/product-input-field.tsx",
       "default": "./src/components/product-input-field.tsx"
