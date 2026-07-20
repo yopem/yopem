@@ -6,6 +6,7 @@ import {
   EyeOffIcon,
   KeyIcon,
   MoreVerticalIcon,
+  SparklesIcon,
 } from "lucide-react"
 import { memo, type ReactNode } from "react"
 
@@ -20,11 +21,13 @@ import type { ApiKeyConfig } from "utils/api-keys-schema"
 const providerIcons: Record<string, ReactNode> = {
   openai: <BotIcon className="text-background" />,
   openrouter: <KeyIcon className="text-background" />,
+  fal: <SparklesIcon className="text-background" />,
 }
 
 const providerNames: Record<string, string> = {
   openai: "OpenAI",
   openrouter: "OpenRouter",
+  fal: "fal.ai",
 }
 
 interface ProviderCardProps {

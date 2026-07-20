@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const apiKeyProviderSchema = z.enum(["openai", "openrouter"])
+export const apiKeyProviderSchema = z.enum(["openai", "openrouter", "fal"])
 
 export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
 
@@ -33,6 +33,7 @@ export const addApiKeyInputSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   status: apiKeyStatusSchema.default("active"),
   restrictions: apiKeyRestrictionsSchema.optional(),
+  skipValidation: z.boolean().default(false),
 })
 
 export type AddApiKeyInput = z.infer<typeof addApiKeyInputSchema>
@@ -49,6 +50,7 @@ export const updateApiKeyInputSchema = z.object({
   apiKey: z.string().min(1, "API key is required").optional(),
   status: apiKeyStatusSchema.optional(),
   restrictions: apiKeyRestrictionsSchema.optional(),
+  skipValidation: z.boolean().default(false),
 })
 
 export type UpdateApiKeyInput = z.infer<typeof updateApiKeyInputSchema>

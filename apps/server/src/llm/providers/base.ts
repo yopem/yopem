@@ -1,4 +1,4 @@
-export type ApiKeyProvider = "openai" | "openrouter"
+export type ApiKeyProvider = "openai" | "openrouter" | "fal"
 
 export interface ExecutionRequest {
   systemRole: string

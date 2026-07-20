@@ -21,6 +21,7 @@ interface ApiKeySelectorProps {
 const providerDisplayNames: Record<string, string> = {
   openai: "OpenAI",
   openrouter: "OpenRouter",
+  fal: "fal.ai",
 }
 
 const ApiKeySelector = ({

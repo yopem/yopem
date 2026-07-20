@@ -1,46 +1,32 @@
-import type { ApiKeyProvider } from "./api-keys-schema.ts"
+import type { ApiKeyProvider } from "utils/api-keys-schema"
 
-function getProviderForModel(modelEngine: string): ApiKeyProvider | null {
-  const modelLower = modelEngine.toLowerCase()
-
-  if (modelLower.includes("gpt")) {
-    return "openai"
-  }
-
-  if (modelLower.includes("llama") || modelLower.includes("openrouter")) {
-    return "openrouter"
-  }
-
-  return null
-}
-
-export function validateModelProviderMatch(
-  modelEngine: string,
-  apiKeyProvider: ApiKeyProvider,
-): boolean {
-  const requiredProvider = getProviderForModel(modelEngine)
-
-  if (!requiredProvider) {
-    return true
-  }
-
-  return requiredProvider === apiKeyProvider
+export function findModelProvider(
+  modelId: string,
+  models: { modelId: string; provider: string }[],
+): { modelId: string; provider: string } | undefined {
+  return models.find((m) => m.modelId === modelId)
 }
 
 export function getProviderMismatchMessage(
-  modelEngine: string,
-  apiKeyProvider: ApiKeyProvider,
+  provider: string,
+  modelId: string,
 ): string {
-  const requiredProvider = getProviderForModel(modelEngine)
+  return `Model "${modelId}" does not belong to provider "${provider}". Please select a model from the selected API key's provider.`
+}
 
-  if (!requiredProvider) {
-    return "Unable to determine the required provider for this model"
+export function validateModelProviderMatch(
+  provider: ApiKeyProvider,
+  modelId: string,
+  models: { modelId: string; provider: string }[],
+): { valid: boolean; message?: string } {
+  const modelEntry = findModelProvider(modelId, models)
+
+  if (modelEntry && modelEntry.provider !== provider) {
+    return {
+      valid: false,
+      message: getProviderMismatchMessage(provider, modelId),
+    }
   }
 
-  const providerNames: Record<ApiKeyProvider, string> = {
-    openai: "OpenAI",
-    openrouter: "OpenRouter",
-  }
-
-  return `The selected API key (${providerNames[apiKeyProvider]}) is not compatible with ${modelEngine}. Please select a ${providerNames[requiredProvider]} API key.`
+  return { valid: true }
 }

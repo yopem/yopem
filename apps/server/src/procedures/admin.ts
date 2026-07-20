@@ -1,8 +1,12 @@
 import { ORPCError } from "@orpc/server"
+import { and, asc, eq } from "drizzle-orm"
+import { testApiKey } from "server/llm/test-key"
 import { adminProcedure } from "server/orpc"
 import { WebhookMetrics } from "server/payments/webhook-metrics"
 import { z } from "zod"
 
+import { db } from "db"
+import { aiModelsTable } from "db/schema"
 import * as adminService from "db/services/admin"
 import {
   addApiKeyInputSchema,
@@ -15,7 +19,6 @@ import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
-const MODEL_CACHE_PREFIX = "models:"
 const MODEL_CACHE_TTL = 300
 const SETTINGS_CACHE_TTL = 300
 
@@ -127,6 +130,15 @@ export const adminRouter = {
         })
       }
 
+      if (!input.skipValidation) {
+        const validation = await testApiKey(input.provider, input.apiKey)
+        if (!validation.valid) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: validation.error ?? "API key validation failed",
+          })
+        }
+      }
+
       const newKey: ApiKeyConfig = {
         id: createCustomId(),
         provider: input.provider,
@@ -149,7 +161,7 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.invalidatePattern(`${"models"}*`)
       void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true, id: newKey.id }
@@ -182,6 +194,16 @@ export const adminRouter = {
           })
         }
         newApiKey = encryptResult
+
+        if (!input.skipValidation) {
+          const provider = input.provider ?? existingKeys[keyIndex].provider
+          const validation = await testApiKey(provider, input.apiKey)
+          if (!validation.valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: validation.error ?? "API key validation failed",
+            })
+          }
+        }
       }
 
       const updatedKey: ApiKeyConfig = {
@@ -210,7 +232,7 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.invalidatePattern("models:*")
       void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
@@ -236,7 +258,7 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern(`${MODEL_CACHE_PREFIX}*`)
+      void context.redis.invalidatePattern(`${"models"}*`)
       void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
@@ -298,66 +320,113 @@ export const adminRouter = {
       return stats
     }),
 
-  getAvailableModels: adminProcedure.handler(async ({ context }) => {
-    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+  getAIModels: adminProcedure.handler(async () => {
+    const models = await db
+      .select()
+      .from(aiModelsTable)
+      .orderBy(asc(aiModelsTable.displayName))
 
-    if (!settings?.settingValue) {
-      return []
-    }
+    return models
+  }),
 
-    const apiKeys = settings.settingValue as ApiKeyConfig[]
-    const activeKeys = apiKeys.filter((key) => key.status === "active")
-
-    const uniqueByProvider = new Map<string, ApiKeyConfig>()
-    for (const key of activeKeys) {
-      if (!uniqueByProvider.has(key.provider)) {
-        uniqueByProvider.set(key.provider, key)
-      }
-    }
-
-    const entries = Array.from(uniqueByProvider.entries())
-    const results = await Promise.all(
-      entries.map(async ([provider, key]) => {
-        const cacheKey = `${MODEL_CACHE_PREFIX}${provider}:${key.id}`
-        const cached =
-          await context.redis.getCache<{ id: string; name: string }[]>(cacheKey)
-
-        if (cached) {
-          return { provider, models: cached }
-        }
-
-        const decryptedKey = decryptApiKey(key.apiKey)
-        if (!decryptedKey) {
-          console.error(`Failed to decrypt API key for ${provider}`)
-          return { provider, models: [] as { id: string; name: string }[] }
-        }
-        const result = await fetchModelsForProvider(
-          provider as ApiKeyConfig["provider"],
-          decryptedKey,
-        )
-        if (Array.isArray(result)) {
-          void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
-        } else {
-          console.error(
-            `Failed to fetch models for ${provider}: ${result?.error?.message ?? "Unknown error"}`,
-          )
-        }
-        return {
-          provider,
-          models: Array.isArray(result) ? result : [],
-        }
+  addAIModel: adminProcedure
+    .input(
+      z.object({
+        provider: z.string(),
+        modelId: z.string().min(1),
+        displayName: z.string().min(1),
+        isEnabled: z.boolean().default(true),
       }),
     )
+    .handler(async ({ input }) => {
+      const [existing] = await db
+        .select({ id: aiModelsTable.id })
+        .from(aiModelsTable)
+        .where(
+          and(
+            eq(aiModelsTable.provider, input.provider),
+            eq(aiModelsTable.modelId, input.modelId),
+          ),
+        )
 
-    const allModels: { id: string; name: string; provider: string }[] = []
-    for (const { provider, models } of results) {
-      for (const model of models) {
-        allModels.push({ ...model, provider })
+      if (existing) {
+        throw new ORPCError("CONFLICT", {
+          message: `Model "${input.modelId}" already exists for provider "${input.provider}"`,
+        })
       }
-    }
 
-    return allModels
-  }),
+      const [created] = await db
+        .insert(aiModelsTable)
+        .values({
+          provider: input.provider,
+          modelId: input.modelId,
+          displayName: input.displayName,
+          isEnabled: input.isEnabled,
+        })
+        .returning()
+
+      return created
+    }),
+
+  updateAIModel: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        provider: z.string().optional(),
+        modelId: z.string().min(1).optional(),
+        displayName: z.string().min(1).optional(),
+        isEnabled: z.boolean().optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const [existing] = await db
+        .select({ id: aiModelsTable.id })
+        .from(aiModelsTable)
+        .where(eq(aiModelsTable.id, input.id))
+
+      if (!existing) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `AI model not found: ${input.id}`,
+        })
+      }
+
+      const [updated] = await db
+        .update(aiModelsTable)
+        .set({
+          ...(input.provider !== undefined && { provider: input.provider }),
+          ...(input.modelId !== undefined && { modelId: input.modelId }),
+          ...(input.displayName !== undefined && {
+            displayName: input.displayName,
+          }),
+          ...(input.isEnabled !== undefined && {
+            isEnabled: input.isEnabled,
+          }),
+          updatedAt: new Date(),
+        })
+        .where(eq(aiModelsTable.id, input.id))
+        .returning()
+
+      return updated
+    }),
+
+  deleteAIModel: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input }) => {
+      const [existing] = await db
+        .select({ id: aiModelsTable.id })
+        .from(aiModelsTable)
+        .where(eq(aiModelsTable.id, input.id))
+
+      if (!existing) {
+        throw new ORPCError("NOT_FOUND", {
+          message: `AI model not found: ${input.id}`,
+        })
+      }
+
+      await db.delete(aiModelsTable).where(eq(aiModelsTable.id, input.id))
+
+      return { success: true }
+    }),
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
     const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
@@ -894,78 +963,4 @@ function calculateTrend(current: number, previous: number): string {
   }
   const trend = ((current - previous) / previous) * 100
   return trend >= 0 ? `+${trend.toFixed(1)}%` : `${trend.toFixed(1)}%`
-}
-
-async function fetchModelsForProvider(
-  provider: ApiKeyConfig["provider"],
-  apiKey: string,
-): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
-  switch (provider) {
-    case "openai":
-      return await fetchOpenAIModels(apiKey)
-    case "openrouter":
-      return await fetchOpenRouterModels(apiKey)
-    default:
-      return []
-  }
-}
-
-async function fetchOpenAIModels(
-  apiKey: string,
-): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
-  try {
-    const res = await fetch("https://api.openai.com/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!res.ok) {
-      return {
-        error: {
-          message: `API request failed with status ${res.status}`,
-        },
-      }
-    }
-    const data = await res.json()
-    return (
-      data.data?.map((m: { id: string }) => ({
-        id: m.id,
-        name: m.id.toUpperCase().replace(/-/g, " "),
-      })) ?? []
-    )
-  } catch (e) {
-    return {
-      error: {
-        message: e instanceof Error ? e.message : "Unknown error occurred",
-      },
-    }
-  }
-}
-
-async function fetchOpenRouterModels(
-  apiKey: string,
-): Promise<{ id: string; name: string }[] | { error: { message: string } }> {
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!res.ok) {
-      return {
-        error: {
-          message: `API request failed with status ${res.status}`,
-        },
-      }
-    }
-    const data = await res.json()
-    return (
-      data.data?.map((m: { id: string; name?: string }) => ({
-        id: m.id,
-        name: m.name ?? m.id,
-      })) ?? []
-    )
-  } catch (e) {
-    return {
-      error: {
-        message: e instanceof Error ? e.message : "Unknown error occurred",
-      },
-    }
-  }
 }

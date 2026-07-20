@@ -4,8 +4,8 @@ import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
 import type { ApiKeyProvider } from "./providers/base.ts"
 import type { AIProviderErrors } from "./providers/base.ts"
 
-import { OpenAIProvider } from "./providers/openai.ts"
-import { OpenRouterProvider } from "./providers/openrouter.ts"
+import { FalProvider } from "./providers/fal.ts"
+import { OpenAICompatibleProvider } from "./providers/openai-compatible.ts"
 
 export class UploadError extends Error {
   format: "image" | "video"
@@ -52,9 +52,21 @@ function getProviderInstance(
 ): AIProvider {
   switch (provider) {
     case "openai":
-      return new OpenAIProvider({ apiKey, model })
+      return new OpenAICompatibleProvider({
+        name: "openai",
+        apiKey,
+        model,
+        baseURL: "https://api.openai.com/v1",
+      })
     case "openrouter":
-      return new OpenRouterProvider({ apiKey, model })
+      return new OpenAICompatibleProvider({
+        name: "openrouter",
+        apiKey,
+        model,
+        baseURL: "https://openrouter.ai/api/v1",
+      })
+    case "fal":
+      return new FalProvider({ apiKey, model })
   }
 }
 

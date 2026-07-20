@@ -9,10 +9,7 @@ import { insertProductSchema, type SelectProduct } from "db/schema"
 import { queryApi } from "rpc/query"
 import { toastManager } from "ui/toast"
 import type { ApiKeyConfig } from "utils/api-keys-schema"
-import {
-  getProviderMismatchMessage,
-  validateModelProviderMatch,
-} from "utils/model-provider-validation"
+import { validateModelProviderMatch } from "utils/model-provider-validation"
 
 import type { InputFieldType, SelectOption } from "./input-variable-row"
 
@@ -193,7 +190,7 @@ const useProductForm = ({
   const userInstructionRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: availableModelsData } = useQuery({
-    ...queryApi.admin.getAvailableModels.queryOptions(),
+    ...queryApi.admin.getAIModels.queryOptions(),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -273,27 +270,6 @@ const useProductForm = ({
     },
   })
 
-  const availableModels = useMemo(() => {
-    if (!availableModelsData || availableModelsData.length === 0) {
-      return []
-    }
-    return availableModelsData.map((model) => model.id)
-  }, [availableModelsData])
-
-  const categories = useMemo(() => {
-    if (!categoriesData || categoriesData.length === 0) {
-      return []
-    }
-    return categoriesData
-  }, [categoriesData])
-
-  const tags = useMemo(() => {
-    if (!tagsData || tagsData.length === 0) {
-      return []
-    }
-    return tagsData
-  }, [tagsData])
-
   const form = useForm({
     defaultValues: {
       name: "",
@@ -368,6 +344,40 @@ const useProductForm = ({
       void onSubmit(formData)
     },
   })
+
+  const selectedApiKeyProvider = useMemo(() => {
+    if (!form.state.values.apiKeyId || !safeApiKeys) return undefined
+    const key = safeApiKeys.find((k) => k.id === form.state.values.apiKeyId)
+    return key?.provider
+  }, [form.state.values.apiKeyId, safeApiKeys])
+
+  const availableModels = useMemo(() => {
+    if (!availableModelsData || availableModelsData.length === 0) {
+      return []
+    }
+
+    let filtered = availableModelsData.filter((m) => m.isEnabled)
+
+    if (selectedApiKeyProvider) {
+      filtered = filtered.filter((m) => m.provider === selectedApiKeyProvider)
+    }
+
+    return filtered.map((model) => model.modelId)
+  }, [availableModelsData, selectedApiKeyProvider])
+
+  const categories = useMemo(() => {
+    if (!categoriesData || categoriesData.length === 0) {
+      return []
+    }
+    return categoriesData
+  }, [categoriesData])
+
+  const tags = useMemo(() => {
+    if (!tagsData || tagsData.length === 0) {
+      return []
+    }
+    return tagsData
+  }, [tagsData])
 
   const getFormValues = (): ProductFormData => {
     const formData = form.state.values
@@ -511,16 +521,16 @@ const useProductForm = ({
     if (apiKeyId && modelEngine) {
       const selectedKey = safeApiKeys.find((key) => key.id === apiKeyId)
       if (selectedKey) {
-        const isValid = validateModelProviderMatch(
-          modelEngine,
+        const result = validateModelProviderMatch(
           selectedKey.provider,
+          modelEngine,
+          availableModelsData ?? [],
         )
-        if (!isValid) {
-          const errorMessage = getProviderMismatchMessage(
-            modelEngine,
-            selectedKey.provider,
+        if (!result.valid) {
+          form.setFieldValue(
+            "apiKeyError",
+            result.message ?? "Model/provider mismatch",
           )
-          form.setFieldValue("apiKeyError", errorMessage)
         } else {
           form.setFieldValue("apiKeyError", "")
         }

@@ -1,4 +1,5 @@
 import { ORPCError } from "@orpc/server"
+import { testApiKey } from "server/llm/test-key"
 import { adminProcedure, protectedProcedure } from "server/orpc"
 import { getEntitlements } from "server/payments/entitlements"
 import { createOverflowCreditCheckout } from "server/payments/overflow-checkout"
@@ -303,6 +304,15 @@ export const userRouter = {
         })
       }
 
+      if (!input.skipValidation) {
+        const validation = await testApiKey(input.provider, input.apiKey)
+        if (!validation.valid) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: validation.error ?? "API key validation failed",
+          })
+        }
+      }
+
       const newKey: ApiKeyConfig = {
         id: createCustomId(),
         provider: input.provider,
@@ -396,6 +406,16 @@ export const userRouter = {
           })
         }
         encryptedApiKey = encryptResult
+
+        if (!input.skipValidation) {
+          const provider = input.provider ?? existingKeys[keyIndex].provider
+          const validation = await testApiKey(provider, input.apiKey)
+          if (!validation.valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: validation.error ?? "API key validation failed",
+            })
+          }
+        }
       }
 
       const updatedKey: ApiKeyConfig = {

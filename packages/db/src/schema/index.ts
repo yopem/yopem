@@ -1,4 +1,5 @@
 export * from "./admin-settings.ts"
+export * from "./ai-models.ts"
 export * from "./user-settings.ts"
 export * from "./subscriptions.ts"
 export * from "./products.ts"

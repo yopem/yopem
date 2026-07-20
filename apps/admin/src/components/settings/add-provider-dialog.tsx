@@ -70,6 +70,7 @@ const AddProviderDialog = ({
                 <SelectContent>
                   <SelectItem value="openai">OpenAI</SelectItem>
                   <SelectItem value="openrouter">OpenRouter</SelectItem>
+                  <SelectItem value="fal">fal.ai</SelectItem>
                 </SelectContent>
               </Select>
             </div>
