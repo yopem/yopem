@@ -141,6 +141,10 @@
       "types": "./src/components/resize-handle.tsx",
       "default": "./src/components/resize-handle.tsx"
     },
+    "./slash-node": {
+      "types": "./src/components/slash-node.tsx",
+      "default": "./src/components/slash-node.tsx"
+    },
     "./transform": {
       "types": "./src/components/transform.tsx",
       "default": "./src/components/transform.tsx"
