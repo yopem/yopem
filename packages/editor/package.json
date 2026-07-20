@@ -113,6 +113,10 @@
       "types": "./src/components/media-file-node.tsx",
       "default": "./src/components/media-file-node.tsx"
     },
+    "./media-image-node": {
+      "types": "./src/components/media-image-node.tsx",
+      "default": "./src/components/media-image-node.tsx"
+    },
     "./media-toolbar": {
       "types": "./src/components/media-toolbar.tsx",
       "default": "./src/components/media-toolbar.tsx"
