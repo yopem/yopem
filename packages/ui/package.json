@@ -38,6 +38,10 @@
       "types": "./src/components/combobox.tsx",
       "default": "./src/components/combobox.tsx"
     },
+    "./context-menu": {
+      "types": "./src/components/context-menu.tsx",
+      "default": "./src/components/context-menu.tsx"
+    },
     "./dialog": {
       "types": "./src/components/dialog.tsx",
       "default": "./src/components/dialog.tsx"
@@ -125,6 +129,10 @@
     "./hooks/use-mobile": {
       "types": "./src/hooks/use-mobile.ts",
       "default": "./src/hooks/use-mobile.ts"
+    },
+    "./hooks/use-touch-device": {
+      "types": "./src/hooks/use-touch-device.ts",
+      "default": "./src/hooks/use-touch-device.ts"
     },
     "./logo": {
       "types": "./src/components/logo.tsx",
