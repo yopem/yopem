@@ -93,6 +93,10 @@
       "types": "./src/components/floating-toolbar-buttons.tsx",
       "default": "./src/components/floating-toolbar-buttons.tsx"
     },
+    "./floating-toolbar-kit": {
+      "types": "./src/components/floating-toolbar-kit.tsx",
+      "default": "./src/components/floating-toolbar-kit.tsx"
+    },
     "./floating-toolbar": {
       "types": "./src/components/floating-toolbar.tsx",
       "default": "./src/components/floating-toolbar.tsx"
