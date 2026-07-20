@@ -41,6 +41,10 @@
       "types": "./src/components/caption.tsx",
       "default": "./src/components/caption.tsx"
     },
+    "./code-node": {
+      "types": "./src/components/code-node.tsx",
+      "default": "./src/components/code-node.tsx"
+    },
     "./drag-handle": {
       "types": "./src/components/drag-handle.tsx",
       "default": "./src/components/drag-handle.tsx"
