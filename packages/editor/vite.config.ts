@@ -1,0 +1,43 @@
+import { defineConfig } from "vite-plus"
+
+export default defineConfig({
+  lint: {
+    plugins: [
+      "eslint",
+      "import",
+      "jsx-a11y",
+      "nextjs",
+      "oxc",
+      "promise",
+      "react",
+      "react-perf",
+      "typescript",
+      "unicorn",
+    ],
+    jsPlugins: ["eslint-plugin-better-tailwindcss"],
+    rules: {
+      "better-tailwindcss/enforce-canonical-classes": "error",
+      "better-tailwindcss/enforce-consistent-class-order": "off",
+      "better-tailwindcss/enforce-consistent-line-wrapping": "off",
+      "better-tailwindcss/enforce-shorthand-classes": "error",
+      "better-tailwindcss/no-conflicting-classes": "error",
+      "better-tailwindcss/no-deprecated-classes": "error",
+      "better-tailwindcss/no-duplicate-classes": "warn",
+      "better-tailwindcss/no-restricted-classes": "error",
+      "better-tailwindcss/no-unknown-classes": "off",
+      "better-tailwindcss/no-unnecessary-whitespace": "warn",
+      "import/no-relative-parent-imports": "off",
+      "nextjs/no-img-element": "error",
+      "react/rules-of-hooks": "error",
+    },
+    settings: {
+      "better-tailwindcss": {
+        entryPoint: "./src/style.css",
+      },
+    },
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
+})

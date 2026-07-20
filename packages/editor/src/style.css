@@ -1,0 +1,6 @@
+@import "ui/style.css";
+
+@theme inline {
+  --font-sans: var(--font-adwaita-sans);
+  --font-mono: var(--font-adwaita-mono);
+}

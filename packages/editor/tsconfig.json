@@ -1,0 +1,11 @@
+{
+  "extends": "@yopem/typescript-config/react",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "jsx": "react-jsx",
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}
