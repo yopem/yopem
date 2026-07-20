@@ -93,6 +93,10 @@
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"
     },
+    "./link-toolbar": {
+      "types": "./src/components/link-toolbar.tsx",
+      "default": "./src/components/link-toolbar.tsx"
+    },
     "./mark-toolbar-button": {
       "types": "./src/components/mark-toolbar-button.tsx",
       "default": "./src/components/mark-toolbar-button.tsx"
