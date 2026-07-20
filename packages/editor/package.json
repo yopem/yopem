@@ -69,6 +69,10 @@
       "types": "./src/components/heading-node.tsx",
       "default": "./src/components/heading-node.tsx"
     },
+    "./highlight-node": {
+      "types": "./src/components/highlight-node.tsx",
+      "default": "./src/components/highlight-node.tsx"
+    },
     "./link-toolbar-button": {
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"

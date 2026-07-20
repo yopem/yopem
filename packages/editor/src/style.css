@@ -1,9 +1,20 @@
 @import "ui/style.css";
 @plugin "tailwind-scrollbar-hide";
 
+:root {
+  --highlight: oklch(0.852 0.199 91.936);
+}
+
+.dark {
+  --highlight: oklch(0.852 0.199 91.936);
+}
+
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --font-sans: var(--font-adwaita-sans);
   --font-mono: var(--font-adwaita-mono);
+  --color-highlight: var(--highlight);
 }
 
 @utility toaster {
