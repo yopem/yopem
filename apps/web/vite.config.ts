@@ -51,6 +51,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: webPort,
       host: "0.0.0.0",
+      proxy: {
+        "/rpc": {
+          target: "http://localhost:4000",
+          changeOrigin: true,
+        },
+      },
     },
     resolve: {
       tsconfigPaths: true,

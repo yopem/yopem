@@ -6,6 +6,15 @@ import { RPCLink } from "@orpc/client/fetch"
 
 import { apiUrl } from "env"
 
+// Browser: use relative path to avoid CORS preflight issues with Hono dev server
+// Server (SSR): use validated env URL for correct resolution
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    return "/rpc"
+  }
+  return `${apiUrl}/rpc`
+}
+
 export const createORPCLink = (
   customFetch?: (
     input: RequestInfo | URL,
@@ -13,7 +22,7 @@ export const createORPCLink = (
   ) => Promise<Response>,
 ) => {
   return new RPCLink({
-    url: `${apiUrl}/rpc`,
+    url: getBaseUrl(),
     fetch:
       customFetch ??
       ((input, init) => {
