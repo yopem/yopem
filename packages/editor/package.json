@@ -72,6 +72,10 @@
     "./transform": {
       "types": "./src/components/transform.tsx",
       "default": "./src/components/transform.tsx"
+    },
+    "./turn-into-toolbar-button": {
+      "types": "./src/components/turn-into-toolbar-button.tsx",
+      "default": "./src/components/turn-into-toolbar-button.tsx"
     }
   },
   "scripts": {
