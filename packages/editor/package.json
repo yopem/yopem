@@ -77,6 +77,10 @@
       "types": "./src/components/hr-node.tsx",
       "default": "./src/components/hr-node.tsx"
     },
+    "./inline-combobox": {
+      "types": "./src/components/inline-combobox.tsx",
+      "default": "./src/components/inline-combobox.tsx"
+    },
     "./link-toolbar-button": {
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"
@@ -101,17 +105,21 @@
   },
   "dependencies": {
     "@platejs/caption": "^53.0.0",
+    "@platejs/combobox": "^53.0.0",
     "@platejs/dnd": "^53.1.0",
     "@platejs/floating": "^53.0.0",
     "@platejs/link": "^53.3.1",
     "@platejs/list": "^53.1.3",
     "@platejs/media": "^53.1.4",
     "@platejs/selection": "^53.1.6",
+    "@platejs/utils": "^53.2.4",
     "@tabler/icons-react": "^3.45.0",
     "@udecode/cn": "^52.3.4",
+    "@udecode/react-utils": "^52.3.4",
     "lucide-react": "catalog:",
     "platejs": "^53.2.4",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "catalog:",
     "ui": "workspace:*"
@@ -119,6 +127,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "oxlint-tailwindcss": "catalog:",
     "typescript": "catalog:",
