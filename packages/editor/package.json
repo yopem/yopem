@@ -105,6 +105,18 @@
       "types": "./src/components/media-audio-node.tsx",
       "default": "./src/components/media-audio-node.tsx"
     },
+    "./media-embed-node": {
+      "types": "./src/components/media-embed-node.tsx",
+      "default": "./src/components/media-embed-node.tsx"
+    },
+    "./media-toolbar": {
+      "types": "./src/components/media-toolbar.tsx",
+      "default": "./src/components/media-toolbar.tsx"
+    },
+    "./resize-handle": {
+      "types": "./src/components/resize-handle.tsx",
+      "default": "./src/components/resize-handle.tsx"
+    },
     "./transform": {
       "types": "./src/components/transform.tsx",
       "default": "./src/components/transform.tsx"
@@ -137,6 +149,8 @@
     "platejs": "^53.2.4",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-lite-youtube-embed": "^3.6.0",
+    "react-tweet": "^3.3.1",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "catalog:",
     "ui": "workspace:*"
