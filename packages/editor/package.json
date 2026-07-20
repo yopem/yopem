@@ -21,6 +21,10 @@
       "types": "./src/components/drag-handle.tsx",
       "default": "./src/components/drag-handle.tsx"
     },
+    "./draggable-gutter": {
+      "types": "./src/components/draggable-gutter.tsx",
+      "default": "./src/components/draggable-gutter.tsx"
+    },
     "./drop-line": {
       "types": "./src/components/drop-line.tsx",
       "default": "./src/components/drop-line.tsx"
