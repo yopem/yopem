@@ -189,6 +189,10 @@
       "types": "./src/components/resize-handle.tsx",
       "default": "./src/components/resize-handle.tsx"
     },
+    "./slash-kit": {
+      "types": "./src/components/slash-kit.tsx",
+      "default": "./src/components/slash-kit.tsx"
+    },
     "./slash-node": {
       "types": "./src/components/slash-node.tsx",
       "default": "./src/components/slash-node.tsx"
@@ -219,6 +223,7 @@
     "@platejs/media": "^53.1.4",
     "@platejs/resizable": "^53.0.0",
     "@platejs/selection": "^53.1.6",
+    "@platejs/slash-command": "^53.0.0",
     "@platejs/utils": "^53.2.4",
     "@tabler/icons-react": "^3.45.0",
     "@udecode/cn": "^52.3.4",

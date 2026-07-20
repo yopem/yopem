@@ -543,6 +543,9 @@ importers:
       '@platejs/selection':
         specifier: ^53.1.6
         version: 53.1.6(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@platejs/slash-command':
+        specifier: ^53.0.0
+        version: 53.0.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@platejs/utils':
         specifier: ^53.2.4
         version: 53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
@@ -2142,6 +2145,13 @@ packages:
 
   '@platejs/selection@53.1.6':
     resolution: {integrity: sha512-d3pJur7bkkDd2DUcJfYrpRi+5/WgQyYiD1/keG4OveNhc2SN/lE3RaFSNbGVTdHjwJ/20mslw0JNAgyjZrPGkg==}
+    peerDependencies:
+      platejs: '>=53.0.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@platejs/slash-command@53.0.0':
+    resolution: {integrity: sha512-JXK/HykJcGOMhw8bM7NqrlubDkeyThokDqnZoIYDu9PykR8qUupcCjjdz23X2jabNSLPbnuQJKkFvep6H5sl+Q==}
     peerDependencies:
       platejs: '>=53.0.0'
       react: '>=18.0.0'
@@ -6206,6 +6216,14 @@ snapshots:
   '@platejs/selection@53.1.6(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       copy-to-clipboard: 3.3.3
+      platejs: 53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
+      react: 19.2.7
+      react-compiler-runtime: 1.0.0(react@19.2.7)
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@platejs/slash-command@53.0.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@platejs/combobox': 53.0.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       platejs: 53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
       react: 19.2.7
       react-compiler-runtime: 1.0.0(react@19.2.7)
