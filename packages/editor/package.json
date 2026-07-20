@@ -85,6 +85,10 @@
       "types": "./src/components/editor.tsx",
       "default": "./src/components/editor.tsx"
     },
+    "./exit-break-kit": {
+      "types": "./src/components/exit-break-kit.tsx",
+      "default": "./src/components/exit-break-kit.tsx"
+    },
     "./floating-toolbar-buttons": {
       "types": "./src/components/floating-toolbar-buttons.tsx",
       "default": "./src/components/floating-toolbar-buttons.tsx"
