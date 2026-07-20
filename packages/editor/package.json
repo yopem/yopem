@@ -57,6 +57,10 @@
       "types": "./src/components/drop-line.tsx",
       "default": "./src/components/drop-line.tsx"
     },
+    "./floating-toolbar-buttons": {
+      "types": "./src/components/floating-toolbar-buttons.tsx",
+      "default": "./src/components/floating-toolbar-buttons.tsx"
+    },
     "./heading-node": {
       "types": "./src/components/heading-node.tsx",
       "default": "./src/components/heading-node.tsx"
