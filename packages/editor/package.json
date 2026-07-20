@@ -49,6 +49,14 @@
       "types": "./src/components/block-list.tsx",
       "default": "./src/components/block-list.tsx"
     },
+    "./block-menu-kit": {
+      "types": "./src/components/block-menu-kit.tsx",
+      "default": "./src/components/block-menu-kit.tsx"
+    },
+    "./block-placeholder-kit": {
+      "types": "./src/components/block-placeholder-kit.tsx",
+      "default": "./src/components/block-placeholder-kit.tsx"
+    },
     "./block-selection": {
       "types": "./src/components/block-selection.tsx",
       "default": "./src/components/block-selection.tsx"
