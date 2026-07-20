@@ -17,7 +17,7 @@ const CTA = ({ session }: { session: SessionUser | false }) => {
             Ready to unify your AI stack?
           </h2>
           <p className="text-muted-foreground mx-auto mb-10 max-w-[600px] text-lg/relaxed">
-            Start building with unified access to all major AI tools.
+            Start building with unified access to all major AI products.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {session ? (

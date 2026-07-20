@@ -2,7 +2,7 @@ import { and, eq, ne } from "drizzle-orm"
 import { transliterate as tr } from "transliteration"
 
 import { db } from "db"
-import { categoriesTable, tagsTable, toolsTable } from "db/schema"
+import { categoriesTable, productsTable, tagsTable } from "db/schema"
 
 function slugify(text: string) {
   return tr(text)
@@ -18,16 +18,18 @@ function slugify(text: string) {
     .replace(/-$/g, "")
 }
 
-export const generateUniqueToolSlug = async (text: string): Promise<string> => {
+export const generateUniqueProductSlug = async (
+  text: string,
+): Promise<string> => {
   const slug = slugify(text)
   let uniqueSlug = slug
   let suffix = 1
 
   while (true) {
     const existing = await db
-      .select({ id: toolsTable.id })
-      .from(toolsTable)
-      .where(eq(toolsTable.slug, uniqueSlug))
+      .select({ id: productsTable.id })
+      .from(productsTable)
+      .where(eq(productsTable.slug, uniqueSlug))
       .limit(1)
 
     if (existing.length === 0) break

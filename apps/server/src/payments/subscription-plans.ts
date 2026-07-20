@@ -13,7 +13,7 @@ export interface PlanConfig {
   limits: {
     maxRequestsPerMonth: number
     maxTokensPerRequest: number
-    maxCustomTools: number | null
+    maxCustomProducts: number | null
   }
   features: string[]
 }
@@ -22,15 +22,15 @@ const plans: Record<SubscriptionTier, PlanConfig> = {
   free: {
     tier: "free",
     displayName: "Free",
-    description: "Get started with essential tools",
+    description: "Get started with essential products",
     monthlyPrice: null,
     yearlyPrice: null,
     limits: {
       maxRequestsPerMonth: 10,
       maxTokensPerRequest: 1000,
-      maxCustomTools: 0,
+      maxCustomProducts: 0,
     },
-    features: ["access_public_tools", "community_support"],
+    features: ["access_public_products", "community_support"],
   },
   pro: {
     tier: "pro",
@@ -41,11 +41,11 @@ const plans: Record<SubscriptionTier, PlanConfig> = {
     limits: {
       maxRequestsPerMonth: 1000,
       maxTokensPerRequest: 5000,
-      maxCustomTools: 10,
+      maxCustomProducts: 10,
     },
     features: [
-      "access_public_tools",
-      "create_custom_tools",
+      "access_public_products",
+      "create_custom_products",
       "priority_support",
       "higher_token_limits",
     ],
@@ -59,11 +59,11 @@ const plans: Record<SubscriptionTier, PlanConfig> = {
     limits: {
       maxRequestsPerMonth: Number.POSITIVE_INFINITY,
       maxTokensPerRequest: 10000,
-      maxCustomTools: null,
+      maxCustomProducts: null,
     },
     features: [
-      "access_public_tools",
-      "create_custom_tools",
+      "access_public_products",
+      "create_custom_products",
       "priority_support",
       "higher_token_limits",
       "team_collaboration",

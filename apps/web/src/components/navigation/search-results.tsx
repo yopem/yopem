@@ -58,7 +58,7 @@ const SearchResults = ({
         <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
           <SearchIcon className="text-muted-foreground size-8" />
           <p className="text-muted-foreground text-sm">
-            No tools found for &ldquo;{query}&rdquo;
+            No products found for &ldquo;{query}&rdquo;
           </p>
         </div>
       ) : (
@@ -67,7 +67,7 @@ const SearchResults = ({
             {results.map((result) => (
               <Link
                 key={result.id}
-                to="/marketplace/tools/$slug"
+                to="/marketplace/products/$slug"
                 params={{ slug: result.slug }}
                 onClick={onResultClick}
                 className="hover:bg-accent flex items-center gap-3 rounded-md px-3 py-2 transition-colors"

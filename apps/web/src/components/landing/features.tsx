@@ -20,7 +20,7 @@ const Features = () => {
             Why Choose Yopem?
           </h2>
           <p className="text-muted-foreground text-lg/relaxed">
-            Simplify your workflow. Access powerful AI tools without the
+            Simplify your workflow. Access powerful AI products without the
             complexity of managing multiple platforms and subscriptions.
           </p>
         </div>
@@ -33,12 +33,12 @@ const Features = () => {
           <FeatureCard
             icon={<ZapIcon className="size-5" />}
             title="Instant Access"
-            description="No setup required. Start using AI tools immediately. Everything you need in one place."
+            description="No setup required. Start using AI products immediately. Everything you need in one place."
           />
           <FeatureCard
             icon={<LayoutDashboardIcon className="size-5" />}
             title="Unified Dashboard"
-            description="Manage all your AI operations from one clean interface. Monitor usage, track costs, and access powerful tools without the hassle."
+            description="Manage all your AI operations from one clean interface. Monitor usage, track costs, and access powerful products without the hassle."
           />
         </div>
         <div className="mt-6 grid h-auto grid-cols-1 gap-6 md:grid-cols-2 lg:h-105 lg:grid-cols-3">

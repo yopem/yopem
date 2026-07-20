@@ -10,7 +10,7 @@ export interface Entitlements {
   limits: {
     maxRequestsPerMonth: number
     maxTokensPerRequest: number
-    maxCustomTools: number | null
+    maxCustomProducts: number | null
   }
   features: string[]
   isPaid: boolean

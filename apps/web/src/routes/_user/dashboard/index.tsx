@@ -127,7 +127,7 @@ function DashboardPage() {
                   >
                     <div>
                       <p className="font-medium">
-                        {run.toolName ?? "Unknown Tool"}
+                        {run.productName ?? "Unknown Product"}
                       </p>
                       <p className="text-muted-foreground text-sm">
                         {formatDateOnly(run.createdAt)}

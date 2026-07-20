@@ -34,7 +34,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    50 tool executions/month
+                    50 product executions/month
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -46,7 +46,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    Access to public tools
+                    Access to public products
                   </span>
                 </li>
               </ul>
@@ -71,7 +71,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    1,000 tool executions/month
+                    1,000 product executions/month
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -83,7 +83,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    Up to 10 custom tools
+                    Up to 10 custom products
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -119,7 +119,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    Unlimited tool executions
+                    Unlimited product executions
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -131,7 +131,7 @@ const Pricing = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircleIcon className="text-primary mt-0.5 size-5" />
                   <span className="text-muted-foreground text-sm">
-                    Unlimited custom tools
+                    Unlimited custom products
                   </span>
                 </li>
                 <li className="flex items-start gap-3">

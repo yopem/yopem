@@ -43,7 +43,7 @@ const TagDialog = ({
             <p className="text-muted-foreground text-sm">
               {editing
                 ? "Update the tag name"
-                : "Add a new tag to label your tools"}
+                : "Add a new tag to label your products"}
             </p>
           </div>
 

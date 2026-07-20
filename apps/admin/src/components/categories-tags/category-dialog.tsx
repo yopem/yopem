@@ -48,7 +48,7 @@ const CategoryDialog = ({
             <p className="text-muted-foreground text-sm">
               {editing
                 ? "Update the category details"
-                : "Add a new category to organize your tools"}
+                : "Add a new category to organize your products"}
             </p>
           </div>
 

@@ -316,7 +316,7 @@ const CategoriesTagsContent = () => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Categories & Tags</h1>
         <p className="text-muted-foreground mt-2">
-          Manage categories and tags for organizing your tools
+          Manage categories and tags for organizing your products
         </p>
       </div>
 

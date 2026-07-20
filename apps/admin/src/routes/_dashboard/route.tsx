@@ -31,8 +31,8 @@ const DashboardLayout = () => {
     },
     {
       icon: <BotIcon className="size-4.5" />,
-      label: "Tools",
-      href: "/tools",
+      label: "Products",
+      href: "/products",
     },
     {
       icon: <FileImageIcon className="size-4.5" />,

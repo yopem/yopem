@@ -10,8 +10,8 @@ import {
   creditTransactionsTable,
   polarCheckoutSessionsTable,
   polarPaymentsTable,
-  toolRunsTable,
-  toolsTable,
+  productRunsTable,
+  productsTable,
   userCreditsTable,
   userSettingsTable,
 } from "db/schema"
@@ -39,8 +39,8 @@ export const getUserStats = async (
 
   const [runsResult] = await db
     .select({ count: sql<number>`count(*)` })
-    .from(toolRunsTable)
-    .where(eq(toolRunsTable.userId, userId))
+    .from(productRunsTable)
+    .where(eq(productRunsTable.userId, userId))
 
   return {
     balance: credits ? credits.balance : "0",
@@ -57,27 +57,27 @@ export const getUserRuns = async (
 ): Promise<{
   runs: {
     id: string
-    toolId: string
+    productId: string
     status: string | null
     cost: string | null
     createdAt: Date | null
-    toolName: string | null
+    productName: string | null
   }[]
   nextCursor?: string
 }> => {
   const runs = await db
     .select({
-      id: toolRunsTable.id,
-      toolId: toolRunsTable.toolId,
-      status: toolRunsTable.status,
-      cost: toolRunsTable.cost,
-      createdAt: toolRunsTable.createdAt,
-      toolName: toolsTable.name,
+      id: productRunsTable.id,
+      productId: productRunsTable.productId,
+      status: productRunsTable.status,
+      cost: productRunsTable.cost,
+      createdAt: productRunsTable.createdAt,
+      productName: productsTable.name,
     })
-    .from(toolRunsTable)
-    .leftJoin(toolsTable, eq(toolRunsTable.toolId, toolsTable.id))
-    .where(eq(toolRunsTable.userId, userId))
-    .orderBy(desc(toolRunsTable.createdAt))
+    .from(productRunsTable)
+    .leftJoin(productsTable, eq(productRunsTable.productId, productsTable.id))
+    .where(eq(productRunsTable.userId, userId))
+    .orderBy(desc(productRunsTable.createdAt))
     .limit(input.limit + 1)
 
   let nextCursor: string | undefined = undefined
@@ -296,8 +296,8 @@ export const initUserCredits = async (
 export const deductCreditsForRun = async (
   userId: string,
   cost: number,
-  toolRunId: string,
-  toolName: string,
+  productRunId: string,
+  productName: string,
 ): Promise<void> => {
   await db
     .update(userCreditsTable)
@@ -313,15 +313,15 @@ export const deductCreditsForRun = async (
     userId,
     amount: String(-cost),
     type: "usage" as const,
-    description: `Tool execution: ${toolName}`,
-    toolRunId,
+    description: `Product execution: ${productName}`,
+    productRunId,
   })
 }
 
 export const deductOverflowCredit = async (
   userId: string,
-  toolName: string,
-  toolRunId?: string,
+  productName: string,
+  productRunId?: string,
 ): Promise<boolean> => {
   const result = await db
     .update(userCreditsTable)
@@ -345,8 +345,8 @@ export const deductOverflowCredit = async (
     userId,
     amount: "-1",
     type: "overflow_usage",
-    description: `Overflow usage: ${toolName}`,
-    toolRunId: toolRunId ?? null,
+    description: `Overflow usage: ${productName}`,
+    productRunId: productRunId ?? null,
   })
 
   return true

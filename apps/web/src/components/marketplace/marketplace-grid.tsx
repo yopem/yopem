@@ -11,9 +11,9 @@ import { Button } from "ui/button"
 
 import SearchBar from "@/components/marketplace/search-bar"
 
-const ToolCard = lazy(() => import("./tool-card"))
+const ProductCard = lazy(() => import("./product-card"))
 
-const ToolCardSkeleton = () => (
+const ProductCardSkeleton = () => (
   <div className="bg-card flex flex-col gap-3 rounded-xl border p-4">
     <div className="flex items-start gap-3">
       <div className="bg-muted size-10 shrink-0 animate-pulse rounded-lg" />
@@ -31,7 +31,9 @@ const ToolCardSkeleton = () => (
 )
 
 interface MarketplaceGridProps {
-  initialTools?: Awaited<ReturnType<typeof clientApi.tools.list>>["tools"]
+  initialProducts?: Awaited<
+    ReturnType<typeof clientApi.products.list>
+  >["products"]
   categoryIds?: string[]
   tagIds?: string[]
   priceFilter?: string
@@ -39,16 +41,16 @@ interface MarketplaceGridProps {
   initialSearch?: string
 }
 
-type ToolListItem = Awaited<
-  ReturnType<typeof clientApi.tools.list>
->["tools"][number]
+type ProductListItem = Awaited<
+  ReturnType<typeof clientApi.products.list>
+>["products"][number]
 
-const EMPTY_TOOLS: ToolListItem[] = []
+const EMPTY_PRODUCTS: ProductListItem[] = []
 const EMPTY_CATEGORY_IDS: string[] = []
 const EMPTY_TAG_IDS: string[] = []
 
 const MarketplaceGrid = ({
-  initialTools = EMPTY_TOOLS,
+  initialProducts = EMPTY_PRODUCTS,
   categoryIds = EMPTY_CATEGORY_IDS,
   tagIds = EMPTY_TAG_IDS,
   priceFilter = "all",
@@ -59,7 +61,7 @@ const MarketplaceGrid = ({
   const navigate = useNavigate()
 
   const queryKey = [
-    "marketplace-tools",
+    "marketplace-products",
     search,
     categoryIds.join(","),
     status,
@@ -71,7 +73,7 @@ const MarketplaceGrid = ({
     useInfiniteQuery({
       queryKey,
       queryFn: async ({ pageParam }) => {
-        const result = await clientApi.tools.list({
+        const result = await clientApi.products.list({
           search,
           categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
           status: status as "draft" | "active" | "archived" | "all",
@@ -84,15 +86,15 @@ const MarketplaceGrid = ({
       },
       initialPageParam: undefined as string | undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      ...(initialTools.length > 0 && {
+      ...(initialProducts.length > 0 && {
         initialData: {
-          pages: [{ tools: initialTools, nextCursor: undefined }],
+          pages: [{ products: initialProducts, nextCursor: undefined }],
           pageParams: [undefined],
         },
       }),
     })
 
-  const tools = data?.pages.flatMap((page) => page.tools) ?? []
+  const products = data?.pages.flatMap((page) => page.products) ?? []
 
   const handleSearch = (query: string) => {
     void navigate({
@@ -114,38 +116,38 @@ const MarketplaceGrid = ({
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <ToolCardSkeleton key={i} />
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
-        ) : tools.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="bg-card flex flex-col items-center justify-center rounded-3xl border border-dashed py-24 text-center">
             <div className="bg-muted/50 mb-6 rounded-full p-6">
               <PackageIcon className="text-muted-foreground size-12" />
             </div>
             <h3 className="mb-2 text-xl font-semibold tracking-tight">
-              No tools found
+              No products found
             </h3>
             <p className="text-muted-foreground max-w-sm text-base">
               {search
                 ? "Try adjusting your search terms or filter criteria."
-                : "No tools are currently available in this category."}
+                : "No products are currently available in this category."}
             </p>
           </div>
         ) : (
           <div className="space-y-10">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-              {tools.map((tool) => (
-                <Suspense key={tool.id} fallback={<ToolCardSkeleton />}>
-                  <ToolCard
-                    slug={tool.slug}
-                    name={tool.name}
-                    description={tool.description}
-                    excerpt={tool.excerpt}
-                    costPerRun={tool.costPerRun}
-                    categories={tool.categories}
-                    thumbnail={tool.thumbnail}
-                    averageRating={tool.averageRating}
-                    reviewCount={tool.reviewCount}
+              {products.map((product) => (
+                <Suspense key={product.id} fallback={<ProductCardSkeleton />}>
+                  <ProductCard
+                    slug={product.slug}
+                    name={product.name}
+                    description={product.description}
+                    excerpt={product.excerpt}
+                    costPerRun={product.costPerRun}
+                    categories={product.categories}
+                    thumbnail={product.thumbnail}
+                    averageRating={product.averageRating}
+                    reviewCount={product.reviewCount}
                   />
                 </Suspense>
               ))}
@@ -163,10 +165,10 @@ const MarketplaceGrid = ({
                   {isFetchingNextPage ? (
                     <>
                       <Loader2Icon className="mr-2 size-5 animate-spin" />
-                      Loading more tools...
+                      Loading more products...
                     </>
                   ) : (
-                    "Load more tools"
+                    "Load more products"
                   )}
                 </Button>
               </div>

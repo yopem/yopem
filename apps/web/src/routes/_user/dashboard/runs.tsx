@@ -53,11 +53,11 @@ function RunsPage() {
       | {
           runs: {
             id: string
-            toolId: string | null
+            productId: string | null
             status: string
             cost: string | null
             createdAt: Date | null
-            toolName: string | null
+            productName: string | null
           }[]
           nextCursor: string | undefined
         }
@@ -71,7 +71,7 @@ function RunsPage() {
       <div>
         <h1 className="text-3xl font-bold">My Runs</h1>
         <p className="text-muted-foreground mt-2">
-          View your tool execution history.
+          View your product execution history.
         </p>
       </div>
 
@@ -84,7 +84,7 @@ function RunsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Status</TableHead>
-                <TableHead>Tool</TableHead>
+                <TableHead>Product</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
               </TableRow>
@@ -114,7 +114,7 @@ function RunsPage() {
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center">
                     <p className="text-muted-foreground">
-                      No tool runs yet. Visit the marketplace to get started!
+                      No product runs yet. Visit the marketplace to get started!
                     </p>
                     <div className="mt-4">
                       <Link to="/marketplace">
@@ -133,7 +133,7 @@ function RunsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {run.toolName ?? "Unknown Tool"}
+                      {run.productName ?? "Unknown Product"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDateTime(run.createdAt) || "-"}

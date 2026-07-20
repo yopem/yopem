@@ -5,7 +5,7 @@ import {
   activityLogsTable,
   adminSettingsTable,
   polarPaymentsTable,
-  toolRunsTable,
+  productRunsTable,
   uptimeEventsTable,
 } from "db/schema"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
@@ -145,17 +145,17 @@ export const getSystemMetrics = async (): Promise<{
 
   const [activeUsersResult] = await db
     .select({
-      current: sql<number>`COUNT(DISTINCT CASE WHEN ${toolRunsTable.createdAt} >= ${thirtyDaysAgo} THEN ${toolRunsTable.userId} END)`,
-      previous: sql<number>`COUNT(DISTINCT CASE WHEN ${toolRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${toolRunsTable.createdAt} < ${thirtyDaysAgo} THEN ${toolRunsTable.userId} END)`,
+      current: sql<number>`COUNT(DISTINCT CASE WHEN ${productRunsTable.createdAt} >= ${thirtyDaysAgo} THEN ${productRunsTable.userId} END)`,
+      previous: sql<number>`COUNT(DISTINCT CASE WHEN ${productRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${productRunsTable.createdAt} < ${thirtyDaysAgo} THEN ${productRunsTable.userId} END)`,
     })
-    .from(toolRunsTable)
+    .from(productRunsTable)
 
   const [aiRequestsResult] = await db
     .select({
-      current: sql<number>`COUNT(CASE WHEN ${toolRunsTable.createdAt} >= ${thirtyDaysAgo} AND ${toolRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
-      previous: sql<number>`COUNT(CASE WHEN ${toolRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${toolRunsTable.createdAt} < ${thirtyDaysAgo} AND ${toolRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
+      current: sql<number>`COUNT(CASE WHEN ${productRunsTable.createdAt} >= ${thirtyDaysAgo} AND ${productRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
+      previous: sql<number>`COUNT(CASE WHEN ${productRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${productRunsTable.createdAt} < ${thirtyDaysAgo} AND ${productRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
     })
-    .from(toolRunsTable)
+    .from(productRunsTable)
 
   const [uptimeStats] = await db
     .select({
@@ -253,13 +253,13 @@ export const getAiRequestsHistory = (input: {
 }): Promise<{ createdAt: Date | null }[]> => {
   return db
     .select({
-      createdAt: toolRunsTable.createdAt,
+      createdAt: productRunsTable.createdAt,
     })
-    .from(toolRunsTable)
+    .from(productRunsTable)
     .where(
       and(
-        gte(toolRunsTable.createdAt, input.startDate),
-        sql`${toolRunsTable.status} IN ('completed', 'failed')`,
+        gte(productRunsTable.createdAt, input.startDate),
+        sql`${productRunsTable.status} IN ('completed', 'failed')`,
       ),
     )
 }
@@ -281,23 +281,23 @@ export const getApiKeyStats = async (): Promise<{
 
   const [totalRequestsResult] = await db
     .select({ count: sql<number>`COUNT(*)` })
-    .from(toolRunsTable)
+    .from(productRunsTable)
 
   const [currentMonthResult] = await db
     .select({
       count: sql<number>`COUNT(*)`,
-      cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
+      cost: sql<number>`COALESCE(SUM(CAST(${productRunsTable.cost} AS DECIMAL)), 0)`,
     })
-    .from(toolRunsTable)
-    .where(sql`${toolRunsTable.createdAt} >= ${startOfCurrentMonth}`)
+    .from(productRunsTable)
+    .where(sql`${productRunsTable.createdAt} >= ${startOfCurrentMonth}`)
 
   const [previousMonthResult] = await db
     .select({
-      cost: sql<number>`COALESCE(SUM(CAST(${toolRunsTable.cost} AS DECIMAL)), 0)`,
+      cost: sql<number>`COALESCE(SUM(CAST(${productRunsTable.cost} AS DECIMAL)), 0)`,
     })
-    .from(toolRunsTable)
+    .from(productRunsTable)
     .where(
-      sql`${toolRunsTable.createdAt} >= ${startOfPreviousMonth} AND ${toolRunsTable.createdAt} < ${endOfPreviousMonth}`,
+      sql`${productRunsTable.createdAt} >= ${startOfPreviousMonth} AND ${productRunsTable.createdAt} < ${endOfPreviousMonth}`,
     )
 
   return {

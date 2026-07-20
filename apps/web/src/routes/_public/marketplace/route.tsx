@@ -4,10 +4,11 @@ export const Route = createFileRoute("/_public/marketplace")({
   component: MarketplaceLayout,
   head: () => ({
     meta: [
-      { title: "Browse Tools | Marketplace" },
+      { title: "Browse Products | Marketplace" },
       {
         name: "description",
-        content: "Explore and use AI-powered tools to automate your workflows",
+        content:
+          "Explore and use AI-powered products to automate your workflows",
       },
     ],
   }),

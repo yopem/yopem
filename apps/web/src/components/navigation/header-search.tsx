@@ -32,7 +32,7 @@ const HeaderSearch = () => {
   const shouldSearch = debouncedQuery.trim().length >= 2
 
   const { data, isLoading } = useQuery({
-    ...queryApi.tools.search.queryOptions({
+    ...queryApi.products.search.queryOptions({
       input: {
         query: debouncedQuery.trim(),
         limit: 8,
@@ -161,7 +161,7 @@ const HeaderSearch = () => {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Search tools..."
+                placeholder="Search products..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}

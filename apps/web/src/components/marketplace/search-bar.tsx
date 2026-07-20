@@ -27,10 +27,10 @@ const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
       <input
         id="marketplace-search"
         type="text"
-        placeholder="Search tools..."
+        placeholder="Search products..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        aria-label="Search marketplace tools"
+        aria-label="Search marketplace products"
         className="bg-muted/50 border-border focus:bg-background focus:ring-ring w-full rounded-md border py-2 pr-8 pl-9 text-sm outline-none focus:ring-1"
       />
       {query ? (

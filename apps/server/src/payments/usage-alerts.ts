@@ -56,7 +56,7 @@ export const formatUsageAlertMessage = (
   limit: number,
 ): string => {
   if (usagePercentage >= 100) {
-    return `You've reached your monthly limit (${used}/${limit} requests). Upgrade to continue using tools.`
+    return `You've reached your monthly limit (${used}/${limit} requests). Upgrade to continue using products.`
   }
 
   if (usagePercentage >= 95) {

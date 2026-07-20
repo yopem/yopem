@@ -138,9 +138,9 @@
       "types": "./src/components/theme-switcher.tsx",
       "default": "./src/components/theme-switcher.tsx"
     },
-    "./tool-input-field": {
-      "types": "./src/components/tool-input-field.tsx",
-      "default": "./src/components/tool-input-field.tsx"
+    "./product-input-field": {
+      "types": "./src/components/product-input-field.tsx",
+      "default": "./src/components/product-input-field.tsx"
     }
   },
   "scripts": {

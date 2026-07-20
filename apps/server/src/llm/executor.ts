@@ -21,7 +21,7 @@ export class UploadError extends Error {
 
 export type AIExecutionError = AIProviderErrors | UploadError
 
-interface ExecuteAIToolParams {
+interface ExecuteAIProductParams {
   systemRole: string
   userInstructionTemplate: string
   inputs: Record<string, unknown>
@@ -111,8 +111,8 @@ async function uploadMediaOutput(
   return { output: url, usage }
 }
 
-export async function executeAITool(
-  params: ExecuteAIToolParams,
+export async function executeAIProduct(
+  params: ExecuteAIProductParams,
 ): Promise<ExecutionResponse> {
   const systemRole = replaceVariables(params.systemRole, params.inputs)
   const userInstruction = replaceVariables(

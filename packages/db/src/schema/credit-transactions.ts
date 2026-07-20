@@ -23,7 +23,7 @@ export const creditTransactionsTable = pgTable(
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     type: text("type", { enum: creditTransactionTypeEnum }).notNull(),
     description: text("description"),
-    toolRunId: text("tool_run_id"),
+    productRunId: text("product_run_id"),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => ({

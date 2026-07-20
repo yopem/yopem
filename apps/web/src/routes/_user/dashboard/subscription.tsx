@@ -243,17 +243,17 @@ function SubscriptionPage() {
                       {plan.limits?.maxTokensPerRequest?.toLocaleString()}{" "}
                       tokens/request
                     </li>
-                    {plan.limits?.maxCustomTools !== null && (
+                    {plan.limits?.maxCustomProducts !== null && (
                       <li className="flex items-center gap-2 text-sm">
                         <CheckIcon className="size-4 text-green-600" />
-                        {plan.limits?.maxCustomTools} custom tools
+                        {plan.limits?.maxCustomProducts} custom products
                       </li>
                     )}
-                    {plan.limits?.maxCustomTools === null &&
+                    {plan.limits?.maxCustomProducts === null &&
                       plan.tier !== "free" && (
                         <li className="flex items-center gap-2 text-sm">
                           <CheckIcon className="size-4 text-green-600" />
-                          Unlimited custom tools
+                          Unlimited custom products
                         </li>
                       )}
                   </ul>

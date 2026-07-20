@@ -12,10 +12,10 @@ const Hero = ({ session }: { session: SessionUser | false }) => {
       <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-20" />
       <div className="relative z-10 container mx-auto flex max-w-[800px] flex-col items-center px-4 text-center md:px-6">
         <h1 className="text-foreground mb-6 pb-2 text-4xl/tight font-semibold tracking-tight md:text-6xl lg:text-7xl">
-          Your AI Tools Hub
+          Your AI Products Hub
         </h1>
         <p className="text-muted-foreground mb-10 max-w-160 text-lg/relaxed md:text-xl">
-          Access powerful AI tools with flexible subscription plans.{" "}
+          Access powerful AI products with flexible subscription plans.{" "}
           <br className="hidden sm:block" />
           Start free, upgrade when you need more. Simple, transparent pricing.
         </p>

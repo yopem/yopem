@@ -8,8 +8,8 @@ import MarketplaceGrid from "@/components/marketplace/marketplace-grid"
 import MarketplaceSidebar from "@/components/marketplace/marketplace-sidebar"
 
 interface MarketplaceContentProps {
-  categories: Awaited<ReturnType<typeof clientApi.tools.getCategories>>
-  tags: Awaited<ReturnType<typeof clientApi.tools.getTags>>
+  categories: Awaited<ReturnType<typeof clientApi.products.getCategories>>
+  tags: Awaited<ReturnType<typeof clientApi.products.getTags>>
   initialSearch?: string
 }
 

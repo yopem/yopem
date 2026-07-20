@@ -15,8 +15,8 @@ export const Route = createFileRoute("/_public/marketplace/")({
   validateSearch: marketplaceSearchSchema,
   loader: async () => {
     const [categories, tags] = await Promise.all([
-      queryApi.tools.getCategories.call({}),
-      queryApi.tools.getTags.call({}),
+      queryApi.products.getCategories.call({}),
+      queryApi.products.getTags.call({}),
     ])
     return { categories, tags }
   },
@@ -31,11 +31,11 @@ function MarketplacePage() {
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
       <div className="mb-12 flex flex-col space-y-2">
         <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
-          Browse Tools
+          Browse Products
         </h1>
         <p className="text-muted-foreground max-w-[600px] text-base/relaxed">
-          Explore and use AI-powered tools to automate your workflows. Find the
-          right tool for your specific needs.
+          Explore and use AI-powered products to automate your workflows. Find
+          the right product for your specific needs.
         </p>
       </div>
 

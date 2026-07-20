@@ -1,7 +1,7 @@
 interface SubscriptionLimits {
   maxRequestsPerMonth: number
   maxTokensPerRequest: number
-  maxCustomTools: number | null
+  maxCustomProducts: number | null
 }
 
 interface UsageStatsProps {
@@ -45,11 +45,11 @@ const UsageStats = ({
         </div>
 
         <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">Custom Tools</p>
+          <p className="text-muted-foreground text-sm">Custom Products</p>
           <p className="text-2xl font-semibold">
-            {limits?.maxCustomTools === null
+            {limits?.maxCustomProducts === null
               ? "Unlimited"
-              : (limits?.maxCustomTools ?? 0)}
+              : (limits?.maxCustomProducts ?? 0)}
           </p>
         </div>
       </div>

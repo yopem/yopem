@@ -16,22 +16,24 @@ import { queryApi } from "rpc/query"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Field, FieldLabel } from "ui/field"
+import ProductInputField, {
+  type ProductInputVariable,
+} from "ui/product-input-field"
 import { Textarea } from "ui/textarea"
-import ToolInputField, { type ToolInputVariable } from "ui/tool-input-field"
 
-interface ToolExecuteFormProps {
-  toolId: string
+interface ProductExecuteFormProps {
+  productId: string
   costPerRun: string | null
-  inputVariable?: ToolInputVariable[] | null
+  inputVariable?: ProductInputVariable[] | null
   isAuthenticated: boolean
 }
 
-export default function ToolExecuteForm({
-  toolId,
+export default function ProductExecuteForm({
+  productId,
   costPerRun,
   inputVariable,
   isAuthenticated,
-}: ToolExecuteFormProps) {
+}: ProductExecuteFormProps) {
   const hasVariables = inputVariable && inputVariable.length > 0
 
   const [inputs, setInputs] = useState<Record<string, string>>({})
@@ -63,8 +65,8 @@ export default function ToolExecuteForm({
 
   const executeMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const result = await queryApi.tools.execute.call({
-        toolId,
+      const result = await queryApi.products.execute.call({
+        productId,
         inputs: payload,
       })
       return result
@@ -126,7 +128,7 @@ export default function ToolExecuteForm({
                 <FieldLabel className="text-foreground text-sm font-medium">
                   {field.variableName}
                 </FieldLabel>
-                <ToolInputField
+                <ProductInputField
                   field={field}
                   value={inputs[field.variableName] ?? ""}
                   error={undefined}
@@ -161,7 +163,7 @@ export default function ToolExecuteForm({
               <div className="flex items-center gap-2">
                 <CrownIcon className="size-4 text-amber-500" />
                 <span className="text-foreground text-sm font-medium">
-                  Premium Tool
+                  Premium Product
                 </span>
               </div>
               <Badge variant="secondary" className="text-xs">
@@ -171,7 +173,7 @@ export default function ToolExecuteForm({
             {!hasAccess && subscription && (
               <div className="border-border/50 mt-3 border-t pt-3">
                 <div className="text-muted-foreground text-sm">
-                  Upgrade to Pro to use this tool
+                  Upgrade to Pro to use this product
                 </div>
                 <Button
                   size="sm"
@@ -197,7 +199,7 @@ export default function ToolExecuteForm({
                   Authentication required
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Sign in to execute this tool and view results
+                  Sign in to execute this product and view results
                 </p>
               </div>
             </div>
@@ -215,7 +217,7 @@ export default function ToolExecuteForm({
               ) : (
                 <>
                   <PlayIcon className="mr-2 size-4" />
-                  Run tool
+                  Run product
                 </>
               )}
             </Button>
