@@ -25,6 +25,10 @@
       "types": "./src/components/basic-menu-kit.tsx",
       "default": "./src/components/basic-menu-kit.tsx"
     },
+    "./basic-placeholder-kit": {
+      "types": "./src/components/basic-placeholder-kit.tsx",
+      "default": "./src/components/basic-placeholder-kit.tsx"
+    },
     "./basic-selection-kit": {
       "types": "./src/components/basic-selection-kit.tsx",
       "default": "./src/components/basic-selection-kit.tsx"
