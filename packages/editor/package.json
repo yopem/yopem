@@ -17,6 +17,10 @@
       "types": "./src/components/basic-blocks-kit.tsx",
       "default": "./src/components/basic-blocks-kit.tsx"
     },
+    "./basic-marks-kit": {
+      "types": "./src/components/basic-marks-kit.tsx",
+      "default": "./src/components/basic-marks-kit.tsx"
+    },
     "./block-context-menu": {
       "types": "./src/components/block-context-menu.tsx",
       "default": "./src/components/block-context-menu.tsx"
