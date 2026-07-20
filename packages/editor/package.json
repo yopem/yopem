@@ -21,6 +21,10 @@
       "types": "./src/components/basic-marks-kit.tsx",
       "default": "./src/components/basic-marks-kit.tsx"
     },
+    "./basic-menu-kit": {
+      "types": "./src/components/basic-menu-kit.tsx",
+      "default": "./src/components/basic-menu-kit.tsx"
+    },
     "./basic-selection-kit": {
       "types": "./src/components/basic-selection-kit.tsx",
       "default": "./src/components/basic-selection-kit.tsx"
