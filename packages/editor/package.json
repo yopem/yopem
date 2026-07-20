@@ -21,17 +21,21 @@
       "types": "./src/components/block-draggable.tsx",
       "default": "./src/components/block-draggable.tsx"
     },
-    "./block-list": {
-      "types": "./src/components/block-list.tsx",
-      "default": "./src/components/block-list.tsx"
-    },
     "./block-list-elements": {
       "types": "./src/components/block-list-elements.tsx",
       "default": "./src/components/block-list-elements.tsx"
     },
+    "./block-list": {
+      "types": "./src/components/block-list.tsx",
+      "default": "./src/components/block-list.tsx"
+    },
     "./block-selection": {
       "types": "./src/components/block-selection.tsx",
       "default": "./src/components/block-selection.tsx"
+    },
+    "./blockquote-node": {
+      "types": "./src/components/blockquote-node.tsx",
+      "default": "./src/components/blockquote-node.tsx"
     },
     "./drag-handle": {
       "types": "./src/components/drag-handle.tsx",
