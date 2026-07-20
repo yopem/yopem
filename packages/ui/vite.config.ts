@@ -6,7 +6,6 @@ export default defineConfig({
       "eslint",
       "import",
       "jsx-a11y",
-      "nextjs",
       "oxc",
       "promise",
       "react",

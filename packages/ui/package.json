@@ -153,6 +153,10 @@
     "./product-input-field": {
       "types": "./src/components/product-input-field.tsx",
       "default": "./src/components/product-input-field.tsx"
+    },
+    "./youtube-embed": {
+      "types": "./src/components/youtube-embed.tsx",
+      "default": "./src/components/youtube-embed.tsx"
     }
   },
   "scripts": {
