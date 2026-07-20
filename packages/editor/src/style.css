@@ -1,4 +1,5 @@
 @import "ui/style.css";
+@plugin "tailwind-scrollbar-hide";
 
 @theme inline {
   --font-sans: var(--font-adwaita-sans);

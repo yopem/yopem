@@ -516,6 +516,9 @@ importers:
       '@platejs/dnd':
         specifier: ^53.1.0
         version: 53.1.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dnd-html5-backend@16.0.1)(react-dnd@16.0.1(@types/node@26.1.1)(@types/react@19.2.17)(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@platejs/floating':
+        specifier: ^53.0.0
+        version: 53.0.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@platejs/link':
         specifier: ^53.3.1
         version: 53.3.1(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -546,6 +549,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.7(react@19.2.7)
+      tailwind-scrollbar-hide:
+        specifier: ^4.0.0
+        version: 4.0.0(tailwindcss@4.3.2)
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.2
@@ -4343,6 +4349,11 @@ packages:
 
   tailwind-merge@3.6.0:
     resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
+
+  tailwind-scrollbar-hide@4.0.0:
+    resolution: {integrity: sha512-gobtvVcThB2Dxhy0EeYSS1RKQJ5baDFkamkhwBvzvevwX6L4XQfpZ3me9s25Ss1ecFVT5jPYJ50n+7xTBJG9WQ==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || >= 4.0.0 || >= 4.0.0-beta.8 || >= 4.0.0-alpha.20'
 
   tailwindcss@4.3.2:
     resolution: {integrity: sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA==}
@@ -8166,6 +8177,10 @@ snapshots:
   tagged-tag@1.0.0: {}
 
   tailwind-merge@3.6.0: {}
+
+  tailwind-scrollbar-hide@4.0.0(tailwindcss@4.3.2):
+    dependencies:
+      tailwindcss: 4.3.2
 
   tailwindcss@4.3.2: {}
 
