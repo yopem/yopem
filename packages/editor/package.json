@@ -73,6 +73,10 @@
       "types": "./src/components/highlight-node.tsx",
       "default": "./src/components/highlight-node.tsx"
     },
+    "./hr-node": {
+      "types": "./src/components/hr-node.tsx",
+      "default": "./src/components/hr-node.tsx"
+    },
     "./link-toolbar-button": {
       "types": "./src/components/link-toolbar-button.tsx",
       "default": "./src/components/link-toolbar-button.tsx"
