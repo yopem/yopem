@@ -9,13 +9,13 @@ import {
   useScaleInput,
 } from "@platejs/media/react"
 import {
-  IconArrowLeft,
-  IconArrowRight,
-  IconDownload,
-  IconMinus,
-  IconPlus,
-  IconX,
-} from "@tabler/icons-react"
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  DownloadIcon,
+  MinusIcon,
+  PlusIcon,
+  XIcon,
+} from "lucide-react"
 import { useEditorRef } from "platejs/react"
 
 import { cn, cva } from "ui"
@@ -100,7 +100,7 @@ export function MediaPreviewDialog() {
                 )}
                 type="button"
               >
-                <IconArrowLeft />
+                <ArrowLeftIcon />
               </button>
               {(currentUrlIndex ?? 0) + 1}
               <button
@@ -112,7 +112,7 @@ export function MediaPreviewDialog() {
                 )}
                 type="button"
               >
-                <IconArrowRight />
+                <ArrowRightIcon />
               </button>
             </div>
             <div className="flex">
@@ -126,7 +126,7 @@ export function MediaPreviewDialog() {
                 type="button"
                 aria-label="Zoom out"
               >
-                <IconMinus className="size-4" />
+                <MinusIcon className="size-4" />
               </button>
               <div className="mx-px">
                 {isEditingScale ? (
@@ -148,7 +148,7 @@ export function MediaPreviewDialog() {
                 type="button"
                 aria-label="Zoom in"
               >
-                <IconPlus className="size-4" />
+                <PlusIcon className="size-4" />
               </button>
             </div>
             <button
@@ -162,7 +162,7 @@ export function MediaPreviewDialog() {
               type="button"
               aria-label="Download"
             >
-              <IconDownload className="size-4" />
+              <DownloadIcon className="size-4" />
             </button>
             <button
               {...closeProps}
@@ -170,7 +170,7 @@ export function MediaPreviewDialog() {
               type="button"
               aria-label="Close"
             >
-              <IconX className="size-4" />
+              <XIcon className="size-4" />
             </button>
           </div>
         </div>

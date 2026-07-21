@@ -13,11 +13,11 @@ import {
   useFloatingLinkInsertState,
 } from "@platejs/link/react"
 import {
-  IconExternalLink,
-  IconLink,
-  IconTextCaption,
-  IconLinkOff,
-} from "@tabler/icons-react"
+  ExternalLinkIcon,
+  Link2OffIcon,
+  LinkIcon,
+  ALargeSmallIcon,
+} from "lucide-react"
 import { KEYS } from "platejs"
 import { useEditorRef, useFormInputProps, usePluginOption } from "platejs/react"
 
@@ -26,7 +26,7 @@ import { buttonVariants } from "ui/button"
 import { Separator } from "ui/separator"
 
 const popoverVariants = cva(
-  "bg-popover text-popover-foreground z-50 w-auto rounded-md border p-1 shadow-md outline-hidden",
+  "bg-popover text-popover-foreground z-50 w-auto rounded-lg border p-1 shadow-lg/5 outline-hidden",
 )
 
 const inputVariants = cva(
@@ -93,7 +93,7 @@ export function LinkFloatingToolbar({
     <div className="flex w-82.5 flex-col" {...inputProps}>
       <div className="flex items-center">
         <div className="text-muted-foreground flex items-center pr-1 pl-2">
-          <IconLink className="size-4" />
+          <LinkIcon className="size-4" />
         </div>
 
         <FloatingLinkUrlInput
@@ -105,7 +105,7 @@ export function LinkFloatingToolbar({
       <Separator className="my-1" />
       <div className="flex items-center">
         <div className="text-muted-foreground flex items-center pr-1 pl-2">
-          <IconTextCaption className="size-4" />
+          <ALargeSmallIcon className="size-4" />
         </div>
         <input
           className={inputVariants()}
@@ -143,7 +143,7 @@ export function LinkFloatingToolbar({
         type="button"
         {...unlinkButtonProps}
       >
-        <IconLinkOff width={18} />
+        <Link2OffIcon className="size-4" />
       </button>
     </div>
   )
@@ -191,7 +191,7 @@ function LinkOpenButton() {
       aria-label="Open link in a new tab"
       target="_blank"
     >
-      <IconExternalLink width={18} />
+      <ExternalLinkIcon className="size-4" />
     </a>
   )
 }

@@ -5,7 +5,7 @@ import type { TElement } from "platejs"
 import { DndPlugin } from "@platejs/dnd"
 import { expandListItemsWithChildren } from "@platejs/list"
 import { BlockSelectionPlugin } from "@platejs/selection/react"
-import { IconGripVertical } from "@tabler/icons-react"
+import { GripVerticalIcon } from "lucide-react"
 import { type PlateEditor, useEditorRef, useElement } from "platejs/react"
 import { type RefCallback, type RefObject } from "react"
 
@@ -118,7 +118,7 @@ export function DragHandle({
           }}
           data-plate-prevent-deselect
         >
-          <IconGripVertical className="text-muted-foreground" />
+          <GripVerticalIcon className="text-muted-foreground" />
         </button>
       </TooltipTrigger>
       <TooltipContent>Drag to move</TooltipContent>

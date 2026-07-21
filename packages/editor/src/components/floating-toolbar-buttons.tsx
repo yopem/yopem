@@ -1,11 +1,11 @@
 "use client"
 
 import {
-  IconBold,
-  IconItalic,
-  IconStrikethrough,
-  IconUnderline,
-} from "@tabler/icons-react"
+  BoldIcon,
+  ItalicIcon,
+  StrikethroughIcon,
+  UnderlineIcon,
+} from "lucide-react"
 import { KEYS } from "platejs"
 import { useEditorReadOnly } from "platejs/react"
 
@@ -26,28 +26,28 @@ export function FloatingToolbarButtons() {
             <TurnIntoToolbarButton />
 
             <MarkToolbarButton nodeType={KEYS.bold} data-tooltip="Bold (⌘+B)">
-              <IconBold />
+              <BoldIcon />
             </MarkToolbarButton>
 
             <MarkToolbarButton
               nodeType={KEYS.italic}
               data-tooltip="Italic (⌘+I)"
             >
-              <IconItalic />
+              <ItalicIcon />
             </MarkToolbarButton>
 
             <MarkToolbarButton
               nodeType={KEYS.underline}
               data-tooltip="Underline (⌘+U)"
             >
-              <IconUnderline />
+              <UnderlineIcon />
             </MarkToolbarButton>
 
             <MarkToolbarButton
               nodeType={KEYS.strikethrough}
               data-tooltip="Strikethrough (⌘+⇧+M)"
             >
-              <IconStrikethrough />
+              <StrikethroughIcon />
             </MarkToolbarButton>
 
             <LinkToolbarButton />

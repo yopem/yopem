@@ -237,7 +237,6 @@
     "@platejs/selection": "^53.1.6",
     "@platejs/slash-command": "^53.0.0",
     "@platejs/utils": "^53.2.4",
-    "@tabler/icons-react": "^3.45.0",
     "@udecode/cn": "^52.3.4",
     "@udecode/react-utils": "^52.3.4",
     "lucide-react": "catalog:",

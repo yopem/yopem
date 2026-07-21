@@ -2,17 +2,17 @@ import type { TElement } from "platejs"
 import type { ComponentProps } from "react"
 
 import {
-  IconH1,
-  IconH2,
-  IconH3,
-  IconH4,
-  IconH5,
-  IconH6,
-  IconList,
-  IconListNumbers,
-  IconPilcrow,
-  IconQuote,
-} from "@tabler/icons-react"
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon,
+  ListIcon,
+  ListOrderedIcon,
+  PilcrowIcon,
+  QuoteIcon,
+} from "lucide-react"
 import { KEYS } from "platejs"
 import { useEditorRef, useSelectionFragmentProp } from "platejs/react"
 import { useState } from "react"
@@ -29,61 +29,61 @@ import { ToolbarButton } from "ui/toolbar"
 
 export const turnIntoItems = [
   {
-    icon: <IconPilcrow />,
+    icon: <PilcrowIcon />,
     keywords: ["paragraph"],
     label: "Paragraph",
     value: KEYS.p,
   },
   {
-    icon: <IconH1 />,
+    icon: <Heading1Icon />,
     keywords: ["title", "h1"],
     label: "Heading 1",
     value: "h1",
   },
   {
-    icon: <IconH2 />,
+    icon: <Heading2Icon />,
     keywords: ["subtitle", "h2"],
     label: "Heading 2",
     value: "h2",
   },
   {
-    icon: <IconH3 />,
+    icon: <Heading3Icon />,
     keywords: ["subtitle", "h3"],
     label: "Heading 3",
     value: "h3",
   },
   {
-    icon: <IconH4 />,
+    icon: <Heading4Icon />,
     keywords: ["subtitle", "h4"],
     label: "Heading 4",
     value: "h4",
   },
   {
-    icon: <IconH5 />,
+    icon: <Heading5Icon />,
     keywords: ["subtitle", "h5"],
     label: "Heading 5",
     value: "h5",
   },
   {
-    icon: <IconH6 />,
+    icon: <Heading6Icon />,
     keywords: ["subtitle", "h6"],
     label: "Heading 6",
     value: "h6",
   },
   {
-    icon: <IconList />,
+    icon: <ListIcon />,
     keywords: ["unordered", "ul", "-"],
     label: "Bulleted list",
     value: KEYS.ul,
   },
   {
-    icon: <IconListNumbers />,
+    icon: <ListOrderedIcon />,
     keywords: ["ordered", "ol", "1"],
     label: "Numbered list",
     value: KEYS.ol,
   },
   {
-    icon: <IconQuote />,
+    icon: <QuoteIcon />,
     keywords: ["citation", "blockquote", ">"],
     label: "Quote",
     value: KEYS.blockquote,

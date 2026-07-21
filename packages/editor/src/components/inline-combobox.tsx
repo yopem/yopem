@@ -388,7 +388,7 @@ export function InlineComboboxContent({
       role="listbox"
       aria-label="Suggestions"
       className={cn(
-        "bg-popover max-h-72 w-75 overflow-y-auto rounded-md shadow-md",
+        "bg-popover max-h-72 w-75 overflow-y-auto rounded-lg shadow-lg/5",
         !open && "hidden",
         className,
       )}

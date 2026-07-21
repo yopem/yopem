@@ -4,15 +4,15 @@ import type { PlateEditor, PlateElementProps } from "platejs/react"
 import type { ReactNode } from "react"
 
 import {
-  IconH1,
-  IconH2,
-  IconH3,
-  IconLink,
-  IconList,
-  IconListNumbers,
-  IconPilcrow,
-  IconQuote,
-} from "@tabler/icons-react"
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  LinkIcon,
+  ListIcon,
+  ListOrderedIcon,
+  PilcrowIcon,
+  QuoteIcon,
+} from "lucide-react"
 import { type TComboboxInputElement, KEYS } from "platejs"
 import { PlateElement } from "platejs/react"
 
@@ -47,43 +47,43 @@ const groups: Group[] = [
     group: "Basic blocks",
     items: [
       {
-        icon: <IconPilcrow />,
+        icon: <PilcrowIcon />,
         keywords: ["paragraph"],
         label: "Paragraph",
         value: KEYS.p,
       },
       {
-        icon: <IconH1 />,
+        icon: <Heading1Icon />,
         keywords: ["title", "h1"],
         label: "Heading 1",
         value: KEYS.h1,
       },
       {
-        icon: <IconH2 />,
+        icon: <Heading2Icon />,
         keywords: ["subtitle", "h2"],
         label: "Heading 2",
         value: KEYS.h2,
       },
       {
-        icon: <IconH3 />,
+        icon: <Heading3Icon />,
         keywords: ["subtitle", "h3"],
         label: "Heading 3",
         value: KEYS.h3,
       },
       {
-        icon: <IconList />,
+        icon: <ListIcon />,
         keywords: ["unordered", "ul", "-"],
         label: "Bulleted list",
         value: KEYS.ul,
       },
       {
-        icon: <IconListNumbers />,
+        icon: <ListOrderedIcon />,
         keywords: ["ordered", "ol", "1"],
         label: "Numbered list",
         value: KEYS.ol,
       },
       {
-        icon: <IconQuote />,
+        icon: <QuoteIcon />,
         keywords: ["citation", "blockquote", "quote", ">"],
         label: "Blockquote",
         value: KEYS.blockquote,
@@ -100,7 +100,7 @@ const groups: Group[] = [
     items: [
       {
         focusEditor: true,
-        icon: <IconLink />,
+        icon: <LinkIcon />,
         keywords: ["url", "href", "link"],
         label: "Link",
         value: KEYS.link,

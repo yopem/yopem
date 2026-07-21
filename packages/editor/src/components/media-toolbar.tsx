@@ -9,7 +9,7 @@ import {
   useFloatingMediaValue,
   useImagePreviewValue,
 } from "@platejs/media/react"
-import { IconLink, IconTrash } from "@tabler/icons-react"
+import { LinkIcon, TrashIcon } from "lucide-react"
 import {
   useEditorRef,
   useEditorSelector,
@@ -75,7 +75,7 @@ export function MediaToolbar({
           <div className="flex w-[330px] flex-col">
             <div className="flex items-center">
               <div className="text-muted-foreground flex items-center pr-1 pl-2">
-                <IconLink className="size-4" />
+                <LinkIcon className="size-4" />
               </div>
 
               <FloatingMediaPrimitive.UrlInput
@@ -100,7 +100,7 @@ export function MediaToolbar({
             <Separator orientation="vertical" className="mx-1 h-6" />
 
             <Button size="sm" variant="ghost" {...buttonProps}>
-              <IconTrash />
+              <TrashIcon />
             </Button>
           </div>
         )}

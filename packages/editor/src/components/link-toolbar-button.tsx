@@ -6,7 +6,7 @@ import {
   useLinkToolbarButton,
   useLinkToolbarButtonState,
 } from "@platejs/link/react"
-import { IconLink } from "@tabler/icons-react"
+import { LinkIcon } from "lucide-react"
 
 import { ToolbarButton } from "ui/toolbar"
 
@@ -16,7 +16,7 @@ export function LinkToolbarButton(props: ComponentProps<typeof ToolbarButton>) {
 
   return (
     <ToolbarButton {...props} {...buttonProps} data-plate-focus>
-      <IconLink />
+      <LinkIcon />
     </ToolbarButton>
   )
 }

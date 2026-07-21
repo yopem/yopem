@@ -5,7 +5,7 @@ import type { PlateElementProps } from "platejs/react"
 
 import { useMediaState } from "@platejs/media/react"
 import { ResizableProvider } from "@platejs/resizable"
-import { IconFileUpload } from "@tabler/icons-react"
+import { UploadIcon } from "lucide-react"
 import { PlateElement, useReadOnly, withHOC } from "platejs/react"
 
 import { cn } from "ui"
@@ -32,7 +32,7 @@ export const FileElement = withHOC(
           target="_blank"
         >
           <div className={cn("flex items-center gap-1 p-1")}>
-            <IconFileUpload className="size-5" />
+            <UploadIcon className="size-5" />
             <div>{name}</div>
           </div>
 
