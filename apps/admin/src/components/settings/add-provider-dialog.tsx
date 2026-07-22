@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select"
+import { Switch } from "ui/switch"
 import { Textarea } from "ui/textarea"
 import type { AddApiKeyInput } from "utils/api-keys-schema"
 
@@ -106,9 +107,29 @@ const AddProviderDialog = ({
                 type="password"
                 value={formData.apiKey}
                 onChange={(e) =>
-                  onFormDataChange({ ...formData, apiKey: e.target.value })
+                  onFormDataChange({
+                    ...formData,
+                    apiKey: e.target.value.replace(/\s+/g, ""),
+                  })
                 }
                 placeholder="sk-proj-..."
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-md border p-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm" htmlFor="skipValidation">
+                  Skip validation
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  Save the key without contacting the provider
+                </p>
+              </div>
+              <Switch
+                id="skipValidation"
+                checked={formData.skipValidation ?? false}
+                onCheckedChange={(checked) =>
+                  onFormDataChange({ ...formData, skipValidation: checked })
+                }
               />
             </div>
           </div>

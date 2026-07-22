@@ -30,7 +30,7 @@ export const addApiKeyInputSchema = z.object({
   provider: apiKeyProviderSchema,
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
   description: z.string().max(500, "Description too long").optional(),
-  apiKey: z.string().min(1, "API key is required"),
+  apiKey: z.string().trim().min(1, "API key is required"),
   status: apiKeyStatusSchema.default("active"),
   restrictions: apiKeyRestrictionsSchema.optional(),
   skipValidation: z.boolean().default(false),
@@ -47,7 +47,7 @@ export const updateApiKeyInputSchema = z.object({
     .max(100, "Name too long")
     .optional(),
   description: z.string().max(500, "Description too long").optional(),
-  apiKey: z.string().min(1, "API key is required").optional(),
+  apiKey: z.string().trim().min(1, "API key is required").optional(),
   status: apiKeyStatusSchema.optional(),
   restrictions: apiKeyRestrictionsSchema.optional(),
   skipValidation: z.boolean().default(false),

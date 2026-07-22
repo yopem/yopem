@@ -6,13 +6,26 @@ import { RPCLink } from "@orpc/client/fetch"
 
 import { apiUrl } from "env"
 
-// Browser: use relative path to avoid CORS preflight issues with Hono dev server
+// Browser: use absolute same-origin URL to avoid CORS preflight and keep URL construction valid
 // Server (SSR): use validated env URL for correct resolution
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {
-    return "/rpc"
+    return `${window.location.origin}/rpc`
   }
-  return `${apiUrl}/rpc`
+  const base = apiUrl?.replace(/\/$/, "")
+  if (!base) {
+    throw new Error(
+      "PUBLIC_API_URL is not set. Check your .env file or run with `vp run with-env ...`.",
+    )
+  }
+  try {
+    new URL(`${base}/rpc`)
+  } catch (e) {
+    throw new Error(
+      `PUBLIC_API_URL is not a valid URL: ${JSON.stringify(base)}. ${e instanceof Error ? e.message : String(e)}`,
+    )
+  }
+  return `${base}/rpc`
 }
 
 export const createORPCLink = (
