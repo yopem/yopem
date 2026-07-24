@@ -79,6 +79,7 @@ vp run --filter server build        # server (Vite + @hono/vite-build)
 # DB
 vp run --filter db db:generate      # drizzle-kit generate
 vp run --filter db db:migrate       # drizzle-kit migrate
+vp run --filter db db:seed          # seed categories, tags, and products
 vp run --filter db db:studio        # drizzle-kit studio
 
 # Lint / format
