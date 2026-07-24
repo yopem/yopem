@@ -15,7 +15,6 @@ import {
 import { decryptApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
-import { getSettingCache } from "cache/services/settings"
 import { getOrCompute } from "cache/services/with-cache"
 import { insertProductSchema, updateProductSchema } from "db/schema"
 import { getSetting } from "db/services/admin"
@@ -217,7 +216,7 @@ export const productsRouter = {
         })
       }
 
-      const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+      const apiKeys = await getOrCompute<ApiKeyConfig[]>(
         context.redis,
         API_KEYS_SETTING_KEY,
         async () => {
@@ -386,7 +385,7 @@ export const productsRouter = {
       validateUserInstructionTemplate(input.userInstructionTemplate)
       validateApiKeyId(input.apiKeyId)
 
-      const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+      const apiKeys = await getOrCompute<ApiKeyConfig[]>(
         context.redis,
         API_KEYS_SETTING_KEY,
         async () => {
