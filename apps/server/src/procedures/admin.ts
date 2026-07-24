@@ -5,6 +5,11 @@ import { adminProcedure } from "server/orpc"
 import { WebhookMetrics } from "server/payments/webhook-metrics"
 import { z } from "zod"
 
+import {
+  deleteSettingCache,
+  getSettingCache,
+  invalidateModelCache,
+} from "cache/services/settings"
 import { db } from "db"
 import { aiModelsTable } from "db/schema"
 import * as adminService from "db/services/admin"
@@ -81,40 +86,27 @@ const uptimeHistoryOutputSchema = z.object({
   ),
 })
 
+const formatApiKey = (key: ApiKeyConfig) => ({
+  ...key,
+  apiKey: (() => {
+    const decrypted = decryptApiKey(key.apiKey)
+    return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
+  })(),
+})
+
 export const adminRouter = {
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-    const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
+    const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+      context.redis,
+      API_KEYS_SETTING_KEY,
+      async () => {
+        const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+        return (settings?.settingValue as ApiKeyConfig[] | undefined) ?? []
+      },
+      SETTINGS_CACHE_TTL,
+    )
 
-    if (cached) {
-      return cached.map((key) => ({
-        ...key,
-        apiKey: (() => {
-          const decrypted = decryptApiKey(key.apiKey)
-          return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
-        })(),
-      }))
-    }
-
-    const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
-
-    const apiKeys = settings?.settingValue as ApiKeyConfig[] | undefined
-
-    if (!apiKeys) {
-      return []
-    }
-
-    void context.redis.setCache(cacheKey, apiKeys, SETTINGS_CACHE_TTL)
-
-    return apiKeys.map((key) => {
-      return {
-        ...key,
-        apiKey: (() => {
-          const decrypted = decryptApiKey(key.apiKey)
-          return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
-        })(),
-      }
-    })
+    return apiKeys.map(formatApiKey)
   }),
 
   addApiKey: adminProcedure
@@ -161,8 +153,8 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern(`${"models"}*`)
-      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+      invalidateModelCache(context.redis)
+      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
 
       return { success: true, id: newKey.id }
     }),
@@ -232,8 +224,8 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern("models:*")
-      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+      invalidateModelCache(context.redis)
+      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
 
       return { success: true }
     }),
@@ -258,8 +250,8 @@ export const adminRouter = {
         })
       }
 
-      void context.redis.invalidatePattern(`${"models"}*`)
-      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+      invalidateModelCache(context.redis)
+      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
 
       return { success: true }
     }),
@@ -429,21 +421,17 @@ export const adminRouter = {
     }),
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
-    const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cached = await context.redis.getCache<number>(cacheKey)
-
-    if (cached !== null) {
-      return { maxUploadSizeMB: cached }
-    }
-
-    const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
-
-    const maxUploadSizeMB =
-      settings && typeof settings.settingValue === "number"
-        ? settings.settingValue
-        : 50
-
-    void context.redis.setCache(cacheKey, maxUploadSizeMB, SETTINGS_CACHE_TTL)
+    const maxUploadSizeMB = await getSettingCache<number>(
+      context.redis,
+      ASSETS_MAX_SIZE_KEY,
+      async () => {
+        const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
+        return settings && typeof settings.settingValue === "number"
+          ? settings.settingValue
+          : 50
+      },
+      SETTINGS_CACHE_TTL,
+    )
 
     return { maxUploadSizeMB }
   }),
@@ -456,7 +444,7 @@ export const adminRouter = {
         input.maxUploadSizeMB,
       )
 
-      await context.redis.deleteCache(`settings:${ASSETS_MAX_SIZE_KEY}`)
+      deleteSettingCache(context.redis, ASSETS_MAX_SIZE_KEY)
 
       return { success: true }
     }),

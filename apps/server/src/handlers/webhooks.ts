@@ -1,7 +1,6 @@
 import { Webhooks } from "@polar-sh/hono"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
-import { redisCache } from "server/cache"
 import { WebhookHandlerError } from "server/errors"
 import { addOverflowCredits } from "server/payments/add-overflow-credits"
 import { calculateCreditsFromAmount } from "server/payments/credit-calculation"
@@ -15,6 +14,7 @@ import {
 import { WebhookMonitor } from "server/payments/webhook-monitor"
 import { z } from "zod"
 
+import { redisCache } from "cache"
 import { db } from "db"
 import { polarCheckoutSessionsTable, polarPaymentEventsTable } from "db/schema"
 import { createCustomId } from "utils/custom-id"

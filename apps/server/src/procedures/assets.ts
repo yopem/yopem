@@ -7,6 +7,7 @@ import {
 import { getR2Storage } from "server/storage"
 import { z } from "zod"
 
+import { getSettingCache } from "cache/services/settings"
 import {
   deleteAsset,
   getAdminUploadSizeSetting,
@@ -44,24 +45,17 @@ export const assetsRouter = {
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
-    const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-    const cached = await context.redis.getCache<number>(cacheKey)
-
-    if (cached !== null) {
-      return {
-        maxSizeMB: cached,
-        maxSizeBytes: cached * 1024 * 1024,
-      }
-    }
-
-    const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
-
-    const maxSizeMB =
-      settings && typeof settings.settingValue === "number"
-        ? settings.settingValue
-        : MAX_UPLOAD_SIZE_MB
-
-    void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
+    const maxSizeMB = await getSettingCache<number>(
+      context.redis,
+      ASSETS_MAX_SIZE_KEY,
+      async () => {
+        const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+        return settings && typeof settings.settingValue === "number"
+          ? settings.settingValue
+          : MAX_UPLOAD_SIZE_MB
+      },
+      SETTINGS_CACHE_TTL,
+    )
 
     return {
       maxSizeMB,
@@ -72,19 +66,17 @@ export const assetsRouter = {
   upload: adminProcedure
     .input(z.instanceof(File))
     .handler(async ({ context, input: file }) => {
-      const cacheKey = `settings:${ASSETS_MAX_SIZE_KEY}`
-      let maxSizeMB = await context.redis.getCache<number>(cacheKey)
-
-      if (maxSizeMB === null) {
-        const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
-
-        maxSizeMB =
-          settings && typeof settings.settingValue === "number"
+      const maxSizeMB = await getSettingCache<number>(
+        context.redis,
+        ASSETS_MAX_SIZE_KEY,
+        async () => {
+          const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
+          return settings && typeof settings.settingValue === "number"
             ? settings.settingValue
             : MAX_UPLOAD_SIZE_MB
-
-        void context.redis.setCache(cacheKey, maxSizeMB, SETTINGS_CACHE_TTL)
-      }
+        },
+        SETTINGS_CACHE_TTL,
+      )
 
       const maxSizeBytes = maxSizeMB * 1024 * 1024
 

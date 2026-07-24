@@ -72,7 +72,7 @@ const schema = z.object({
 const mergedEnv = {
   ...process.env,
   ...import.meta.env,
-  PUBLIC_SITE_URL: `${protocol}${import.meta.env.PUBLIC_SITE_DOMAIN}`,
+  PUBLIC_SITE_URL: `${protocol}${import.meta.env["PUBLIC_SITE_DOMAIN"]}`,
 }
 
 const isBrowser =

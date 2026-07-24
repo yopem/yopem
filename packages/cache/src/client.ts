@@ -2,6 +2,8 @@ import type { Redis } from "ioredis"
 
 import { redisKeyPrefix, redisUrl } from "env"
 
+export type RedisCache = ReturnType<typeof createRedisCache>
+
 export function createRedisCache() {
   let redis: Redis | null = null
   const prefix = redisKeyPrefix || ""

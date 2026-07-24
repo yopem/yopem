@@ -284,6 +284,9 @@ importers:
       auth:
         specifier: workspace:*
         version: link:../../packages/auth
+      cache:
+        specifier: workspace:*
+        version: link:../../packages/cache
       db:
         specifier: workspace:*
         version: link:../../packages/db
@@ -458,6 +461,28 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.17
+      '@yopem/typescript-config':
+        specifier: 'catalog:'
+        version: 0.2.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(svelte@5.56.4)(tsx@4.23.0)(typescript@7.0.2)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0))
+
+  packages/cache:
+    dependencies:
+      env:
+        specifier: workspace:*
+        version: link:../env
+      ioredis:
+        specifier: 'catalog:'
+        version: 5.11.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.1.1
       '@yopem/typescript-config':
         specifier: 'catalog:'
         version: 0.2.1

@@ -12,10 +12,6 @@
       "types": "./src/*.ts",
       "default": "./src/*.ts"
     },
-    "./cache": {
-      "types": "./src/cache/index.ts",
-      "default": "./src/cache/index.ts"
-    },
     "./storage": {
       "types": "./src/storage/index.ts",
       "default": "./src/storage/index.ts"
@@ -51,6 +47,7 @@
     "@polar-sh/sdk": "catalog:",
     "ai": "catalog:",
     "auth": "workspace:*",
+    "cache": "workspace:*",
     "db": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",

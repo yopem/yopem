@@ -12,6 +12,8 @@ import {
 } from "server/payments/product-subscription-middleware"
 import { z } from "zod"
 
+import { getSettingCache } from "cache/services/settings"
+import { getOrCompute } from "cache/services/with-cache"
 import { insertProductSchema, updateProductSchema } from "db/schema"
 import { getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
@@ -42,6 +44,7 @@ import { decryptApiKey } from "utils/crypto"
 import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
+const SETTINGS_CACHE_TTL = 300
 
 const publicProductFields = [
   "id",
@@ -213,20 +216,20 @@ export const productsRouter = {
         })
       }
 
-      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
-      let apiKeys: ApiKeyConfig[]
-      if (cached) {
-        apiKeys = cached
-      } else {
-        const settings = await getSetting(API_KEYS_SETTING_KEY)
-        if (!settings?.settingValue) {
-          throw new ORPCError("NOT_FOUND", {
-            message: "No API keys configured",
-          })
-        }
-        apiKeys = settings.settingValue as ApiKeyConfig[]
-      }
+      const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+        context.redis,
+        API_KEYS_SETTING_KEY,
+        async () => {
+          const settings = await getSetting(API_KEYS_SETTING_KEY)
+          if (!settings?.settingValue) {
+            throw new ORPCError("NOT_FOUND", {
+              message: "No API keys configured",
+            })
+          }
+          return settings.settingValue as ApiKeyConfig[]
+        },
+        SETTINGS_CACHE_TTL,
+      )
 
       const selectedKey = apiKeys.find((key) => key.id === product.apiKeyId)
 
@@ -382,20 +385,20 @@ export const productsRouter = {
       validateUserInstructionTemplate(input.userInstructionTemplate)
       validateApiKeyId(input.apiKeyId)
 
-      const cacheKey = `settings:${API_KEYS_SETTING_KEY}`
-      const cached = await context.redis.getCache<ApiKeyConfig[]>(cacheKey)
-      let apiKeys: ApiKeyConfig[]
-      if (cached) {
-        apiKeys = cached
-      } else {
-        const settings = await getSetting(API_KEYS_SETTING_KEY)
-        if (!settings?.settingValue) {
-          throw new ORPCError("NOT_FOUND", {
-            message: "No API keys configured",
-          })
-        }
-        apiKeys = settings.settingValue as ApiKeyConfig[]
-      }
+      const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+        context.redis,
+        API_KEYS_SETTING_KEY,
+        async () => {
+          const settings = await getSetting(API_KEYS_SETTING_KEY)
+          if (!settings?.settingValue) {
+            throw new ORPCError("NOT_FOUND", {
+              message: "No API keys configured",
+            })
+          }
+          return settings.settingValue as ApiKeyConfig[]
+        },
+        SETTINGS_CACHE_TTL,
+      )
 
       const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
 
@@ -709,24 +712,12 @@ export const productsRouter = {
     )
     .handler(async ({ context, input }) => {
       const cacheKey = `search:${input.query.toLowerCase().trim()}:${input.limit}`
-      const cached = await context.redis.getCache<
-        {
-          id: string
-          slug: string
-          name: string
-          excerpt: string | null
-          costPerRun: string | null
-          thumbnail: { id: string; url: string } | null
-        }[]
-      >(cacheKey)
-
-      if (cached) {
-        return { results: cached }
-      }
-
-      const results = await searchProducts(input.query, input.limit)
-
-      void context.redis.setCache(cacheKey, results, 60)
+      const results = await getOrCompute(
+        context.redis,
+        cacheKey,
+        async () => await searchProducts(input.query, input.limit),
+        60,
+      )
 
       return { results }
     }),

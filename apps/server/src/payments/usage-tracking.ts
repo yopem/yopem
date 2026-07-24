@@ -1,4 +1,4 @@
-import { redisCache } from "server/cache"
+import { redisCache } from "cache"
 
 const USAGE_CACHE_TTL = 35 * 24 * 60 * 60
 

@@ -52,7 +52,7 @@ packages/
 - `root.ts` — `appRouter` aggregating procedures (admin, assets, categories, products, session, tags, user).
 - `orpc.ts` — `publicProcedure` / `protectedProcedure` / `adminProcedure` (role check), `createRPCContext` (session from cookies, db, redis).
 - `handlers/` — `rpc.ts` (prefix `/rpc`), `auth-callback.ts` (OAuth code exchange + redirect validation), `checkout.ts`, `portal.ts`, `webhooks.ts` (Polar).
-- `cache/` — `redisCache` (`ioredis`, graceful null if `REDIS_URL` missing) with `invalidatePattern`.
+- `cache/` — moved to `packages/cache`; Redis-backed cache (`ioredis`) with `invalidatePattern`, used via the `cache` workspace package.
 - `storage/` — `R2Storage` (singleton) using `sharp` for image→webp and magic-byte validation.
 - `llm/` — `executeAITool`, providers (`openai`, `openrouter`), media uploaded to R2.
 - `payments/` — 17 modules: plans, credits, entitlements, quota, subscription/webhook handling, usage tracking/alerts. Product entity (`apps/server/src/procedures/products.ts`) replaces the old `tools` entity across DB schema, components, and routes.
