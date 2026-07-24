@@ -28,7 +28,7 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 - **Payments:** Polar.sh (`@polar-sh/hono`)
 - **AI:** Vercel AI SDK + OpenAI / OpenRouter, `sharp` for media processing
 - **Validation:** Zod 4
-- **Env:** `@t3-oss/env-core`, `dotenv-cli`
+- **Env:** `dotenv-cli`
 
 ## Monorepo layout
 
@@ -43,7 +43,7 @@ packages/
   rpc/       — oRPC shared/client/server, query bindings, query hydration (`hydration.tsx`) and server prefetching (`prefetch.ts`)
   ui/        — coss ui components from shadcn/ui registry (Base UI), theme, style.css
   utils/     — crypto, custom-id, date formatting, validation schemas
-  env/       — t3-env validated env vars (server + client)
+  env/       — typed env helpers (server + client)
 ```
 
 ### Server app structure (`apps/server/src`)
@@ -95,7 +95,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - `.env` at repo root (not committed). Must exist for most commands.
 - `APP_ENV=development` for local dev.
 - `PUBLIC_` and `VITE_` prefixed vars are exposed to the client.
-- Env validation (`@t3-oss/env-core`) is **skipped** in CI and during the `lint` npm lifecycle event (`skipValidation`).
+- Env validation is **skipped** in CI and during the `lint` npm lifecycle event.
 - **Ports:** server `4000` (`SERVER_PORT`), web `3000` (`WEB_PORT`), admin `3001` (`ADMIN_PORT`).
 - **Auth:** OpenAuth issuer is `AUTH_ISSUER`. Session cookies: `access_token` (1d) + `refresh_token` (7d), `httpOnly`, `sameSite: none` (prod) / `lax` (dev), secure if `COOKIE_DOMAIN` set or prod.
 - `vp run with-env` wraps a command with `dotenv -e ../../.env --`; required for server/db/build scripts.

@@ -1,6 +1,6 @@
 import crypto from "crypto"
 
-import { env } from "env"
+import { apiKeyEncryptionSecret } from "env"
 
 export class EncryptionError extends Error {
   override cause?: unknown
@@ -23,7 +23,7 @@ export class DecryptionError extends Error {
 }
 
 function getEncryptionKey(): Buffer {
-  const key = env.API_KEY_ENCRYPTION_SECRET
+  const key = apiKeyEncryptionSecret
   return crypto.createHash("sha256").update(key).digest()
 }
 

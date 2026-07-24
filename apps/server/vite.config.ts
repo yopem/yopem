@@ -2,7 +2,7 @@ import build from "@hono/vite-build/node"
 import devServer from "@hono/vite-dev-server"
 import nodeAdapter from "@hono/vite-dev-server/node"
 import { resolve } from "node:path"
-import { defineConfig, loadEnv } from "vite-plus"
+import { defineConfig, loadEnv } from "vite"
 
 const env = loadEnv(
   process.env["APP_ENV"] ?? "development",

@@ -13,7 +13,6 @@ catalog:
   "@orpc/server": ^1.14.7
   "@orpc/tanstack-query": ^1.14.7
   "@polar-sh/sdk": ^0.48.1
-  "@t3-oss/env-core": ^0.13.11
   "@tailwindcss/postcss": ^4.3.2
   "@tailwindcss/vite": ^4.3.2
   "@tanstack/react-form": ^1.33.1

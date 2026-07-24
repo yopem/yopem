@@ -14,9 +14,7 @@
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "zod": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
