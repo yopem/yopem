@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server"
-import { and, asc, eq } from "drizzle-orm"
 import { testApiKey } from "server/llm/test-key"
 import { adminProcedure } from "server/orpc"
 import { WebhookMetrics } from "server/payments/webhook-metrics"
@@ -10,9 +9,23 @@ import {
   getSettingCache,
   invalidateModelCache,
 } from "cache/services/settings"
-import { db } from "db"
-import { aiModelsTable } from "db/schema"
-import * as adminService from "db/services/admin"
+import {
+  createAIModel,
+  deleteAIModelById,
+  findAIModelById,
+  findAIModelByProviderAndModelId,
+  getActivityFeed,
+  getActivityLogs,
+  getAiRequestsHistory,
+  getApiKeyStats,
+  getSetting,
+  getSystemMetrics,
+  getUptimeHistory,
+  getUptimeMetrics,
+  listAIModels,
+  updateAIModelById,
+  upsertSetting,
+} from "db/services/admin"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
@@ -100,7 +113,7 @@ export const adminRouter = {
       context.redis,
       API_KEYS_SETTING_KEY,
       async () => {
-        const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+        const settings = await getSetting(API_KEYS_SETTING_KEY)
         return (settings?.settingValue as ApiKeyConfig[] | undefined) ?? []
       },
       SETTINGS_CACHE_TTL,
@@ -112,7 +125,7 @@ export const adminRouter = {
   addApiKey: adminProcedure
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const settings = await getSetting(API_KEYS_SETTING_KEY)
       const existingKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
 
       const encryptedKey = encryptApiKey(input.apiKey)
@@ -146,7 +159,7 @@ export const adminRouter = {
       const updatedKeys = [...existingKeys, newKey]
 
       try {
-        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+        await upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `Failed to update settings: ${String(e)}`,
@@ -162,7 +175,7 @@ export const adminRouter = {
   updateApiKey: adminProcedure
     .input(updateApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const settings = await getSetting(API_KEYS_SETTING_KEY)
 
       if (!settings?.settingValue) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -217,7 +230,7 @@ export const adminRouter = {
       updatedKeys[keyIndex] = updatedKey
 
       try {
-        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+        await upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `Failed to update settings: ${String(e)}`,
@@ -233,7 +246,7 @@ export const adminRouter = {
   deleteApiKey: adminProcedure
     .input(deleteApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const settings = await adminService.getSetting(API_KEYS_SETTING_KEY)
+      const settings = await getSetting(API_KEYS_SETTING_KEY)
 
       if (!settings?.settingValue) {
         throw new ORPCError("NOT_FOUND", { message: "No API keys found" })
@@ -243,7 +256,7 @@ export const adminRouter = {
       const updatedKeys = existingKeys.filter((key) => key.id !== input.id)
 
       try {
-        await adminService.upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
+        await upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
       } catch (e) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `Failed to update settings: ${String(e)}`,
@@ -273,8 +286,8 @@ export const adminRouter = {
       }
 
       const [settings, rawStats] = await Promise.all([
-        adminService.getSetting(API_KEYS_SETTING_KEY),
-        adminService.getApiKeyStats(),
+        getSetting(API_KEYS_SETTING_KEY),
+        getApiKeyStats(),
       ])
 
       const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
@@ -312,14 +325,7 @@ export const adminRouter = {
       return stats
     }),
 
-  getAIModels: adminProcedure.handler(async () => {
-    const models = await db
-      .select()
-      .from(aiModelsTable)
-      .orderBy(asc(aiModelsTable.displayName))
-
-    return models
-  }),
+  getAIModels: adminProcedure.handler(() => listAIModels()),
 
   addAIModel: adminProcedure
     .input(
@@ -331,15 +337,10 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ input }) => {
-      const [existing] = await db
-        .select({ id: aiModelsTable.id })
-        .from(aiModelsTable)
-        .where(
-          and(
-            eq(aiModelsTable.provider, input.provider),
-            eq(aiModelsTable.modelId, input.modelId),
-          ),
-        )
+      const existing = await findAIModelByProviderAndModelId(
+        input.provider,
+        input.modelId,
+      )
 
       if (existing) {
         throw new ORPCError("CONFLICT", {
@@ -347,17 +348,7 @@ export const adminRouter = {
         })
       }
 
-      const [created] = await db
-        .insert(aiModelsTable)
-        .values({
-          provider: input.provider,
-          modelId: input.modelId,
-          displayName: input.displayName,
-          isEnabled: input.isEnabled,
-        })
-        .returning()
-
-      return created
+      return createAIModel(input)
     }),
 
   updateAIModel: adminProcedure
@@ -371,10 +362,7 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ input }) => {
-      const [existing] = await db
-        .select({ id: aiModelsTable.id })
-        .from(aiModelsTable)
-        .where(eq(aiModelsTable.id, input.id))
+      const existing = await findAIModelById(input.id)
 
       if (!existing) {
         throw new ORPCError("NOT_FOUND", {
@@ -382,32 +370,18 @@ export const adminRouter = {
         })
       }
 
-      const [updated] = await db
-        .update(aiModelsTable)
-        .set({
-          ...(input.provider !== undefined && { provider: input.provider }),
-          ...(input.modelId !== undefined && { modelId: input.modelId }),
-          ...(input.displayName !== undefined && {
-            displayName: input.displayName,
-          }),
-          ...(input.isEnabled !== undefined && {
-            isEnabled: input.isEnabled,
-          }),
-          updatedAt: new Date(),
-        })
-        .where(eq(aiModelsTable.id, input.id))
-        .returning()
-
-      return updated
+      return updateAIModelById(input.id, {
+        provider: input.provider,
+        modelId: input.modelId,
+        displayName: input.displayName,
+        isEnabled: input.isEnabled,
+      })
     }),
 
   deleteAIModel: adminProcedure
     .input(z.object({ id: z.string() }))
     .handler(async ({ input }) => {
-      const [existing] = await db
-        .select({ id: aiModelsTable.id })
-        .from(aiModelsTable)
-        .where(eq(aiModelsTable.id, input.id))
+      const existing = await findAIModelById(input.id)
 
       if (!existing) {
         throw new ORPCError("NOT_FOUND", {
@@ -415,7 +389,7 @@ export const adminRouter = {
         })
       }
 
-      await db.delete(aiModelsTable).where(eq(aiModelsTable.id, input.id))
+      await deleteAIModelById(input.id)
 
       return { success: true }
     }),
@@ -425,7 +399,7 @@ export const adminRouter = {
       context.redis,
       ASSETS_MAX_SIZE_KEY,
       async () => {
-        const settings = await adminService.getSetting(ASSETS_MAX_SIZE_KEY)
+        const settings = await getSetting(ASSETS_MAX_SIZE_KEY)
         return settings && typeof settings.settingValue === "number"
           ? settings.settingValue
           : 50
@@ -439,10 +413,7 @@ export const adminRouter = {
   updateAssetSettings: adminProcedure
     .input(z.object({ maxUploadSizeMB: z.number().min(1).max(500) }))
     .handler(async ({ context, input }) => {
-      await adminService.upsertSetting(
-        ASSETS_MAX_SIZE_KEY,
-        input.maxUploadSizeMB,
-      )
+      await upsertSetting(ASSETS_MAX_SIZE_KEY, input.maxUploadSizeMB)
 
       deleteSettingCache(context.redis, ASSETS_MAX_SIZE_KEY)
 
@@ -620,7 +591,7 @@ export const adminRouter = {
         return cached
       }
 
-      const recentPayments = await adminService.getActivityFeed(10)
+      const recentPayments = await getActivityFeed(10)
 
       const activities = recentPayments.map((payment) => {
         const userIdentifier =
@@ -650,7 +621,7 @@ export const adminRouter = {
         return cached
       }
 
-      const rawMetrics = await adminService.getUptimeMetrics()
+      const rawMetrics = await getUptimeMetrics()
 
       const totalSeconds = 30 * 24 * 60 * 60
       const downtimeSeconds = rawMetrics.totalDowntime
@@ -696,7 +667,7 @@ export const adminRouter = {
         return cached
       }
 
-      const rawResult = await adminService.getActivityLogs({
+      const rawResult = await getActivityLogs({
         limit: input.limit,
         cursor: input.cursor,
         eventType: input.eventType,
@@ -760,7 +731,7 @@ export const adminRouter = {
         })
       }
 
-      const downtimeEvents = await adminService.getUptimeHistory({
+      const downtimeEvents = await getUptimeHistory({
         days,
         startDate,
         now,
@@ -806,7 +777,7 @@ export const adminRouter = {
         return cached
       }
 
-      const rawMetrics = await adminService.getSystemMetrics()
+      const rawMetrics = await getSystemMetrics()
 
       const revenueChange = calculateTrend(
         rawMetrics.revenue.current,
@@ -887,7 +858,7 @@ export const adminRouter = {
         dataPointsMap.set(dateStr, { date: dateStr, requests: 0 })
       }
 
-      const runs = await adminService.getAiRequestsHistory({ startDate })
+      const runs = await getAiRequestsHistory({ startDate })
 
       for (const run of runs) {
         if (run.createdAt) {

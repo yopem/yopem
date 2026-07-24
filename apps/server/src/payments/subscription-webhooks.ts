@@ -1,11 +1,9 @@
-import { db } from "db"
-import { polarPaymentEventsTable } from "db/schema"
+import { recordPolarPaymentEvent } from "db/services/payments"
 import {
   createSubscription,
   getSubscription,
   updateSubscriptionByPolarId,
 } from "db/services/subscriptions"
-import { createCustomId } from "utils/custom-id"
 
 import type { SubscriptionStatus, SubscriptionTier } from "./subscription-plans"
 
@@ -84,11 +82,10 @@ export const handleSubscriptionCreated = async (
   const subscription = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "subscription.created",
       polarEventId: subscription.id,
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     const metadata = parseSubscriptionMetadata(subscription.metadata)
@@ -143,11 +140,10 @@ export const handleSubscriptionUpdated = async (
   const subscription = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "subscription.updated",
       polarEventId: subscription.id,
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     const updated = await updateSubscriptionByPolarId(subscription.id, {
@@ -178,11 +174,10 @@ export const handleSubscriptionCancelled = async (
   const subscription = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "subscription.cancelled",
       polarEventId: subscription.id,
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     const updated = await updateSubscriptionByPolarId(subscription.id, {
@@ -209,11 +204,10 @@ export const handleSubscriptionPaymentFailed = async (
   const subscription = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "subscription.payment_failed",
       polarEventId: subscription.id,
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     const updated = await updateSubscriptionByPolarId(subscription.id, {

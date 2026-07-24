@@ -11,8 +11,18 @@ import { getPlanConfig, listPlans } from "server/payments/subscription-plans"
 import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
 import { z } from "zod"
 
-import * as subscriptionService from "db/services/subscriptions"
-import * as userService from "db/services/user"
+import { cancelSubscription, getSubscription } from "db/services/subscriptions"
+import {
+  addCredits,
+  getPaymentHistory,
+  getPendingCheckouts,
+  getUserCredits,
+  getUserRuns,
+  getUserSettings,
+  getUserStats,
+  getUserTransactions,
+  upsertUserSettings,
+} from "db/services/user"
 import {
   addApiKeyInputSchema,
   apiKeyConfigSchema,
@@ -50,7 +60,7 @@ export const userRouter = {
     }),
 
   getStats: protectedProcedure.handler(async ({ context }) => {
-    const result = await userService.getUserStats(context.session.id)
+    const result = await getUserStats(context.session.id)
     return result
   }),
 
@@ -64,7 +74,7 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await userService.getUserRuns(context.session.id, {
+      const result = await getUserRuns(context.session.id, {
         limit: input?.limit ?? 20,
         cursor: input?.cursor,
       })
@@ -72,7 +82,7 @@ export const userRouter = {
     }),
 
   getCredits: protectedProcedure.handler(async ({ context }) => {
-    const result = await userService.getUserCredits(context.session.id)
+    const result = await getUserCredits(context.session.id)
     return result
   }),
 
@@ -139,9 +149,7 @@ export const userRouter = {
     }),
 
   createBillingPortal: protectedProcedure.handler(async ({ context }) => {
-    const subscription = await subscriptionService.getSubscription(
-      context.session.id,
-    )
+    const subscription = await getSubscription(context.session.id)
 
     if (!subscription) {
       throw new ORPCError("BAD_REQUEST", {
@@ -177,9 +185,7 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      const subscription = await subscriptionService.getSubscription(
-        context.session.id,
-      )
+      const subscription = await getSubscription(context.session.id)
 
       try {
         const result = await createOverflowCreditCheckout(
@@ -211,7 +217,7 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await userService.getUserTransactions(context.session.id, {
+      const result = await getUserTransactions(context.session.id, {
         limit: input?.limit ?? 20,
       })
       return result
@@ -226,14 +232,14 @@ export const userRouter = {
         .optional(),
     )
     .handler(async ({ context, input }) => {
-      const result = await userService.getPaymentHistory(context.session.id, {
+      const result = await getPaymentHistory(context.session.id, {
         limit: input?.limit ?? 20,
       })
       return result
     }),
 
   getPendingCheckouts: protectedProcedure.handler(async ({ context }) => {
-    const result = await userService.getPendingCheckouts(context.session.id)
+    const result = await getPendingCheckouts(context.session.id)
     return result
   }),
 
@@ -244,12 +250,12 @@ export const userRouter = {
       }),
     )
     .handler(async ({ context, input }) => {
-      await userService.addCredits(context.session.id, input.amount)
+      await addCredits(context.session.id, input.amount)
       return { success: true, amount: input.amount }
     }),
 
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const settings = await userService.getUserSettings(context.session.id)
+    const settings = await getUserSettings(context.session.id)
 
     if (!settings?.apiKeys) {
       return []
@@ -295,7 +301,7 @@ export const userRouter = {
         })
       }
 
-      const settings = await userService.getUserSettings(context.session.id)
+      const settings = await getUserSettings(context.session.id)
 
       const encryptedKey = encryptApiKey(input.apiKey)
       if (!encryptedKey) {
@@ -337,7 +343,7 @@ export const userRouter = {
 
       const updatedKeys = [...existingKeys, newKey]
 
-      await userService.upsertUserSettings(context.session.id, {
+      await upsertUserSettings(context.session.id, {
         apiKeys: updatedKeys,
       })
 
@@ -371,7 +377,7 @@ export const userRouter = {
         })
       }
 
-      const settings = await userService.getUserSettings(context.session.id)
+      const settings = await getUserSettings(context.session.id)
 
       if (!settings?.apiKeys) {
         throw new ORPCError("NOT_FOUND", {
@@ -428,7 +434,7 @@ export const userRouter = {
       const updatedKeys = [...existingKeys]
       updatedKeys[keyIndex] = updatedKey
 
-      await userService.upsertUserSettings(context.session.id, {
+      await upsertUserSettings(context.session.id, {
         apiKeys: updatedKeys,
       })
 
@@ -469,7 +475,7 @@ export const userRouter = {
         })
       }
 
-      const settings = await userService.getUserSettings(context.session.id)
+      const settings = await getUserSettings(context.session.id)
 
       if (!settings?.apiKeys) {
         throw new ORPCError("NOT_FOUND", {
@@ -495,7 +501,7 @@ export const userRouter = {
         })
       }
 
-      await userService.upsertUserSettings(context.session.id, {
+      await upsertUserSettings(context.session.id, {
         apiKeys: updatedKeys,
       })
 
@@ -503,7 +509,7 @@ export const userRouter = {
     }),
 
   getApiKeyStats: adminProcedure.handler(async ({ context }) => {
-    const settings = await userService.getUserSettings(context.session.id)
+    const settings = await getUserSettings(context.session.id)
 
     let activeKeys = 0
 
@@ -520,9 +526,7 @@ export const userRouter = {
   }),
 
   cancelSubscription: protectedProcedure.handler(async ({ context }) => {
-    const subscription = await subscriptionService.getSubscription(
-      context.session.id,
-    )
+    const subscription = await getSubscription(context.session.id)
 
     if (!subscription || subscription.tier === "free") {
       throw new ORPCError("BAD_REQUEST", {
@@ -543,9 +547,7 @@ export const userRouter = {
     }
 
     try {
-      const cancelResult = await subscriptionService.cancelSubscription(
-        context.session.id,
-      )
+      const cancelResult = await cancelSubscription(context.session.id)
 
       console.info(
         `Subscription cancelled for user ${context.session.id}, will end on ${cancelResult.currentPeriodEnd?.toISOString() ?? "null"}`,

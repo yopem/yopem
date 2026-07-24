@@ -1,9 +1,10 @@
-import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
 
 import { db } from "db"
 import {
   activityLogsTable,
   adminSettingsTable,
+  aiModelsTable,
   polarPaymentsTable,
   productRunsTable,
   uptimeEventsTable,
@@ -262,6 +263,87 @@ export const getAiRequestsHistory = (input: {
         sql`${productRunsTable.status} IN ('completed', 'failed')`,
       ),
     )
+}
+
+export const listAIModels = () => {
+  return db.select().from(aiModelsTable).orderBy(asc(aiModelsTable.displayName))
+}
+
+export const findAIModelByProviderAndModelId = async (
+  provider: string,
+  modelId: string,
+) => {
+  const [existing] = await db
+    .select({ id: aiModelsTable.id })
+    .from(aiModelsTable)
+    .where(
+      and(
+        eq(aiModelsTable.provider, provider),
+        eq(aiModelsTable.modelId, modelId),
+      ),
+    )
+
+  return existing ?? null
+}
+
+export const findAIModelById = async (id: string) => {
+  const [existing] = await db
+    .select({ id: aiModelsTable.id })
+    .from(aiModelsTable)
+    .where(eq(aiModelsTable.id, id))
+
+  return existing ?? null
+}
+
+export const createAIModel = async (input: {
+  provider: string
+  modelId: string
+  displayName: string
+  isEnabled: boolean
+}) => {
+  const [created] = await db
+    .insert(aiModelsTable)
+    .values({
+      provider: input.provider,
+      modelId: input.modelId,
+      displayName: input.displayName,
+      isEnabled: input.isEnabled,
+    })
+    .returning()
+
+  return created
+}
+
+export const updateAIModelById = async (
+  id: string,
+  input: {
+    provider?: string
+    modelId?: string
+    displayName?: string
+    isEnabled?: boolean
+  },
+) => {
+  const [updated] = await db
+    .update(aiModelsTable)
+    .set({
+      ...(input.provider !== undefined && { provider: input.provider }),
+      ...(input.modelId !== undefined && { modelId: input.modelId }),
+      ...(input.displayName !== undefined && {
+        displayName: input.displayName,
+      }),
+      ...(input.isEnabled !== undefined && {
+        isEnabled: input.isEnabled,
+      }),
+      updatedAt: new Date(),
+    })
+    .where(eq(aiModelsTable.id, id))
+    .returning()
+
+  return updated
+}
+
+export const deleteAIModelById = async (id: string) => {
+  await db.delete(aiModelsTable).where(eq(aiModelsTable.id, id))
 }
 
 export const getApiKeyStats = async (): Promise<{

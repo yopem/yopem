@@ -1,11 +1,7 @@
 import { Webhooks } from "@polar-sh/hono"
-import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { WebhookHandlerError } from "server/errors"
-import { addOverflowCredits } from "server/payments/add-overflow-credits"
 import { calculateCreditsFromAmount } from "server/payments/credit-calculation"
-import { grantCredits } from "server/payments/grant-credits"
-import { refundCredits } from "server/payments/refund-credits"
 import {
   handleSubscriptionCancelled,
   handleSubscriptionCreated,
@@ -15,9 +11,15 @@ import { WebhookMonitor } from "server/payments/webhook-monitor"
 import { z } from "zod"
 
 import { redisCache } from "cache"
-import { db } from "db"
-import { polarCheckoutSessionsTable, polarPaymentEventsTable } from "db/schema"
-import { createCustomId } from "utils/custom-id"
+import {
+  addOverflowCredits,
+  grantCredits,
+  refundCredits,
+} from "db/services/credits"
+import {
+  completePolarCheckoutSession,
+  recordPolarPaymentEvent,
+} from "db/services/payments"
 
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),
@@ -64,11 +66,9 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
   const order = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "order.paid",
-      polarEventId: createCustomId(),
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     const metadataParse = webhookOrderMetadataSchema.safeParse(order.metadata)
@@ -120,10 +120,7 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
       }
 
       if (order.checkoutId) {
-        await db
-          .update(polarCheckoutSessionsTable)
-          .set({ status: "completed", updatedAt: new Date() })
-          .where(eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId))
+        await completePolarCheckoutSession(order.checkoutId)
       }
 
       console.info(
@@ -157,10 +154,7 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
     }
 
     if (order.checkoutId) {
-      await db
-        .update(polarCheckoutSessionsTable)
-        .set({ status: "completed", updatedAt: new Date() })
-        .where(eq(polarCheckoutSessionsTable.checkoutId, order.checkoutId))
+      await completePolarCheckoutSession(order.checkoutId)
     }
 
     console.info(
@@ -182,11 +176,9 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
   const order = payload.data
 
   try {
-    await db.insert(polarPaymentEventsTable).values({
-      id: createCustomId(),
+    await recordPolarPaymentEvent({
       eventType: "order.refunded",
-      polarEventId: createCustomId(),
-      payload: JSON.stringify(payload),
+      payload,
     })
 
     WebhookMonitor.detectAnomalousRefund({
