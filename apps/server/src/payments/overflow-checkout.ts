@@ -1,16 +1,15 @@
 import { Polar } from "@polar-sh/sdk"
 
-const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
-const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
+import { isDev, polarAccessToken, webOrigin } from "env"
 
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: import.meta.env.DEV ? "sandbox" : "production",
+  server: isDev ? "sandbox" : "production",
 })
 
 const PACK_SIZE_TO_PRODUCT_ID: Record<string, string | undefined> = {
-  "100": process.env["POLAR_OVERFLOW_100_PRODUCT_ID"],
-  "500": process.env["POLAR_OVERFLOW_500_PRODUCT_ID"],
+  "100": "100",
+  "500": "500",
 }
 
 export interface OverflowCheckoutSession {

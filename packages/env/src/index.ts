@@ -36,7 +36,10 @@ export const apiKeyEncryptionSecret = getString("API_KEY_ENCRYPTION_SECRET")
 
 export const polarAccessToken = getString("POLAR_ACCESS_TOKEN")
 export const polarWebhookSecret = getString("POLAR_WEBHOOK_SECRET")
-export const polarProductId = getString("POLAR_PRODUCT_ID")
+export const polarProProductId = getString("POLAR_PRO_PRODUCT_ID")
+export const polarEnterpriseProductId = getString("POLAR_ENTERPRISE_PRODUCT_ID")
+export const polarProPriceId = getString("POLAR_PRO_PRICE_ID")
+export const polarEnterprisePriceId = getString("POLAR_ENTERPRISE_PRICE_ID")
 
 export const cfAccountId = getString("CF_ACCOUNT_ID")
 export const r2AccessKey = getString("R2_ACCESS_KEY")

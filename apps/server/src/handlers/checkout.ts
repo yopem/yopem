@@ -8,6 +8,14 @@ import {
   insertCheckoutSession,
   upsertPolarCustomer,
 } from "db/services/user"
+import {
+  isDev,
+  polarProProductId,
+  polarAccessToken,
+  webOrigin,
+  polarProPriceId,
+  polarEnterprisePriceId,
+} from "env"
 
 interface Env {
   Variables: {
@@ -15,15 +23,9 @@ interface Env {
   }
 }
 
-const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
-const polarProductId = process.env["POLAR_PRODUCT_ID"] ?? ""
-const polarProPriceId = process.env["POLAR_PRO_PRICE_ID"] ?? ""
-const polarEnterprisePriceId = process.env["POLAR_ENTERPRISE_PRICE_ID"] ?? ""
-const webOrigin = process.env["WEB_ORIGIN"] ?? "http://localhost:3000"
-
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: import.meta.env.DEV ? "sandbox" : "production",
+  server: isDev ? "sandbox" : "production",
 })
 
 const checkoutRoute = new Hono<Env>()
@@ -152,7 +154,7 @@ checkoutRoute.get("/", async (c) => {
     let checkoutUrl: string
     try {
       const checkout = await polar.checkouts.create({
-        products: [polarProductId],
+        products: [polarProProductId],
         amount: Math.round(amountNum * 100),
         successUrl,
         customerId: polarCustomerId,
@@ -171,7 +173,7 @@ checkoutRoute.get("/", async (c) => {
       await insertCheckoutSession({
         userId: session.id,
         checkoutId: checkout.id,
-        productId: polarProductId,
+        productId: polarProProductId,
         checkoutUrl,
         amount: String(amountNum),
       })

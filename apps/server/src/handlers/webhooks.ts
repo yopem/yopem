@@ -20,6 +20,7 @@ import {
   completePolarCheckoutSession,
   recordPolarPaymentEvent,
 } from "db/services/payments"
+import { polarWebhookSecret } from "env"
 
 const webhookOrderMetadataSchema = z.object({
   userId: z.string().min(1),
@@ -31,8 +32,6 @@ const webhookOrderMetadataSchema = z.object({
   type: z.enum(["subscription", "overflow_credits", "credit_topup"]).optional(),
   packSize: z.string().optional(),
 })
-
-const polarWebhookSecret = process.env["POLAR_WEBHOOK_SECRET"] ?? ""
 
 let redisInitialized = false
 

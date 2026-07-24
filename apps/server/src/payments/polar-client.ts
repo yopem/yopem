@@ -1,12 +1,11 @@
 import { Polar } from "@polar-sh/sdk"
 
 import type { SelectSubscription } from "db/schema"
-
-const polarAccessToken = process.env["POLAR_ACCESS_TOKEN"] ?? ""
+import { isDev, polarAccessToken } from "env"
 
 const polar = new Polar({
   accessToken: polarAccessToken,
-  server: import.meta.env.DEV ? "sandbox" : "production",
+  server: isDev ? "sandbox" : "production",
 })
 
 export interface PolarSubscription {

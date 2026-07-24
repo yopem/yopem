@@ -2,18 +2,24 @@ import { Hono } from "hono"
 import { getCookie, deleteCookie, setCookie } from "hono/cookie"
 
 import { authClient } from "auth/client"
+import {
+  adminOrigin,
+  authCallbackUrl,
+  cookieDomain,
+  isDev,
+  isProd,
+  webOrigin,
+} from "env"
 
-const allowedOrigins = import.meta.env.DEV
+const allowedOrigins = isDev
   ? [
-      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      webOrigin ?? "http://localhost:3000",
+      adminOrigin ?? "http://localhost:3001",
     ]
-  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
-      Boolean,
-    )
+  : [webOrigin, adminOrigin].filter(Boolean)
+
 const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
-const callbackUrl =
-  process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
+const callbackUrl = authCallbackUrl ?? "http://localhost:4000/auth/callback"
 
 const isValidRedirectPath = (path: string): boolean => {
   if (!path.startsWith("/")) return false
@@ -69,14 +75,13 @@ authCallbackRoute.get("/callback", async (c) => {
       ? loginOrigin
       : defaultOrigin
 
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
-  const isSecure = !!cookieDomain || !import.meta.env.DEV
+  const isSecure = !!cookieDomain || isProd
   deleteCookie(c, "login_origin", {
     path: "/",
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
-  const sameSite: "none" | "lax" = import.meta.env.DEV ? "lax" : "none"
+  const sameSite: "none" | "lax" = isDev ? "lax" : "none"
   const cookieOptions = {
     httpOnly: true,
     sameSite,

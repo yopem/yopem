@@ -5,6 +5,7 @@ import { getCookie, setCookie } from "hono/cookie"
 import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
 import type { SessionUser } from "auth/types"
+import { cookieDomain, isProd } from "env"
 
 export type { SessionUser }
 
@@ -14,16 +15,12 @@ interface SessionEnv {
   }
 }
 
-const isProduction = () => !import.meta.env.DEV
 const isSecure = () => {
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
-  return !!cookieDomain || isProduction()
+  return !!cookieDomain || isProd
 }
 
 const getCookieOptions = () => {
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
-  const prod = isProduction()
-  const sameSite: "none" | "lax" = prod ? "none" : "lax"
+  const sameSite: "none" | "lax" = isProd ? "none" : "lax"
   return {
     sameSite,
     secure: isSecure(),

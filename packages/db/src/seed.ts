@@ -4,11 +4,10 @@ import { Pool } from "pg"
 import { transliterate as tr } from "transliteration"
 
 import * as schema from "db/schema"
+import { databaseUrl } from "env"
 import { apiKeyConfigSchema, apiKeyProviderSchema } from "utils/api-keys-schema"
 import type { ApiKeyProvider } from "utils/api-keys-schema"
 import { createCustomId } from "utils/custom-id"
-
-const databaseUrl = process.env["DATABASE_URL"]
 
 if (!databaseUrl) {
   console.error("DATABASE_URL environment variable is not set")

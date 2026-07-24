@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
-import { serverPort } from "env"
+import { adminOrigin, webOrigin, serverPort, isDev, isProd } from "env"
 
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"
@@ -16,14 +16,12 @@ const app = new Hono()
 
 const port = serverPort
 
-const allowedOrigins = import.meta.env.DEV
+const allowedOrigins = isDev
   ? [
-      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      webOrigin ?? "http://localhost:3000",
+      adminOrigin ?? "http://localhost:3001",
     ]
-  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
-      Boolean,
-    )
+  : [webOrigin ?? "", adminOrigin ?? ""].filter(Boolean)
 
 app.use(
   "*",
@@ -69,7 +67,7 @@ app.onError((err, c) => {
 
 export default app
 
-if (!import.meta.env.DEV) {
+if (isProd) {
   serve(
     {
       fetch: app.fetch,

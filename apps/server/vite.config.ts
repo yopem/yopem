@@ -4,15 +4,11 @@ import nodeAdapter from "@hono/vite-dev-server/node"
 import { resolve } from "node:path"
 import { defineConfig, loadEnv } from "vite"
 
-const env = loadEnv(
-  process.env["APP_ENV"] ?? "development",
-  resolve(__dirname, "../.."),
-  "",
-)
+import { isDev, serverPort } from "env"
+
+const env = loadEnv(isDev ? "DEV" : "PROD", resolve(__dirname, "../.."), "")
 
 Object.assign(process.env, env)
-
-const serverPort = Number(env["SERVER_PORT"]) || 4000
 
 export default defineConfig({
   envDir: "../..",

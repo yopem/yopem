@@ -237,6 +237,9 @@ importers:
       '@openauthjs/openauth':
         specifier: 'catalog:'
         version: 0.4.3(arctic@2.3.4)(hono@4.12.32)
+      env:
+        specifier: workspace:*
+        version: link:../env
       react:
         specifier: 'catalog:'
         version: 19.2.8

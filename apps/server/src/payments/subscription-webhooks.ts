@@ -4,6 +4,7 @@ import {
   getSubscription,
   updateSubscriptionByPolarId,
 } from "db/services/subscriptions"
+import { polarProProductId, polarEnterpriseProductId } from "env"
 
 import type { SubscriptionStatus, SubscriptionTier } from "./subscription-plans"
 
@@ -64,8 +65,8 @@ const mapPolarStatus = (status: string): SubscriptionStatus => {
 }
 
 const tierFromProductId = (productId: string): SubscriptionTier => {
-  const proProductId = process.env["POLAR_PRO_PRODUCT_ID"]
-  const enterpriseProductId = process.env["POLAR_ENTERPRISE_PRODUCT_ID"]
+  const proProductId = polarProProductId
+  const enterpriseProductId = polarEnterpriseProductId
 
   if (productId === enterpriseProductId) {
     return "enterprise"
