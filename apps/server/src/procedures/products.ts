@@ -1,3 +1,5 @@
+import type { ApiKeyConfig } from "server/llm/api-keys-schema"
+
 import { ORPCError } from "@orpc/server"
 import { executeAIProduct } from "server/llm/executor"
 import {
@@ -10,6 +12,7 @@ import {
   requireSubscriptionForProduct,
   trackProductExecution,
 } from "server/payments/product-subscription-middleware"
+import { decryptApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
 import { getSettingCache } from "cache/services/settings"
@@ -39,8 +42,6 @@ import {
   upsertProductReview,
 } from "db/services/products"
 import { listTags, validateTagIds } from "db/services/tags"
-import type { ApiKeyConfig } from "utils/api-keys-schema"
-import { decryptApiKey } from "utils/crypto"
 import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"

@@ -30,6 +30,7 @@
     }
   },
   "scripts": {
+    "seed": "tsx --env-file=../../.env src/seed.ts",
     "dev": "vp dev",
     "build": "vp build",
     "start": "node --env-file=../../.env dist/index.js",

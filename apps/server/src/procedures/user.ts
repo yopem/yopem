@@ -1,4 +1,11 @@
 import { ORPCError } from "@orpc/server"
+import {
+  addApiKeyInputSchema,
+  apiKeyConfigSchema,
+  deleteApiKeyInputSchema,
+  updateApiKeyInputSchema,
+  type ApiKeyConfig,
+} from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
 import { adminProcedure, protectedProcedure } from "server/orpc"
 import { getEntitlements } from "server/payments/entitlements"
@@ -9,6 +16,7 @@ import {
 } from "server/payments/subscription-checkout"
 import { getPlanConfig, listPlans } from "server/payments/subscription-plans"
 import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
 import { cancelSubscription, getSubscription } from "db/services/subscriptions"
@@ -23,14 +31,6 @@ import {
   getUserTransactions,
   upsertUserSettings,
 } from "db/services/user"
-import {
-  addApiKeyInputSchema,
-  apiKeyConfigSchema,
-  deleteApiKeyInputSchema,
-  updateApiKeyInputSchema,
-  type ApiKeyConfig,
-} from "utils/api-keys-schema"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "utils/crypto"
 import { createCustomId } from "utils/custom-id"
 
 export const userRouter = {

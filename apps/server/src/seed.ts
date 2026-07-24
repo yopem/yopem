@@ -1,12 +1,16 @@
+import type { ApiKeyProvider } from "server/llm/api-keys-schema"
+
 import { and, eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
+import {
+  apiKeyConfigSchema,
+  apiKeyProviderSchema,
+} from "server/llm/api-keys-schema"
 import { transliterate as tr } from "transliteration"
 
 import * as schema from "db/schema"
 import { databaseUrl } from "env"
-import { apiKeyConfigSchema, apiKeyProviderSchema } from "utils/api-keys-schema"
-import type { ApiKeyProvider } from "utils/api-keys-schema"
 import { createCustomId } from "utils/custom-id"
 
 if (!databaseUrl) {

@@ -24,7 +24,6 @@
   "scripts": {
     "db:generate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs migrate",
-    "db:seed": "tsx --env-file=../../.env src/seed.ts",
     "db:studio": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs studio",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",

@@ -19,9 +19,9 @@ export const apiKeyConfigSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   status: apiKeyStatusSchema,
   restrictions: apiKeyRestrictionsSchema.optional(),
-  lastUsed: z.string().datetime().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  lastUsed: z.date().optional(),
+  createdAt: z.string().date(),
+  updatedAt: z.string().date(),
 })
 
 export type ApiKeyConfig = z.infer<typeof apiKeyConfigSchema>

@@ -1,4 +1,4 @@
-import type { ApiKeyProvider } from "utils/api-keys-schema"
+import type { ApiKeyProvider } from "server/llm/api-keys-schema"
 
 interface TestKeyResult {
   valid: boolean
