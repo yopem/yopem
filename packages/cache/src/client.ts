@@ -1,5 +1,7 @@
 import type { Redis } from "ioredis"
 
+import RedisClient from "ioredis"
+
 import { redisKeyPrefix, redisUrl } from "env"
 
 export type RedisCache = ReturnType<typeof createRedisCache>
@@ -20,7 +22,7 @@ export function createRedisCache() {
     return key.slice(prefix.length)
   }
 
-  async function initRedis(): Promise<Redis | null> {
+  function initRedis(): Redis | null {
     if (redis) return redis
 
     if (!redisUrl) {
@@ -29,7 +31,6 @@ export function createRedisCache() {
     }
 
     try {
-      const { default: RedisClient } = await import("ioredis")
       const client = new RedisClient(redisUrl, {
         keyPrefix: prefix || undefined,
       })
@@ -180,14 +181,14 @@ export function createRedisCache() {
     }
   }
 
-  async function getRedisClient(): Promise<Redis | null> {
+  function getRedisClient(): Promise<Redis | null> {
     if (typeof process === "undefined") {
-      return null
+      return Promise.resolve(null)
     }
 
-    redis ??= await initRedis()
+    redis ??= initRedis()
 
-    return redis
+    return Promise.resolve(redis)
   }
 
   async function close(): Promise<void> {

@@ -11,11 +11,7 @@ import { WebhookMetrics } from "server/payments/webhook-metrics"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
-import {
-  deleteSettingCache,
-  getSettingCache,
-  invalidateModelCache,
-} from "cache/services/settings"
+import { getOrCompute } from "cache/services/with-cache"
 import {
   createAIModel,
   deleteAIModelById,
@@ -33,6 +29,11 @@ import {
   updateAIModelById,
   upsertSetting,
 } from "db/services/admin"
+import {
+  getRevenueStats,
+  getSubscriptionStats,
+  getSubscriptionsList,
+} from "db/services/subscription-admin"
 import { createCustomId } from "utils/custom-id"
 
 const API_KEYS_SETTING_KEY = "api_keys"
@@ -109,9 +110,9 @@ const formatApiKey = (key: ApiKeyConfig) => ({
 
 export const adminRouter = {
   getApiKeys: adminProcedure.handler(async ({ context }) => {
-    const apiKeys = await getSettingCache<ApiKeyConfig[]>(
+    const apiKeys = await getOrCompute(
       context.redis,
-      API_KEYS_SETTING_KEY,
+      `settings:${API_KEYS_SETTING_KEY}`,
       async () => {
         const settings = await getSetting(API_KEYS_SETTING_KEY)
         return (settings?.settingValue as ApiKeyConfig[] | undefined) ?? []
@@ -166,8 +167,8 @@ export const adminRouter = {
         })
       }
 
-      invalidateModelCache(context.redis)
-      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
+      void context.redis.invalidatePattern("models:*")
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true, id: newKey.id }
     }),
@@ -237,8 +238,8 @@ export const adminRouter = {
         })
       }
 
-      invalidateModelCache(context.redis)
-      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
+      void context.redis.invalidatePattern("models:*")
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
     }),
@@ -263,8 +264,8 @@ export const adminRouter = {
         })
       }
 
-      invalidateModelCache(context.redis)
-      deleteSettingCache(context.redis, API_KEYS_SETTING_KEY)
+      void context.redis.invalidatePattern("models:*")
+      void context.redis.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
 
       return { success: true }
     }),
@@ -395,9 +396,9 @@ export const adminRouter = {
     }),
 
   getAssetSettings: adminProcedure.handler(async ({ context }) => {
-    const maxUploadSizeMB = await getSettingCache<number>(
+    const maxUploadSizeMB = await getOrCompute(
       context.redis,
-      ASSETS_MAX_SIZE_KEY,
+      `settings:${ASSETS_MAX_SIZE_KEY}`,
       async () => {
         const settings = await getSetting(ASSETS_MAX_SIZE_KEY)
         return settings && typeof settings.settingValue === "number"
@@ -415,7 +416,7 @@ export const adminRouter = {
     .handler(async ({ context, input }) => {
       await upsertSetting(ASSETS_MAX_SIZE_KEY, input.maxUploadSizeMB)
 
-      deleteSettingCache(context.redis, ASSETS_MAX_SIZE_KEY)
+      void context.redis.deleteCache(`settings:${ASSETS_MAX_SIZE_KEY}`)
 
       return { success: true }
     }),
@@ -881,9 +882,6 @@ export const adminRouter = {
     }),
 
   getSubscriptionStats: adminProcedure.handler(async () => {
-    const { getSubscriptionStats, getRevenueStats } =
-      await import("db/services/subscription-admin")
-
     const [stats, revenue] = await Promise.all([
       getSubscriptionStats(),
       getRevenueStats(),
@@ -907,9 +905,6 @@ export const adminRouter = {
       }),
     )
     .handler(async ({ input }) => {
-      const { getSubscriptionsList } =
-        await import("db/services/subscription-admin")
-
       const result = await getSubscriptionsList(input)
 
       return result

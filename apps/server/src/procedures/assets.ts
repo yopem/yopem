@@ -7,7 +7,7 @@ import {
 import { getR2Storage } from "server/storage"
 import { z } from "zod"
 
-import { getSettingCache } from "cache/services/settings"
+import { getOrCompute } from "cache/services/with-cache"
 import {
   deleteAsset,
   getAdminUploadSizeSetting,
@@ -45,9 +45,9 @@ export const assetsRouter = {
     }),
 
   getUploadSettings: publicProcedure.handler(async ({ context }) => {
-    const maxSizeMB = await getSettingCache<number>(
+    const maxSizeMB = await getOrCompute(
       context.redis,
-      ASSETS_MAX_SIZE_KEY,
+      `settings:${ASSETS_MAX_SIZE_KEY}`,
       async () => {
         const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
         return settings && typeof settings.settingValue === "number"
@@ -66,9 +66,9 @@ export const assetsRouter = {
   upload: adminProcedure
     .input(z.instanceof(File))
     .handler(async ({ context, input: file }) => {
-      const maxSizeMB = await getSettingCache<number>(
+      const maxSizeMB = await getOrCompute(
         context.redis,
-        ASSETS_MAX_SIZE_KEY,
+        `settings:${ASSETS_MAX_SIZE_KEY}`,
         async () => {
           const settings = await getAdminUploadSizeSetting(ASSETS_MAX_SIZE_KEY)
           return settings && typeof settings.settingValue === "number"

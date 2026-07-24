@@ -106,6 +106,8 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **Web `@/` alias** resolves to `apps/web/src` (and similar for admin); prefer it for app-local imports, workspace names for packages.
 - **Separate type imports** (`import type { X } from "..."`).
 - **No `console.log`** — only `console.error`, `console.warn`, `console.info`.
+- **Separate type imports** (`import type { X } from "..."`).
+- **No `await import()`** — use static `import` always. If lazy loading is genuinely needed, inline the pattern directly in the codebase; don't write ad-hoc `await import()` calls.
 - **No semicolons**, double quotes, 80-char width, trailing commas.
 - **Import order:** type-imports → external → workspace types → workspace values → internal → parent/sibling/index.
 - **`no-explicit-any: error`**, **`no-unused-vars`** (prefix with `_` to ignore), **`require-await: error`**, **`prefer-const: error`**.
