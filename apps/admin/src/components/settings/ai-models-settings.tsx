@@ -62,19 +62,27 @@ const AIModelsSettings = memo(() => {
   const [newModelId, setNewModelId] = useState("")
   const [newDisplayName, setNewDisplayName] = useState("")
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newModelId.trim() || !newDisplayName.trim()) return
-    addMutation.mutate({
-      provider: newProvider,
-      modelId: newModelId.trim(),
-      displayName: newDisplayName.trim(),
-    })
-    setNewModelId("")
-    setNewDisplayName("")
-    toastManager.add({
-      title: "AI model added",
-      type: "success",
-    })
+    try {
+      await addMutation.mutateAsync({
+        provider: newProvider,
+        modelId: newModelId.trim(),
+        displayName: newDisplayName.trim(),
+      })
+      setNewModelId("")
+      setNewDisplayName("")
+      toastManager.add({
+        title: "AI model added",
+        type: "success",
+      })
+    } catch (e) {
+      toastManager.add({
+        title: "Failed to add AI model",
+        description: e instanceof Error ? e.message : "Unknown error",
+        type: "error",
+      })
+    }
   }
 
   return (
@@ -126,12 +134,21 @@ const AIModelsSettings = memo(() => {
                   size="icon-xs"
                   variant="ghost"
                   className="text-muted-foreground hover:text-destructive shrink-0"
-                  onClick={() => {
-                    deleteMutation.mutate({ id: model.id })
-                    toastManager.add({
-                      title: "AI model deleted",
-                      type: "success",
-                    })
+                  onClick={async () => {
+                    try {
+                      await deleteMutation.mutateAsync({ id: model.id })
+                      toastManager.add({
+                        title: "AI model deleted",
+                        type: "success",
+                      })
+                    } catch (e) {
+                      toastManager.add({
+                        title: "Failed to delete AI model",
+                        description:
+                          e instanceof Error ? e.message : "Unknown error",
+                        type: "error",
+                      })
+                    }
                   }}
                 >
                   <Trash2Icon className="size-4" />
