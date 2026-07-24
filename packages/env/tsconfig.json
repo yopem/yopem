@@ -4,8 +4,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "types": ["node"],
-    "noPropertyAccessFromIndexSignature": false
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }
