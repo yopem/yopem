@@ -4,7 +4,7 @@ import { db } from "db"
 import { categoriesTable } from "db/schema"
 import type { SelectCategory } from "db/schema/categories"
 
-import { generateUniqueCategorySlug } from "./slug.ts"
+import { generateUniqueCategorySlug } from "./slug"
 
 export const listCategories = (): Promise<
   {

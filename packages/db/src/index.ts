@@ -3,7 +3,7 @@ import { Pool } from "pg"
 
 import { databaseUrl, isDev } from "env"
 
-import * as schema from "./schema/index.ts"
+import * as schema from "./schema"
 
 const pool = new Pool({
   connectionString: databaseUrl,

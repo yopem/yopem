@@ -1,6 +1,6 @@
 import type { Redis } from "ioredis"
 
-import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics.ts"
+import { WebhookMetrics as WebhookMetricsTracker } from "./webhook-metrics"
 
 interface WebhookMonitorMetrics {
   eventType: string

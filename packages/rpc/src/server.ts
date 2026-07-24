@@ -1,14 +1,12 @@
-import { createORPCClientFromLink, createORPCLink } from "./shared.ts"
+import { getRequestHeaders } from "@tanstack/react-start/server"
+
+import { createORPCClientFromLink, createORPCLink } from "./shared"
 
 const createServerFetchWithCookies = () => {
-  return async (
-    input: RequestInfo | URL,
-    init?: RequestInit,
-  ): Promise<Response> => {
+  return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const fetchInit = { ...init }
 
     try {
-      const { getRequestHeaders } = await import("@tanstack/react-start/server")
       const allHeaders = getRequestHeaders()
       const cookieHeader = allHeaders.get("cookie")
 

@@ -111,6 +111,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **`no-explicit-any: error`**, **`no-unused-vars`** (prefix with `_` to ignore), **`require-await: error`**, **`prefer-const: error`**.
 - **No comments or JSDoc** — code must be self-documenting through clear naming and structure.
 - **Components and functions** must be reusable, maintainable, modular, and easy to understand.
+- **Omit file extensions in imports:** never add `.ts`, `.tsx`, `.js`, `.jsx` extensions when importing from other files — let the bundler/resolver handle them.
 - **Icons:** use `lucide-react` only. Imports use the `Icon` suffix convention (e.g. `BoldIcon`, `LinkIcon`, `TrashIcon`, `GripVerticalIcon`, not `Bold`, `Link`, `Trash`, `GripVertical`). Tabler/icons-react and any other icon library are not used.
 - **Commit granularity:** one commit per feature, change, or context switch.
 - **Keep `AGENTS.md` current** — update it when the tech stack, frameworks, or packages change.

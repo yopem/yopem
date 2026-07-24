@@ -3,4 +3,4 @@ export {
   StorageUploadError,
   StorageDeleteError,
   getR2Storage,
-} from "./r2.ts"
+} from "./r2"

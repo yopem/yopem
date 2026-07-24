@@ -16,7 +16,7 @@ import type { InsertProductVersion } from "db/schema/product-versions"
 import type { InsertProduct, SelectProduct } from "db/schema/products"
 import { createCustomId } from "utils/custom-id"
 
-import { generateUniqueProductSlug } from "./slug.ts"
+import { generateUniqueProductSlug } from "./slug"
 
 export const listProducts = async (input?: {
   limit?: number

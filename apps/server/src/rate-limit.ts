@@ -1,6 +1,6 @@
 import type { Redis } from "ioredis"
 
-import { RateLimitError } from "./errors.ts"
+import { RateLimitError } from "./errors"
 
 export async function checkRateLimit(
   getRedisClient: () => Promise<Redis | null>,

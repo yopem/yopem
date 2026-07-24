@@ -10,7 +10,7 @@ import {
   type ApiKeyProvider,
   type ExecutionRequest,
   type ExecutionResponse,
-} from "./base.ts"
+} from "./base"
 
 interface OpenAICompatibleConfig {
   name: string

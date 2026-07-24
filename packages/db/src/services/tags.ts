@@ -4,7 +4,7 @@ import { db } from "db"
 import { tagsTable } from "db/schema"
 import type { SelectTag } from "db/schema/tags"
 
-import { generateUniqueTagSlug } from "./slug.ts"
+import { generateUniqueTagSlug } from "./slug"
 
 export const listTags = (): Promise<
   {

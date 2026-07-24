@@ -1,11 +1,11 @@
 import { getR2Storage } from "server/storage"
 
-import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
-import type { ApiKeyProvider } from "./providers/base.ts"
-import type { AIProviderErrors } from "./providers/base.ts"
+import type { AIProvider, ExecutionResponse } from "./providers/base"
+import type { ApiKeyProvider } from "./providers/base"
+import type { AIProviderErrors } from "./providers/base"
 
-import { FalProvider } from "./providers/fal.ts"
-import { OpenAICompatibleProvider } from "./providers/openai-compatible.ts"
+import { FalProvider } from "./providers/fal"
+import { OpenAICompatibleProvider } from "./providers/openai-compatible"
 
 export class UploadError extends Error {
   format: "image" | "video"

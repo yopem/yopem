@@ -11,7 +11,7 @@ import {
   type ExecutionRequest,
   type ExecutionResponse,
   type ProviderConfig,
-} from "./base.ts"
+} from "./base"
 
 const FAL_OPENAI_COMPATIBLE_URL = "https://fal.run/openai-compatible/v1"
 const FAL_API_BASE = "https://fal.run"
