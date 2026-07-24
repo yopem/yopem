@@ -1,3 +1,5 @@
+minimumReleaseAge: 0
+
 packages:
   - apps/*
   - packages/*
@@ -25,7 +27,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   "@unpic/react": ^1.0.2
   "@vitejs/plugin-react": ^6.0.3
-  "@yopem/typescript-config": ^0.2.1
+  "@yopem/typescript-config": ^0.2.2
   ai: ^7.0.22
   babel-plugin-react-compiler: ^1.0.0
   dayjs: ^1.11.21
@@ -50,9 +52,10 @@ catalog:
   transliteration: ^2.6.1
   tsdown: ^0.22.5
   typescript: ^7.0.2
-  vite-plus: ^0.2.5
+  vite-plus: ^0.2.6
   vite: npm:@voidzero-dev/vite-plus-core@0.2.5
   zod: ^4.4.3
 
-patchedDependencies:
-  "@tanstack/start-plugin-core@1.171.19": patches/@tanstack__start-plugin-core@1.171.19.patch
+allowBuilds:
+  esbuild: true
+  sharp: true

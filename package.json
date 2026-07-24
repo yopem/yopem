@@ -45,7 +45,7 @@
   "overrides": {
     "vite": "catalog:"
   },
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@11.10.0",
   "pnpm": {
     "peerDependencyRules": {
       "allowedVersions": {
