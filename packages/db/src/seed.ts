@@ -4,7 +4,7 @@ import { Pool } from "pg"
 import { transliterate as tr } from "transliteration"
 
 import * as schema from "db/schema"
-import { apiKeyConfigSchema } from "utils/api-keys-schema"
+import { apiKeyConfigSchema, apiKeyProviderSchema } from "utils/api-keys-schema"
 import type { ApiKeyProvider } from "utils/api-keys-schema"
 import { createCustomId } from "utils/custom-id"
 
@@ -59,6 +59,8 @@ interface SeedModel {
   displayName: string
   isEnabled: boolean
 }
+
+const DEFAULT_TEXT_MODEL_ID = "nemotron-3-ultra-550b-a55b:free"
 
 const categories: SeedCategory[] = [
   {
@@ -155,6 +157,12 @@ const aiModels: SeedModel[] = [
     provider: "fal",
     modelId: "fal-ai/recraft-v3",
     displayName: "Recraft V3",
+    isEnabled: true,
+  },
+  {
+    provider: "openrouter",
+    modelId: DEFAULT_TEXT_MODEL_ID,
+    displayName: "Nemotron 3 Ultra 550B",
     isEnabled: true,
   },
 ]
@@ -776,10 +784,42 @@ async function seedAIModels() {
   return { created, skipped }
 }
 
+async function getDefaultTextModel(): Promise<{
+  provider: ApiKeyProvider
+  modelId: string
+} | null> {
+  const [model] = await db
+    .select({
+      provider: schema.aiModelsTable.provider,
+      modelId: schema.aiModelsTable.modelId,
+    })
+    .from(schema.aiModelsTable)
+    .where(
+      and(
+        eq(schema.aiModelsTable.modelId, DEFAULT_TEXT_MODEL_ID),
+        eq(schema.aiModelsTable.isEnabled, true),
+      ),
+    )
+    .limit(1)
+
+  if (!model) {
+    return null
+  }
+
+  const parsed = apiKeyProviderSchema.safeParse(model.provider)
+  if (!parsed.success) {
+    console.warn(`Default text model has unknown provider: ${model.provider}`)
+    return null
+  }
+
+  return { provider: parsed.data, modelId: model.modelId }
+}
+
 async function seedProducts(
   categoryIds: Map<string, string>,
   tagIds: Map<string, string>,
   apiKeys: { id: string; provider: ApiKeyProvider }[],
+  defaultTextModel?: { provider: ApiKeyProvider; modelId: string } | null,
 ) {
   const keyByProvider = new Map<ApiKeyProvider, string>()
   for (const key of apiKeys) {
@@ -789,10 +829,24 @@ async function seedProducts(
   }
 
   let created = 0
+  let updated = 0
   let skipped = 0
 
   for (const product of products) {
-    const apiKeyId = keyByProvider.get(product.provider)
+    const isMediaProduct =
+      product.outputFormat === "image" || product.outputFormat === "video"
+
+    const productProvider =
+      defaultTextModel && !isMediaProduct
+        ? defaultTextModel.provider
+        : product.provider
+
+    const modelEngine =
+      defaultTextModel && !isMediaProduct
+        ? defaultTextModel.modelId
+        : product.modelEngine
+
+    const apiKeyId = keyByProvider.get(productProvider)
     if (!apiKeyId) {
       console.warn(
         `Skipping ${product.name}: no active ${product.provider} API key`,
@@ -802,14 +856,33 @@ async function seedProducts(
     }
 
     const [existing] = await db
-      .select({ id: schema.productsTable.id })
+      .select({
+        id: schema.productsTable.id,
+        config: schema.productsTable.config,
+        apiKeyId: schema.productsTable.apiKeyId,
+      })
       .from(schema.productsTable)
       .where(eq(schema.productsTable.name, product.name))
       .limit(1)
 
     if (existing) {
-      console.info(`Skipping ${product.name}: already exists`)
-      skipped++
+      const needsUpdate =
+        defaultTextModel &&
+        !isMediaProduct &&
+        (existing.config as { modelEngine?: string } | null)?.modelEngine !==
+          modelEngine
+
+      if (needsUpdate) {
+        await db
+          .update(schema.productsTable)
+          .set({ config: { modelEngine }, apiKeyId })
+          .where(eq(schema.productsTable.id, existing.id))
+        console.info(`Updated product: ${product.name}`)
+        updated++
+      } else {
+        console.info(`Skipping ${product.name}: already up to date`)
+        skipped++
+      }
       continue
     }
 
@@ -823,7 +896,7 @@ async function seedProducts(
       excerpt: product.excerpt,
       description: product.description,
       status: "active",
-      config: { modelEngine: product.modelEngine },
+      config: { modelEngine },
       systemRole: product.systemRole,
       userInstructionTemplate: product.userInstructionTemplate,
       inputVariable: product.inputVariable,
@@ -864,7 +937,7 @@ async function seedProducts(
     console.info(`Created product: ${product.name}`)
   }
 
-  return { created, skipped }
+  return { created, updated, skipped }
 }
 
 async function main() {
@@ -872,6 +945,13 @@ async function main() {
   console.info(
     `Seeded ${modelResult.created} AI models, skipped ${modelResult.skipped}`,
   )
+
+  const defaultTextModel = await getDefaultTextModel()
+  if (!defaultTextModel) {
+    console.warn(
+      "Default text model not found in database; using product defaults",
+    )
+  }
 
   const apiKeys = await getActiveApiKeys()
   const textKeys = apiKeys.filter(
@@ -885,13 +965,15 @@ async function main() {
     process.exit(1)
   }
 
-  const { created, skipped } = await (async () => {
+  const { created, updated, skipped } = await (async () => {
     const categoryIds = await seedCategories()
     const tagIds = await seedTags()
-    return await seedProducts(categoryIds, tagIds, apiKeys)
+    return await seedProducts(categoryIds, tagIds, apiKeys, defaultTextModel)
   })()
 
-  console.info(`Seeded ${created} products, skipped ${skipped}`)
+  console.info(
+    `Seeded ${created} products, updated ${updated}, skipped ${skipped}`,
+  )
 }
 
 try {

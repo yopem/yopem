@@ -259,7 +259,7 @@ export const productsRouter = {
         })
       }
 
-      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+      const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
       if (!decryptedKey) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Failed to decrypt API key",
@@ -414,7 +414,7 @@ export const productsRouter = {
         })
       }
 
-      const decryptedKey = decryptApiKey(selectedKey.apiKey)
+      const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
       if (!decryptedKey) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Failed to decrypt API key",

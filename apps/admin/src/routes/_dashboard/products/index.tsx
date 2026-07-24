@@ -47,14 +47,14 @@ const ProductsIndexPage = () => {
   }) as {
     data:
       | {
-          tools: Product[]
+          products: Product[]
           nextCursor: string | undefined
         }
       | undefined
     refetch: () => void
   } & { isLoading: boolean }
 
-  const products = useMemo(() => productsData?.tools ?? [], [productsData])
+  const products = useMemo(() => productsData?.products ?? [], [productsData])
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: string) => {

@@ -54,10 +54,14 @@ export class OpenAICompatibleProvider implements AIProvider {
     } catch (e) {
       if (e instanceof Error) {
         const msg = e.message.toLowerCase()
-        if (msg.includes("401") || msg.includes("unauthorized")) {
+        if (
+          msg.includes("401") ||
+          msg.includes("unauthorized") ||
+          msg.includes("missing authentication")
+        ) {
           throw new InvalidKeyError(
             this.providerName,
-            "Invalid API key. Please check your credentials.",
+            "Invalid or missing API key. Please check your credentials.",
             e,
           )
         }
