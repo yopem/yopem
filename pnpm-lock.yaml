@@ -114,6 +114,9 @@ catalogs:
     shimmer-from-structure:
       specifier: 2.4.5
       version: 2.4.5
+    slate:
+      specifier: 0.124.1
+      version: 0.124.1
     srvx:
       specifier: ^0.11.22
       version: 0.11.22
@@ -163,6 +166,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@platejs/media':
+        specifier: ^53.1.4
+        version: 53.1.4(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-form':
         specifier: 'catalog:'
         version: 1.33.1(@tanstack/react-start@1.168.27(@voidzero-dev/vite-plus-core@0.2.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(typescript@7.0.2))(crossws@0.4.10(srvx@0.11.22))(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(rollup@4.62.2))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -184,12 +190,18 @@ importers:
       db:
         specifier: workspace:*
         version: link:../../packages/db
+      editor:
+        specifier: workspace:*
+        version: link:../../packages/editor
       env:
         specifier: workspace:*
         version: link:../../packages/env
       lucide-react:
         specifier: 'catalog:'
         version: 1.24.0(react@19.2.7)
+      platejs:
+        specifier: ^53.2.4
+        version: 53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
       react:
         specifier: 'catalog:'
         version: 19.2.7
@@ -375,6 +387,9 @@ importers:
       db:
         specifier: workspace:*
         version: link:../../packages/db
+      editor:
+        specifier: workspace:*
+        version: link:../../packages/editor
       env:
         specifier: workspace:*
         version: link:../../packages/env
@@ -544,6 +559,9 @@ importers:
       '@platejs/combobox':
         specifier: ^53.0.0
         version: 53.0.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@platejs/core':
+        specifier: ^53.2.4
+        version: 53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
       '@platejs/dnd':
         specifier: ^53.1.0
         version: 53.1.0(platejs@53.2.4(@types/react@19.2.17)(immer@11.1.11)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)))(react-dnd-html5-backend@16.0.1)(react-dnd@16.0.1(@types/node@26.1.1)(@types/react@19.2.17)(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -607,6 +625,9 @@ importers:
       react-tweet:
         specifier: ^3.3.1
         version: 3.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      slate:
+        specifier: 'catalog:'
+        version: 0.124.1
       tailwind-scrollbar-hide:
         specifier: ^4.0.0
         version: 4.0.0(tailwindcss@4.3.2)

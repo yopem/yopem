@@ -53,6 +53,9 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    ssr: {
+      noExternal: ["react-tweet"],
+    },
     resolve: {
       tsconfigPaths: true,
     },

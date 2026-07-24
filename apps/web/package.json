@@ -21,6 +21,7 @@
     "@unpic/react": "catalog:",
     "auth": "workspace:*",
     "db": "workspace:*",
+    "editor": "workspace:*",
     "env": "workspace:*",
     "lucide-react": "catalog:",
     "react": "catalog:",

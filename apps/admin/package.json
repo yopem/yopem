@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@platejs/media": "^53.1.4",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
@@ -21,8 +22,10 @@
     "@unpic/react": "catalog:",
     "auth": "workspace:*",
     "db": "workspace:*",
+    "editor": "workspace:*",
     "env": "workspace:*",
     "lucide-react": "catalog:",
+    "platejs": "^53.2.4",
     "react": "catalog:",
     "react-dom": "catalog:",
     "recharts": "^3.8.1",

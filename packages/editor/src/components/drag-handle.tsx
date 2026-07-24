@@ -16,9 +16,7 @@ interface DragHandleProps {
   previewRef: RefObject<HTMLDivElement | null>
   resetPreview: () => void
   setPreviewTop: (top: number) => void
-  handleRef:
-    | RefCallback<HTMLButtonElement>
-    | RefObject<HTMLButtonElement | null>
+  handleRef: RefCallback<HTMLDivElement> | RefObject<HTMLDivElement | null>
 }
 
 export function DragHandle({
@@ -65,14 +63,21 @@ export function DragHandle({
   return (
     <Tooltip>
       <TooltipTrigger>
-        <button
+        <div
           ref={handleRef}
-          type="button"
+          role="button"
+          tabIndex={0}
           aria-label="Drag to move"
           className="flex size-full items-center justify-center"
           onClick={(e) => {
             e.preventDefault()
             editor.getApi(BlockSelectionPlugin).blockSelection.focus()
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              editor.getApi(BlockSelectionPlugin).blockSelection.focus()
+            }
           }}
           onMouseDown={(e) => {
             resetPreview()
@@ -119,7 +124,7 @@ export function DragHandle({
           data-plate-prevent-deselect
         >
           <GripVerticalIcon className="text-muted-foreground" />
-        </button>
+        </div>
       </TooltipTrigger>
       <TooltipContent>Drag to move</TooltipContent>
     </Tooltip>

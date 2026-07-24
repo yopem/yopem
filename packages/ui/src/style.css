@@ -170,6 +170,15 @@
   }
 }
 
+/* Plate slash-command menu: Tailwind can't scan node_modules */
+[role="listbox"] > .hidden:has([role="option"]) {
+  display: block;
+}
+
+.w-75 {
+  width: 18.75rem;
+}
+
 @keyframes indeterminate-progress {
   0% {
     transform: translateX(-100%);

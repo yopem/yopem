@@ -14,9 +14,11 @@ import { Separator } from "ui/separator"
 import { Skeleton } from "ui/skeleton"
 
 import ProductExecuteForm from "@/components/marketplace/execute-form"
+import ProductDescription from "@/components/marketplace/product-description"
 import ProductInfo from "@/components/marketplace/product-info"
 import ProductReviewsSection from "@/components/marketplace/product-reviews-section"
 import UserCredits from "@/components/marketplace/user-credits"
+import { stripHtml } from "@/utils/strip-html"
 
 export const Route = createFileRoute("/_public/marketplace/products/$slug")({
   loader: async ({ params, context }) => {
@@ -57,8 +59,9 @@ export const Route = createFileRoute("/_public/marketplace/products/$slug")({
       return { meta: [{ title: "Product Not Found" }] }
     }
     const title = `${product.name} | ${siteTitle}`
+    const rawDescription = product.description ?? ""
     const description =
-      product.description ??
+      stripHtml(rawDescription) ||
       "Discover this AI-powered product in our marketplace"
     return {
       meta: [
@@ -135,9 +138,10 @@ function ProductDetailPage() {
                   </Badge>
                 </div>
 
-                <p className="text-muted-foreground text-base/relaxed">
-                  {product.description ?? "No description available"}
-                </p>
+                <ProductDescription
+                  description={product.description}
+                  className="text-muted-foreground text-base/relaxed"
+                />
 
                 {product.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
