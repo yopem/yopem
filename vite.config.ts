@@ -3,7 +3,8 @@ import { defineConfig } from "vite-plus"
 export default defineConfig({
   staged: {
     "*": "vp check --fix",
-    "*.{js,ts,tsx,json,md,yaml,yml,css}": "vp fmt --write",
+    "*.{js,ts,tsx,json,md,yaml,yml,css}, !**/migrations/**, !pnpm-lock.yaml":
+      "vp fmt --write",
   },
   fmt: {
     bracketSpacing: true,
