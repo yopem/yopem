@@ -1,6 +1,8 @@
-import type { MiddlewareHandler } from "hono"
+import type { Context, MiddlewareHandler } from "hono"
 
 import { HTTPException } from "hono/http-exception"
+
+import type { SessionUser } from "auth/types"
 
 import type { AppContext } from "./context"
 
@@ -18,4 +20,14 @@ export const requireAdmin: MiddlewareHandler<AppContext> = async (c, next) => {
   }
 
   await next()
+}
+
+export const assertSession = (c: Context<AppContext>): SessionUser => {
+  const session = c.var.session
+
+  if (!session) {
+    throw new HTTPException(401, { message: "Authentication required" })
+  }
+
+  return session
 }

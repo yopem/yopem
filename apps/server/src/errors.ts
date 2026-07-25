@@ -1,3 +1,5 @@
+import { HTTPException } from "hono/http-exception"
+
 export class RateLimitError extends Error {
   readonly tag = "RateLimitError" as const
   operation: string
@@ -55,6 +57,27 @@ export class PortalHandlerError extends Error {
     this.operation = args.operation
     this.cause = args.cause
     this.name = "PortalHandlerError"
+  }
+}
+
+const statusMap = {
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  INTERNAL_SERVER_ERROR: 500,
+} as const
+
+export class ApiError extends HTTPException {
+  constructor(
+    code: keyof typeof statusMap,
+    options: { message: string; cause?: unknown },
+  ) {
+    super(statusMap[code], {
+      message: options.message,
+      cause: options.cause,
+    })
   }
 }
 
