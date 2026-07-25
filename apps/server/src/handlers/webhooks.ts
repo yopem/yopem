@@ -7,10 +7,8 @@ import {
   handleSubscriptionCreated,
   handleSubscriptionUpdated,
 } from "server/payments/subscription-webhooks"
-import { WebhookMonitor } from "server/payments/webhook-monitor"
 import { z } from "zod"
 
-import { redisCache } from "cache"
 import {
   addOverflowCredits,
   grantCredits,
@@ -33,18 +31,6 @@ const webhookOrderMetadataSchema = z.object({
   packSize: z.string().optional(),
 })
 
-let redisInitialized = false
-
-async function ensureRedisInitialized() {
-  if (!redisInitialized) {
-    const redis = await redisCache.getRedisClient()
-    if (redis) {
-      WebhookMonitor.setRedisClient(redis)
-      redisInitialized = true
-    }
-  }
-}
-
 interface PolarOrderData {
   id: string
   customerId: string | null
@@ -61,7 +47,6 @@ interface PolarWebhookPayload {
 }
 
 async function handleOrderPaid(payload: PolarWebhookPayload) {
-  await ensureRedisInitialized()
   const order = payload.data
 
   try {
@@ -107,11 +92,6 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
         "alreadyProcessed" in overflowResult &&
         overflowResult.alreadyProcessed
       ) {
-        WebhookMonitor.detectDuplicateWebhook({
-          eventType: "order.paid",
-          orderId: order.id,
-          isProcessed: true,
-        })
         console.info(
           `Overflow order already processed (idempotent): orderId=${order.id}`,
         )
@@ -143,11 +123,6 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
     })
 
     if ("alreadyProcessed" in grantResult && grantResult.alreadyProcessed) {
-      WebhookMonitor.detectDuplicateWebhook({
-        eventType: "order.paid",
-        orderId: order.id,
-        isProcessed: true,
-      })
       console.info(`Order already processed (idempotent): orderId=${order.id}`)
       return
     }
@@ -171,7 +146,6 @@ async function handleOrderPaid(payload: PolarWebhookPayload) {
 }
 
 async function handleOrderRefunded(payload: PolarWebhookPayload) {
-  await ensureRedisInitialized()
   const order = payload.data
 
   try {
@@ -180,23 +154,12 @@ async function handleOrderRefunded(payload: PolarWebhookPayload) {
       payload,
     })
 
-    WebhookMonitor.detectAnomalousRefund({
-      refundAmount: (order.refundedAmount ?? 0) / 100,
-      totalAmount: order.totalAmount / 100,
-      orderId: order.id,
-    })
-
     const refundResult = await refundCredits({
       polarPaymentId: order.id,
       refundAmount: order.refundedAmount ?? 0,
     })
 
     if (refundResult.alreadyProcessed) {
-      WebhookMonitor.detectDuplicateWebhook({
-        eventType: "order.refunded",
-        orderId: order.id,
-        isProcessed: true,
-      })
       console.info(
         `Order refund already processed (idempotent): orderId=${order.id}`,
       )

@@ -7,7 +7,6 @@ import {
 } from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
 import { adminProcedure } from "server/orpc"
-import { WebhookMetrics } from "server/payments/webhook-metrics"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
@@ -18,13 +17,9 @@ import {
   findAIModelById,
   findAIModelByProviderAndModelId,
   getActivityFeed,
-  getActivityLogs,
   getAiRequestsHistory,
   getApiKeyStats,
   getSetting,
-  getSystemMetrics,
-  getUptimeHistory,
-  getUptimeMetrics,
   listAIModels,
   updateAIModelById,
   upsertSetting,
@@ -49,55 +44,12 @@ const activityFeedItemSchema = z.object({
 
 const activityFeedOutputSchema = z.array(activityFeedItemSchema)
 
-const systemMetricsOutputSchema = z.object({
-  revenue: z.number(),
-  revenueChange: z.string(),
-  activeUsers: z.number(),
-  activeUsersChange: z.string(),
-  aiRequests: z.number(),
-  aiRequestsChange: z.string(),
-  systemUptime: z.string(),
-  systemUptimeChange: z.string(),
-})
-
 const apiKeyStatsOutputSchema = z.object({
   totalRequests: z.number(),
   activeKeys: z.number(),
   monthlyCost: z.number(),
   requestsThisMonth: z.number(),
   costChange: z.string(),
-})
-
-const uptimeMetricsOutputSchema = z.object({
-  uptimePercentage: z.number(),
-  totalDuration: z.number(),
-  lastDowntime: z.date().nullable(),
-  downtimeCount: z.number(),
-})
-
-const activityLogsOutputSchema = z.object({
-  logs: z.array(
-    z.object({
-      id: z.string(),
-      timestamp: z.date(),
-      eventType: z.string(),
-      severity: z.string(),
-      description: z.string(),
-      metadata: z.record(z.string(), z.unknown()).nullable(),
-    }),
-  ),
-  nextCursor: z.string().optional(),
-  totalCount: z.number(),
-})
-
-const uptimeHistoryOutputSchema = z.object({
-  dataPoints: z.array(
-    z.object({
-      date: z.string(),
-      uptimePercentage: z.number(),
-      downtimeSeconds: z.number(),
-    }),
-  ),
 })
 
 const formatApiKey = (key: ApiKeyConfig) => ({
@@ -421,161 +373,6 @@ export const adminRouter = {
       return { success: true }
     }),
 
-  getWebhookMetrics: adminProcedure
-    .input(
-      z.object({
-        eventType: z.enum(["order.paid", "order.refunded"]).optional(),
-      }),
-    )
-    .handler(async ({ context, input }) => {
-      const redis = await context.redis.getRedisClient()
-
-      if (!redis) {
-        return { metrics: [] }
-      }
-
-      const metricsTracker = new WebhookMetrics(redis)
-
-      const eventTypes = input.eventType
-        ? [input.eventType]
-        : ["order.paid", "order.refunded"]
-
-      const metricsPromises = eventTypes.map((eventType) =>
-        metricsTracker.getMetricsSummary(eventType).then((summary) => ({
-          eventType,
-          ...summary,
-        })),
-      )
-
-      const metrics = await Promise.all(metricsPromises)
-
-      return { metrics }
-    }),
-
-  getWebhookMetricsHistory: adminProcedure
-    .input(
-      z.object({
-        eventType: z.enum(["order.paid", "order.refunded"]).optional(),
-        timeRange: z.enum(["24h", "7d"]),
-      }),
-    )
-    .handler(async ({ context, input }) => {
-      const redis = await context.redis.getRedisClient()
-
-      if (!redis) {
-        return {
-          dataPoints: [],
-          summary: {
-            totalProcessed: 0,
-            successCount: 0,
-            failureCount: 0,
-            successRate: 0,
-            avgProcessingTime: 0,
-          },
-        }
-      }
-
-      const endDate = new Date()
-      const startDate =
-        input.timeRange === "24h"
-          ? new Date(endDate.getTime() - 24 * 60 * 60 * 1000)
-          : new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000)
-
-      const eventTypes = input.eventType
-        ? [input.eventType]
-        : ["order.paid", "order.refunded"]
-
-      const dataPointsMap = new Map<
-        string,
-        {
-          successCount: number
-          failureCount: number
-          totalTime: number
-          totalCount: number
-        }
-      >()
-
-      for (const eventType of eventTypes) {
-        let currentDate = new Date(startDate)
-        while (currentDate <= endDate) {
-          const dateStr = currentDate.toISOString().split("T")[0]
-
-          const existing = dataPointsMap.get(dateStr) ?? {
-            successCount: 0,
-            failureCount: 0,
-            totalTime: 0,
-            totalCount: 0,
-          }
-
-          const [successCount, failureCount, totalTime, totalCount] =
-            await Promise.all([
-              redis
-                .get(`webhook:metrics:${eventType}:success:${dateStr}`)
-                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redis
-                .get(`webhook:metrics:${eventType}:failure:${dateStr}`)
-                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redis
-                .get(`webhook:metrics:${eventType}:processing_time:${dateStr}`)
-                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-              redis
-                .get(`webhook:metrics:${eventType}:processing_count:${dateStr}`)
-                .then((v: string | null) => Number.parseInt(v ?? "0", 10)),
-            ])
-
-          dataPointsMap.set(dateStr, {
-            successCount: existing.successCount + successCount,
-            failureCount: existing.failureCount + failureCount,
-            totalTime: existing.totalTime + totalTime,
-            totalCount: existing.totalCount + totalCount,
-          })
-
-          currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1))
-        }
-      }
-
-      const dataPoints = Array.from(dataPointsMap.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([date, data]) => ({
-          date,
-          successCount: data.successCount,
-          failureCount: data.failureCount,
-          avgProcessingTime:
-            data.totalCount > 0 ? data.totalTime / data.totalCount : 0,
-        }))
-
-      const totalProcessed = dataPoints.reduce(
-        (sum, dp) => sum + dp.successCount + dp.failureCount,
-        0,
-      )
-      const successCount = dataPoints.reduce(
-        (sum, dp) => sum + dp.successCount,
-        0,
-      )
-      const failureCount = dataPoints.reduce(
-        (sum, dp) => sum + dp.failureCount,
-        0,
-      )
-      const totalAvgTime = dataPoints.reduce(
-        (sum, dp) => sum + dp.avgProcessingTime,
-        0,
-      )
-      const avgProcessingTime =
-        dataPoints.length > 0 ? totalAvgTime / dataPoints.length : 0
-
-      return {
-        dataPoints,
-        summary: {
-          totalProcessed,
-          successCount,
-          failureCount,
-          successRate:
-            totalProcessed > 0 ? (successCount / totalProcessed) * 100 : 0,
-          avgProcessingTime,
-        },
-      }
-    }),
-
   getActivityFeed: adminProcedure
     .output(activityFeedOutputSchema)
     .handler(async ({ context }) => {
@@ -607,215 +404,6 @@ export const adminRouter = {
       void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
 
       return activities
-    }),
-
-  getUptimeMetrics: adminProcedure
-    .output(uptimeMetricsOutputSchema)
-    .handler(async ({ context }) => {
-      const cacheKey = "admin:uptime:metrics"
-      const cached =
-        await context.redis.getCache<z.infer<typeof uptimeMetricsOutputSchema>>(
-          cacheKey,
-        )
-
-      if (cached) {
-        return cached
-      }
-
-      const rawMetrics = await getUptimeMetrics()
-
-      const totalSeconds = 30 * 24 * 60 * 60
-      const downtimeSeconds = rawMetrics.totalDowntime
-      const uptimePercentage =
-        ((totalSeconds - downtimeSeconds) / totalSeconds) * 100
-
-      const metrics = {
-        uptimePercentage: Math.round(uptimePercentage * 10) / 10,
-        totalDuration: totalSeconds - downtimeSeconds,
-        lastDowntime: rawMetrics.lastDowntime,
-        downtimeCount: rawMetrics.downtimeCount,
-      }
-
-      void context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
-
-      return metrics
-    }),
-
-  getActivityLogs: adminProcedure
-    .input(
-      z.object({
-        eventType: z
-          .enum(["auth", "system", "payment", "tool", "api", "webhook"])
-          .optional(),
-        severity: z
-          .enum(["critical", "error", "warning", "info", "debug"])
-          .optional(),
-        startDate: z.date().optional(),
-        endDate: z.date().optional(),
-        cursor: z.string().optional(),
-        limit: z.number().min(1).max(100).default(50),
-      }),
-    )
-    .output(activityLogsOutputSchema)
-    .handler(async ({ context, input }) => {
-      const cacheKey = `admin:activity-logs:${input.eventType ?? "all"}:${input.severity ?? "all"}:${input.startDate?.toISOString() ?? "all"}:${input.endDate?.toISOString() ?? "all"}:${input.cursor ?? "initial"}`
-      const cached =
-        await context.redis.getCache<z.infer<typeof activityLogsOutputSchema>>(
-          cacheKey,
-        )
-
-      if (cached) {
-        return cached
-      }
-
-      const rawResult = await getActivityLogs({
-        limit: input.limit,
-        cursor: input.cursor,
-        eventType: input.eventType,
-        severity: input.severity,
-        startDate: input.startDate,
-        endDate: input.endDate,
-      })
-
-      const result = {
-        logs: rawResult.logs.map((log) => ({
-          id: log.id,
-          timestamp: log.timestamp,
-          eventType: log.eventType,
-          severity: log.severity,
-          description: log.description,
-          metadata: log.metadata as Record<string, unknown> | null,
-        })),
-        nextCursor: rawResult.nextCursor,
-        totalCount: rawResult.totalCount,
-      }
-
-      void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
-
-      return result
-    }),
-
-  getUptimeHistory: adminProcedure
-    .input(
-      z.object({
-        timeRange: z.enum(["7d", "30d"]).default("7d"),
-      }),
-    )
-    .output(uptimeHistoryOutputSchema)
-    .handler(async ({ context, input }) => {
-      const cacheKey = `admin:uptime:history:${input.timeRange}`
-      const cached =
-        await context.redis.getCache<z.infer<typeof uptimeHistoryOutputSchema>>(
-          cacheKey,
-        )
-
-      if (cached) {
-        return cached
-      }
-
-      const now = new Date()
-      const days = input.timeRange === "7d" ? 7 : 30
-      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
-
-      const dataPointsMap = new Map<
-        string,
-        { date: string; uptimePercentage: number; downtimeSeconds: number }
-      >()
-
-      for (let i = 0; i < days; i++) {
-        const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
-        const dateStr = date.toISOString().split("T")[0]
-        dataPointsMap.set(dateStr, {
-          date: dateStr,
-          uptimePercentage: 100,
-          downtimeSeconds: 0,
-        })
-      }
-
-      const downtimeEvents = await getUptimeHistory({
-        days,
-        startDate,
-        now,
-      })
-
-      for (const event of downtimeEvents) {
-        const dateStr = event.startedAt?.toISOString().split("T")[0]
-        if (!dateStr) continue
-        const existing = dataPointsMap.get(dateStr)
-        if (existing) {
-          const duration = event.durationSeconds ?? 0
-          existing.downtimeSeconds += duration
-          const totalSeconds = 24 * 60 * 60
-          existing.uptimePercentage =
-            Math.round(
-              ((totalSeconds - existing.downtimeSeconds) / totalSeconds) *
-                100 *
-                10,
-            ) / 10
-        }
-      }
-
-      const dataPoints = Array.from(dataPointsMap.values()).sort((a, b) =>
-        a.date.localeCompare(b.date),
-      )
-
-      const result = { dataPoints }
-      void context.redis.setCache(cacheKey, result, MODEL_CACHE_TTL)
-
-      return result
-    }),
-
-  getSystemMetrics: adminProcedure
-    .output(systemMetricsOutputSchema)
-    .handler(async ({ context }) => {
-      const cacheKey = "admin:metrics:system"
-      const cached =
-        await context.redis.getCache<z.infer<typeof systemMetricsOutputSchema>>(
-          cacheKey,
-        )
-
-      if (cached) {
-        return cached
-      }
-
-      const rawMetrics = await getSystemMetrics()
-
-      const revenueChange = calculateTrend(
-        rawMetrics.revenue.current,
-        rawMetrics.revenue.previous,
-      )
-      const activeUsersChange = calculateTrend(
-        rawMetrics.activeUsers.current,
-        rawMetrics.activeUsers.previous,
-      )
-      const aiRequestsChange = calculateTrend(
-        rawMetrics.aiRequests.current,
-        rawMetrics.aiRequests.previous,
-      )
-
-      const totalSeconds = 30 * 24 * 60 * 60
-      const downtimeSeconds = rawMetrics.downtimeSeconds
-      const uptimePercentage =
-        ((totalSeconds - downtimeSeconds) / totalSeconds) * 100
-      const uptimeChange =
-        downtimeSeconds > 0
-          ? `-${((downtimeSeconds / totalSeconds) * 100).toFixed(1)}%`
-          : "+0.0%"
-
-      const metrics = {
-        revenue: rawMetrics.revenue.current,
-        revenueChange,
-        activeUsers: rawMetrics.activeUsers.current,
-        activeUsersChange,
-        aiRequests: rawMetrics.aiRequests.current,
-        aiRequestsChange,
-        systemUptime: `${uptimePercentage.toFixed(1)}%`,
-        systemUptimeChange: uptimeChange,
-      }
-
-      void context.redis.setCache(cacheKey, metrics, MODEL_CACHE_TTL)
-
-      return metrics
     }),
 
   getAiRequestsHistory: adminProcedure
@@ -909,12 +497,4 @@ export const adminRouter = {
 
       return result
     }),
-}
-
-function calculateTrend(current: number, previous: number): string {
-  if (previous === 0) {
-    return current > 0 ? "+100%" : "N/A"
-  }
-  const trend = ((current - previous) / previous) * 100
-  return trend >= 0 ? `+${trend.toFixed(1)}%` : `${trend.toFixed(1)}%`
 }
