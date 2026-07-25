@@ -27,18 +27,11 @@ import {
   getPopularProducts,
   getProductById,
   getProductBySlug,
-  getProductBySlugId,
-  getProductReviewById,
-  getProductReviews,
-  getUserReview,
-  hasUserUsedProduct,
   insertProductRun,
   listProducts,
   searchProducts,
   updateProduct,
-  updateProductReview,
   updateProductStatus,
-  upsertProductReview,
 } from "db/services/products"
 import { listTags, validateTagIds } from "db/services/tags"
 import { createCustomId } from "utils/custom-id"
@@ -56,12 +49,9 @@ const publicProductFields = [
   "costPerRun",
   "markup",
   "status",
-  "reviewStatus",
   "categories",
   "tags",
   "thumbnail",
-  "averageRating",
-  "reviewCount",
   "outputFormat",
   "inputVariable",
   "createdAt",
@@ -587,120 +577,6 @@ export const productsRouter = {
     )
     .handler(async ({ input }) => {
       return await updateProductStatus(input.ids, input.status)
-    }),
-
-  getReviews: publicProcedure
-    .input(z.object({ slug: z.string() }))
-    .handler(async ({ input }) => {
-      const product = await getProductBySlugId(input.slug)
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          message: `Product not found: ${input.slug}`,
-        })
-      }
-      const reviews = await getProductReviews(product.id)
-      return {
-        ...reviews,
-        reviews: reviews.reviews.map(
-          ({ userId: _userId, ...publicReview }) => publicReview,
-        ),
-      }
-    }),
-
-  submitReview: protectedProcedure
-    .input(
-      z.object({
-        slug: z.string(),
-        rating: z.number().min(1).max(5),
-        reviewText: z.string().max(2000).optional(),
-      }),
-    )
-    .handler(async ({ context, input }) => {
-      const product = await getProductBySlugId(input.slug)
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          message: `Product not found: ${input.slug}`,
-        })
-      }
-
-      const hasUsed = await hasUserUsedProduct(product.id, context.session.id)
-
-      if (!hasUsed) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "You must use this product at least once before reviewing it",
-        })
-      }
-
-      const review = await upsertProductReview(
-        product.id,
-        context.session.id,
-        context.session.username ??
-          context.session.name ??
-          context.session.email ??
-          null,
-        input.rating,
-        input.reviewText ?? null,
-      )
-
-      return review
-    }),
-
-  updateReview: protectedProcedure
-    .input(
-      z.object({
-        reviewId: z.string(),
-        rating: z.number().min(1).max(5),
-        reviewText: z.string().max(2000).optional(),
-      }),
-    )
-    .handler(async ({ context, input }) => {
-      const review = await getProductReviewById(input.reviewId)
-      if (!review) {
-        throw new ORPCError("NOT_FOUND", {
-          message: `Review not found: ${input.reviewId}`,
-        })
-      }
-
-      if (review.userId !== context.session.id) {
-        throw new ORPCError("FORBIDDEN", {
-          message: "You can only update your own reviews",
-        })
-      }
-
-      await updateProductReview(
-        input.reviewId,
-        input.rating,
-        input.reviewText ?? null,
-      )
-
-      return { success: true }
-    }),
-
-  getUserReview: protectedProcedure
-    .input(z.object({ slug: z.string() }))
-    .handler(async ({ context, input }) => {
-      const product = await getProductBySlugId(input.slug)
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          message: `Product not found: ${input.slug}`,
-        })
-      }
-      const review = await getUserReview(product.id, context.session.id)
-      return review
-    }),
-
-  hasUsedProduct: protectedProcedure
-    .input(z.object({ slug: z.string() }))
-    .handler(async ({ context, input }) => {
-      const product = await getProductBySlugId(input.slug)
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          message: `Product not found: ${input.slug}`,
-        })
-      }
-      const hasUsed = await hasUserUsedProduct(product.id, context.session.id)
-      return { hasUsed }
     }),
 
   search: publicProcedure

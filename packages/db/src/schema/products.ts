@@ -73,7 +73,5 @@ export type SelectProduct = typeof productsTable.$inferSelect & {
   categories: { id: string; name: string; slug: string }[]
   tags: { id: string; name: string; slug: string }[]
   thumbnail?: { id: string; url: string; originalName: string } | null
-  averageRating?: number | null
-  reviewCount?: number
 }
 export type InsertProduct = typeof productsTable.$inferInsert
