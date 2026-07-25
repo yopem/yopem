@@ -280,6 +280,105 @@ export const getProductBySlug = async (
   }
 }
 
+export type PublicProduct = Omit<
+  typeof productsTable.$inferSelect,
+  | "apiKeyId"
+  | "config"
+  | "systemRole"
+  | "userInstructionTemplate"
+  | "thumbnailId"
+  | "createdBy"
+> & {
+  categories: { id: string; name: string; slug: string }[]
+  tags: { id: string; name: string; slug: string }[]
+  thumbnail: { id: string; url: string } | null
+}
+
+const buildPublicProduct = async (
+  product: typeof productsTable.$inferSelect,
+): Promise<PublicProduct> => {
+  const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
+    db
+      .select({
+        id: categoriesTable.id,
+        name: categoriesTable.name,
+        slug: categoriesTable.slug,
+      })
+      .from(productCategoriesTable)
+      .innerJoin(
+        categoriesTable,
+        eq(productCategoriesTable.categoryId, categoriesTable.id),
+      )
+      .where(eq(productCategoriesTable.productId, product.id)),
+    db
+      .select({
+        id: tagsTable.id,
+        name: tagsTable.name,
+        slug: tagsTable.slug,
+      })
+      .from(productTagsTable)
+      .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
+      .where(eq(productTagsTable.productId, product.id)),
+    product.thumbnailId
+      ? db
+          .select({
+            id: assetsTable.id,
+            url: assetsTable.url,
+          })
+          .from(assetsTable)
+          .where(eq(assetsTable.id, product.thumbnailId))
+      : Promise.resolve([]),
+  ])
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    excerpt: product.excerpt,
+    isPublic: product.isPublic,
+    costPerRun: product.costPerRun,
+    markup: product.markup,
+    status: product.status,
+    categories: categoriesResult,
+    tags: tagsResult,
+    thumbnail: thumbnailResult[0] ?? null,
+    outputFormat: product.outputFormat,
+    inputVariable: product.inputVariable,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+  }
+}
+
+export const getPublicProductById = async (
+  id: string,
+): Promise<PublicProduct | null> => {
+  const [product] = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.id, id))
+
+  if (!product) {
+    return null
+  }
+
+  return buildPublicProduct(product)
+}
+
+export const getPublicProductBySlug = async (
+  slug: string,
+): Promise<PublicProduct | null> => {
+  const product = await db.query.productsTable.findFirst({
+    where: eq(productsTable.slug, slug),
+  })
+
+  if (!product) {
+    return null
+  }
+
+  return buildPublicProduct(product)
+}
+
 export const createProduct = async (
   data: Omit<InsertProduct, "id" | "slug"> & {
     categoryIds?: string[]

@@ -26,7 +26,8 @@ import {
   duplicateProduct,
   getPopularProducts,
   getProductById,
-  getProductBySlug,
+  getPublicProductById,
+  getPublicProductBySlug,
   insertProductRun,
   listProducts,
   searchProducts,
@@ -40,40 +41,6 @@ import { idParamSchema, jsonOkResponse, paginationQuerySchema } from "./common"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const SETTINGS_CACHE_TTL = 300
-
-const publicProductFields = [
-  "id",
-  "slug",
-  "name",
-  "description",
-  "excerpt",
-  "isPublic",
-  "costPerRun",
-  "markup",
-  "status",
-  "categories",
-  "tags",
-  "thumbnail",
-  "outputFormat",
-  "inputVariable",
-  "createdAt",
-  "updatedAt",
-] as const
-
-type PublicProductField = (typeof publicProductFields)[number]
-
-function projectPublicProduct<T extends Record<string, unknown>>(
-  product: T,
-): Pick<T, Extract<keyof T, PublicProductField>> {
-  const result = {} as Pick<T, Extract<keyof T, PublicProductField>>
-  for (const key of publicProductFields) {
-    if (key in product) {
-      ;(result as Record<string, unknown>)[key] = product[key]
-    }
-  }
-  return result
-}
-
 function validateRequiredInputs(
   inputs: Record<string, string>,
   inputVariables: { variableName: string; isOptional?: boolean }[],
@@ -193,7 +160,7 @@ const getByIdRoute = createRoute({
 
 productsPublicApp.openapi(getByIdRoute, async (c) => {
   const { id } = c.req.valid("param")
-  const product = await getProductById(id)
+  const product = await getPublicProductById(id)
 
   if (!product) {
     throw new ApiError("NOT_FOUND", {
@@ -201,7 +168,7 @@ productsPublicApp.openapi(getByIdRoute, async (c) => {
     })
   }
 
-  return c.json(projectPublicProduct(product), 200)
+  return c.json(product, 200)
 })
 
 const getBySlugRoute = createRoute({
@@ -218,7 +185,7 @@ const getBySlugRoute = createRoute({
 
 productsPublicApp.openapi(getBySlugRoute, async (c) => {
   const { slug } = c.req.valid("param")
-  const product = await getProductBySlug(slug)
+  const product = await getPublicProductBySlug(slug)
 
   if (!product) {
     throw new ApiError("NOT_FOUND", {
@@ -226,7 +193,7 @@ productsPublicApp.openapi(getBySlugRoute, async (c) => {
     })
   }
 
-  return c.json(projectPublicProduct(product), 200)
+  return c.json(product, 200)
 })
 
 const popularRoute = createRoute({
