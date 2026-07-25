@@ -1,1 +1,0 @@
-ALTER TABLE "tool_reviews" ADD COLUMN "user_name" text;
