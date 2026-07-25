@@ -13,6 +13,10 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 
 <!--VITE PLUS END-->
 
+## Agent workflow
+
+- Before starting work, query codebase memory via available MCP first to check prior decisions, plans, blockers, and relevant context.
+
 ## Stack
 
 - **Package manager:** pnpm 10.12.1 (workspaces, `catalog:` deps)
