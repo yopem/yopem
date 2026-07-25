@@ -17,12 +17,8 @@
       "default": "./src/storage/index.ts"
     },
     "./router": {
-      "types": "./src/root.ts",
-      "default": "./src/root.ts"
-    },
-    "./orpc": {
-      "types": "./src/orpc.ts",
-      "default": "./src/orpc.ts"
+      "types": "./src/router.ts",
+      "default": "./src/router.ts"
     },
     "./rate-limit": {
       "types": "./src/rate-limit.ts",
@@ -43,7 +39,7 @@
     "@ai-sdk/openai-compatible": "catalog:",
     "@aws-sdk/client-s3": "catalog:",
     "@hono/node-server": "^1.19.12",
-    "@orpc/server": "catalog:",
+    "@hono/zod-openapi": "^1.5.1",
     "@polar-sh/hono": "^0.5.5",
     "@polar-sh/sdk": "catalog:",
     "ai": "catalog:",

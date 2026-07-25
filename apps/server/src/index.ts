@@ -1,18 +1,20 @@
 import { serve } from "@hono/node-server"
-import { Hono } from "hono"
+import { OpenAPIHono } from "@hono/zod-openapi"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
 import { adminOrigin, webOrigin, serverPort, isDev, isProd } from "env"
 
+import type { AppContext } from "./context"
+
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"
 import { checkoutRoute } from "./handlers/checkout"
 import { portalRoute } from "./handlers/portal"
-import { rpcRoute } from "./handlers/rpc"
 import { webhooksRoute } from "./handlers/webhooks"
+import { apiApp } from "./router"
 
-const app = new Hono()
+const app = new OpenAPIHono<AppContext>()
 
 const port = serverPort
 
@@ -29,7 +31,7 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "x-orpc-procedure"],
+    allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Disposition"],
   }),
 )
@@ -48,10 +50,18 @@ app.get("/health", (c) => {
 })
 
 app.route("/auth", authCallbackRoute)
-app.route("/rpc", rpcRoute)
+app.route("/api", apiApp)
 app.route("/checkout", checkoutRoute)
 app.route("/portal", portalRoute)
 app.route("/webhooks", webhooksRoute)
+
+app.doc("/doc", {
+  openapi: "3.0.0",
+  info: {
+    title: "Yopem API",
+    version: "1.0.0",
+  },
+})
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {

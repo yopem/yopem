@@ -1,4 +1,4 @@
-import { protectedProcedure } from "server/orpc"
+import { protectedProcedure } from "server/procedure"
 
 export const sessionRouter = {
   current: protectedProcedure.handler(({ context }) => {

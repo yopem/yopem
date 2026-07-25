@@ -1,5 +1,4 @@
-import { ORPCError } from "@orpc/server"
-import { adminProcedure, publicProcedure } from "server/orpc"
+import { ORPCError, adminProcedure, publicProcedure } from "server/procedure"
 import { z } from "zod"
 
 import { insertTagSchema } from "db/schema"

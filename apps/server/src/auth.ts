@@ -7,13 +7,9 @@ import { subjects } from "auth/subjects"
 import type { SessionUser } from "auth/types"
 import { cookieDomain, isProd } from "env"
 
-export type { SessionUser }
+import type { AppContext } from "./context"
 
-interface SessionEnv {
-  Variables: {
-    session: SessionUser | null
-  }
-}
+export type { SessionUser }
 
 const isSecure = () => {
   return !!cookieDomain || isProd
@@ -31,13 +27,17 @@ const getCookieOptions = () => {
   }
 }
 
-const setTokenCookies = (c: Context, access: string, refresh: string) => {
+const setTokenCookies = (
+  c: Context<AppContext>,
+  access: string,
+  refresh: string,
+) => {
   const options = getCookieOptions()
   setCookie(c, "access_token", access, options)
   setCookie(c, "refresh_token", refresh, options)
 }
 
-export const authMiddleware: MiddlewareHandler<SessionEnv> = async (
+export const authMiddleware: MiddlewareHandler<AppContext> = async (
   c,
   next,
 ) => {

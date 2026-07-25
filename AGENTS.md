@@ -24,7 +24,7 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 - **Language:** TypeScript 7
 - **Frontend:** React 19, TanStack Start (SSR), TanStack Router (file-based), TanStack React Query, TanStack React Form
 - **Styling:** Tailwind CSS 4, Base UI (`@base-ui/react`) primitives, coss ui components from shadcn/ui registry, `tw-animate-css`, `next-themes`
-- **Backend:** Hono, oRPC (`@orpc/server` + `@orpc/client` + TanStack Query bindings)
+- **Backend:** Hono, `@hono/zod-openapi` (auto-generated OpenAPI), cookie-based auth middleware
 - **DB:** PostgreSQL + Drizzle ORM (`drizzle-kit`), `pg` Pool (max 20)
 - **Auth:** OpenAuth (`@openauthjs/openauth`), cookie-based sessions
 - **Cache:** Redis (`ioredis`)
@@ -133,4 +133,4 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - `vp run with-env` loads `.env` from repo root — required for server, db, and build commands.
 - Docker builds set `CI=true` and require `PUBLIC_` ARGs. Web/admin build output is `dist/{client,server}`; the `start` script runs `srvx` serving `dist/server/server.js` with `dist/client` as static assets (web on `WEB_PORT` default 3000, admin on `ADMIN_PORT` default 3001). The Dockerfile `CMD` is `node node_modules/srvx/bin/srvx.mjs serve --prod ... -s ../client dist/server/server.js`.
 - `AGENTS.md` is gitignored — edits won't show as uncommitted changes.
-- **Query hydration:** web/admin `__root.tsx` uses `dehydrate(queryClient)` + `<HydrateClient state=...>` from `@yopem/rpc/hydration` to transfer server-prefetched data to the client. Server routes prefetch via `prefetchQueries` from `@yopem/rpc/prefetch` and pass the dehydrated state into the root before render.
+- Server routes are organized as Hono sub-routers. The API is exposed under `/api/{namespace}/{action}` and auto-documented at `/doc`. Auth/role checks are Hono middleware (`requireAuth`, `requireAdmin`).

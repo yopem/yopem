@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server"
 import {
   addApiKeyInputSchema,
   deleteApiKeyInputSchema,
@@ -6,7 +5,7 @@ import {
   type ApiKeyConfig,
 } from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
-import { adminProcedure } from "server/orpc"
+import { adminProcedure, ORPCError } from "server/procedure"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
@@ -35,22 +34,6 @@ const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
 const MODEL_CACHE_TTL = 300
 const SETTINGS_CACHE_TTL = 300
-
-const activityFeedItemSchema = z.object({
-  type: z.string(),
-  message: z.string(),
-  timestamp: z.date(),
-})
-
-const activityFeedOutputSchema = z.array(activityFeedItemSchema)
-
-const apiKeyStatsOutputSchema = z.object({
-  totalRequests: z.number(),
-  activeKeys: z.number(),
-  monthlyCost: z.number(),
-  requestsThisMonth: z.number(),
-  costChange: z.string(),
-})
 
 const formatApiKey = (key: ApiKeyConfig) => ({
   ...key,
@@ -222,61 +205,55 @@ export const adminRouter = {
       return { success: true }
     }),
 
-  getApiKeyStats: adminProcedure
-    .output(apiKeyStatsOutputSchema)
-    .handler(async ({ context }) => {
-      const cacheKey = "admin:metrics:api_key_stats"
-      const cached = await context.redis.getCache<{
-        totalRequests: number
-        activeKeys: number
-        monthlyCost: number
-        requestsThisMonth: number
-        costChange: string
-      }>(cacheKey)
+  getApiKeyStats: adminProcedure.handler(async ({ context }) => {
+    const cacheKey = "admin:metrics:api_key_stats"
+    const cached = await context.redis.getCache<{
+      totalRequests: number
+      activeKeys: number
+      monthlyCost: number
+      requestsThisMonth: number
+      costChange: string
+    }>(cacheKey)
 
-      if (cached) {
-        return cached
-      }
+    if (cached) {
+      return cached
+    }
 
-      const [settings, rawStats] = await Promise.all([
-        getSetting(API_KEYS_SETTING_KEY),
-        getApiKeyStats(),
-      ])
+    const [settings, rawStats] = await Promise.all([
+      getSetting(API_KEYS_SETTING_KEY),
+      getApiKeyStats(),
+    ])
 
-      const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
-      const activeKeys = apiKeys.filter((key) => key.status === "active").length
+    const apiKeys = (settings?.settingValue as ApiKeyConfig[]) ?? []
+    const activeKeys = apiKeys.filter((key) => key.status === "active").length
 
-      const {
-        totalRequests,
-        requestsThisMonth,
-        monthlyCost,
-        previousMonthCost,
-      } = rawStats
+    const { totalRequests, requestsThisMonth, monthlyCost, previousMonthCost } =
+      rawStats
 
-      let costChange = "N/A"
-      if (previousMonthCost > 0) {
-        const changePercent =
-          ((monthlyCost - previousMonthCost) / previousMonthCost) * 100
-        costChange =
-          changePercent >= 0
-            ? `+${changePercent.toFixed(1)}%`
-            : `${changePercent.toFixed(1)}%`
-      } else if (monthlyCost > 0) {
-        costChange = "+100%"
-      }
+    let costChange = "N/A"
+    if (previousMonthCost > 0) {
+      const changePercent =
+        ((monthlyCost - previousMonthCost) / previousMonthCost) * 100
+      costChange =
+        changePercent >= 0
+          ? `+${changePercent.toFixed(1)}%`
+          : `${changePercent.toFixed(1)}%`
+    } else if (monthlyCost > 0) {
+      costChange = "+100%"
+    }
 
-      const stats = {
-        totalRequests,
-        activeKeys,
-        monthlyCost,
-        requestsThisMonth,
-        costChange,
-      }
+    const stats = {
+      totalRequests,
+      activeKeys,
+      monthlyCost,
+      requestsThisMonth,
+      costChange,
+    }
 
-      void context.redis.setCache(cacheKey, stats, MODEL_CACHE_TTL)
+    void context.redis.setCache(cacheKey, stats, MODEL_CACHE_TTL)
 
-      return stats
-    }),
+    return stats
+  }),
 
   getAIModels: adminProcedure.handler(() => listAIModels()),
 
@@ -373,53 +350,41 @@ export const adminRouter = {
       return { success: true }
     }),
 
-  getActivityFeed: adminProcedure
-    .output(activityFeedOutputSchema)
-    .handler(async ({ context }) => {
-      const cacheKey = "admin:metrics:activity_feed"
-      const cached = await context.redis.getCache<
-        {
-          type: string
-          message: string
-          timestamp: Date
-        }[]
-      >(cacheKey)
+  getActivityFeed: adminProcedure.handler(async ({ context }) => {
+    const cacheKey = "admin:metrics:activity_feed"
+    const cached = await context.redis.getCache<
+      {
+        type: string
+        message: string
+        timestamp: Date
+      }[]
+    >(cacheKey)
 
-      if (cached) {
-        return cached
+    if (cached) {
+      return cached
+    }
+
+    const recentPayments = await getActivityFeed(10)
+
+    const activities = recentPayments.map((payment) => {
+      const userIdentifier =
+        payment.userName ?? `User #${payment.userId.slice(0, 8)}`
+      return {
+        type: "payment",
+        message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
+        timestamp: payment.createdAt ?? new Date(),
       }
+    })
 
-      const recentPayments = await getActivityFeed(10)
+    void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
 
-      const activities = recentPayments.map((payment) => {
-        const userIdentifier =
-          payment.userName ?? `User #${payment.userId.slice(0, 8)}`
-        return {
-          type: "payment",
-          message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
-          timestamp: payment.createdAt ?? new Date(),
-        }
-      })
-
-      void context.redis.setCache(cacheKey, activities, MODEL_CACHE_TTL)
-
-      return activities
-    }),
+    return activities
+  }),
 
   getAiRequestsHistory: adminProcedure
     .input(
       z.object({
         timeRange: z.enum(["7d", "30d"]).default("7d"),
-      }),
-    )
-    .output(
-      z.object({
-        dataPoints: z.array(
-          z.object({
-            date: z.string(),
-            requests: z.number(),
-          }),
-        ),
       }),
     )
     .handler(async ({ context, input }) => {

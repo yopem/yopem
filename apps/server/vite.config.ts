@@ -25,7 +25,6 @@ export default defineConfig({
       "db",
       "env",
       "logger",
-      "orpc",
       "utils",
       "cache",
       "ai",

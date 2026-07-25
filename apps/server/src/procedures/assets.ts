@@ -1,9 +1,9 @@
-import { ORPCError } from "@orpc/server"
 import {
   adminProcedure,
   protectedProcedure,
   publicProcedure,
-} from "server/orpc"
+  ORPCError,
+} from "server/procedure"
 import { getR2Storage } from "server/storage"
 import { z } from "zod"
 
