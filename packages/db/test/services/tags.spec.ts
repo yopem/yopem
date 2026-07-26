@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import {
   createTag,
   deleteTag,
+  getTag,
   listTags,
   updateTag,
   validateTagIds,
@@ -33,6 +34,18 @@ describe("tags service", () => {
     mockDb.setReturn([[], [{ id: "t1", name: "Tag", slug: "tag" }]])
     const result = await createTag({ name: "Tag" })
     expect(result.slug).toBe("tag")
+  })
+
+  test("getTag returns tag when found", async () => {
+    mockDb.setReturn([[{ id: "t1", name: "Tag", slug: "tag" }]])
+    const result = await getTag("t1")
+    expect(result?.id).toBe("t1")
+  })
+
+  test("getTag returns null when not found", async () => {
+    mockDb.setReturn([[]])
+    const result = await getTag("missing")
+    expect(result).toBeNull()
   })
 
   test("updateTag returns updated tag", async () => {

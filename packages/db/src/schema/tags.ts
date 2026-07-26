@@ -1,5 +1,9 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -14,6 +18,12 @@ export const tagsTable = pgTable("tags", {
 
 export const insertTagSchema = createInsertSchema(tagsTable)
 export const updateTagSchema = createUpdateSchema(tagsTable)
+export const tagSchema = createSelectSchema(tagsTable)
+export const listTagSchema = tagSchema.pick({
+  id: true,
+  name: true,
+  slug: true,
+})
 
 export type SelectTag = typeof tagsTable.$inferSelect
 export type InsertTag = typeof tagsTable.$inferInsert

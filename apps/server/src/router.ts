@@ -14,13 +14,9 @@ import {
   productsPublicApp,
 } from "./routes/products"
 import { sessionProtectedApp } from "./routes/session"
-import { tagsAdminApp, tagsPublicApp } from "./routes/tags"
 import { userAdminApp, userProtectedApp } from "./routes/user"
 
 export const apiApp = new OpenAPIHono<AppContext>()
-
-apiApp.route("/tags", tagsPublicApp)
-apiApp.route("/tags", tagsAdminApp)
 
 apiApp.route("/assets", assetsPublicApp)
 apiApp.route("/assets", assetsProtectedApp)

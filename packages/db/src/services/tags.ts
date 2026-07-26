@@ -23,6 +23,15 @@ export const listTags = (): Promise<
     .orderBy(asc(tagsTable.name))
 }
 
+export const getTag = async (id: string): Promise<SelectTag | null> => {
+  const [tag] = await db
+    .select()
+    .from(tagsTable)
+    .where(eq(tagsTable.id, id))
+    .limit(1)
+  return tag ?? null
+}
+
 export const createTag = async (input: {
   name: string
 }): Promise<SelectTag> => {
