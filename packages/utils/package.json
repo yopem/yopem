@@ -4,13 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./custom-id": {
-      "types": "./src/custom-id.ts",
-      "default": "./src/custom-id.ts"
-    },
-    "./format-date": {
-      "types": "./src/format-date.ts",
-      "default": "./src/format-date.ts"
+    "./*": {
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
     }
   },
   "scripts": {
