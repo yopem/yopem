@@ -1,15 +1,3 @@
-declare global {
-  interface ImportMetaEnv {
-    DEV: boolean
-    PROD: boolean
-    [key: string]: string | boolean | undefined
-  }
-
-  interface ImportMeta {
-    readonly env: ImportMetaEnv
-  }
-}
-
 const getString = (key: string, fallback = ""): string =>
   (process.env[key] ?? import.meta.env?.[key] ?? fallback) as string
 
