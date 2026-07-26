@@ -12,6 +12,10 @@
       "types": "./src/*.ts",
       "default": "./src/*.ts"
     },
+    "./routers": {
+      "types": "./src/routers/index.ts",
+      "default": "./src/routers/index.ts"
+    },
     "./storage": {
       "types": "./src/storage/index.ts",
       "default": "./src/storage/index.ts"
@@ -40,6 +44,9 @@
     "@aws-sdk/client-s3": "catalog:",
     "@hono/node-server": "^1.19.12",
     "@hono/zod-openapi": "^1.5.1",
+    "@orpc/openapi": "^1.14.10",
+    "@orpc/server": "^1.14.10",
+    "@orpc/zod": "^1.14.10",
     "@polar-sh/hono": "^0.5.5",
     "@polar-sh/sdk": "catalog:",
     "ai": "catalog:",
