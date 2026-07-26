@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import {
   createCategory,
   deleteCategory,
+  getCategory,
   listCategories,
   updateCategory,
   validateCategoryIds,
@@ -35,6 +36,18 @@ describe("categories service", () => {
     mockDb.setReturn([[], [{ id: "c1", name: "Cat", slug: "cat" }]])
     const result = await createCategory({ name: "Cat" })
     expect(result.slug).toBe("cat")
+  })
+
+  test("getCategory returns category when found", async () => {
+    mockDb.setReturn([[{ id: "c1", name: "Cat", slug: "cat" }]])
+    const result = await getCategory("c1")
+    expect(result?.id).toBe("c1")
+  })
+
+  test("getCategory returns null when not found", async () => {
+    mockDb.setReturn([[]])
+    const result = await getCategory("missing")
+    expect(result).toBeNull()
   })
 
   test("updateCategory returns updated category", async () => {

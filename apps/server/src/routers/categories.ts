@@ -1,16 +1,11 @@
 import { ORPCError } from "@orpc/server"
-import { eq } from "drizzle-orm"
 import { z } from "zod"
 
-import { db } from "db"
-import {
-  categoriesTable,
-  categorySchema,
-  listCategorySchema,
-} from "db/schema/categories"
+import { categorySchema, listCategorySchema } from "db/schema/categories"
 import {
   createCategory,
   deleteCategory,
+  getCategory,
   listCategories,
   updateCategory,
 } from "db/services/categories"
@@ -28,11 +23,7 @@ export const categoriesRouter = {
     .input(z.object({ id: z.string() }))
     .output(categorySchema)
     .handler(async ({ input }) => {
-      const [category] = await db
-        .select()
-        .from(categoriesTable)
-        .where(eq(categoriesTable.id, input.id))
-        .limit(1)
+      const category = await getCategory(input.id)
       if (!category) {
         throw new ORPCError("NOT_FOUND", {
           status: 404,
@@ -68,11 +59,17 @@ export const categoriesRouter = {
     .handler(async ({ input }) => {
       try {
         return await updateCategory(input)
-      } catch {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: "Category not found",
-        })
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "Update returned no rows"
+        ) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: "Category not found",
+          })
+        }
+        throw error
       }
     }),
 

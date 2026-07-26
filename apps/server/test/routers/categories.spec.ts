@@ -1,3 +1,4 @@
+import { call } from "@orpc/server"
 import { categoriesRouter } from "server/routers/categories"
 import { describe, expect, test } from "vite-plus/test"
 
@@ -19,5 +20,15 @@ describe("categories router", () => {
     for (const procedure of Object.values(categoriesRouter)) {
       expect(procedure).toBeDefined()
     }
+  })
+
+  test("admin procedures reject null sessions with FORBIDDEN", async () => {
+    await expect(
+      call(
+        categoriesRouter.categoryCreate,
+        { name: "x" },
+        { context: { session: null } },
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 })

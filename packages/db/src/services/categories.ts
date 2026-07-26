@@ -25,6 +25,17 @@ export const listCategories = (): Promise<
     .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
 }
 
+export const getCategory = async (
+  id: string,
+): Promise<SelectCategory | null> => {
+  const [category] = await db
+    .select()
+    .from(categoriesTable)
+    .where(eq(categoriesTable.id, id))
+    .limit(1)
+  return category ?? null
+}
+
 export const createCategory = async (input: {
   name: string
   description?: string
