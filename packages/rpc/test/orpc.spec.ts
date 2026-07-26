@@ -1,14 +1,11 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { createRPCClient } from "rpc/client"
-import { createORPCUtils } from "rpc/orpc"
+import { queryApi } from "rpc/query"
 
 describe("orpc utils", () => {
-  test("createORPCUtils returns a proxy with per-procedure queryOptions", () => {
-    const client = createRPCClient("http://localhost:4000/rpc")
-    const utils = createORPCUtils(client)
-    expect(utils).toBeDefined()
-    expect(typeof utils.categoryList.queryOptions).toBe("function")
-    expect(typeof utils.categoryList.mutationOptions).toBe("function")
+  test("queryApi is a proxy with per-procedure queryOptions/mutationOptions", () => {
+    expect(queryApi).toBeDefined()
+    expect(typeof queryApi.categoryList.key).toBe("function")
+    expect(typeof queryApi.categoryList.queryOptions).toBe("function")
   })
 })

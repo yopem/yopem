@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { RPCProvider } from "rpc/provider"
+import { QueryProvider } from "rpc/provider"
 
-describe("RPCProvider", () => {
+describe("QueryProvider", () => {
   test("is a React component (function)", () => {
-    expect(typeof RPCProvider).toBe("function")
+    expect(typeof QueryProvider).toBe("function")
   })
 })

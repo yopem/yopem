@@ -1,15 +1,14 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { createRPCClient } from "rpc/client"
+import { clientApi } from "rpc/client"
 
 describe("rpc client", () => {
-  test("createRPCClient returns a typed proxy bound to the router", () => {
-    const client = createRPCClient("http://localhost:4000/rpc")
-    expect(client).toBeDefined()
-    expect(typeof client.categoryList).toBe("function")
-    expect(typeof client.categoryById).toBe("function")
-    expect(typeof client.categoryCreate).toBe("function")
-    expect(typeof client.categoryUpdate).toBe("function")
-    expect(typeof client.categoryDelete).toBe("function")
+  test("clientApi is a typed proxy bound to the router procedures", () => {
+    expect(clientApi).toBeDefined()
+    expect(typeof clientApi.categoryList).toBe("function")
+    expect(typeof clientApi.categoryById).toBe("function")
+    expect(typeof clientApi.categoryCreate).toBe("function")
+    expect(typeof clientApi.categoryUpdate).toBe("function")
+    expect(typeof clientApi.categoryDelete).toBe("function")
   })
 })
