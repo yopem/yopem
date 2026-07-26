@@ -75,6 +75,9 @@ const orpcHandler = new OpenAPIHandler(router, {
       },
       docsPath: "/doc",
       specPath: "/spec.json",
+      docsConfig: {
+        agent: { disabled: true },
+      },
     }),
   ],
 })
