@@ -13,20 +13,21 @@
   "scripts": {
     "build": "vp run -r build",
     "build:server": "vp run --filter server build",
-    "dev": "vp run -r --parallel dev",
-    "dev:server": "vp run --filter server dev",
-    "start": "vp run -r start",
-    "start:server": "vp run --filter server start",
-    "lint": "vp lint",
-    "lint:fix": "vp lint --fix",
-    "format:check": "vp fmt --check .",
-    "format:write": "vp fmt --write .",
-    "typecheck": "vp run -r typecheck",
     "check": "vp check",
-    "fix": "vp lint --fix && vp fmt --write .",
     "db:generate": "vp run --filter db db:generate",
     "db:migrate": "vp run --filter db db:migrate",
     "db:studio": "vp run --filter db db:studio",
+    "dev": "vp run -r --parallel dev",
+    "dev:admin": "vp run --filter admin dev",
+    "dev:server": "vp run --filter server dev",
+    "fix": "vp lint --fix && vp fmt --write .",
+    "format:check": "vp fmt --check .",
+    "format:write": "vp fmt --write .",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "start": "vp run -r start",
+    "start:server": "vp run --filter server start",
+    "typecheck": "vp run -r typecheck",
     "ui-add": "cd packages/ui && vpx shadcn@latest add"
   },
   "devDependencies": {
@@ -41,12 +42,5 @@
   "overrides": {
     "vite": "catalog:"
   },
-  "packageManager": "pnpm@11.10.0",
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "vite": "*"
-      }
-    }
-  }
+  "packageManager": "pnpm@11.10.0"
 }

@@ -4,29 +4,41 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
-    "./orpc": {
-      "types": "./src/orpc.ts",
-      "default": "./src/orpc.ts"
-    },
-    "./query-client": {
-      "types": "./src/query-client.ts",
-      "default": "./src/query-client.ts"
+    "./prefetch": {
+      "types": "./src/prefetch.ts",
+      "default": "./src/prefetch.ts"
     },
     "./provider": {
       "types": "./src/provider.tsx",
       "default": "./src/provider.tsx"
     },
-    "./hydration": {
-      "types": "./src/hydration.tsx",
-      "default": "./src/hydration.tsx"
+    "./query-client": {
+      "types": "./src/query-client.tsx",
+      "default": "./src/query-client.tsx"
+    },
+    "./query": {
+      "types": "./src/query.ts",
+      "default": "./src/query.ts"
+    },
+    "./serializer": {
+      "types": "./src/serializer.tsx",
+      "default": "./src/serializer.tsx"
+    },
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
+    },
+    "./server-query": {
+      "types": "./src/server-query.ts",
+      "default": "./src/server-query.ts"
+    },
+    "./shared": {
+      "types": "./src/shared.ts",
+      "default": "./src/shared.ts"
     }
   },
   "scripts": {
@@ -38,6 +50,8 @@
     "@orpc/client": "^1.14.10",
     "@orpc/tanstack-query": "^1.14.10",
     "@tanstack/react-query": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "env": "workspace:*",
     "server": "workspace:*"
   },
   "devDependencies": {
