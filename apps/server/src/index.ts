@@ -9,9 +9,6 @@ import type { AppContext } from "./context"
 
 import { authMiddleware } from "./auth"
 import { authCallbackRoute } from "./handlers/auth-callback"
-import { checkoutRoute } from "./handlers/checkout"
-import { portalRoute } from "./handlers/portal"
-import { webhooksRoute } from "./handlers/webhooks"
 import { apiApp } from "./router"
 
 const app = new OpenAPIHono<AppContext>()
@@ -51,9 +48,6 @@ app.get("/health", (c) => {
 
 app.route("/auth", authCallbackRoute)
 app.route("/api", apiApp)
-app.route("/checkout", checkoutRoute)
-app.route("/portal", portalRoute)
-app.route("/webhooks", webhooksRoute)
 
 app.doc("/doc", {
   openapi: "3.0.0",

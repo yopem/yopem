@@ -1,12 +1,7 @@
 import { and, asc, eq, gte, sql } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  adminSettingsTable,
-  aiModelsTable,
-  polarPaymentsTable,
-  productRunsTable,
-} from "db/schema"
+import { adminSettingsTable, aiModelsTable, productRunsTable } from "db/schema"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
 
 export const getSetting = async (
@@ -43,33 +38,6 @@ export const upsertSetting = async (
     .returning()
 
   return created
-}
-
-export const getActivityFeed = (
-  limit: number,
-): Promise<
-  {
-    userId: string
-    userName: string | null
-    amount: string
-    currency: string
-    creditsGranted: number
-    createdAt: Date | null
-  }[]
-> => {
-  return db
-    .select({
-      userId: polarPaymentsTable.userId,
-      userName: polarPaymentsTable.userName,
-      amount: polarPaymentsTable.amount,
-      currency: polarPaymentsTable.currency,
-      creditsGranted: polarPaymentsTable.creditsGranted,
-      createdAt: polarPaymentsTable.createdAt,
-    })
-    .from(polarPaymentsTable)
-    .where(eq(polarPaymentsTable.status, "succeeded"))
-    .orderBy(sql`${polarPaymentsTable.createdAt} DESC`)
-    .limit(limit)
 }
 
 export const getAiRequestsHistory = (input: {

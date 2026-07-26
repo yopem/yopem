@@ -6,11 +6,6 @@ import { ApiError } from "server/errors"
 import { executeAIProduct } from "server/llm/executor"
 import { requireAdmin, requireAuth } from "server/middleware"
 import { assertSession } from "server/middleware"
-import {
-  formatQuotaError,
-  requireSubscriptionForProduct,
-  trackProductExecution,
-} from "server/payments/product-subscription-middleware"
 import { decryptApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
@@ -335,18 +330,6 @@ productsProtectedApp.openapi(executeRoute, async (c) => {
   }
 
   const cost = Number(product.costPerRun ?? 0)
-  const estimatedTokens = 1000
-
-  const subCheck = await requireSubscriptionForProduct(
-    session.id,
-    estimatedTokens,
-  )
-
-  if (!subCheck.allowed) {
-    throw new ApiError("BAD_REQUEST", {
-      message: formatQuotaError(subCheck.reason ?? "quota_exceeded"),
-    })
-  }
 
   const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
   if (!decryptedKey) {
@@ -413,10 +396,6 @@ productsProtectedApp.openapi(executeRoute, async (c) => {
     status: "completed",
     cost: String(cost),
     completedAt: new Date(),
-  })
-
-  void trackProductExecution(session.id, estimatedTokens).catch((error) => {
-    console.warn(`Failed to track product usage for user ${session.id}:`, error)
   })
 
   return c.json(

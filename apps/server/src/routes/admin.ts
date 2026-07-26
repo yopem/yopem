@@ -19,7 +19,6 @@ import {
   deleteAIModelById,
   findAIModelById,
   findAIModelByProviderAndModelId,
-  getActivityFeed,
   getAiRequestsHistory,
   getApiKeyStats,
   getSetting,
@@ -27,14 +26,9 @@ import {
   updateAIModelById,
   upsertSetting,
 } from "db/services/admin"
-import {
-  getRevenueStats,
-  getSubscriptionStats,
-  getSubscriptionsList,
-} from "db/services/subscription-admin"
 import { createCustomId } from "utils/custom-id"
 
-import { idParamSchema, jsonOkResponse, cursorQuerySchema } from "./common"
+import { idParamSchema, jsonOkResponse } from "./common"
 
 const API_KEYS_SETTING_KEY = "api_keys"
 const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
@@ -542,21 +536,9 @@ adminApp.openapi(activityRoute, async (c) => {
     return c.json(cached, 200)
   }
 
-  const recentPayments = await getActivityFeed(10)
+  void redisCache.setCache(cacheKey, [], MODEL_CACHE_TTL)
 
-  const activities = recentPayments.map((payment) => {
-    const userIdentifier =
-      payment.userName ?? `User #${payment.userId.slice(0, 8)}`
-    return {
-      type: "payment",
-      message: `${userIdentifier} purchased ${payment.creditsGranted} credits for ${payment.currency} ${payment.amount}`,
-      timestamp: payment.createdAt ?? new Date(),
-    }
-  })
-
-  void redisCache.setCache(cacheKey, activities, MODEL_CACHE_TTL)
-
-  return c.json(activities, 200)
+  return c.json([], 200)
 })
 
 const aiRequestsHistoryQuerySchema = z.object({
@@ -619,53 +601,4 @@ adminApp.openapi(aiRequestsHistoryRoute, async (c) => {
   void redisCache.setCache(cacheKey, result, MODEL_CACHE_TTL)
 
   return c.json(result, 200)
-})
-
-const subscriptionStatsRoute = createRoute({
-  method: "get",
-  path: "/subscription-stats",
-  tags: ["admin"],
-  responses: {
-    200: jsonOkResponse(),
-  },
-})
-
-adminApp.openapi(subscriptionStatsRoute, async (c) => {
-  const [stats, revenue] = await Promise.all([
-    getSubscriptionStats(),
-    getRevenueStats(),
-  ])
-
-  return c.json({ ...stats, revenue }, 200)
-})
-
-const subscriptionsQuerySchema = cursorQuerySchema.extend({
-  status: z.enum(["active", "cancelled", "past_due", "expired"]).optional(),
-  tier: z.enum(["free", "pro", "enterprise"]).optional(),
-})
-
-const subscriptionsRoute = createRoute({
-  method: "get",
-  path: "/subscriptions",
-  tags: ["admin"],
-  request: {
-    query: subscriptionsQuerySchema,
-  },
-  responses: {
-    200: jsonOkResponse(),
-  },
-})
-
-adminApp.openapi(subscriptionsRoute, async (c) => {
-  const { limit, cursor, status, tier } = c.req.valid("query")
-
-  return c.json(
-    await getSubscriptionsList({
-      limit: limit ?? 20,
-      cursor,
-      status,
-      tier,
-    }),
-    200,
-  )
 })
