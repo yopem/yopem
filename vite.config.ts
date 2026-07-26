@@ -7,7 +7,7 @@ export default defineConfig({
       "packages/env",
       "packages/auth",
       "packages/cache",
-      "packages/api-client",
+      "packages/rpc",
       "packages/db",
       "apps/server",
       "packages/editor",

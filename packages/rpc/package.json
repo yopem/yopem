@@ -1,0 +1,56 @@
+{
+  "name": "rpc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./orpc": {
+      "types": "./src/orpc.ts",
+      "default": "./src/orpc.ts"
+    },
+    "./query-client": {
+      "types": "./src/query-client.ts",
+      "default": "./src/query-client.ts"
+    },
+    "./provider": {
+      "types": "./src/provider.tsx",
+      "default": "./src/provider.tsx"
+    },
+    "./hydration": {
+      "types": "./src/hydration.tsx",
+      "default": "./src/hydration.tsx"
+    },
+    "./prefetch": {
+      "types": "./src/prefetch.ts",
+      "default": "./src/prefetch.ts"
+    }
+  },
+  "scripts": {
+    "lint": "vp lint .",
+    "lint:fix": "vp lint --fix .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.14.10",
+    "@orpc/server": "^1.14.10",
+    "@orpc/tanstack-query": "^1.14.10",
+    "@tanstack/react-query": "catalog:",
+    "server": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@yopem/typescript-config": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

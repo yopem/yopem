@@ -6,11 +6,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   test: {
-    name: "api-client",
+    name: "rpc",
   },
   resolve: {
     alias: {
-      "api-client": resolve(__dirname, "./src"),
+      rpc: resolve(__dirname, "./src"),
     },
   },
 })

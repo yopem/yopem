@@ -21,6 +21,9 @@ catalogs:
     '@polar-sh/sdk':
       specifier: ^0.48.1
       version: 0.48.1
+    '@tanstack/react-query':
+      specifier: ^5.101.2
+      version: 5.101.4
     '@types/node':
       specifier: ^26.1.1
       version: 26.1.1
@@ -231,22 +234,6 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 0.2.6(@types/node@26.1.1)(@voidzero-dev/vite-plus-core@0.2.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(typescript@7.0.2)(yaml@2.9.0))(esbuild@0.28.1)(jiti@2.7.0)(jsdom@29.1.1)(tsx@4.23.1)(typescript@7.0.2)(yaml@2.9.0)
-
-  packages/api-client:
-    dependencies:
-      hono:
-        specifier: ^4.12.9
-        version: 4.12.32
-    devDependencies:
-      '@yopem/typescript-config':
-        specifier: 'catalog:'
-        version: 0.2.2
-      server:
-        specifier: workspace:*
-        version: link:../../apps/server
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
 
   packages/auth:
     dependencies:
@@ -467,6 +454,37 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 0.2.6(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(jsdom@29.1.1)(tsx@4.23.1)(typescript@7.0.2)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))(yaml@2.9.0)
+
+  packages/rpc:
+    dependencies:
+      '@orpc/client':
+        specifier: ^1.14.10
+        version: 1.14.10
+      '@orpc/server':
+        specifier: ^1.14.10
+        version: 1.14.10(ws@8.21.1)
+      '@orpc/tanstack-query':
+        specifier: ^1.14.10
+        version: 1.14.10(@orpc/client@1.14.10)(@tanstack/query-core@5.101.4)
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.101.4(react@19.2.8)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      server:
+        specifier: workspace:*
+        version: link:../../apps/server
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.17
+      '@yopem/typescript-config':
+        specifier: 'catalog:'
+        version: 0.2.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/ui:
     dependencies:
@@ -1562,6 +1580,12 @@ packages:
   '@orpc/standard-server@1.14.10':
     resolution: {integrity: sha512-JCnShe40mswSA1B8J/tYn6wO4vET/fVWtE8bjDb7C3yK635YixilQWJKnhLdFLXTjBwjQIIzgDF1I+0RXseTRQ==}
 
+  '@orpc/tanstack-query@1.14.10':
+    resolution: {integrity: sha512-kOxkDc3jJJ+hW13n39/MDNtw9QF7N7KybMxukyCTHgwJ4yyeOiziEJ0khn66TCDymiDAq4jZTDA+8i3eEYWXXw==}
+    peerDependencies:
+      '@orpc/client': 1.14.10
+      '@tanstack/query-core': '>=5.80.2'
+
   '@orpc/zod@1.14.10':
     resolution: {integrity: sha512-HJJcz8SrtosOhuoxlx6WEESiO7sB1tvSdOKAJ+DVDRjgKbdCDZUOeoBA8gQf72AyA6Ip/MvPmYBi8plkn5gcdQ==}
     peerDependencies:
@@ -2245,6 +2269,14 @@ packages:
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
+
+  '@tanstack/query-core@5.101.4':
+    resolution: {integrity: sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==}
+
+  '@tanstack/react-query@5.101.4':
+    resolution: {integrity: sha512-yRg2pfOCxIs4ZJW3XYYHU/WgtD04FHSnfHlpRT7h7pR77hwkdRG4wxbKe4aq6P0RvXUTBSQpQeadS1SUYUe+KA==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -5209,6 +5241,14 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
+  '@orpc/tanstack-query@1.14.10(@orpc/client@1.14.10)(@tanstack/query-core@5.101.4)':
+    dependencies:
+      '@orpc/client': 1.14.10
+      '@orpc/shared': 1.14.10
+      '@tanstack/query-core': 5.101.4
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+
   '@orpc/zod@1.14.10(@orpc/contract@1.14.10)(@orpc/server@1.14.10(ws@8.21.1))(ws@8.21.1)(zod@4.4.3)':
     dependencies:
       '@orpc/contract': 1.14.10
@@ -5751,6 +5791,13 @@ snapshots:
       magic-string: 0.30.21
       source-map-js: 1.2.1
       tailwindcss: 4.3.3
+
+  '@tanstack/query-core@5.101.4': {}
+
+  '@tanstack/react-query@5.101.4(react@19.2.8)':
+    dependencies:
+      '@tanstack/query-core': 5.101.4
+      react: 19.2.8
 
   '@testing-library/dom@10.4.1':
     dependencies:
