@@ -1,10 +1,13 @@
 import build from "@hono/vite-build/node"
 import devServer from "@hono/vite-dev-server"
 import nodeAdapter from "@hono/vite-dev-server/node"
-import { resolve } from "node:path"
-import { defineConfig, loadEnv } from "vite"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+import { defineConfig, loadEnv } from "vite-plus"
 
 import { isDev, serverPort } from "env"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const env = loadEnv(isDev ? "DEV" : "PROD", resolve(__dirname, "../.."), "")
 
@@ -37,6 +40,10 @@ export default defineConfig({
     tsconfigPaths: true,
   },
 
+  test: {
+    name: "server",
+    globalSetup: ["./test/setup.ts"],
+  },
   plugins: [
     devServer({
       entry: "./src/index.ts",

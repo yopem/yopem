@@ -1,16 +1,16 @@
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { defineConfig } from "vitest/config"
+import { defineConfig } from "vite-plus"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   test: {
-    name: "ui",
+    name: "cache",
   },
   resolve: {
     alias: {
-      ui: resolve(__dirname, "./src"),
+      cache: resolve(__dirname, "./src"),
     },
   },
 })
