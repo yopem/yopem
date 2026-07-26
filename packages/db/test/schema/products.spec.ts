@@ -3,6 +3,8 @@ import { describe, expect, test } from "vite-plus/test"
 import {
   productsTable,
   insertProductSchema,
+  productSchema,
+  publicProductSchema,
   updateProductSchema,
   productStatusEnum,
   productOutputFormatEnum,
@@ -31,5 +33,37 @@ describe("products schema", () => {
   test("exports productOutputFormatEnum", () => {
     expect(productOutputFormatEnum).toBeDefined()
     expect(productOutputFormatEnum.length).toBeGreaterThan(0)
+  })
+
+  test("productSchema omits nothing (full select schema)", () => {
+    const keys = Object.keys(productSchema.shape)
+    for (const field of [
+      "id",
+      "name",
+      "slug",
+      "apiKeyId",
+      "config",
+      "systemRole",
+      "userInstructionTemplate",
+    ]) {
+      expect(keys).toContain(field)
+    }
+  })
+
+  test("publicProductSchema omits sensitive fields", () => {
+    const keys = Object.keys(publicProductSchema.shape)
+    for (const sensitive of [
+      "apiKeyId",
+      "config",
+      "systemRole",
+      "userInstructionTemplate",
+      "thumbnailId",
+      "createdBy",
+    ]) {
+      expect(keys).not.toContain(sensitive)
+    }
+    expect(keys).toContain("id")
+    expect(keys).toContain("name")
+    expect(keys).toContain("slug")
   })
 })

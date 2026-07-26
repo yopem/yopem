@@ -6,7 +6,11 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod"
 import { z } from "zod"
 
 import { createCustomId } from "utils/custom-id"
@@ -67,6 +71,15 @@ export const updateProductSchema = createUpdateSchema(productsTable).extend({
   tagIds: z.array(z.string()).optional(),
   categoryIds: z.array(z.string()).optional(),
   thumbnailId: z.string().optional(),
+})
+export const productSchema = createSelectSchema(productsTable)
+export const publicProductSchema = productSchema.omit({
+  apiKeyId: true,
+  config: true,
+  systemRole: true,
+  userInstructionTemplate: true,
+  thumbnailId: true,
+  createdBy: true,
 })
 
 export type SelectProduct = typeof productsTable.$inferSelect & {
