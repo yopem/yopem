@@ -1,29 +1,15 @@
 import type { ApiKeyProvider } from "server/llm/api-keys-schema"
 
-import { and, eq } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+import { pathToFileURL } from "node:url"
 import {
   apiKeyConfigSchema,
   apiKeyProviderSchema,
 } from "server/llm/api-keys-schema"
-import { transliterate as tr } from "transliteration"
 
-import * as schema from "db/schema"
-import { databaseUrl } from "env"
-import { createCustomId } from "utils/custom-id"
-
-if (!databaseUrl) {
-  console.error("DATABASE_URL environment variable is not set")
-  process.exit(1)
-}
-
-const pool = new Pool({
-  connectionString: databaseUrl,
-  max: 5,
-})
-
-const db = drizzle(pool, { schema })
+import { createAIModel, getSetting, listAIModels } from "db/services/admin"
+import { createCategory, listCategories } from "db/services/categories"
+import { createProduct, listProducts } from "db/services/products"
+import { createTag, listTags } from "db/services/tags"
 
 interface InputVariable {
   variableName: string
@@ -65,7 +51,10 @@ interface SeedModel {
 
 const DEFAULT_TEXT_MODEL_ID = "nemotron-3-ultra-550b-a55b:free"
 
-const categories: SeedCategory[] = [
+export const VALID_PROVIDERS = apiKeyProviderSchema.options
+export const VALID_OUTPUT_FORMATS = ["plain", "json", "image", "video"] as const
+
+export const categories: SeedCategory[] = [
   {
     name: "Writing",
     description: "AI products that help you write faster and better.",
@@ -92,7 +81,7 @@ const categories: SeedCategory[] = [
   },
 ]
 
-const tags: SeedTag[] = [
+export const tags: SeedTag[] = [
   { name: "SEO" },
   { name: "Copywriting" },
   { name: "Code" },
@@ -107,7 +96,7 @@ const tags: SeedTag[] = [
   { name: "Proofreading" },
 ]
 
-const aiModels: SeedModel[] = [
+export const aiModels: SeedModel[] = [
   {
     provider: "openai",
     modelId: "gpt-4o",
@@ -170,7 +159,7 @@ const aiModels: SeedModel[] = [
   },
 ]
 
-const products: SeedProduct[] = [
+export const products: SeedProduct[] = [
   {
     name: "SEO Blog Writer",
     excerpt:
@@ -614,172 +603,22 @@ const products: SeedProduct[] = [
   },
 ]
 
-function slugify(text: string): string {
-  return tr(text)
-    .toString()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/_/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/-$/g, "")
-}
+async function seedAIModels(): Promise<{ created: number; skipped: number }> {
+  const existing = await listAIModels()
+  const existingKeys = new Set(
+    existing.map((model) => `${model.provider}:${model.modelId}`),
+  )
 
-async function ensureUniqueSlug(
-  tableName: "categoriesTable" | "tagsTable" | "productsTable",
-  text: string,
-): Promise<string> {
-  const table =
-    tableName === "categoriesTable"
-      ? schema.categoriesTable
-      : tableName === "tagsTable"
-        ? schema.tagsTable
-        : schema.productsTable
-  const baseSlug = slugify(text)
-  let slug = baseSlug
-  let suffix = 1
-
-  while (true) {
-    const existing = await db
-      .select({ id: table.id })
-      .from(table)
-      .where(eq(table.slug, slug))
-      .limit(1)
-
-    if (existing.length === 0) {
-      return slug
-    }
-
-    suffix++
-    slug = `${baseSlug}-${suffix}`
-  }
-}
-
-async function getActiveApiKeys(): Promise<
-  { id: string; provider: ApiKeyProvider }[]
-> {
-  const [setting] = await db
-    .select({ settingValue: schema.adminSettingsTable.settingValue })
-    .from(schema.adminSettingsTable)
-    .where(eq(schema.adminSettingsTable.settingKey, "api_keys"))
-
-  if (!setting?.settingValue) {
-    return []
-  }
-
-  const parsed = apiKeyConfigSchema
-    .array()
-    .safeParse(
-      typeof setting.settingValue === "string"
-        ? JSON.parse(setting.settingValue)
-        : setting.settingValue,
-    )
-
-  if (!parsed.success) {
-    console.error("Failed to parse api_keys setting:", parsed.error.message)
-    return []
-  }
-
-  return parsed.data
-    .filter((key) => key.status === "active")
-    .map((key) => ({ id: key.id, provider: key.provider }))
-}
-
-async function seedCategories() {
-  const ids = new Map<string, string>()
-
-  for (const category of categories) {
-    const [existing] = await db
-      .select({ id: schema.categoriesTable.id })
-      .from(schema.categoriesTable)
-      .where(eq(schema.categoriesTable.name, category.name))
-      .limit(1)
-
-    if (existing) {
-      ids.set(category.name, existing.id)
-      continue
-    }
-
-    const id = createCustomId()
-    const slug = await ensureUniqueSlug("categoriesTable", category.name)
-
-    await db.insert(schema.categoriesTable).values({
-      id,
-      name: category.name,
-      slug,
-      description: category.description,
-      sortOrder: 0,
-    })
-
-    ids.set(category.name, id)
-  }
-
-  return ids
-}
-
-async function seedTags() {
-  const ids = new Map<string, string>()
-
-  for (const tag of tags) {
-    const [existing] = await db
-      .select({ id: schema.tagsTable.id })
-      .from(schema.tagsTable)
-      .where(eq(schema.tagsTable.name, tag.name))
-      .limit(1)
-
-    if (existing) {
-      ids.set(tag.name, existing.id)
-      continue
-    }
-
-    const id = createCustomId()
-    const slug = await ensureUniqueSlug("tagsTable", tag.name)
-
-    await db.insert(schema.tagsTable).values({
-      id,
-      name: tag.name,
-      slug,
-    })
-
-    ids.set(tag.name, id)
-  }
-
-  return ids
-}
-
-async function seedAIModels() {
   let created = 0
   let skipped = 0
 
   for (const model of aiModels) {
-    const [existing] = await db
-      .select({ id: schema.aiModelsTable.id })
-      .from(schema.aiModelsTable)
-      .where(
-        and(
-          eq(schema.aiModelsTable.provider, model.provider),
-          eq(schema.aiModelsTable.modelId, model.modelId),
-        ),
-      )
-      .limit(1)
-
-    if (existing) {
+    if (existingKeys.has(`${model.provider}:${model.modelId}`)) {
       skipped++
       continue
     }
 
-    const id = createCustomId()
-    await db.insert(schema.aiModelsTable).values({
-      id,
-      provider: model.provider,
-      modelId: model.modelId,
-      displayName: model.displayName,
-      isEnabled: model.isEnabled,
-    })
-
+    await createAIModel(model)
     created++
     console.info(`Created AI model: ${model.displayName} (${model.provider})`)
   }
@@ -787,115 +626,144 @@ async function seedAIModels() {
   return { created, skipped }
 }
 
+async function seedCategories(): Promise<{
+  ids: Map<string, string>
+  created: number
+}> {
+  const existing = await listCategories()
+  const ids = new Map(existing.map((category) => [category.name, category.id]))
+  const existingNames = new Set(ids.keys())
+  let created = 0
+
+  for (const category of categories) {
+    if (existingNames.has(category.name)) continue
+
+    const result = await createCategory(category)
+    ids.set(category.name, result.id)
+    created++
+    console.info(`Created category: ${category.name}`)
+  }
+
+  return { ids, created }
+}
+
+async function seedTags(): Promise<{
+  ids: Map<string, string>
+  created: number
+}> {
+  const existing = await listTags()
+  const ids = new Map(existing.map((tag) => [tag.name, tag.id]))
+  const existingNames = new Set(ids.keys())
+  let created = 0
+
+  for (const tag of tags) {
+    if (existingNames.has(tag.name)) continue
+
+    const result = await createTag(tag)
+    ids.set(tag.name, result.id)
+    created++
+    console.info(`Created tag: ${tag.name}`)
+  }
+
+  return { ids, created }
+}
+
+async function getActiveApiKeysByProvider(): Promise<
+  Map<ApiKeyProvider, string>
+> {
+  const setting = await getSetting("api_keys")
+  const map = new Map<ApiKeyProvider, string>()
+
+  if (!setting?.settingValue) {
+    return map
+  }
+
+  const parsed = apiKeyConfigSchema.array().safeParse(setting.settingValue)
+  if (!parsed.success) {
+    console.error("Failed to parse api_keys setting:", parsed.error.message)
+    return map
+  }
+
+  for (const key of parsed.data) {
+    if (key.status === "active" && !map.has(key.provider)) {
+      map.set(key.provider, key.id)
+    }
+  }
+
+  return map
+}
+
 async function getDefaultTextModel(): Promise<{
   provider: ApiKeyProvider
   modelId: string
 } | null> {
-  const [model] = await db
-    .select({
-      provider: schema.aiModelsTable.provider,
-      modelId: schema.aiModelsTable.modelId,
-    })
-    .from(schema.aiModelsTable)
-    .where(
-      and(
-        eq(schema.aiModelsTable.modelId, DEFAULT_TEXT_MODEL_ID),
-        eq(schema.aiModelsTable.isEnabled, true),
-      ),
-    )
-    .limit(1)
+  const models = await listAIModels()
+  const found = models.find(
+    (model) => model.modelId === DEFAULT_TEXT_MODEL_ID && model.isEnabled,
+  )
 
-  if (!model) {
+  if (!found) {
     return null
   }
 
-  const parsed = apiKeyProviderSchema.safeParse(model.provider)
+  const parsed = apiKeyProviderSchema.safeParse(found.provider)
   if (!parsed.success) {
-    console.warn(`Default text model has unknown provider: ${model.provider}`)
+    console.warn(`Default text model has unknown provider: ${found.provider}`)
     return null
   }
 
-  return { provider: parsed.data, modelId: model.modelId }
+  return { provider: parsed.data, modelId: found.modelId }
 }
 
 async function seedProducts(
   categoryIds: Map<string, string>,
   tagIds: Map<string, string>,
-  apiKeys: { id: string; provider: ApiKeyProvider }[],
-  defaultTextModel?: { provider: ApiKeyProvider; modelId: string } | null,
-) {
-  const keyByProvider = new Map<ApiKeyProvider, string>()
-  for (const key of apiKeys) {
-    if (!keyByProvider.has(key.provider)) {
-      keyByProvider.set(key.provider, key.id)
-    }
-  }
+  apiKeyByProvider: Map<ApiKeyProvider, string>,
+  defaultTextModel: { provider: ApiKeyProvider; modelId: string } | null,
+): Promise<{ created: number; skipped: number }> {
+  const { products: existing } = await listProducts({
+    status: "all",
+    limit: 1000,
+  })
+  const existingNames = new Set(existing.map((product) => product.name))
 
   let created = 0
-  let updated = 0
   let skipped = 0
 
   for (const product of products) {
-    const isMediaProduct =
-      product.outputFormat === "image" || product.outputFormat === "video"
-
-    const productProvider =
-      defaultTextModel && !isMediaProduct
-        ? defaultTextModel.provider
-        : product.provider
-
-    const modelEngine =
-      defaultTextModel && !isMediaProduct
-        ? defaultTextModel.modelId
-        : product.modelEngine
-
-    const apiKeyId = keyByProvider.get(productProvider)
-    if (!apiKeyId) {
-      console.warn(
-        `Skipping ${product.name}: no active ${product.provider} API key`,
-      )
+    if (existingNames.has(product.name)) {
+      console.info(`Skipping ${product.name}: already exists`)
       skipped++
       continue
     }
 
-    const [existing] = await db
-      .select({
-        id: schema.productsTable.id,
-        config: schema.productsTable.config,
-        apiKeyId: schema.productsTable.apiKeyId,
-      })
-      .from(schema.productsTable)
-      .where(eq(schema.productsTable.name, product.name))
-      .limit(1)
+    const isMediaProduct =
+      product.outputFormat === "image" || product.outputFormat === "video"
 
-    if (existing) {
-      const needsUpdate =
-        defaultTextModel &&
-        !isMediaProduct &&
-        (existing.config as { modelEngine?: string } | null)?.modelEngine !==
-          modelEngine
+    const provider = isMediaProduct
+      ? product.provider
+      : (defaultTextModel?.provider ?? product.provider)
+    const modelEngine = isMediaProduct
+      ? product.modelEngine
+      : (defaultTextModel?.modelId ?? product.modelEngine)
 
-      if (needsUpdate) {
-        await db
-          .update(schema.productsTable)
-          .set({ config: { modelEngine }, apiKeyId })
-          .where(eq(schema.productsTable.id, existing.id))
-        console.info(`Updated product: ${product.name}`)
-        updated++
-      } else {
-        console.info(`Skipping ${product.name}: already up to date`)
-        skipped++
-      }
-      continue
+    const apiKeyId = apiKeyByProvider.get(provider) ?? null
+    if (!apiKeyId) {
+      console.warn(
+        `No active ${provider} API key for ${product.name}; inserting with null apiKeyId`,
+      )
     }
 
-    const id = createCustomId()
-    const slug = await ensureUniqueSlug("productsTable", product.name)
+    const productCategoryIds = product.categories
+      .map((name) => categoryIds.get(name))
+      .filter((id): id is string => id !== undefined)
 
-    await db.insert(schema.productsTable).values({
-      id,
+    const productTagIds = product.tags
+      .map((name) => tagIds.get(name))
+      .filter((id): id is string => id !== undefined)
+
+    await createProduct({
       name: product.name,
-      slug,
       excerpt: product.excerpt,
       description: product.description,
       status: "active",
@@ -905,45 +773,25 @@ async function seedProducts(
       inputVariable: product.inputVariable,
       outputFormat: product.outputFormat,
       costPerRun: product.costPerRun,
-      markup: "0.2000",
       isPublic: true,
       apiKeyId,
+      categoryIds: productCategoryIds,
+      tagIds: productTagIds,
     })
-
-    const productCategoryIds = product.categories
-      .map((name) => categoryIds.get(name))
-      .filter((id): id is string => id !== undefined)
-
-    if (productCategoryIds.length > 0) {
-      await db.insert(schema.productCategoriesTable).values(
-        productCategoryIds.map((categoryId) => ({
-          productId: id,
-          categoryId,
-        })),
-      )
-    }
-
-    const productTagIds = product.tags
-      .map((name) => tagIds.get(name))
-      .filter((id): id is string => id !== undefined)
-
-    if (productTagIds.length > 0) {
-      await db.insert(schema.productTagsTable).values(
-        productTagIds.map((tagId) => ({
-          productId: id,
-          tagId,
-        })),
-      )
-    }
 
     created++
     console.info(`Created product: ${product.name}`)
   }
 
-  return { created, updated, skipped }
+  return { created, skipped }
 }
 
-async function main() {
+export async function runSeed(): Promise<{
+  aiModels: { created: number; skipped: number }
+  categories: number
+  tags: number
+  products: { created: number; skipped: number }
+}> {
   const modelResult = await seedAIModels()
   console.info(
     `Seeded ${modelResult.created} AI models, skipped ${modelResult.skipped}`,
@@ -956,34 +804,38 @@ async function main() {
     )
   }
 
-  const apiKeys = await getActiveApiKeys()
-  const textKeys = apiKeys.filter(
-    (key) => key.provider === "openai" || key.provider === "openrouter",
+  const apiKeyByProvider = await getActiveApiKeysByProvider()
+
+  const categoryResult = await seedCategories()
+  const tagResult = await seedTags()
+  const productResult = await seedProducts(
+    categoryResult.ids,
+    tagResult.ids,
+    apiKeyByProvider,
+    defaultTextModel,
   )
-
-  if (textKeys.length === 0) {
-    console.error(
-      "No active openai or openrouter API key found. Add one in admin settings before seeding products.",
-    )
-    process.exit(1)
-  }
-
-  const { created, updated, skipped } = await (async () => {
-    const categoryIds = await seedCategories()
-    const tagIds = await seedTags()
-    return await seedProducts(categoryIds, tagIds, apiKeys, defaultTextModel)
-  })()
 
   console.info(
-    `Seeded ${created} products, updated ${updated}, skipped ${skipped}`,
+    `Seeded ${categoryResult.created} categories, ${tagResult.created} tags, ${productResult.created} products, skipped ${productResult.skipped} products`,
   )
+
+  return {
+    aiModels: modelResult,
+    categories: categoryResult.created,
+    tags: tagResult.created,
+    products: productResult,
+  }
 }
 
-try {
-  await main()
-} catch (error) {
-  console.error("Seed failed:", error)
-  process.exitCode = 1
-} finally {
-  await pool.end()
+const isMainModule =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (isMainModule) {
+  runSeed()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error("Seed failed:", error)
+      process.exit(1)
+    })
 }
