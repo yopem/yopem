@@ -69,6 +69,13 @@ const statusMap = {
   INTERNAL_SERVER_ERROR: 500,
 } as const
 
+const codeByStatus = Object.fromEntries(
+  Object.entries(statusMap).map(([code, status]) => [status, code]),
+) as Record<number, keyof typeof statusMap>
+
+export const orpcCodeForStatus = (status: number): keyof typeof statusMap =>
+  codeByStatus[status] ?? "INTERNAL_SERVER_ERROR"
+
 export class ApiError extends HTTPException {
   constructor(
     code: keyof typeof statusMap,

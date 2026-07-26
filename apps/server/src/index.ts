@@ -12,7 +12,7 @@ import { adminOrigin, isDev, isProd, serverPort, webOrigin } from "env"
 import type { AppContext } from "./context"
 
 import { authMiddleware } from "./auth"
-import { ApiError } from "./errors"
+import { ApiError, orpcCodeForStatus } from "./errors"
 import { authCallbackRoute } from "./handlers/auth-callback"
 import { apiApp } from "./router"
 import { router } from "./routers"
@@ -67,7 +67,7 @@ const orpcHandler = new OpenAPIHandler(router, {
   interceptors: [
     onError((error) => {
       if (error instanceof ApiError) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        throw new ORPCError(orpcCodeForStatus(error.status), {
           status: error.status,
           message: error.message,
         })
