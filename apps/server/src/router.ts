@@ -8,7 +8,6 @@ import {
   assetsProtectedApp,
   assetsPublicApp,
 } from "./routes/assets"
-import { categoriesAdminApp, categoriesPublicApp } from "./routes/categories"
 import {
   productsAdminApp,
   productsProtectedApp,
@@ -19,9 +18,6 @@ import { tagsAdminApp, tagsPublicApp } from "./routes/tags"
 import { userAdminApp, userProtectedApp } from "./routes/user"
 
 export const apiApp = new OpenAPIHono<AppContext>()
-
-apiApp.route("/categories", categoriesPublicApp)
-apiApp.route("/categories", categoriesAdminApp)
 
 apiApp.route("/tags", tagsPublicApp)
 apiApp.route("/tags", tagsAdminApp)

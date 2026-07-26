@@ -1,1 +1,5 @@
-export const router = {}
+import { categoriesRouter } from "./categories"
+
+export const router = {
+  ...categoriesRouter,
+}

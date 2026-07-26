@@ -7,7 +7,11 @@ describe("router composition", () => {
     expect(typeof router).toBe("object")
   })
 
-  test("starts empty during foundation (no procedures yet)", () => {
-    expect(Object.keys(router)).toHaveLength(0)
+  test("includes the categories router", () => {
+    expect(router).toHaveProperty("categoryList")
+    expect(router).toHaveProperty("categoryCreate")
+    expect(router).toHaveProperty("categoryById")
+    expect(router).toHaveProperty("categoryUpdate")
+    expect(router).toHaveProperty("categoryDelete")
   })
 })
