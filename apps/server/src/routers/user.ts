@@ -7,7 +7,7 @@ import {
   updateApiKeyInputSchema,
 } from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
-import { checkRateLimit, RATE_LIMITS } from "server/rate-limit"
+import { enforceRateLimit } from "server/rate-limit"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
 
@@ -135,27 +135,11 @@ export const userRouter = {
     .use(requireAdminMiddleware)
     .input(addApiKeyInputSchema)
     .handler(async ({ context, input }) => {
-      const rateLimitKey = `${context.session.id}:api-key:add`
-      const rateLimitResult = await checkRateLimit(
+      await enforceRateLimit(
         redisCache.getRedisClient,
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_ADD.maxRequests,
-        RATE_LIMITS.API_KEY_ADD.windowMs,
+        context.session.id,
+        "add",
       )
-
-      const rateLimitCheck = rateLimitResult.ok
-        ? rateLimitResult.value
-        : {
-            isLimited: false,
-            remaining: RATE_LIMITS.API_KEY_ADD.maxRequests,
-          }
-
-      if (rateLimitCheck?.isLimited) {
-        throw new ORPCError("FORBIDDEN", {
-          status: 403,
-          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_ADD.windowMs / 60000)} minutes.`,
-        })
-      }
 
       const settings = await getUserSettings(context.session.id)
 
@@ -219,27 +203,11 @@ export const userRouter = {
     .handler(async ({ context, input }) => {
       const { id } = input
 
-      const rateLimitKey = `${context.session.id}:api-key:update`
-      const rateLimitResult = await checkRateLimit(
+      await enforceRateLimit(
         redisCache.getRedisClient,
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-        RATE_LIMITS.API_KEY_UPDATE.windowMs,
+        context.session.id,
+        "update",
       )
-
-      const rateLimitCheck = rateLimitResult.ok
-        ? rateLimitResult.value
-        : {
-            isLimited: false,
-            remaining: RATE_LIMITS.API_KEY_UPDATE.maxRequests,
-          }
-
-      if (rateLimitCheck?.isLimited) {
-        throw new ORPCError("FORBIDDEN", {
-          status: 403,
-          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_UPDATE.windowMs / 60000)} minutes.`,
-        })
-      }
 
       const settings = await getUserSettings(context.session.id)
 
@@ -329,27 +297,11 @@ export const userRouter = {
     .handler(async ({ context, input }) => {
       const { id } = input
 
-      const rateLimitKey = `${context.session.id}:api-key:delete`
-      const rateLimitResult = await checkRateLimit(
+      await enforceRateLimit(
         redisCache.getRedisClient,
-        rateLimitKey,
-        RATE_LIMITS.API_KEY_DELETE.maxRequests,
-        RATE_LIMITS.API_KEY_DELETE.windowMs,
+        context.session.id,
+        "delete",
       )
-
-      const rateLimitCheck = rateLimitResult.ok
-        ? rateLimitResult.value
-        : {
-            isLimited: false,
-            remaining: RATE_LIMITS.API_KEY_DELETE.maxRequests,
-          }
-
-      if (rateLimitCheck?.isLimited) {
-        throw new ORPCError("FORBIDDEN", {
-          status: 403,
-          message: `Rate limit exceeded. Try again in ${Math.ceil(RATE_LIMITS.API_KEY_DELETE.windowMs / 60000)} minutes.`,
-        })
-      }
 
       const settings = await getUserSettings(context.session.id)
 

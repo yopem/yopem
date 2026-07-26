@@ -1,5 +1,7 @@
 import type { Redis } from "ioredis"
 
+import { ORPCError } from "@orpc/server"
+
 import { RateLimitError } from "./errors"
 
 export async function checkRateLimit(
@@ -72,3 +74,34 @@ export const RATE_LIMITS = {
     windowMs: 60000,
   },
 } as const
+
+export async function enforceRateLimit(
+  getRedisClient: () => Promise<Redis | null>,
+  sessionId: string,
+  action: "add" | "update" | "delete",
+): Promise<void> {
+  const limits =
+    action === "add"
+      ? RATE_LIMITS.API_KEY_ADD
+      : action === "update"
+        ? RATE_LIMITS.API_KEY_UPDATE
+        : RATE_LIMITS.API_KEY_DELETE
+
+  const result = await checkRateLimit(
+    getRedisClient,
+    `${sessionId}:api-key:${action}`,
+    limits.maxRequests,
+    limits.windowMs,
+  )
+
+  const check = result.ok
+    ? result.value
+    : { isLimited: false, remaining: limits.maxRequests }
+
+  if (check?.isLimited) {
+    throw new ORPCError("FORBIDDEN", {
+      status: 403,
+      message: `Rate limit exceeded. Try again in ${Math.ceil(limits.windowMs / 60000)} minutes.`,
+    })
+  }
+}
