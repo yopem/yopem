@@ -7,6 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   test: {
     name: "server",
+    globalSetup: ["./test/setup.ts"],
   },
   resolve: {
     alias: {
