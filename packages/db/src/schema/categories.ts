@@ -1,5 +1,9 @@
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -17,6 +21,13 @@ export const categoriesTable = pgTable("categories", {
 
 export const insertCategorySchema = createInsertSchema(categoriesTable)
 export const updateCategorySchema = createUpdateSchema(categoriesTable)
+export const categorySchema = createSelectSchema(categoriesTable)
+export const listCategorySchema = categorySchema.pick({
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+})
 
 export type SelectCategory = typeof categoriesTable.$inferSelect
 export type InsertCategory = typeof categoriesTable.$inferInsert
