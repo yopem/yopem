@@ -1,5 +1,9 @@
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -27,6 +31,7 @@ export const assetsTable = pgTable("assets", {
 
 export const insertAssetSchema = createInsertSchema(assetsTable)
 export const updateAssetSchema = createUpdateSchema(assetsTable)
+export const assetSchema = createSelectSchema(assetsTable)
 
 export type SelectAsset = typeof assetsTable.$inferSelect
 export type InsertAsset = typeof assetsTable.$inferInsert

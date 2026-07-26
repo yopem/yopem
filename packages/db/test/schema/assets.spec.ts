@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vite-plus/test"
 
 import {
+  assetSchema,
   assetsTable,
+  assetTypeEnum,
   insertAssetSchema,
   updateAssetSchema,
-  assetTypeEnum,
 } from "db/schema/assets"
 
 describe("assets schema", () => {
@@ -30,6 +31,20 @@ describe("assets schema", () => {
       type: "images",
       size: 1,
       url: "https://x/a.webp",
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test("assetSchema validates a full select row", () => {
+    const result = assetSchema.safeParse({
+      id: "ast_1",
+      filename: "a.webp",
+      originalName: "a.webp",
+      type: "images",
+      size: 1,
+      url: "https://x/a.webp",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
     expect(result.success).toBe(true)
   })
