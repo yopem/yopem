@@ -22,18 +22,7 @@ export default defineConfig({
     host: "0.0.0.0",
   },
   ssr: {
-    noExternal: [
-      "ui",
-      "auth",
-      "db",
-      "env",
-      "logger",
-      "utils",
-      "cache",
-      "ai",
-      "payments",
-      "storage",
-    ],
+    noExternal: ["ui", "auth", "db", "env", "utils", "cache", "ai", "storage"],
     external: ["sharp"],
   },
   resolve: {

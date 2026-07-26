@@ -1,9 +1,9 @@
 import { serve } from "@hono/node-server"
-import { OpenAPIHono } from "@hono/zod-openapi"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { ORPCError, onError } from "@orpc/server"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
+import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
@@ -14,10 +14,9 @@ import type { AppContext } from "./context"
 import { authMiddleware } from "./auth"
 import { ApiError, orpcCodeForStatus } from "./errors"
 import { authCallbackRoute } from "./handlers/auth-callback"
-import { apiApp } from "./router"
 import { router } from "./routers"
 
-const app = new OpenAPIHono<AppContext>()
+const app = new Hono<AppContext>()
 
 const port = serverPort
 
@@ -53,15 +52,6 @@ app.get("/health", (c) => {
 })
 
 app.route("/auth", authCallbackRoute)
-app.route("/api", apiApp)
-
-app.doc("/doc", {
-  openapi: "3.0.0",
-  info: {
-    title: "Yopem API",
-    version: "1.0.0",
-  },
-})
 
 const orpcHandler = new OpenAPIHandler(router, {
   interceptors: [

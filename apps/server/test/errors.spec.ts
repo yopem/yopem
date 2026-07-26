@@ -1,10 +1,4 @@
-import {
-  ApiError,
-  CheckoutHandlerError,
-  PortalHandlerError,
-  RateLimitError,
-  WebhookHandlerError,
-} from "server/errors"
+import { ApiError, RateLimitError } from "server/errors"
 import { describe, expect, test } from "vite-plus/test"
 
 describe("errors", () => {
@@ -13,28 +7,6 @@ describe("errors", () => {
     expect(error.operation).toBe("check")
     expect(error.cause).toBe("boom")
     expect(error.tag).toBe("RateLimitError")
-  })
-
-  test("WebhookHandlerError captures operation and cause", () => {
-    const error = new WebhookHandlerError({
-      operation: "parse",
-      cause: new Error("bad"),
-    })
-    expect(error.operation).toBe("parse")
-    expect(error.cause).toBeInstanceOf(Error)
-  })
-
-  test("CheckoutHandlerError captures operation and cause", () => {
-    const error = new CheckoutHandlerError({
-      operation: "create",
-      cause: "fail",
-    })
-    expect(error.name).toBe("CheckoutHandlerError")
-  })
-
-  test("PortalHandlerError captures operation and cause", () => {
-    const error = new PortalHandlerError({ operation: "create", cause: "fail" })
-    expect(error.name).toBe("PortalHandlerError")
   })
 
   test("ApiError maps BAD_REQUEST to 400", () => {

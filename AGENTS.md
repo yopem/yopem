@@ -24,12 +24,11 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 - **Language:** TypeScript 7
 - **Frontend:** React 19, TanStack Start (SSR), TanStack Router (file-based), TanStack React Query, TanStack React Form
 - **Styling:** Tailwind CSS 4, Base UI (`@base-ui/react`) primitives, coss ui components from shadcn/ui registry, `tw-animate-css`, `next-themes`
-- **Backend:** Hono, `@hono/zod-openapi` (auto-generated OpenAPI), cookie-based auth middleware
+- **Backend:** Hono + oRPC (`@orpc/server`, `@orpc/openapi` for auto-generated docs at `/rpc/doc`), cookie-based auth middleware
 - **DB:** PostgreSQL + Drizzle ORM (`drizzle-kit`), `pg` Pool (max 20)
 - **Auth:** OpenAuth (`@openauthjs/openauth`), cookie-based sessions
 - **Cache:** Redis (`ioredis`)
 - **Storage:** Cloudflare R2 (S3-compatible, `@aws-sdk/client-s3`)
-- **Payments:** Polar.sh (`@polar-sh/hono`)
 - **AI:** Vercel AI SDK + OpenAI / OpenRouter, `sharp` for media processing
 - **Validation:** Zod 4
 - **Env:** `dotenv-cli`
@@ -44,7 +43,7 @@ apps/
 packages/
   db/        — Drizzle schema, migrations, services (data-access layer)
   auth/      — OpenAuth client + subjects
-  rpc/       — oRPC shared/client/server, query bindings, query hydration (`hydration.tsx`)
+  rpc/       — oRPC typed client (`@orpc/client`) + TanStack Query bindings (`@orpc/tanstack-query`), shared between web/admin apps
   ui/        — coss ui components from shadcn/ui registry (Base UI), theme, style.css
   utils/     — crypto, custom-id, date formatting, validation schemas
   env/       — typed env helpers (server + client)
@@ -52,14 +51,13 @@ packages/
 
 ### Server app structure (`apps/server/src`)
 
-- `index.ts` — Hono app: CORS (WEB_ORIGIN + ADMIN_ORIGIN), `authMiddleware`, mounts routes.
-- `root.ts` — `appRouter` aggregating procedures (admin, assets, categories, products, session, tags, user).
-- `orpc.ts` — `publicProcedure` / `protectedProcedure` / `adminProcedure` (role check), `createRPCContext` (session from cookies, db, redis).
-- `handlers/` — `rpc.ts` (prefix `/rpc`), `auth-callback.ts` (OAuth code exchange + redirect validation), `checkout.ts`, `portal.ts`, `webhooks.ts` (Polar).
-- `cache/` — moved to `packages/cache`; Redis-backed cache (`ioredis`) with `invalidatePattern`, used via the `cache` workspace package.
+- `index.ts` — Hono app: CORS (WEB_ORIGIN + ADMIN_ORIGIN), `authMiddleware`, mounts `/auth` callback route, oRPC handler under `/rpc`, generic `onError`.
+- `routers/` — oRPC procedures (flat RPC-style, e.g. `/category/list`), one file per domain (admin, assets, categories, products, session, tags, user) mirroring `db/services/`, composed in `routers/index.ts`.
+- `routers/orpc.ts` — `os` builder bound to `{ session }` context, `requireAuth` / `requireAdmin` middlewares.
+- oRPC mounted under `/rpc` via `OpenAPIHandler` + Proxy body-parsing bridge in `index.ts`. Docs at `/rpc/doc`, spec at `/rpc/spec.json`.
+- `handlers/` — `auth-callback.ts` (OAuth code exchange + redirect validation).
 - `storage/` — `R2Storage` (singleton) using `sharp` for image→webp and magic-byte validation.
 - `llm/` — `executeAITool`, providers (`openai`, `openrouter`), media uploaded to R2.
-- `payments/` — 17 modules: plans, credits, entitlements, quota, subscription/webhook handling, usage tracking/alerts. Product entity (`apps/server/src/procedures/products.ts`) replaces the old `tools` entity across DB schema, components, and routes.
 
 ## Commands
 
@@ -70,14 +68,10 @@ vp test                             # run tests
 
 # Dev
 vp run -r --parallel dev            # all apps
-vp run --filter web dev             # web only
-vp run --filter admin dev           # admin only
 vp run --filter server dev          # server only (Vite dev server via @hono/vite-dev-server)
 
 # Build
 vp run -r build                     # all
-vp build apps/web                   # web (Vite)
-vp build apps/admin                 # admin (Vite)
 vp run --filter server build        # server (Vite + @hono/vite-build)
 
 # DB
@@ -99,7 +93,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **Test runner:** always use `vp test` (runs Vitest via Vite+). Never run `npx vitest` or `vitest` directly — `vp test` is the only entry point.
 - **Run a single project:** `vp test -- --project <name>` (e.g. `--project db`, `--project server`, `--project ui`).
 - **Config lives in `vite.config.ts`** — there are no standalone `vitest.config.ts` files. Test options (projects, aliases, environment, plugins) are configured under the `test` key of each package's `vite.config.ts`, using `defineConfig` from `vite-plus`.
-- **Allowed test libraries:** Vitest and Playwright only. `@hono/testing` is permitted for Hono route tests. Do not add other test frameworks.
+- **Allowed test libraries:** Vitest and Playwright only. Do not add other test frameworks.
 - **Import source in tests:** always `import { describe, expect, test, vi, ... } from "vite-plus/test"` — never from `"vitest"`. `vite-plus/test` re-exports everything from vitest.
 - **Test location:** every `.ts`/`.tsx` source file under any `src/` dir has a matching `.spec.ts` (or `.spec.tsx`) in a sibling `test/` dir mirroring the `src/` structure (e.g. `packages/utils/src/custom-id.ts` → `packages/utils/test/custom-id.spec.ts`). Non-code files (`.css`, `.json`, `.sql`, `.woff2`) are not tested.
 - **Imports in tests:** use workspace package-name imports (e.g. `import { createCustomId } from "utils/custom-id"`), not relative parent imports. The per-package `vite.config.ts` alias maps the package name to `./src`.
@@ -144,4 +138,4 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - `vp run with-env` loads `.env` from repo root — required for server, db, and build commands.
 - Docker builds set `CI=true` and require `PUBLIC_` ARGs. Web/admin build output is `dist/{client,server}`; the `start` script runs `srvx` serving `dist/server/server.js` with `dist/client` as static assets (web on `WEB_PORT` default 3000, admin on `ADMIN_PORT` default 3001). The Dockerfile `CMD` is `node node_modules/srvx/bin/srvx.mjs serve --prod ... -s ../client dist/server/server.js`.
 - `AGENTS.md` is gitignored — edits won't show as uncommitted changes.
-- Server routes are organized as Hono sub-routers. The API is exposed under `/api/{namespace}/{action}` and auto-documented at `/doc`. Auth/role checks are Hono middleware (`requireAuth`, `requireAdmin`).
+- Server routes are organized as oRPC routers (one file per domain in `apps/server/src/routers/`), mounted under `/rpc` via `OpenAPIHandler`. The API is exposed under `/rpc/{domain}/{action}` (flat RPC-style) and auto-documented at `/rpc/doc`. Auth/role checks are oRPC middlewares (`requireAuth`, `requireAdmin`) in `routers/orpc.ts`.
