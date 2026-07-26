@@ -36,11 +36,14 @@
     "ui-add": "cd packages/ui && vpx shadcn@latest add"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "catalog:",
+    "playwright": "^1.50.0",
     "typescript": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "^3.0.0"
   },
   "overrides": {
     "vite": "catalog:"

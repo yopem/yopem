@@ -11,17 +11,17 @@ declare global {
 }
 
 const getString = (key: string, fallback = ""): string =>
-  (process.env[key] ?? import.meta.env[key] ?? fallback) as string
+  (process.env[key] ?? import.meta.env?.[key] ?? fallback) as string
 
 const getNumber = (key: string, fallback: number): number => {
-  const value = process.env[key] ?? import.meta.env[key]
+  const value = process.env[key] ?? import.meta.env?.[key]
   if (value === undefined) return fallback
   const parsed = Number(value)
   return Number.isNaN(parsed) ? fallback : parsed
 }
 
 const getBoolean = (key: string): boolean =>
-  (process.env[key] ?? import.meta.env[key]) === "true"
+  (process.env[key] ?? import.meta.env?.[key]) === "true"
 
 const protocol = import.meta.env?.DEV ? "http://" : "https://"
 

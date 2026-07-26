@@ -2,9 +2,13 @@
   "extends": "@yopem/typescript-config/base",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
-    "types": ["node"]
+    "rootDir": ".",
+    "types": ["node"],
+    "paths": {
+      "api-client": ["./src/index.ts"],
+      "api-client/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,6 +1,19 @@
 import { defineConfig } from "vite-plus"
 
 export default defineConfig({
+  test: {
+    projects: [
+      "packages/utils",
+      "packages/env",
+      "packages/auth",
+      "packages/cache",
+      "packages/api-client",
+      "packages/db",
+      "apps/server",
+      "packages/editor",
+      "packages/ui",
+    ],
+  },
   staged: {
     "*": "vp check --fix",
     "*.{js,ts,tsx,json,md,yaml,yml,css}, !**/migrations/**, !pnpm-lock.yaml":
