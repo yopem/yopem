@@ -20,6 +20,7 @@ dist/
 out/
 build/
 .tanstack/
+.output/
 
 # Debug
 npm-debug.log*
