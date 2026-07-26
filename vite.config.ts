@@ -10,6 +10,7 @@ export default defineConfig({
       "packages/rpc",
       "packages/db",
       "apps/server",
+      "apps/admin",
       "packages/editor",
       "packages/ui",
     ],
