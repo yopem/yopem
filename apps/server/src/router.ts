@@ -13,7 +13,6 @@ import {
   productsProtectedApp,
   productsPublicApp,
 } from "./routes/products"
-import { sessionProtectedApp } from "./routes/session"
 import { userAdminApp, userProtectedApp } from "./routes/user"
 
 export const apiApp = new OpenAPIHono<AppContext>()
@@ -25,8 +24,6 @@ apiApp.route("/assets", assetsAdminApp)
 apiApp.route("/products", productsPublicApp)
 apiApp.route("/products", productsProtectedApp)
 apiApp.route("/products", productsAdminApp)
-
-apiApp.route("/session", sessionProtectedApp)
 
 apiApp.route("/user", userProtectedApp)
 apiApp.route("/user/api-keys", userAdminApp)
