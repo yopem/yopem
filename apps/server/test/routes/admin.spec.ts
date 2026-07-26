@@ -1,5 +1,5 @@
 import * as mod from "server/routes/admin"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("admin routes", () => {
   test("exports Hono apps", () => {

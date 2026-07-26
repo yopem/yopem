@@ -4,7 +4,7 @@ import {
   StorageValidationError,
   getR2Storage,
 } from "server/storage"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("storage", () => {
   test("exports storage errors and singleton getter", () => {

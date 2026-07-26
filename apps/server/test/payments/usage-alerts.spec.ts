@@ -1,5 +1,5 @@
 import * as mod from "server/payments/usage-alerts"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("usage-alerts", () => {
   test("module exports are defined", () => {

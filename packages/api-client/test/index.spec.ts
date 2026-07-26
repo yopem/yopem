@@ -1,5 +1,5 @@
 import { createApiClient } from "api-client"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("createApiClient", () => {
   test("returns a client with route namespaces", () => {

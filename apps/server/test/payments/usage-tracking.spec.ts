@@ -1,5 +1,5 @@
 import * as mod from "server/payments/usage-tracking"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("usage-tracking", () => {
   test("module exports are defined", () => {

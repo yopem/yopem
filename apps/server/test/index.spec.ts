@@ -1,5 +1,5 @@
 import app from "server"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("server app", () => {
   test("has a health endpoint", async () => {

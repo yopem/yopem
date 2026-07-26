@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 import { YouTubeEmbed } from "ui/components/youtube-embed"
 

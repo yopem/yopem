@@ -1,5 +1,5 @@
 import { RATE_LIMITS, checkRateLimit } from "server/rate-limit"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("checkRateLimit", () => {
   test("allows requests when redis is unavailable", async () => {

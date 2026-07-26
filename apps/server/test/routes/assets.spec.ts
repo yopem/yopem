@@ -1,5 +1,5 @@
 import * as mod from "server/routes/assets"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("assets routes", () => {
   test("exports Hono apps", () => {

@@ -1,5 +1,5 @@
 import * as mod from "server/payments/polar-client"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("polar-client", () => {
   test("module exports are defined", () => {

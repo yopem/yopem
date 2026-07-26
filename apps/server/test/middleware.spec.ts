@@ -1,5 +1,5 @@
 import { assertSession, requireAdmin, requireAuth } from "server/middleware"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("middleware", () => {
   test("exports required middleware", () => {

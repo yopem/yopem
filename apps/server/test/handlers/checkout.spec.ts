@@ -1,5 +1,5 @@
 import { checkoutRoute } from "server/handlers/checkout"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("checkout handler", () => {
   test("exports a route", () => {

@@ -5,7 +5,7 @@ import {
   RateLimitError,
   WebhookHandlerError,
 } from "server/errors"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("errors", () => {
   test("RateLimitError captures operation and cause", () => {

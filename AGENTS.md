@@ -99,7 +99,8 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **Test runner:** always use `vp test` (runs Vitest via Vite+). Never run `npx vitest` or `vitest` directly — `vp test` is the only entry point.
 - **Run a single project:** `vp test -- --project <name>` (e.g. `--project db`, `--project server`, `--project ui`).
 - **Config lives in `vite.config.ts`** — there are no standalone `vitest.config.ts` files. Test options (projects, aliases, environment, plugins) are configured under the `test` key of each package's `vite.config.ts`, using `defineConfig` from `vite-plus`.
-- **Allowed test libraries:** Vitest and Playwright only. `hono/testing` is permitted for Hono route tests. Do not add other test frameworks.
+- **Allowed test libraries:** Vitest and Playwright only. `@hono/testing` is permitted for Hono route tests. Do not add other test frameworks.
+- **Import source in tests:** always `import { describe, expect, test, vi, ... } from "vite-plus/test"` — never from `"vitest"`. `vite-plus/test` re-exports everything from vitest.
 - **Test location:** every `.ts`/`.tsx` source file under any `src/` dir has a matching `.spec.ts` (or `.spec.tsx`) in a sibling `test/` dir mirroring the `src/` structure (e.g. `packages/utils/src/custom-id.ts` → `packages/utils/test/custom-id.spec.ts`). Non-code files (`.css`, `.json`, `.sql`, `.woff2`) are not tested.
 - **Imports in tests:** use workspace package-name imports (e.g. `import { createCustomId } from "utils/custom-id"`), not relative parent imports. The per-package `vite.config.ts` alias maps the package name to `./src`.
 - **Per-project env:** server tests need env vars set at import time; these come from `apps/server/test/setup.ts` (a Vitest `globalSetup` exporting a default function) — do not rely on `.env` for the test run.

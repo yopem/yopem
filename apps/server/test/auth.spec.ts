@@ -1,5 +1,5 @@
 import { authMiddleware } from "server/auth"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("authMiddleware", () => {
   test("is exported", () => {

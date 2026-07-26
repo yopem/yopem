@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest"
+import { describe, expect, test, vi } from "vite-plus/test"
 
 describe("auth client", () => {
   test("creates an auth client with the configured issuer", async () => {

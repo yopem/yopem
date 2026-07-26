@@ -3,7 +3,7 @@ import {
   jsonOkResponse,
   successSchema,
 } from "server/routes/common"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("common route schemas", () => {
   test("idParamSchema validates an id", () => {

@@ -1,5 +1,5 @@
 import * as mod from "server/llm/providers/fal"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("fal", () => {
   test("module exports are defined", () => {
