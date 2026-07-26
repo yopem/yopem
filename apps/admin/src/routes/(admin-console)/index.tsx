@@ -21,7 +21,6 @@ const AdminConsolePage = () => {
             className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold tracking-tight shadow-sm transition-colors"
             render={
               <>
-                {/* @ts-expect-error */}
                 <Link to="/products/add">
                   <PlusIcon className="size-4.5" />
                   <span>Add New Product</span>

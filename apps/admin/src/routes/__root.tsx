@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
+import type { SessionUser } from "auth/types"
 import { siteTitle } from "env"
 
 import GlobalError from "@/components/global-error"
@@ -19,6 +20,7 @@ import appCss from "@/styles.css?url"
 
 export interface RouterContext {
   queryClient: QueryClient
+  session: SessionUser | null
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({

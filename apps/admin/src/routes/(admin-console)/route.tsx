@@ -9,7 +9,6 @@ import {
 import { Shimmer } from "shimmer-from-structure"
 
 import Layout from "@/components/layout/layout"
-import { getSession } from "@/lib/auth"
 
 const AdminConsoleLoading = () => {
   return (
@@ -69,12 +68,11 @@ const AdminConsoleLayout = () => {
 }
 
 export const Route = createFileRoute("/(admin-console)")({
-  beforeLoad: async () => {
-    const session = await getSession()
-    if (!session) {
+  beforeLoad: ({ context }) => {
+    if (!context.session) {
       throw redirect({ to: "/auth/login" })
     }
-    return { session }
+    return { session: context.session }
   },
   component: AdminConsoleLayout,
   pendingComponent: AdminConsoleLoading,
