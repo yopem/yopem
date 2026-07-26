@@ -27,10 +27,6 @@
     "./hydration": {
       "types": "./src/hydration.tsx",
       "default": "./src/hydration.tsx"
-    },
-    "./prefetch": {
-      "types": "./src/prefetch.ts",
-      "default": "./src/prefetch.ts"
     }
   },
   "scripts": {
@@ -40,12 +36,12 @@
   },
   "dependencies": {
     "@orpc/client": "^1.14.10",
-    "@orpc/server": "^1.14.10",
     "@orpc/tanstack-query": "^1.14.10",
     "@tanstack/react-query": "catalog:",
     "server": "workspace:*"
   },
   "devDependencies": {
+    "@orpc/server": "^1.14.10",
     "@types/react": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "typescript": "catalog:"

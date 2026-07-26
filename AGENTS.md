@@ -44,7 +44,7 @@ apps/
 packages/
   db/        — Drizzle schema, migrations, services (data-access layer)
   auth/      — OpenAuth client + subjects
-  rpc/       — oRPC shared/client/server, query bindings, query hydration (`hydration.tsx`) and server prefetching (`prefetch.ts`)
+  rpc/       — oRPC shared/client/server, query bindings, query hydration (`hydration.tsx`)
   ui/        — coss ui components from shadcn/ui registry (Base UI), theme, style.css
   utils/     — crypto, custom-id, date formatting, validation schemas
   env/       — typed env helpers (server + client)

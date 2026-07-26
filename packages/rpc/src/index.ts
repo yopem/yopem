@@ -7,4 +7,3 @@ export {
   RPCHydrationBoundary,
   type RPCHydrationState,
 } from "./hydration"
-export { prefetch } from "./prefetch"
