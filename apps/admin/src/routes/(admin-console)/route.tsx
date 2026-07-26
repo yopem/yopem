@@ -1,0 +1,81 @@
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
+import {
+  BotIcon,
+  FileImageIcon,
+  LayoutDashboardIcon,
+  SettingsIcon,
+  TagsIcon,
+} from "lucide-react"
+import { Shimmer } from "shimmer-from-structure"
+
+import Layout from "@/components/layout/layout"
+import { getSession } from "@/lib/auth"
+
+const AdminConsoleLoading = () => {
+  return (
+    <Shimmer loading={true}>
+      <div className="bg-muted size-full" />
+    </Shimmer>
+  )
+}
+
+const AdminConsoleLayout = () => {
+  const { session } = Route.useRouteContext()
+
+  const navItems = [
+    {
+      icon: <LayoutDashboardIcon className="size-4.5" />,
+      label: "Overview",
+      href: "/",
+    },
+    {
+      icon: <BotIcon className="size-4.5" />,
+      label: "Products",
+      href: "/products",
+    },
+    {
+      icon: <FileImageIcon className="size-4.5" />,
+      label: "Assets",
+      href: "/assets",
+    },
+    {
+      icon: <TagsIcon className="size-4.5" />,
+      label: "Categories & Tags",
+      href: "/categories-tags",
+    },
+    {
+      icon: <SettingsIcon className="size-4.5" />,
+      label: "Settings",
+      href: "/setting",
+    },
+  ]
+
+  const user = {
+    name: session.name ?? session.email,
+    email: session.email,
+    avatar: session.image ?? undefined,
+  }
+
+  return (
+    <Layout
+      title="Yopem"
+      subtitle="Admin Console"
+      navItems={navItems}
+      user={user}
+    >
+      <Outlet />
+    </Layout>
+  )
+}
+
+export const Route = createFileRoute("/(admin-console)")({
+  beforeLoad: async () => {
+    const session = await getSession()
+    if (!session) {
+      throw redirect({ to: "/auth/login" })
+    }
+    return { session }
+  },
+  component: AdminConsoleLayout,
+  pendingComponent: AdminConsoleLoading,
+})
