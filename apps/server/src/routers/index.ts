@@ -1,3 +1,4 @@
+import { adminRouter } from "./admin"
 import { assetsRouter } from "./assets"
 import { categoriesRouter } from "./categories"
 import { productsRouter } from "./products"
@@ -6,6 +7,7 @@ import { tagsRouter } from "./tags"
 import { userRouter } from "./user"
 
 export const router = {
+  ...adminRouter,
   ...assetsRouter,
   ...categoriesRouter,
   ...productsRouter,

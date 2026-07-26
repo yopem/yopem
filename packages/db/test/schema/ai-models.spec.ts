@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vite-plus/test"
 
 import {
+  aiModelSchema,
   aiModelsTable,
   insertAIModelSchema,
   updateAIModelSchema,
@@ -25,6 +26,19 @@ describe("ai-models schema", () => {
       provider: "openai",
       modelId: "gpt-4",
       displayName: "GPT-4",
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test("aiModelSchema validates a full select row", () => {
+    const result = aiModelSchema.safeParse({
+      id: "aim_1",
+      provider: "openai",
+      modelId: "gpt-4",
+      displayName: "GPT-4",
+      isEnabled: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
     expect(result.success).toBe(true)
   })
