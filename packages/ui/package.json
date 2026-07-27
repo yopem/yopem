@@ -8,8 +8,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./style.css": "./src/style.css",
-    "./fonts/*": "./src/fonts/*",
     "./*": {
       "types": "./src/components/*.tsx",
       "default": "./src/components/*.tsx"
@@ -17,7 +15,13 @@
     "./hooks/*": {
       "types": "./src/hooks/*.tsx",
       "default": "./src/hooks/*.tsx"
-    }
+    },
+    "./utils": {
+      "types": "./src/utils.ts",
+      "default": "./src/utils.ts"
+    },
+    "./style.css": "./src/style.css",
+    "./fonts/*": "./src/fonts/*"
   },
   "scripts": {
     "lint": "vp lint .",
