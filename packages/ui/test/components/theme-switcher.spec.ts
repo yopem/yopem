@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import ThemeSwitcher from "ui/components/theme-switcher"
+import { ThemeSwitcher } from "ui/components/theme-switcher"
 
 describe("theme-switcher", () => {
-  test("default export is defined", () => {
+  test("ThemeSwitcher is exported", () => {
     expect(ThemeSwitcher).toBeDefined()
   })
 })
