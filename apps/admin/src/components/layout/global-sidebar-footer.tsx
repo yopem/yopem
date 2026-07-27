@@ -19,7 +19,7 @@ interface GlobalSidebarFooterProps {
   user: User
 }
 
-const GlobalSidebarFooter = ({ user }: GlobalSidebarFooterProps) => {
+export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
@@ -106,5 +106,3 @@ const GlobalSidebarFooter = ({ user }: GlobalSidebarFooterProps) => {
     </Menu>
   )
 }
-
-export default GlobalSidebarFooter

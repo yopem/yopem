@@ -9,7 +9,7 @@ interface GlobalBreadcrumbProps {
   items: BreadcrumbItem[]
 }
 
-const GlobalBreadcrumb = ({ items }: GlobalBreadcrumbProps) => {
+export function GlobalBreadcrumb({ items }: GlobalBreadcrumbProps) {
   return (
     <div className="flex items-center gap-2 pt-2 text-sm">
       {items.map((item) => (
@@ -32,5 +32,3 @@ const GlobalBreadcrumb = ({ items }: GlobalBreadcrumbProps) => {
     </div>
   )
 }
-
-export default GlobalBreadcrumb

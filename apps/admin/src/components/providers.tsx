@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react"
 
-import ThemeProvider from "ui/theme-provider"
+import { ThemeProvider } from "ui/theme-provider"
 import { AnchoredToastProvider, ToastProvider } from "ui/toast"
 
-const Providers = ({ children }: { children: ReactNode }) => {
+export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -14,5 +14,3 @@ const Providers = ({ children }: { children: ReactNode }) => {
     </ThemeProvider>
   )
 }
-
-export default Providers

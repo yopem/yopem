@@ -7,7 +7,10 @@ interface GlobalSidebarHeaderProps {
   subtitle: string
 }
 
-const GlobalSidebarHeader = ({ title, subtitle }: GlobalSidebarHeaderProps) => {
+export function GlobalSidebarHeader({
+  title,
+  subtitle,
+}: GlobalSidebarHeaderProps) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
@@ -28,5 +31,3 @@ const GlobalSidebarHeader = ({ title, subtitle }: GlobalSidebarHeaderProps) => {
     </div>
   )
 }
-
-export default GlobalSidebarHeader

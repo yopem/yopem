@@ -14,9 +14,9 @@ import { siteTitle } from "env"
 
 import type { getSession } from "@/lib/auth"
 
-import GlobalError from "@/components/global-error"
-import NotFound from "@/components/not-found"
-import Providers from "@/components/providers"
+import { GlobalError } from "@/components/global-error"
+import { NotFound } from "@/components/not-found"
+import { Providers } from "@/components/providers"
 import appCss from "@/styles.css?url"
 
 type Session = Exclude<Awaited<ReturnType<typeof getSession>>, false>

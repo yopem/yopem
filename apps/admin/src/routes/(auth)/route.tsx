@@ -6,10 +6,10 @@ export const Route = createFileRoute("/(auth)")({
       throw redirect({ to: "/" })
     }
   },
-  component: AuthLayout,
+  component: AuthLayoutComponent,
 })
 
-function AuthLayout() {
+function AuthLayoutComponent() {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex flex-1 flex-col">

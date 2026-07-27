@@ -8,7 +8,7 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
-const ThemeProvider = (props: ThemeProviderProps) => {
+export function ThemeProvider(props: ThemeProviderProps) {
   const { children } = props
 
   return (
@@ -22,5 +22,3 @@ const ThemeProvider = (props: ThemeProviderProps) => {
     </NextThemeProvider>
   )
 }
-
-export default ThemeProvider

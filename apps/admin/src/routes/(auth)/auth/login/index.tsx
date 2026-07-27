@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import LoginButton from "@/components/auth/login-button"
+import { LoginButton } from "@/components/auth/login-button"
 
 export const Route = createFileRoute("/(auth)/auth/login/")({
-  component: LoginPage,
+  component: LoginComponent,
 })
 
-function LoginPage() {
+function LoginComponent() {
   return (
     <div className="container mx-auto flex h-screen flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-87.5">

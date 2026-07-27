@@ -4,7 +4,7 @@ import { type ReactNode } from "react"
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "ui/sidebar"
 
-import GlobalSidebar from "./global-sidebar"
+import { GlobalSidebar } from "./global-sidebar"
 
 interface NavSubItem {
   label: string
@@ -32,13 +32,13 @@ interface AdminLayoutProps {
   user: User
 }
 
-const Layout = ({
+export function Layout({
   children,
   title,
   subtitle,
   navItems,
   user,
-}: AdminLayoutProps) => {
+}: AdminLayoutProps) {
   return (
     <SidebarProvider>
       <GlobalSidebar
@@ -56,5 +56,3 @@ const Layout = ({
     </SidebarProvider>
   )
 }
-
-export default Layout

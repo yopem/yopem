@@ -4,10 +4,14 @@ import { PlusIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 
-import GlobalBreadcrumb from "@/components/layout/global-breadcrumb"
-import GlobalPageHeader from "@/components/layout/global-page-header"
+import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
+import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
-const AdminConsolePage = () => {
+export const Route = createFileRoute("/(admin-console)/")({
+  component: AdminConsoleComponent,
+})
+
+function AdminConsoleComponent() {
   const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
 
   return (
@@ -34,7 +38,3 @@ const AdminConsolePage = () => {
     </div>
   )
 }
-
-export const Route = createFileRoute("/(admin-console)/")({
-  component: AdminConsolePage,
-})

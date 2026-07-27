@@ -21,7 +21,7 @@ interface GlobalSidebarNavProps {
   items: NavItem[]
 }
 
-const GlobalSidebarNav = ({ items }: GlobalSidebarNavProps) => {
+export function GlobalSidebarNav({ items }: GlobalSidebarNavProps) {
   const { pathname } = useLocation()
 
   const isItemActive = (href: string) =>
@@ -117,5 +117,3 @@ const GlobalSidebarNav = ({ items }: GlobalSidebarNavProps) => {
     </nav>
   )
 }
-
-export default GlobalSidebarNav

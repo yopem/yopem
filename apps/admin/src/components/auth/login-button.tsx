@@ -8,7 +8,7 @@ import { toastManager } from "ui/toast"
 
 import { loginFn } from "@/lib/auth"
 
-const LoginButton = () => {
+export function LoginButton() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async () => {
@@ -72,5 +72,3 @@ const LoginButton = () => {
     </Button>
   )
 }
-
-export default LoginButton

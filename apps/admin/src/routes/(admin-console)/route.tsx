@@ -8,17 +8,20 @@ import {
 } from "lucide-react"
 import { Shimmer } from "shimmer-from-structure"
 
-import Layout from "@/components/layout/layout"
+import { Layout } from "@/components/layout/layout"
 
-const AdminConsoleLoading = () => {
-  return (
-    <Shimmer loading={true}>
-      <div className="bg-muted size-full" />
-    </Shimmer>
-  )
-}
+export const Route = createFileRoute("/(admin-console)")({
+  beforeLoad: ({ context }) => {
+    if (!context.session) {
+      throw redirect({ to: "/auth/login" })
+    }
+    return { session: context.session }
+  },
+  component: AdminConsoleLayoutComponent,
+  pendingComponent: AdminConsolePendingComponent,
+})
 
-const AdminConsoleLayout = () => {
+function AdminConsoleLayoutComponent() {
   const { session } = Route.useRouteContext()
 
   const navItems = [
@@ -67,13 +70,10 @@ const AdminConsoleLayout = () => {
   )
 }
 
-export const Route = createFileRoute("/(admin-console)")({
-  beforeLoad: ({ context }) => {
-    if (!context.session) {
-      throw redirect({ to: "/auth/login" })
-    }
-    return { session: context.session }
-  },
-  component: AdminConsoleLayout,
-  pendingComponent: AdminConsoleLoading,
-})
+function AdminConsolePendingComponent() {
+  return (
+    <Shimmer loading={true}>
+      <div className="bg-muted size-full" />
+    </Shimmer>
+  )
+}

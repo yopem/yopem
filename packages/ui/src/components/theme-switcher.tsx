@@ -6,7 +6,7 @@ import { useSyncExternalStore } from "react"
 
 import { Button } from "./button"
 
-const ThemeSwitcher = () => {
+export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
   const mounted = useSyncExternalStore(
     () => () => undefined,
@@ -51,5 +51,3 @@ const ThemeSwitcher = () => {
     </div>
   )
 }
-
-export default ThemeSwitcher

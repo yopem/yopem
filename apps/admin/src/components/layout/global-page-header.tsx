@@ -6,11 +6,11 @@ interface GlobalPageHeaderProps {
   action?: ReactNode
 }
 
-const GlobalPageHeader = ({
+export function GlobalPageHeader({
   title,
   description,
   action,
-}: GlobalPageHeaderProps) => {
+}: GlobalPageHeaderProps) {
   return (
     <div className="flex flex-col justify-between gap-6 pb-2 md:flex-row md:items-end">
       <div className="flex flex-col gap-1">
@@ -23,5 +23,3 @@ const GlobalPageHeader = ({
     </div>
   )
 }
-
-export default GlobalPageHeader

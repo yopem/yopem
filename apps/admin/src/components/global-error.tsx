@@ -4,13 +4,13 @@ import { useEffect } from "react"
 
 import { Button } from "ui/button"
 
-const GlobalError = ({
+export function GlobalError({
   error,
   reset,
 }: {
   error: Error
   reset?: () => void
-}) => {
+}) {
   const formatError = (error: unknown): string =>
     error instanceof Error ? (error.stack ?? error.message) : String(error)
 
@@ -62,5 +62,3 @@ const GlobalError = ({
     </div>
   )
 }
-
-export default GlobalError

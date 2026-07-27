@@ -3,7 +3,7 @@ import { HomeIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 
-const NotFound = () => {
+export function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md text-center">
@@ -27,5 +27,3 @@ const NotFound = () => {
     </div>
   )
 }
-
-export default NotFound

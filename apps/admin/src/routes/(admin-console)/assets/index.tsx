@@ -29,10 +29,10 @@ const AssetSkeleton = lazy(() =>
 )
 
 export const Route = createFileRoute("/(admin-console)/assets/")({
-  component: RouteComponent,
+  component: AssetsRouteComponent,
 })
 
-function RouteComponent() {
+function AssetsRouteComponent() {
   const [selectedType, setSelectedType] = useState<AssetType | "all">("all")
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null)
@@ -128,7 +128,7 @@ function RouteComponent() {
   )
 
   return (
-    <Suspense fallback={<AssetsLoading />}>
+    <Suspense fallback={<AseetsLoadingComponent />}>
       <div
         className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
         onPaste={handlePaste}
@@ -198,7 +198,7 @@ function RouteComponent() {
 
 type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
-function AssetsLoading() {
+function AseetsLoadingComponent() {
   return (
     <div className="flex flex-1 items-center justify-center p-8">
       <div className="text-center">

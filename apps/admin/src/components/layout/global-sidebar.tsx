@@ -8,11 +8,11 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "ui/sidebar"
-import ThemeSwitcher from "ui/theme-switcher"
+import { ThemeSwitcher } from "ui/theme-switcher"
 
-import GlobalSidebarFooter from "./global-sidebar-footer"
-import GlobalSidebarHeader from "./global-sidebar-header"
-import GlobalSidebarNav from "./global-sidebar-nav"
+import { GlobalSidebarFooter } from "./global-sidebar-footer"
+import { GlobalSidebarHeader } from "./global-sidebar-header"
+import { GlobalSidebarNav } from "./global-sidebar-nav"
 
 interface NavSubItem {
   label: string
@@ -32,19 +32,19 @@ interface User {
   avatar?: string
 }
 
-interface AdminSidebarProps {
+interface GlobalSidebarProps {
   title: string
   subtitle: string
   navItems: NavItem[]
   user: User
 }
 
-const AdminSidebar = ({
+export function GlobalSidebar({
   title,
   subtitle,
   navItems,
   user,
-}: AdminSidebarProps) => {
+}: GlobalSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader className="p-6">
@@ -62,5 +62,3 @@ const AdminSidebar = ({
     </Sidebar>
   )
 }
-
-export default AdminSidebar
