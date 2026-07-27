@@ -94,7 +94,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-
   @keyframes skeleton {
     to {
       background-position: -200% 0;
@@ -112,7 +111,6 @@
       opacity: 0;
     }
   }
-
   @keyframes toast-success-odd {
     0% {
       scale: 1;
@@ -127,7 +125,6 @@
       scale: 1;
     }
   }
-
   @keyframes toast-error-odd {
     0% {
       translate: 0 0;
@@ -145,7 +142,6 @@
       translate: 0 0;
     }
   }
-
   @keyframes toast-success-even {
     0% {
       scale: 1;
@@ -160,7 +156,6 @@
       scale: 1;
     }
   }
-
   @keyframes toast-error-even {
     0% {
       translate: 0 0;

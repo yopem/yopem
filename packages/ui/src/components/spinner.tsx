@@ -1,4 +1,4 @@
-import type React from "react"
+import type * as React from "react"
 
 import { Loader2Icon } from "lucide-react"
 
@@ -12,7 +12,7 @@ export function Spinner({
     <Loader2Icon
       aria-label="Loading"
       className={cn("animate-spin", className)}
-      data-role="status"
+      role="status"
       {...props}
     />
   )

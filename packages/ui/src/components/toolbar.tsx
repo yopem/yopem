@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import type * as React from "react"
 
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 

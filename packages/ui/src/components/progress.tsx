@@ -1,14 +1,16 @@
 "use client"
 
+import type * as React from "react"
+
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
 
 import { cn } from "ui/utils"
 
-function Progress({
+export function Progress({
   className,
   children,
   ...props
-}: ProgressPrimitive.Root.Props) {
+}: ProgressPrimitive.Root.Props): React.ReactElement {
   return (
     <ProgressPrimitive.Root
       className={cn("flex w-full flex-col gap-2", className)}
@@ -24,7 +26,10 @@ function Progress({
   )
 }
 
-function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
+export function ProgressLabel({
+  className,
+  ...props
+}: ProgressPrimitive.Label.Props): React.ReactElement {
   return (
     <ProgressPrimitive.Label
       className={cn("text-sm font-medium", className)}
@@ -34,7 +39,10 @@ function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
   )
 }
 
-function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
+export function ProgressTrack({
+  className,
+  ...props
+}: ProgressPrimitive.Track.Props): React.ReactElement {
   return (
     <ProgressPrimitive.Track
       className={cn(
@@ -47,24 +55,23 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
   )
 }
 
-function ProgressIndicator({
+export function ProgressIndicator({
   className,
   ...props
-}: ProgressPrimitive.Indicator.Props) {
+}: ProgressPrimitive.Indicator.Props): React.ReactElement {
   return (
     <ProgressPrimitive.Indicator
-      className={cn(
-        "bg-primary transition-all duration-500",
-        "data-indeterminate:animate-indeterminate",
-        className,
-      )}
+      className={cn("bg-primary transition-all duration-500", className)}
       data-slot="progress-indicator"
       {...props}
     />
   )
 }
 
-function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
+export function ProgressValue({
+  className,
+  ...props
+}: ProgressPrimitive.Value.Props): React.ReactElement {
   return (
     <ProgressPrimitive.Value
       className={cn("text-sm tabular-nums", className)}
@@ -74,10 +81,4 @@ function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
   )
 }
 
-export {
-  Progress,
-  ProgressLabel,
-  ProgressTrack,
-  ProgressIndicator,
-  ProgressValue,
-}
+export { ProgressPrimitive }
