@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import { useEditorRef } from "platejs/react"
 
-import { cn, cva } from "ui"
+import { cn, cva } from "ui/utils"
 
 const buttonVariants = cva("rounded bg-[rgba(0,0,0,0.5)] px-1", {
   defaultVariants: {

@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardAction,
   CardDescription,
-  CardContent,
+  CardPanel,
 } from "ui/components/card"
 
 describe("card", () => {
@@ -35,7 +35,7 @@ describe("card", () => {
     expect(CardDescription).toBeDefined()
   })
 
-  test("CardContent is exported", () => {
-    expect(CardContent).toBeDefined()
+  test("CardPanel is exported", () => {
+    expect(CardPanel).toBeDefined()
   })
 })

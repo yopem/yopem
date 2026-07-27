@@ -21,9 +21,9 @@ import {
 import { KEYS } from "platejs"
 import { useEditorRef, useFormInputProps, usePluginOption } from "platejs/react"
 
-import { cva } from "ui"
 import { buttonVariants } from "ui/button"
 import { Separator } from "ui/separator"
+import { cva } from "ui/utils"
 
 const popoverVariants = cva(
   "bg-popover text-popover-foreground z-50 w-auto rounded-lg border p-1 shadow-lg/5 outline-hidden",

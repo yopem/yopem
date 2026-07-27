@@ -5,8 +5,7 @@ import type { ComponentProps, RefObject } from "react"
 
 import { PlateContainer, PlateContent, PlateView } from "platejs/react"
 
-import type { VariantProps } from "ui"
-import { cn, cva } from "ui"
+import { cn, cva, type VariantProps } from "ui/utils"
 
 const editorContainerVariants = cva(
   "caret-primary selection:bg-primary/25 [&_.slate-selection-area]:border-primary/25 [&_.slate-selection-area]:bg-primary/15 relative w-full cursor-text overflow-y-auto select-text focus-visible:outline-none [&_.slate-selection-area]:z-50 [&_.slate-selection-area]:border",

@@ -9,8 +9,8 @@ import {
   useResizeHandleState,
 } from "@platejs/resizable"
 
-import type { VariantProps } from "ui"
-import { cn, cva } from "ui"
+import type { VariantProps } from "ui/utils"
+import { cn, cva } from "ui/utils"
 
 export const mediaResizeHandleVariants = cva(
   cn(

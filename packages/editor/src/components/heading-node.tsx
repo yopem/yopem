@@ -4,7 +4,7 @@ import type { PlateElementProps } from "platejs/react"
 
 import { PlateElement } from "platejs/react"
 
-import { type VariantProps, cva } from "ui"
+import { type VariantProps, cva } from "ui/utils"
 
 const headingVariants = cva(
   "relative mb-1 data-[nav-target=true]:rounded-md data-[nav-target=true]:bg-(--color-highlight)",

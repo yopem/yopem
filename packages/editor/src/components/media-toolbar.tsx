@@ -21,10 +21,10 @@ import {
 } from "platejs/react"
 import { useEffect } from "react"
 
-import { cva } from "ui"
 import { Button, buttonVariants } from "ui/button"
 import { Popover, PopoverContent } from "ui/popover"
 import { Separator } from "ui/separator"
+import { cva } from "ui/utils"
 
 import { CaptionButton } from "./caption"
 

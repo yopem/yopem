@@ -29,7 +29,7 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 
-import { cn, cva } from "ui"
+import { cn, cva } from "ui/utils"
 
 type FilterFn = (
   item: { value: string; group?: string; keywords?: string[]; label?: string },
