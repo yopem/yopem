@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "vite dev --port ${ADMIN_PORT:-3001}",
     "generate-routes": "tsr generate",
-    "build": "vite build",
+    "build": "vite build && node scripts/fix-ssr-bundle.mjs",
     "preview": "vite preview",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
+    "start": "node --env-file=../../.env .output/server/index.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

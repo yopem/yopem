@@ -26,6 +26,7 @@
     "lint": "vp lint",
     "lint:fix": "vp lint --fix",
     "start": "vp run -r start",
+    "start:admin": "vp run --filter admin start",
     "start:server": "vp run --filter server start",
     "typecheck": "vp run -r typecheck",
     "ui-add": "cd packages/ui && vpx shadcn@latest add"
