@@ -1,4 +1,8 @@
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "vite-plus"
+
+const root = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   test: {
@@ -120,9 +124,19 @@ export default defineConfig({
     settings: {
       tailwindcss: {
         entryPoint: [
-          { files: "apps/admin/**", use: "apps/admin/src/styles.css" },
-          { files: "packages/editor/**", use: "packages/editor/src/style.css" },
-          { files: "packages/ui/**", use: "packages/ui/src/style.css" },
+          {
+            files: "apps/admin/**",
+            use: resolve(root, "apps/admin/src/styles.css"),
+          },
+          {
+            files: "packages/editor/**",
+            use: resolve(root, "packages/editor/src/style.css"),
+          },
+          {
+            files: "packages/ui/**",
+            use: resolve(root, "packages/ui/src/style.css"),
+          },
+          { files: "**", use: resolve(root, "packages/ui/src/style.css") },
         ],
       },
     },
