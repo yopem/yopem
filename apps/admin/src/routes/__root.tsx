@@ -10,20 +10,23 @@ import {
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
-import type { SessionUser } from "auth/types"
 import { siteTitle } from "env"
 
 import GlobalError from "@/components/global-error"
 import NotFound from "@/components/not-found"
 import Providers from "@/components/providers"
+import { getSession } from "@/lib/auth"
 import appCss from "@/styles.css?url"
 
 export interface RouterContext {
   queryClient: QueryClient
-  session: SessionUser | null
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  beforeLoad: async () => {
+    const session = await getSession()
+    return { session: session || null }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

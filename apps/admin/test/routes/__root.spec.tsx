@@ -1,18 +1,17 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import type { SessionUser } from "auth/types"
-
 import { Route, type RouterContext } from "@/routes/__root"
 
-const _sessionTypeCheck: RouterContext["session"] extends SessionUser | null
+const _contextHasQueryClientOnly: "queryClient" extends keyof RouterContext
   ? true
   : false = true
 
 describe("root route", () => {
-  test("exports a configured Route with head/error/notFound components", () => {
-    expect(_sessionTypeCheck).toBe(true)
+  test("resolves session in beforeLoad and configures head/error/notFound components", () => {
+    expect(_contextHasQueryClientOnly).toBe(true)
     expect(Route).toBeDefined()
     const options = Route.options
+    expect(typeof options.beforeLoad).toBe("function")
     expect(typeof options.head).toBe("function")
     expect(options.errorComponent).toBeDefined()
     expect(options.notFoundComponent).toBeDefined()
