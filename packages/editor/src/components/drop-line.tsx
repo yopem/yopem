@@ -4,7 +4,7 @@ import type { ComponentProps } from "react"
 
 import { useDropLine } from "@platejs/dnd"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 export function DropLine({ className, ...props }: ComponentProps<"div">) {
   const { dropLine } = useDropLine()

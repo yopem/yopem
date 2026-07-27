@@ -9,7 +9,7 @@ import {
   useSelected,
 } from "platejs/react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 export function HrElement(props: PlateElementProps) {
   const readOnly = useReadOnly()

@@ -2,7 +2,7 @@
 
 import { Field as FieldPrimitive } from "@base-ui/react/field"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 function Field({ className, ...props }: FieldPrimitive.Root.Props) {
   return (

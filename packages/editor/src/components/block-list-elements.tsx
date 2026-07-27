@@ -10,8 +10,8 @@ import {
 } from "@platejs/list/react"
 import { type PlateElementProps, useReadOnly } from "platejs/react"
 
-import { cn } from "ui"
 import { Checkbox } from "ui/checkbox"
+import { cn } from "ui/utils"
 
 const config: Record<
   string,

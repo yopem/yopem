@@ -10,7 +10,7 @@ import { PlateElement, withHOC } from "platejs/react"
 import LiteYouTubeEmbed from "react-lite-youtube-embed"
 import { Tweet } from "react-tweet"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 import { Caption, CaptionTextarea } from "./caption"
 import { MediaToolbar } from "./media-toolbar"

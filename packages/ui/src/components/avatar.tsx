@@ -1,10 +1,15 @@
 "use client"
 
-import { Avatar as AvatarPrimitive } from "@base-ui/react"
+import type React from "react"
 
-import { cn } from "ui"
+import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
 
-function Avatar({ className, ...props }: AvatarPrimitive.Root.Props) {
+import { cn } from "ui/utils"
+
+export function Avatar({
+  className,
+  ...props
+}: AvatarPrimitive.Root.Props): React.ReactElement {
   return (
     <AvatarPrimitive.Root
       className={cn(
@@ -17,7 +22,10 @@ function Avatar({ className, ...props }: AvatarPrimitive.Root.Props) {
   )
 }
 
-function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
+export function AvatarImage({
+  className,
+  ...props
+}: AvatarPrimitive.Image.Props): React.ReactElement {
   return (
     <AvatarPrimitive.Image
       className={cn("size-full object-cover", className)}
@@ -27,10 +35,10 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   )
 }
 
-function AvatarFallback({
+export function AvatarFallback({
   className,
   ...props
-}: AvatarPrimitive.Fallback.Props) {
+}: AvatarPrimitive.Fallback.Props): React.ReactElement {
   return (
     <AvatarPrimitive.Fallback
       className={cn(
@@ -43,4 +51,4 @@ function AvatarFallback({
   )
 }
 
-export { Avatar, AvatarImage, AvatarFallback, AvatarPrimitive }
+export { AvatarPrimitive }

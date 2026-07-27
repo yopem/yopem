@@ -8,7 +8,7 @@ import { ResizableProvider } from "@platejs/resizable"
 import { UploadIcon } from "lucide-react"
 import { PlateElement, useReadOnly, withHOC } from "platejs/react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 import { Caption, CaptionTextarea } from "./caption"
 

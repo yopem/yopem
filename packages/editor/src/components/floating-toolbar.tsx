@@ -17,8 +17,8 @@ import {
   usePluginOption,
 } from "platejs/react"
 
-import { cn } from "ui"
 import { Toolbar } from "ui/toolbar"
+import { cn } from "ui/utils"
 
 export function FloatingToolbar({
   children,

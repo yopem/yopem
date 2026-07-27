@@ -11,7 +11,7 @@ import {
 } from "platejs/react"
 import { useEffect, useState } from "react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 import { DragHandle } from "./drag-handle"
 import { DraggableGutter } from "./draggable-gutter"

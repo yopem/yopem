@@ -6,7 +6,7 @@ import type { PlateElementProps } from "platejs/react"
 import { getLinkAttributes } from "@platejs/link"
 import { PlateElement } from "platejs/react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 export function LinkElement(props: PlateElementProps<TLinkElement>) {
   return (

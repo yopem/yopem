@@ -9,7 +9,7 @@ import {
   TriangleAlertIcon,
 } from "lucide-react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 import { buttonVariants } from "./button"
 

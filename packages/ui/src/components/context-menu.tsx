@@ -5,7 +5,7 @@ import type * as React from "react"
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
 import { ChevronRightIcon } from "lucide-react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 export const ContextMenu: typeof ContextMenuPrimitive.Root =
   ContextMenuPrimitive.Root
