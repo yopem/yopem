@@ -48,7 +48,6 @@
     "@vitejs/plugin-react": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "oxlint-tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"

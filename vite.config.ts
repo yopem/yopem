@@ -117,6 +117,15 @@ export default defineConfig({
     env: {
       builtin: true,
     },
+    settings: {
+      tailwindcss: {
+        entryPoint: [
+          { files: "apps/admin/**", use: "apps/admin/src/styles.css" },
+          { files: "packages/editor/**", use: "packages/editor/src/style.css" },
+          { files: "packages/ui/**", use: "packages/ui/src/style.css" },
+        ],
+      },
+    },
     rules: {
       "import/no-relative-parent-imports": "error",
       "no-array-constructor": "error",
@@ -228,5 +237,30 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
+    overrides: [
+      {
+        files: ["apps/admin/**", "packages/editor/**", "packages/ui/**"],
+        plugins: [
+          "eslint",
+          "import",
+          "jsx-a11y",
+          "oxc",
+          "promise",
+          "react",
+          "react-perf",
+          "typescript",
+          "unicorn",
+        ],
+        jsPlugins: ["oxlint-tailwindcss"],
+        rules: {
+          "react/rules-of-hooks": "error",
+          "tailwindcss/no-conflicting-classes": "error",
+          "tailwindcss/no-deprecated-classes": "error",
+          "tailwindcss/no-unknown-classes": "error",
+          "tailwindcss/no-unnecessary-whitespace": "error",
+          "tailwindcss/enforce-sort-order": "off",
+        },
+      },
+    ],
   },
 })

@@ -40,7 +40,6 @@
     "@types/react": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "jsdom": "^29.1.1",
-    "oxlint-tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },

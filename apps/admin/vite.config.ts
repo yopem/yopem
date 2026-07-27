@@ -16,37 +16,6 @@ Object.assign(process.env, env)
 export default defineConfig({
   envDir: "../..",
   envPrefix: ["VITE_", "PUBLIC_"],
-  lint: {
-    plugins: [
-      "eslint",
-      "import",
-      "jsx-a11y",
-      "oxc",
-      "promise",
-      "react",
-      "react-perf",
-      "typescript",
-      "unicorn",
-    ],
-    jsPlugins: ["oxlint-tailwindcss"],
-    rules: {
-      "tailwindcss/no-unknown-classes": "error",
-      "tailwindcss/no-conflicting-classes": "error",
-      "tailwindcss/enforce-sort-order": "off",
-      "tailwindcss/no-deprecated-classes": "error",
-      "tailwindcss/no-unnecessary-whitespace": "error",
-      "react/rules-of-hooks": "error",
-    },
-    settings: {
-      tailwindcss: {
-        entryPoint: "./src/styles.css",
-      },
-    },
-    options: {
-      typeAware: true,
-      typeCheck: true,
-    },
-  },
 
   resolve: {
     tsconfigPaths: true,

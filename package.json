@@ -36,6 +36,7 @@
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "catalog:",
+    "oxlint-tailwindcss": "^1.3.4",
     "playwright": "^1.50.0",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
@@ -43,5 +44,5 @@
   "overrides": {
     "vite": "catalog:"
   },
-  "packageManager": "pnpm@11.10.0"
+  "packageManager": "pnpm@11.17.0"
 }
