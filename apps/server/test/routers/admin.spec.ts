@@ -18,36 +18,36 @@ const userContext = (
 })
 
 describe("admin router", () => {
-  test("exports thirteen procedures with flat RPC paths", () => {
-    const keys = Object.keys(adminRouter).sort()
+  test("exports thirteen procedures nested under admin", () => {
+    const keys = Object.keys(adminRouter.admin).sort()
     expect(keys).toEqual(
       [
-        "adminActivity",
-        "adminAiRequestsHistory",
-        "adminApiKeyCreate",
-        "adminApiKeyDelete",
-        "adminApiKeyList",
-        "adminApiKeyStats",
-        "adminApiKeyUpdate",
-        "adminAssetSettingsGet",
-        "adminAssetSettingsUpdate",
-        "adminModelCreate",
-        "adminModelDelete",
-        "adminModelList",
-        "adminModelUpdate",
+        "activity",
+        "aiRequestsHistory",
+        "apiKeyCreate",
+        "apiKeyDelete",
+        "apiKeyList",
+        "apiKeyStats",
+        "apiKeyUpdate",
+        "assetSettingsGet",
+        "assetSettingsUpdate",
+        "modelCreate",
+        "modelDelete",
+        "modelList",
+        "modelUpdate",
       ].sort(),
     )
   })
 
   test("every procedure is defined", () => {
-    for (const procedure of Object.values(adminRouter)) {
+    for (const procedure of Object.values(adminRouter.admin)) {
       expect(procedure).toBeDefined()
     }
   })
 
   test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
     await expect(
-      call(adminRouter.adminApiKeyList, undefined, {
+      call(adminRouter.admin.apiKeyList, undefined, {
         context: { session: null },
       }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
@@ -55,7 +55,7 @@ describe("admin router", () => {
 
   test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
     await expect(
-      call(adminRouter.adminApiKeyList, undefined, {
+      call(adminRouter.admin.apiKeyList, undefined, {
         context: userContext("user"),
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })

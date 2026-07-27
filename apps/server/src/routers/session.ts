@@ -12,9 +12,11 @@ const sessionOutputSchema = z.object({
 })
 
 export const sessionRouter = {
-  sessionMe: os
-    .route({ method: "GET", path: "/session/me" })
-    .use(requireAuthMiddleware)
-    .output(sessionOutputSchema)
-    .handler(({ context }) => context.session),
+  session: {
+    me: os
+      .route({ method: "GET" })
+      .use(requireAuthMiddleware)
+      .output(sessionOutputSchema)
+      .handler(({ context }) => context.session),
+  },
 }

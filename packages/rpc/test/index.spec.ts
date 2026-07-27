@@ -12,12 +12,12 @@ import { createORPCLink, createORPCClientFromLink } from "rpc/shared"
 
 describe("rpc package public surface", () => {
   test("client exports a router-bound proxy", () => {
-    expect(typeof clientApi.categoryList).toBe("function")
+    expect(typeof clientApi.categories.list).toBe("function")
   })
 
   test("query/server-query export tanstack-query utils", () => {
-    expect(typeof queryApi.categoryList.queryOptions).toBe("function")
-    expect(typeof serverQueryApi.categoryList.queryOptions).toBe("function")
+    expect(typeof queryApi.categories.list.queryOptions).toBe("function")
+    expect(typeof serverQueryApi.categories.list.queryOptions).toBe("function")
   })
 
   test("query-client exports factory and cached getter", () => {
@@ -43,6 +43,6 @@ describe("rpc package public surface", () => {
   })
 
   test("server exports a server-bound client proxy", () => {
-    expect(typeof serverApi.categoryList).toBe("function")
+    expect(typeof serverApi.categories.list).toBe("function")
   })
 })

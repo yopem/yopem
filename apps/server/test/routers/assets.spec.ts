@@ -18,27 +18,25 @@ const userContext = (
 })
 
 describe("assets router", () => {
-  test("exports four procedures with flat RPC paths", () => {
-    const keys = Object.keys(assetsRouter).sort()
-    expect(keys).toEqual(
-      ["assetDelete", "assetList", "assetUpload", "assetUploadSettings"].sort(),
-    )
+  test("exports four procedures nested under assets", () => {
+    const keys = Object.keys(assetsRouter.assets).sort()
+    expect(keys).toEqual(["delete", "list", "upload", "uploadSettings"].sort())
   })
 
   test("every procedure is defined", () => {
-    for (const procedure of Object.values(assetsRouter)) {
+    for (const procedure of Object.values(assetsRouter.assets)) {
       expect(procedure).toBeDefined()
     }
   })
 
-  test("assetUploadSettings is registered (public, no auth)", () => {
-    expect(assetsRouter.assetUploadSettings).toBeDefined()
+  test("assets.uploadSettings is registered (public, no auth)", () => {
+    expect(assetsRouter.assets.uploadSettings).toBeDefined()
   })
 
-  test("assetList rejects null sessions with UNAUTHORIZED", async () => {
+  test("assets.list rejects null sessions with UNAUTHORIZED", async () => {
     await expect(
       call(
-        assetsRouter.assetList,
+        assetsRouter.assets.list,
         {},
         {
           context: { session: null },
@@ -47,30 +45,30 @@ describe("assets router", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("assetUpload rejects null sessions with UNAUTHORIZED", async () => {
+  test("assets.upload rejects null sessions with UNAUTHORIZED", async () => {
     await expect(
       call(
-        assetsRouter.assetUpload,
+        assetsRouter.assets.upload,
         new File(["x"], "test.txt", { type: "text/plain" }),
         { context: { session: null } },
       ),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("assetUpload rejects non-admin sessions with FORBIDDEN", async () => {
+  test("assets.upload rejects non-admin sessions with FORBIDDEN", async () => {
     await expect(
       call(
-        assetsRouter.assetUpload,
+        assetsRouter.assets.upload,
         new File(["x"], "test.txt", { type: "text/plain" }),
         { context: userContext("user") },
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 
-  test("assetDelete rejects non-admin sessions with FORBIDDEN", async () => {
+  test("assets.delete rejects non-admin sessions with FORBIDDEN", async () => {
     await expect(
       call(
-        assetsRouter.assetDelete,
+        assetsRouter.assets.delete,
         { id: "ast_1" },
         {
           context: userContext("user"),

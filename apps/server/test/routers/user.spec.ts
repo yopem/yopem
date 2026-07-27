@@ -18,8 +18,8 @@ const userContext = (
 })
 
 describe("user router", () => {
-  test("exports nine procedures with flat RPC paths", () => {
-    const keys = Object.keys(userRouter).sort()
+  test("exports nine procedures nested under user", () => {
+    const keys = Object.keys(userRouter.user).sort()
     expect(keys).toEqual(
       [
         "apiKeyCreate",
@@ -27,28 +27,28 @@ describe("user router", () => {
         "apiKeyList",
         "apiKeyStats",
         "apiKeyUpdate",
-        "userMe",
-        "userRuns",
-        "userStats",
-        "userUpdate",
+        "me",
+        "runs",
+        "stats",
+        "update",
       ].sort(),
     )
   })
 
   test("every procedure is defined", () => {
-    for (const procedure of Object.values(userRouter)) {
+    for (const procedure of Object.values(userRouter.user)) {
       expect(procedure).toBeDefined()
     }
   })
 
   test("protected procedures reject null sessions with UNAUTHORIZED", async () => {
     await expect(
-      call(userRouter.userMe, undefined, { context: { session: null } }),
+      call(userRouter.user.me, undefined, { context: { session: null } }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("userMe returns the trimmed session for authenticated users", async () => {
-    const result = await call(userRouter.userMe, undefined, {
+  test("user.me returns the trimmed session for authenticated users", async () => {
+    const result = await call(userRouter.user.me, undefined, {
       context: userContext(),
     })
     expect(result).toEqual({
@@ -62,13 +62,17 @@ describe("user router", () => {
 
   test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
     await expect(
-      call(userRouter.apiKeyList, undefined, { context: { session: null } }),
+      call(userRouter.user.apiKeyList, undefined, {
+        context: { session: null },
+      }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
   test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
     await expect(
-      call(userRouter.apiKeyList, undefined, { context: userContext("user") }),
+      call(userRouter.user.apiKeyList, undefined, {
+        context: userContext("user"),
+      }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 })

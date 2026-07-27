@@ -18,20 +18,22 @@ const userContext = (
 })
 
 describe("session router", () => {
-  test("exports a sessionMe procedure", () => {
-    expect(sessionRouter.sessionMe).toBeDefined()
+  test("exports a session.me procedure", () => {
+    expect(sessionRouter.session.me).toBeDefined()
   })
 
-  test("sessionMe returns the session from context for authenticated users", async () => {
-    const result = await call(sessionRouter.sessionMe, undefined, {
+  test("session.me returns the session from context for authenticated users", async () => {
+    const result = await call(sessionRouter.session.me, undefined, {
       context: userContext(),
     })
     expect(result).toEqual(userContext().session)
   })
 
-  test("sessionMe rejects null sessions with UNAUTHORIZED", async () => {
+  test("session.me rejects null sessions with UNAUTHORIZED", async () => {
     await expect(
-      call(sessionRouter.sessionMe, undefined, { context: { session: null } }),
+      call(sessionRouter.session.me, undefined, {
+        context: { session: null },
+      }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 })

@@ -159,454 +159,450 @@ const productBulkStatusInputSchema = z.object({
 })
 
 export const productsRouter = {
-  productList: os
-    .route({ method: "GET", path: "/product/list" })
-    .input(productListInputSchema)
-    .handler(({ input }) =>
-      listProducts({
-        limit: input.limit,
-        cursor: input.cursor,
-        search: input.search,
-        categoryIds: input.categoryIds,
-        status: input.status,
-        priceFilter: input.priceFilter,
-        tagIds: input.tagIds,
-      }),
-    ),
+  products: {
+    list: os
+      .route({ method: "GET" })
+      .input(productListInputSchema)
+      .handler(({ input }) =>
+        listProducts({
+          limit: input.limit,
+          cursor: input.cursor,
+          search: input.search,
+          categoryIds: input.categoryIds,
+          status: input.status,
+          priceFilter: input.priceFilter,
+          tagIds: input.tagIds,
+        }),
+      ),
 
-  productById: os
-    .route({ method: "GET", path: "/product/{id}" })
-    .input(z.object({ id: z.string() }))
-    .handler(async ({ input }) => {
-      const product = await getPublicProductById(input.id)
+    byId: os
+      .route({ method: "GET" })
+      .input(z.object({ id: z.string() }))
+      .handler(async ({ input }) => {
+        const product = await getPublicProductById(input.id)
 
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: `Product not found: ${input.id}`,
-        })
-      }
-
-      return product
-    }),
-
-  productBySlug: os
-    .route({ method: "GET", path: "/product/slug/{slug}" })
-    .input(z.object({ slug: z.string().min(1) }))
-    .handler(async ({ input }) => {
-      const product = await getPublicProductBySlug(input.slug)
-
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: `Product not found: ${input.slug}`,
-        })
-      }
-
-      return product
-    }),
-
-  productPopular: os
-    .route({ method: "GET", path: "/product/popular" })
-    .handler(() => getPopularProducts(10)),
-
-  productCategories: os
-    .route({ method: "GET", path: "/product/category-list" })
-    .handler(() => listCategories()),
-
-  productTags: os
-    .route({ method: "GET", path: "/product/tag-list" })
-    .handler(() => listTags()),
-
-  productSearch: os
-    .route({ method: "GET", path: "/product/search" })
-    .input(productSearchInputSchema)
-    .handler(async ({ input }) => {
-      const cacheKey = `search:${input.query.toLowerCase().trim()}:${input.limit ?? 8}`
-
-      const results = await getOrCompute(
-        redisCache,
-        cacheKey,
-        async () => await searchProducts(input.query, input.limit ?? 8),
-        60,
-      )
-
-      return { results }
-    }),
-
-  productExecute: os
-    .route({ method: "POST", path: "/product/{id}/execute" })
-    .use(requireAuthMiddleware)
-    .input(productExecuteInputSchema)
-    .handler(async ({ context, input }) => {
-      const session = context.session
-      const { id: productId, inputs } = input
-
-      const product = await getProductById(productId)
-
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: `Product not found: ${productId}`,
-        })
-      }
-
-      if (product.status !== "active") {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: `Product not available: ${productId}`,
-        })
-      }
-
-      if (product.apiKeyId === null) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Product is not configured with an API key",
-        })
-      }
-
-      const apiKeys = await getApiKeys()
-      const selectedKey = apiKeys.find((key) => key.id === product.apiKeyId)
-
-      if (!selectedKey) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: "The API key configured for this product no longer exists",
-        })
-      }
-
-      if (selectedKey.status !== "active") {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "The API key configured for this product is inactive",
-        })
-      }
-
-      const cost = Number(product.costPerRun ?? 0)
-
-      const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
-      if (!decryptedKey) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          status: 500,
-          message: "Failed to decrypt API key",
-        })
-      }
-
-      const productConfig = product.config as { modelEngine: string } | null
-
-      if (productConfig === null) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Product configuration is missing",
-        })
-      }
-
-      const runId = createCustomId()
-
-      let execResult: {
-        output: string
-        usage?: {
-          promptTokens: number
-          completionTokens: number
-          totalTokens: number
+        if (!product) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: `Product not found: ${input.id}`,
+          })
         }
-      }
 
-      try {
-        execResult = await executeAIProduct({
-          systemRole: product.systemRole ?? "",
-          userInstructionTemplate: product.userInstructionTemplate ?? "",
-          inputs,
-          config: productConfig,
-          outputFormat: product.outputFormat ?? "plain",
-          apiKey: decryptedKey,
-          provider: selectedKey.provider,
-        })
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
+        return product
+      }),
+
+    bySlug: os
+      .route({ method: "GET" })
+      .input(z.object({ slug: z.string().min(1) }))
+      .handler(async ({ input }) => {
+        const product = await getPublicProductBySlug(input.slug)
+
+        if (!product) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: `Product not found: ${input.slug}`,
+          })
+        }
+
+        return product
+      }),
+
+    popular: os.route({ method: "GET" }).handler(() => getPopularProducts(10)),
+
+    categories: os.route({ method: "GET" }).handler(() => listCategories()),
+
+    tags: os.route({ method: "GET" }).handler(() => listTags()),
+
+    search: os
+      .route({ method: "GET" })
+      .input(productSearchInputSchema)
+      .handler(async ({ input }) => {
+        const cacheKey = `search:${input.query.toLowerCase().trim()}:${input.limit ?? 8}`
+
+        const results = await getOrCompute(
+          redisCache,
+          cacheKey,
+          async () => await searchProducts(input.query, input.limit ?? 8),
+          60,
+        )
+
+        return { results }
+      }),
+
+    execute: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .input(productExecuteInputSchema)
+      .handler(async ({ context, input }) => {
+        const session = context.session
+        const { id: productId, inputs } = input
+
+        const product = await getProductById(productId)
+
+        if (!product) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: `Product not found: ${productId}`,
+          })
+        }
+
+        if (product.status !== "active") {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: `Product not available: ${productId}`,
+          })
+        }
+
+        if (product.apiKeyId === null) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: "Product is not configured with an API key",
+          })
+        }
+
+        const apiKeys = await getApiKeys()
+        const selectedKey = apiKeys.find((key) => key.id === product.apiKeyId)
+
+        if (!selectedKey) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: "The API key configured for this product no longer exists",
+          })
+        }
+
+        if (selectedKey.status !== "active") {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: "The API key configured for this product is inactive",
+          })
+        }
+
+        const cost = Number(product.costPerRun ?? 0)
+
+        const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
+        if (!decryptedKey) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            status: 500,
+            message: "Failed to decrypt API key",
+          })
+        }
+
+        const productConfig = product.config as { modelEngine: string } | null
+
+        if (productConfig === null) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: "Product configuration is missing",
+          })
+        }
+
+        const runId = createCustomId()
+
+        let execResult: {
+          output: string
+          usage?: {
+            promptTokens: number
+            completionTokens: number
+            totalTokens: number
+          }
+        }
+
+        try {
+          execResult = await executeAIProduct({
+            systemRole: product.systemRole ?? "",
+            userInstructionTemplate: product.userInstructionTemplate ?? "",
+            inputs,
+            config: productConfig,
+            outputFormat: product.outputFormat ?? "plain",
+            apiKey: decryptedKey,
+            provider: selectedKey.provider,
+          })
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
+          await insertProductRun({
+            id: runId,
+            productId,
+            userId: session.id,
+            inputs,
+            outputs: { error: errorMessage },
+            status: "failed",
+            cost: String(cost),
+            completedAt: new Date(),
+          })
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            status: 500,
+            message: `AI execution failed: ${errorMessage}`,
+            cause: error,
+          })
+        }
+
+        const output = execResult.output
+
         await insertProductRun({
           id: runId,
           productId,
           userId: session.id,
           inputs,
-          outputs: { error: errorMessage },
-          status: "failed",
+          outputs: { result: output },
+          status: "completed",
           cost: String(cost),
           completedAt: new Date(),
         })
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          status: 500,
-          message: `AI execution failed: ${errorMessage}`,
-          cause: error,
-        })
-      }
 
-      const output = execResult.output
-
-      await insertProductRun({
-        id: runId,
-        productId,
-        userId: session.id,
-        inputs,
-        outputs: { result: output },
-        status: "completed",
-        cost: String(cost),
-        completedAt: new Date(),
-      })
-
-      return {
-        runId,
-        output,
-        cost,
-      }
-    }),
-
-  productPreview: os
-    .route({ method: "POST", path: "/product/preview" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(previewInputSchema)
-    .handler(async ({ input }) => {
-      validateRequiredInputs(input.inputs, input.inputVariable)
-      validateSystemRole(input.systemRole)
-      validateUserInstructionTemplate(input.userInstructionTemplate)
-      validateApiKeyId(input.apiKeyId)
-
-      const apiKeys = await getApiKeys()
-      const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
-
-      if (!selectedKey) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Selected API key not found",
-        })
-      }
-
-      if (selectedKey.status !== "active") {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Selected API key is inactive",
-        })
-      }
-
-      const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
-      if (!decryptedKey) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          status: 500,
-          message: "Failed to decrypt API key",
-        })
-      }
-
-      let execResult: {
-        output: string
-        usage?: {
-          promptTokens: number
-          completionTokens: number
-          totalTokens: number
+        return {
+          runId,
+          output,
+          cost,
         }
-      }
+      }),
 
-      try {
-        execResult = await executeAIProduct({
-          systemRole: input.systemRole,
-          userInstructionTemplate: input.userInstructionTemplate,
-          inputs: input.inputs,
-          config: input.config,
-          outputFormat: input.outputFormat,
-          apiKey: decryptedKey,
-          provider: selectedKey.provider,
-        })
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
+    preview: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(previewInputSchema)
+      .handler(async ({ input }) => {
+        validateRequiredInputs(input.inputs, input.inputVariable)
+        validateSystemRole(input.systemRole)
+        validateUserInstructionTemplate(input.userInstructionTemplate)
+        validateApiKeyId(input.apiKeyId)
 
-        if (
-          error instanceof Error &&
-          (error.name === "ContextLengthError" ||
-            error.name === "InvalidKeyError" ||
-            error.name === "RateLimitError")
-        ) {
+        const apiKeys = await getApiKeys()
+        const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
+
+        if (!selectedKey) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
+            message: "Selected API key not found",
+          })
+        }
+
+        if (selectedKey.status !== "active") {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: "Selected API key is inactive",
+          })
+        }
+
+        const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
+        if (!decryptedKey) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            status: 500,
+            message: "Failed to decrypt API key",
+          })
+        }
+
+        let execResult: {
+          output: string
+          usage?: {
+            promptTokens: number
+            completionTokens: number
+            totalTokens: number
+          }
+        }
+
+        try {
+          execResult = await executeAIProduct({
+            systemRole: input.systemRole,
+            userInstructionTemplate: input.userInstructionTemplate,
+            inputs: input.inputs,
+            config: input.config,
+            outputFormat: input.outputFormat,
+            apiKey: decryptedKey,
+            provider: selectedKey.provider,
+          })
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
+
+          if (
+            error instanceof Error &&
+            (error.name === "ContextLengthError" ||
+              error.name === "InvalidKeyError" ||
+              error.name === "RateLimitError")
+          ) {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: `AI execution failed: ${errorMessage}`,
+            })
+          }
+
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            status: 500,
             message: `AI execution failed: ${errorMessage}`,
+            cause: error,
           })
         }
 
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          status: 500,
-          message: `AI execution failed: ${errorMessage}`,
-          cause: error,
-        })
-      }
+        return {
+          output: execResult.output,
+          cost: 0,
+        }
+      }),
 
-      return {
-        output: execResult.output,
-        cost: 0,
-      }
-    }),
+    adminById: os
+      .route({ method: "GET" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(z.object({ id: z.string() }))
+      .handler(async ({ input }) => {
+        const product = await getProductById(input.id)
 
-  productAdminById: os
-    .route({ method: "GET", path: "/product/admin/{id}" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(z.object({ id: z.string() }))
-    .handler(async ({ input }) => {
-      const product = await getProductById(input.id)
-
-      if (!product) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: `Product not found: ${input.id}`,
-        })
-      }
-
-      return product
-    }),
-
-  productCreate: os
-    .route({ method: "POST", path: "/product/create" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(insertProductSchema)
-    .handler(async ({ context, input }) => {
-      const session = context.session
-      const { tagIds, categoryIds, thumbnailId, ...toolData } = input
-
-      if (thumbnailId) {
-        const asset = await getAssetById(thumbnailId)
-        if (!asset) {
+        if (!product) {
           throw new ORPCError("NOT_FOUND", {
             status: 404,
-            message: `Asset not found: ${thumbnailId}`,
+            message: `Product not found: ${input.id}`,
           })
         }
-        if (asset.type !== "images") {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "Thumbnail must be an image asset",
-          })
+
+        return product
+      }),
+
+    create: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(insertProductSchema)
+      .handler(async ({ context, input }) => {
+        const session = context.session
+        const { tagIds, categoryIds, thumbnailId, ...toolData } = input
+
+        if (thumbnailId) {
+          const asset = await getAssetById(thumbnailId)
+          if (!asset) {
+            throw new ORPCError("NOT_FOUND", {
+              status: 404,
+              message: `Asset not found: ${thumbnailId}`,
+            })
+          }
+          if (asset.type !== "images") {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "Thumbnail must be an image asset",
+            })
+          }
         }
-      }
 
-      if (categoryIds && categoryIds.length > 0) {
-        const valid = await validateCategoryIds(categoryIds)
-        if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "One or more category IDs are invalid",
-          })
+        if (categoryIds && categoryIds.length > 0) {
+          const valid = await validateCategoryIds(categoryIds)
+          if (!valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "One or more category IDs are invalid",
+            })
+          }
         }
-      }
 
-      if (tagIds && tagIds.length > 0) {
-        const valid = await validateTagIds(tagIds)
-        if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "One or more tag IDs are invalid",
-          })
+        if (tagIds && tagIds.length > 0) {
+          const valid = await validateTagIds(tagIds)
+          if (!valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "One or more tag IDs are invalid",
+            })
+          }
         }
-      }
 
-      const product = await createProduct({
-        ...toolData,
-        thumbnailId: thumbnailId ?? undefined,
-        categoryIds,
-        tagIds,
-        createdBy: session.id,
-      })
-
-      return product
-    }),
-
-  productUpdate: os
-    .route({ method: "POST", path: "/product/update" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(productUpdateInputSchema)
-    .handler(async ({ input }) => {
-      const { id, tagIds, categoryIds, thumbnailId, ...data } = input
-
-      if (!id) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Product ID is required",
+        const product = await createProduct({
+          ...toolData,
+          thumbnailId: thumbnailId ?? undefined,
+          categoryIds,
+          tagIds,
+          createdBy: session.id,
         })
-      }
 
-      if (thumbnailId) {
-        const asset = await getAssetById(thumbnailId)
-        if (!asset) {
-          throw new ORPCError("NOT_FOUND", {
-            status: 404,
-            message: `Asset not found: ${thumbnailId}`,
-          })
-        }
-        if (asset.type !== "images") {
+        return product
+      }),
+
+    update: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(productUpdateInputSchema)
+      .handler(async ({ input }) => {
+        const { id, tagIds, categoryIds, thumbnailId, ...data } = input
+
+        if (!id) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
-            message: "Thumbnail must be an image asset",
+            message: "Product ID is required",
           })
         }
-      }
 
-      if (categoryIds && categoryIds.length > 0) {
-        const valid = await validateCategoryIds(categoryIds)
-        if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "One or more category IDs are invalid",
-          })
+        if (thumbnailId) {
+          const asset = await getAssetById(thumbnailId)
+          if (!asset) {
+            throw new ORPCError("NOT_FOUND", {
+              status: 404,
+              message: `Asset not found: ${thumbnailId}`,
+            })
+          }
+          if (asset.type !== "images") {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "Thumbnail must be an image asset",
+            })
+          }
         }
-      }
 
-      if (tagIds && tagIds.length > 0) {
-        const valid = await validateTagIds(tagIds)
-        if (!valid) {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "One or more tag IDs are invalid",
-          })
+        if (categoryIds && categoryIds.length > 0) {
+          const valid = await validateCategoryIds(categoryIds)
+          if (!valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "One or more category IDs are invalid",
+            })
+          }
         }
-      }
 
-      const product = await updateProduct(id, {
-        ...data,
-        thumbnailId: thumbnailId ?? undefined,
-        categoryIds,
-        tagIds,
-      })
+        if (tagIds && tagIds.length > 0) {
+          const valid = await validateTagIds(tagIds)
+          if (!valid) {
+            throw new ORPCError("BAD_REQUEST", {
+              status: 400,
+              message: "One or more tag IDs are invalid",
+            })
+          }
+        }
 
-      return product
-    }),
+        const product = await updateProduct(id, {
+          ...data,
+          thumbnailId: thumbnailId ?? undefined,
+          categoryIds,
+          tagIds,
+        })
 
-  productDelete: os
-    .route({ method: "POST", path: "/product/delete" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(z.object({ id: z.string() }))
-    .output(z.object({ success: z.boolean() }))
-    .handler(async ({ input }) => {
-      await deleteProduct(input.id)
-      return { success: true }
-    }),
+        return product
+      }),
 
-  productDuplicate: os
-    .route({ method: "POST", path: "/product/duplicate" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(z.object({ id: z.string() }))
-    .handler(async ({ context, input }) => {
-      const session = context.session
-      const product = await duplicateProduct(input.id, session.id)
-      return product
-    }),
+    delete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(z.object({ id: z.string() }))
+      .output(z.object({ success: z.boolean() }))
+      .handler(async ({ input }) => {
+        await deleteProduct(input.id)
+        return { success: true }
+      }),
 
-  productBulkStatusUpdate: os
-    .route({ method: "POST", path: "/product/status/bulk" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(productBulkStatusInputSchema)
-    .handler(({ input }) => updateProductStatus(input.ids, input.status)),
+    duplicate: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(z.object({ id: z.string() }))
+      .handler(async ({ context, input }) => {
+        const session = context.session
+        const product = await duplicateProduct(input.id, session.id)
+        return product
+      }),
+
+    bulkStatusUpdate: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(productBulkStatusInputSchema)
+      .handler(({ input }) => updateProductStatus(input.ids, input.status)),
+  },
 }

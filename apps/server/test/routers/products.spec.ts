@@ -18,31 +18,31 @@ const userContext = (
 })
 
 describe("products router", () => {
-  test("exports fifteen procedures with flat RPC paths", () => {
-    const keys = Object.keys(productsRouter).sort()
+  test("exports fifteen procedures nested under products", () => {
+    const keys = Object.keys(productsRouter.products).sort()
     expect(keys).toEqual(
       [
-        "productAdminById",
-        "productBulkStatusUpdate",
-        "productBySlug",
-        "productCategories",
-        "productCreate",
-        "productDelete",
-        "productDuplicate",
-        "productExecute",
-        "productById",
-        "productList",
-        "productPopular",
-        "productPreview",
-        "productSearch",
-        "productTags",
-        "productUpdate",
+        "adminById",
+        "bulkStatusUpdate",
+        "bySlug",
+        "categories",
+        "create",
+        "delete",
+        "duplicate",
+        "execute",
+        "byId",
+        "list",
+        "popular",
+        "preview",
+        "search",
+        "tags",
+        "update",
       ].sort(),
     )
   })
 
   test("every procedure is defined", () => {
-    for (const procedure of Object.values(productsRouter)) {
+    for (const procedure of Object.values(productsRouter.products)) {
       expect(procedure).toBeDefined()
     }
   })
@@ -50,7 +50,7 @@ describe("products router", () => {
   test("protected procedures reject null sessions with UNAUTHORIZED", async () => {
     await expect(
       call(
-        productsRouter.productExecute,
+        productsRouter.products.execute,
         { id: "p_1", inputs: {} },
         { context: { session: null } },
       ),
@@ -60,7 +60,7 @@ describe("products router", () => {
   test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
     await expect(
       call(
-        productsRouter.productCreate,
+        productsRouter.products.create,
         { name: "x" },
         { context: { session: null } },
       ),
@@ -70,7 +70,7 @@ describe("products router", () => {
   test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
     await expect(
       call(
-        productsRouter.productCreate,
+        productsRouter.products.create,
         { name: "x" },
         { context: userContext("user") },
       ),
@@ -79,16 +79,16 @@ describe("products router", () => {
 
   test("public procedures expose no auth middleware", () => {
     const publicKeys = [
-      "productList",
-      "productById",
-      "productBySlug",
-      "productPopular",
-      "productCategories",
-      "productTags",
-      "productSearch",
+      "list",
+      "byId",
+      "bySlug",
+      "popular",
+      "categories",
+      "tags",
+      "search",
     ] as const
     for (const key of publicKeys) {
-      expect(productsRouter[key]).toBeDefined()
+      expect(productsRouter.products[key]).toBeDefined()
     }
   })
 })

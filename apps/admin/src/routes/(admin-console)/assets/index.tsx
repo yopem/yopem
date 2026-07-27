@@ -38,7 +38,7 @@ function AssetsRouteComponent() {
   const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null)
 
   const { data: settings } = useQuery({
-    ...queryApi.assetUploadSettings.queryOptions(),
+    ...queryApi.assets.uploadSettings.queryOptions(),
   })
 
   const maxSizeMB = settings?.maxSizeMB ?? 50
@@ -48,7 +48,7 @@ function AssetsRouteComponent() {
     isLoading,
     refetch,
   } = useQuery({
-    ...queryApi.assetList.queryOptions({
+    ...queryApi.assets.list.queryOptions({
       input: {
         limit: 50,
         type: selectedType === "all" ? undefined : selectedType,
@@ -59,7 +59,7 @@ function AssetsRouteComponent() {
   const assets = (assetsData?.assets as Asset[]) ?? []
 
   const uploadMutation = useMutation({
-    ...queryApi.assetUpload.mutationOptions(),
+    ...queryApi.assets.upload.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "File uploaded",
@@ -78,7 +78,7 @@ function AssetsRouteComponent() {
   })
 
   const deleteMutation = useMutation({
-    ...queryApi.assetDelete.mutationOptions(),
+    ...queryApi.assets.delete.mutationOptions(),
     onSuccess: () => {
       toastManager.add({
         title: "Asset deleted",
