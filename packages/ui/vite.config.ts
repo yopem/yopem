@@ -30,7 +30,7 @@ export default defineConfig({
     rules: {
       "tailwindcss/no-unknown-classes": "error",
       "tailwindcss/no-conflicting-classes": "error",
-      "tailwindcss/enforce-sort-order": "warn",
+      "tailwindcss/enforce-sort-order": "off",
       "tailwindcss/no-deprecated-classes": "error",
       "tailwindcss/no-unnecessary-whitespace": "error",
       "react/rules-of-hooks": "error",
