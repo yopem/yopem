@@ -79,10 +79,20 @@ function scrollActiveIntoView(
   }
 }
 
-const defaultFilter: FilterFn = (
-  { group, keywords = [], label, value },
-  search,
-) => {
+function defaultFilter(
+  {
+    group,
+    keywords = [],
+    label,
+    value,
+  }: {
+    value: string
+    group?: string
+    keywords?: string[]
+    label?: string
+  },
+  search: string,
+): boolean {
   const uniqueTerms = new Set(
     [value, ...keywords, group, label].filter(Boolean),
   )
@@ -125,7 +135,7 @@ export function InlineCombobox({
   const currentUserId = editor.meta?.userId
   const isCreator = !elementUserId || elementUserId === currentUserId
 
-  const setValue = (newValue: string) => {
+  function setValue(newValue: string) {
     setValueProp?.(newValue)
 
     if (!hasValueProp) {
@@ -198,14 +208,14 @@ export function InlineCombobox({
   const visibleValuesRef = useRef<string[]>(visibleValues)
   visibleValuesRef.current = visibleValues
 
-  const flushVisibleValues = () => {
+  function flushVisibleValues() {
     if (pendingVisibleRef.current) {
       setVisibleValues(pendingVisibleRef.current)
       pendingVisibleRef.current = null
     }
   }
 
-  const updateVisibleValues = () => {
+  function updateVisibleValues() {
     const next: string[] = []
     for (const [key, item] of itemsRef.current.entries()) {
       if (item.visible) next.push(key)
@@ -215,11 +225,7 @@ export function InlineCombobox({
     }
   }
 
-  const register = (
-    itemValue: string,
-    visible: boolean,
-    onSelect: () => void,
-  ) => {
+  function register(itemValue: string, visible: boolean, onSelect: () => void) {
     itemsRef.current.set(itemValue, { onSelect, visible })
     updateVisibleValues()
 
@@ -231,14 +237,14 @@ export function InlineCombobox({
 
   const activeValue = visibleValues[activeIndex] ?? null
 
-  const setActiveValue = (nextValue: string | null) => {
+  function setActiveValue(nextValue: string | null) {
     const index = nextValue ? visibleValues.indexOf(nextValue) : -1
     if (index >= 0) {
       setActiveIndex(index)
     }
   }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     inputProps.onKeyDown?.(event)
 
     if (!open) return

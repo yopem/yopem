@@ -56,7 +56,7 @@ export function MediaPreviewDialog() {
     zoomOutDisabled,
   } = useImagePreview({ scrollSpeed: SCROLL_SPEED })
   const downloadDisabled = !currentPreview?.url
-  const handleDownload = () => {
+  function handleDownload() {
     if (!currentPreview?.url) return
 
     const link = document.createElement("a")

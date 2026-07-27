@@ -29,7 +29,7 @@ export function DragHandle({
   const editor = useEditorRef()
   const element = useElement()
 
-  const onMouseEnter = () => {
+  function onMouseEnter() {
     if (isDragging) return
 
     const blockSelection = editor
@@ -131,14 +131,14 @@ export function DragHandle({
   )
 }
 
-const createDragPreviewElements = (
+function createDragPreviewElements(
   editor: PlateEditor,
   blocks: TElement[],
-): HTMLElement[] => {
+): HTMLElement[] {
   const elements: HTMLElement[] = []
   const ids: string[] = []
 
-  const removeDataAttributes = (element: HTMLElement) => {
+  function removeDataAttributes(element: HTMLElement) {
     Array.from(element.attributes).forEach((attr) => {
       if (
         attr.name.startsWith("data-slate") ||
@@ -153,14 +153,11 @@ const createDragPreviewElements = (
     })
   }
 
-  const resolveElement = (node: TElement, index: number) => {
+  function resolveElement(node: TElement, index: number) {
     const domNode = editor.api.toDOMNode(node)!
     const newDomNode = domNode.cloneNode(true) as HTMLElement
 
-    const applyScrollCompensation = (
-      original: Element,
-      cloned: HTMLElement,
-    ) => {
+    function applyScrollCompensation(original: Element, cloned: HTMLElement) {
       const scrollLeft = original.scrollLeft
 
       if (scrollLeft > 0) {
@@ -221,7 +218,7 @@ const createDragPreviewElements = (
   return elements
 }
 
-const calculatePreviewTop = (
+function calculatePreviewTop(
   editor: PlateEditor,
   {
     blocks,
@@ -230,7 +227,7 @@ const calculatePreviewTop = (
     blocks: TElement[]
     element: TElement
   },
-): number => {
+): number {
   const child = editor.api.toDOMNode(element)!
   const editable = editor.api.toDOMNode(editor)!
   const firstSelectedChild = blocks[0]

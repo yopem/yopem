@@ -12,7 +12,7 @@ export function MediaUploadToast() {
   return null
 }
 
-const useUploadErrorToast = () => {
+function useUploadErrorToast() {
   const uploadError = usePluginOption(PlaceholderPlugin, "error")
 
   useEffect(() => {

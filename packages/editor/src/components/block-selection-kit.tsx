@@ -7,17 +7,18 @@ import { getPluginTypes } from "platejs"
 
 import { BlockSelection } from "editor/block-selection"
 
-export const hasSelectableClass = ({
+export function hasSelectableClass({
   attributes,
   className,
 }: {
   attributes: { className?: string }
   className?: string
-}) =>
-  [className, attributes.className]
+}) {
+  return [className, attributes.className]
     .filter(Boolean)
     .join(" ")
     .includes("slate-selectable")
+}
 
 export const BlockSelectionKit = [
   BlockSelectionPlugin.configure(({ editor }) => ({

@@ -17,7 +17,7 @@ import {
   PathApi,
 } from "platejs"
 
-const insertList = (editor: PlateEditor, type: string) => {
+function insertList(editor: PlateEditor, type: string) {
   editor.tf.insertNodes(
     editor.api.create.block({
       indent: 1,
@@ -27,12 +27,14 @@ const insertList = (editor: PlateEditor, type: string) => {
   )
 }
 
-const createBlockquote = (editor: PlateEditor) => ({
-  children: [editor.api.create.block({ type: KEYS.p })],
-  type: KEYS.blockquote,
-})
+function createBlockquote(editor: PlateEditor) {
+  return {
+    children: [editor.api.create.block({ type: KEYS.p })],
+    type: KEYS.blockquote,
+  }
+}
 
-const selectBlockquoteStart = (editor: PlateEditor, path: Path) => {
+function selectBlockquoteStart(editor: PlateEditor, path: Path) {
   const start = editor.api.start(path.concat([0]))
 
   if (start) {
@@ -72,11 +74,11 @@ interface InsertBlockOptions {
   upsert?: boolean
 }
 
-export const insertBlock = (
+export function insertBlock(
   editor: PlateEditor,
   type: string,
   options: InsertBlockOptions = {},
-) => {
+) {
   const { upsert = false } = options
 
   editor.tf.withoutNormalizing(() => {
@@ -125,17 +127,17 @@ export const insertBlock = (
   })
 }
 
-export const insertInlineElement = (editor: PlateEditor, type: string) => {
+export function insertInlineElement(editor: PlateEditor, type: string) {
   if (insertInlineMap[type]) {
     insertInlineMap[type](editor, type)
   }
 }
 
-const setList = (
+function setList(
   editor: PlateEditor,
   type: string,
   entry: NodeEntry<TElement>,
-) => {
+) {
   editor.tf.setNodes(
     editor.api.create.block({
       indent: 1,
@@ -155,11 +157,11 @@ const setBlockMap: Record<
   [KEYS.ul]: setList,
 }
 
-export const setBlockType = (
+export function setBlockType(
   editor: PlateEditor,
   type: string,
   { at }: { at?: Path } = {},
-) => {
+) {
   editor.tf.withoutNormalizing(() => {
     if (type === KEYS.blockquote) {
       const target = at ?? editor.selection
@@ -176,7 +178,7 @@ export const setBlockType = (
       return
     }
 
-    const setEntry = (entry: NodeEntry<TElement>) => {
+    function setEntry(entry: NodeEntry<TElement>) {
       const [node, path] = entry
 
       if (node[KEYS.listType]) {
@@ -208,7 +210,7 @@ export const setBlockType = (
   })
 }
 
-export const getBlockType = (block: TElement) => {
+export function getBlockType(block: TElement) {
   if (block[KEYS.listType]) {
     if (block[KEYS.listType] === KEYS.ol) {
       return KEYS.ol
