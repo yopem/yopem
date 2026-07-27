@@ -12,21 +12,21 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
 import { siteTitle } from "env"
 
+import type { getSession } from "@/lib/auth"
+
 import GlobalError from "@/components/global-error"
 import NotFound from "@/components/not-found"
 import Providers from "@/components/providers"
-import { getSession } from "@/lib/auth"
 import appCss from "@/styles.css?url"
+
+type Session = Exclude<Awaited<ReturnType<typeof getSession>>, false>
 
 export interface RouterContext {
   queryClient: QueryClient
+  session: Session | null
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  beforeLoad: async () => {
-    const session = await getSession()
-    return { session: session || null }
-  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
