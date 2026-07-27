@@ -37,9 +37,9 @@ function AssetsRouteComponent() {
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null)
 
-  const { data: settings } = useQuery({
-    ...queryApi.assets.uploadSettings.queryOptions(),
-  })
+  const { data: settings } = useQuery(
+    queryApi.assets.uploadSettings.queryOptions(),
+  )
 
   const maxSizeMB = settings?.maxSizeMB ?? 50
 
@@ -47,55 +47,57 @@ function AssetsRouteComponent() {
     data: assetsData,
     isLoading,
     refetch,
-  } = useQuery({
-    ...queryApi.assets.list.queryOptions({
+  } = useQuery(
+    queryApi.assets.list.queryOptions({
       input: {
         limit: 50,
         type: selectedType === "all" ? undefined : selectedType,
       },
     }),
-  })
+  )
 
   const assets = (assetsData?.assets as Asset[]) ?? []
 
-  const uploadMutation = useMutation({
-    ...queryApi.assets.upload.mutationOptions(),
-    onSuccess: () => {
-      toastManager.add({
-        title: "File uploaded",
-        description: "Your file has been uploaded successfully.",
-        type: "success",
-      })
-      void refetch()
-    },
-    onError: (error: Error) => {
-      toastManager.add({
-        title: "Upload failed",
-        description: error.message,
-        type: "error",
-      })
-    },
-  })
+  const uploadMutation = useMutation(
+    queryApi.assets.upload.mutationOptions({
+      onSuccess: () => {
+        toastManager.add({
+          title: "File uploaded",
+          description: "Your file has been uploaded successfully.",
+          type: "success",
+        })
+        void refetch()
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Upload failed",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
 
-  const deleteMutation = useMutation({
-    ...queryApi.assets.delete.mutationOptions(),
-    onSuccess: () => {
-      toastManager.add({
-        title: "Asset deleted",
-        description: "The asset has been deleted successfully.",
-        type: "success",
-      })
-      setDeleteAsset(null)
-      void refetch()
-    },
-    onError: (error: Error) => {
-      toastManager.add({
-        title: "Delete failed",
-        description: error.message,
-        type: "error",
-      })
-    },
-  })
+  const deleteMutation = useMutation(
+    queryApi.assets.delete.mutationOptions({
+      onSuccess: () => {
+        toastManager.add({
+          title: "Asset deleted",
+          description: "The asset has been deleted successfully.",
+          type: "success",
+        })
+        setDeleteAsset(null)
+        void refetch()
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Delete failed",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
 
   const handleUpload = useCallback(
     (file: File) => {
