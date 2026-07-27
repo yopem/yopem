@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router"
 
-import Logo from "ui/logo"
+import { Logo } from "ui/logo"
 
 interface GlobalSidebarHeaderProps {
   title: string

@@ -27,14 +27,14 @@ export interface ProductInputFieldProps {
   onClearError: (variableName: string) => void
 }
 
-const ProductInputField = ({
+export function ProductInputField({
   field,
   value,
   error,
   fileReaderRef,
   onChange,
   onClearError,
-}: ProductInputFieldProps) => {
+}: ProductInputFieldProps) {
   const handleChange = (newValue: string) => {
     onChange(field.variableName, newValue)
     if (error) {
@@ -199,5 +199,3 @@ const ProductInputField = ({
       )
   }
 }
-
-export default ProductInputField

@@ -52,123 +52,125 @@ const assetListOutputSchema = z.object({
 const assetDeleteInputSchema = z.object({ id: z.string() })
 
 export const assetsRouter = {
-  assetUploadSettings: os
-    .route({ method: "GET", path: "/asset/upload-settings" })
-    .output(uploadSettingsOutputSchema)
-    .handler(async () => {
-      const maxSizeMB = await getMaxUploadSizeMB()
-      return {
-        maxSizeMB,
-        maxSizeBytes: maxSizeMB * 1024 * 1024,
-      }
-    }),
-
-  assetList: os
-    .route({ method: "GET", path: "/asset/list" })
-    .use(requireAuthMiddleware)
-    .input(assetListInputSchema)
-    .output(assetListOutputSchema)
-    .handler(({ input }) =>
-      listAssets({
-        limit: input.limit ?? 20,
-        cursor: input.cursor,
-        type: input.type,
+  assets: {
+    uploadSettings: os
+      .route({ method: "GET" })
+      .output(uploadSettingsOutputSchema)
+      .handler(async () => {
+        const maxSizeMB = await getMaxUploadSizeMB()
+        return {
+          maxSizeMB,
+          maxSizeBytes: maxSizeMB * 1024 * 1024,
+        }
       }),
-    ),
 
-  assetUpload: os
-    .route({ method: "POST", path: "/asset/upload" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(z.file())
-    .output(assetSchema)
-    .handler(async ({ input }) => {
-      const file = input
+    list: os
+      .route({ method: "GET" })
+      .use(requireAuthMiddleware)
+      .input(assetListInputSchema)
+      .output(assetListOutputSchema)
+      .handler(({ input }) =>
+        listAssets({
+          limit: input.limit ?? 20,
+          cursor: input.cursor,
+          type: input.type,
+        }),
+      ),
 
-      if (!(file instanceof File)) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: "Missing file",
+    upload: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(z.file())
+      .output(assetSchema)
+      .handler(async ({ input }) => {
+        const file = input
+
+        if (!(file instanceof File)) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: "Missing file",
+          })
+        }
+
+        const maxSizeMB = await getMaxUploadSizeMB()
+        const maxSizeBytes = maxSizeMB * 1024 * 1024
+
+        if (file.size > maxSizeBytes) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: `File size exceeds ${maxSizeMB}MB limit`,
+          })
+        }
+
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const r2 = getR2Storage()
+
+        let uploadResult: {
+          url: string
+          type: "images" | "videos" | "documents" | "archives" | "others"
+          size: number
+          key: string
+        }
+
+        try {
+          uploadResult = await r2.uploadAsset(
+            buffer,
+            file.name,
+            file.type || "application/octet-stream",
+          )
+        } catch (error) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: `Failed to upload asset: ${error instanceof Error ? error.message : String(error)}`,
+          })
+        }
+
+        const { url, type, size, key } = uploadResult
+
+        const asset = await insertAsset({
+          filename: key.split("/").pop()!,
+          originalName: file.name,
+          type,
+          size,
+          url,
         })
-      }
 
-      const maxSizeMB = await getMaxUploadSizeMB()
-      const maxSizeBytes = maxSizeMB * 1024 * 1024
+        return asset
+      }),
 
-      if (file.size > maxSizeBytes) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: `File size exceeds ${maxSizeMB}MB limit`,
-        })
-      }
+    delete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(assetDeleteInputSchema)
+      .output(z.object({ success: z.boolean() }))
+      .handler(async ({ input }) => {
+        const asset = await getAssetById(input.id)
 
-      const arrayBuffer = await file.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
-      const r2 = getR2Storage()
+        if (!asset) {
+          throw new ORPCError("NOT_FOUND", {
+            status: 404,
+            message: `Asset not found: ${input.id}`,
+          })
+        }
 
-      let uploadResult: {
-        url: string
-        type: "images" | "videos" | "documents" | "archives" | "others"
-        size: number
-        key: string
-      }
+        const r2 = getR2Storage()
+        const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
 
-      try {
-        uploadResult = await r2.uploadAsset(
-          buffer,
-          file.name,
-          file.type || "application/octet-stream",
-        )
-      } catch (error) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: `Failed to upload asset: ${error instanceof Error ? error.message : String(error)}`,
-        })
-      }
+        try {
+          await r2.deleteFile(key)
+        } catch (error) {
+          throw new ORPCError("BAD_REQUEST", {
+            status: 400,
+            message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
+          })
+        }
 
-      const { url, type, size, key } = uploadResult
+        await deleteAsset(input.id)
 
-      const asset = await insertAsset({
-        filename: key.split("/").pop()!,
-        originalName: file.name,
-        type,
-        size,
-        url,
-      })
-
-      return asset
-    }),
-
-  assetDelete: os
-    .route({ method: "POST", path: "/asset/delete" })
-    .use(requireAuthMiddleware)
-    .use(requireAdminMiddleware)
-    .input(assetDeleteInputSchema)
-    .output(z.object({ success: z.boolean() }))
-    .handler(async ({ input }) => {
-      const asset = await getAssetById(input.id)
-
-      if (!asset) {
-        throw new ORPCError("NOT_FOUND", {
-          status: 404,
-          message: `Asset not found: ${input.id}`,
-        })
-      }
-
-      const r2 = getR2Storage()
-      const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
-
-      try {
-        await r2.deleteFile(key)
-      } catch (error) {
-        throw new ORPCError("BAD_REQUEST", {
-          status: 400,
-          message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
-        })
-      }
-
-      await deleteAsset(input.id)
-
-      return { success: true }
-    }),
+        return { success: true }
+      }),
+  },
 }
