@@ -7,9 +7,6 @@ import { RPCLink } from "@orpc/client/fetch"
 import { apiUrl } from "env"
 
 const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/rpc`
-  }
   const base = apiUrl?.replace(/\/$/, "")
   if (!base) {
     throw new Error(
