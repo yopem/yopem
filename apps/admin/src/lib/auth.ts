@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start"
+import {
+  getCookie,
+  setCookie,
+  deleteCookie,
+} from "@tanstack/react-start/server"
 
 import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
 import { adminOrigin, authCallbackUrl, cookieDomain, isProd } from "env"
-
-const getServerUtils = async () => {
-  const { getCookie, setCookie, deleteCookie } =
-    await import("@tanstack/react-start/server")
-  return { getCookie, setCookie, deleteCookie }
-}
 
 const isSecure = () => {
   return !!cookieDomain || isProd
@@ -16,8 +15,6 @@ const isSecure = () => {
 
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { getCookie, setCookie } = await getServerUtils()
-
     const accessToken = getCookie("access_token")
     const refreshToken = getCookie("refresh_token")
 
@@ -56,8 +53,6 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 )
 
 export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { getCookie, setCookie } = await getServerUtils()
-
   const accessToken = getCookie("access_token")
   const refreshToken = getCookie("refresh_token")
 
@@ -99,9 +94,7 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
   return { redirectTo: url }
 })
 
-export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { deleteCookie } = await getServerUtils()
-
+export const logoutFn = createServerFn({ method: "POST" }).handler(() => {
   const cookieOpts = cookieDomain
     ? { path: "/", domain: cookieDomain }
     : { path: "/" }
