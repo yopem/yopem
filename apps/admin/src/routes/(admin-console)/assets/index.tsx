@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { lazy, Suspense, useCallback, useState } from "react"
+import { lazy, useCallback, useState } from "react"
 
 import { queryApi } from "rpc/query"
 import { toastManager } from "ui/toast"
@@ -31,6 +31,8 @@ const AssetSkeleton = lazy(() =>
 export const Route = createFileRoute("/(admin-console)/assets/")({
   component: AssetsRouteComponent,
 })
+
+type AssetType = "images" | "videos" | "documents" | "archives" | "others"
 
 function AssetsRouteComponent() {
   const [selectedType, setSelectedType] = useState<AssetType | "all">("all")
@@ -130,83 +132,68 @@ function AssetsRouteComponent() {
   )
 
   return (
-    <Suspense fallback={<AseetsLoadingComponent />}>
-      <div
-        className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
-        onPaste={handlePaste}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-            <p className="text-muted-foreground">
-              Manage and organize your uploaded files. Max size: {maxSizeMB}MB
-              per file.
-            </p>
-          </div>
+    <div
+      className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
+      onPaste={handlePaste}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
+          <p className="text-muted-foreground">
+            Manage and organize your uploaded files. Max size: {maxSizeMB}MB per
+            file.
+          </p>
         </div>
-
-        <UploadDropzone onUpload={handleUpload} maxSizeMB={maxSizeMB} />
-
-        <UploadProgress isUploading={uploadMutation.isPending} />
-
-        <AssetTypeFilter
-          selectedType={selectedType}
-          onTypeChange={setSelectedType}
-        />
-
-        {isLoading ? (
-          <AssetSkeleton />
-        ) : assets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-16">
-            <p className="text-muted-foreground text-lg">No assets yet</p>
-            <p className="text-muted-foreground text-sm">
-              Upload your first file to get started.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
-            {assets.map((asset) => (
-              <AssetCard
-                key={asset.id}
-                asset={asset}
-                onPreview={setPreviewAsset}
-                onDelete={setDeleteAsset}
-              />
-            ))}
-          </div>
-        )}
-
-        <AssetPreviewDialog
-          asset={previewAsset}
-          onClose={() => setPreviewAsset(null)}
-          onDelete={(asset) => {
-            setPreviewAsset(null)
-            setDeleteAsset(asset)
-          }}
-        />
-
-        <DeleteAssetDialog
-          asset={deleteAsset}
-          onClose={() => setDeleteAsset(null)}
-          onConfirm={() =>
-            deleteAsset && deleteMutation.mutate({ id: deleteAsset.id })
-          }
-          isDeleting={deleteMutation.isPending}
-        />
       </div>
-    </Suspense>
-  )
-}
 
-type AssetType = "images" | "videos" | "documents" | "archives" | "others"
+      <UploadDropzone onUpload={handleUpload} maxSizeMB={maxSizeMB} />
 
-function AseetsLoadingComponent() {
-  return (
-    <div className="flex flex-1 items-center justify-center p-8">
-      <div className="text-center">
-        <div className="border-primary size-8 animate-spin rounded-full border-2 border-t-transparent" />
-        <p className="text-muted-foreground mt-2 text-sm">Loading assets...</p>
-      </div>
+      <UploadProgress isUploading={uploadMutation.isPending} />
+
+      <AssetTypeFilter
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+      />
+
+      {isLoading ? (
+        <AssetSkeleton />
+      ) : assets.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <p className="text-muted-foreground text-lg">No assets yet</p>
+          <p className="text-muted-foreground text-sm">
+            Upload your first file to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
+          {assets.map((asset) => (
+            <AssetCard
+              key={asset.id}
+              asset={asset}
+              onPreview={setPreviewAsset}
+              onDelete={setDeleteAsset}
+            />
+          ))}
+        </div>
+      )}
+
+      <AssetPreviewDialog
+        asset={previewAsset}
+        onClose={() => setPreviewAsset(null)}
+        onDelete={(asset) => {
+          setPreviewAsset(null)
+          setDeleteAsset(asset)
+        }}
+      />
+
+      <DeleteAssetDialog
+        asset={deleteAsset}
+        onClose={() => setDeleteAsset(null)}
+        onConfirm={() =>
+          deleteAsset && deleteMutation.mutate({ id: deleteAsset.id })
+        }
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   )
 }
