@@ -79,8 +79,31 @@ describe("seed data", () => {
     }
   })
 
-  test("every AI model has a unique provider:modelId pair", () => {
-    const keys = aiModels.map((model) => `${model.provider}:${model.modelId}`)
-    expect(findDuplicates(keys)).toEqual([])
+  test("every product modelEngine exists in aiModels", () => {
+    const modelKeys = new Set(
+      aiModels.map((model) => `${model.provider}:${model.modelId}`),
+    )
+
+    for (const product of products) {
+      expect(modelKeys.has(`${product.provider}:${product.modelEngine}`)).toBe(
+        true,
+      )
+    }
+  })
+
+  test("media products use a fal image model", () => {
+    for (const product of products) {
+      if (
+        product.outputFormat !== "image" &&
+        product.outputFormat !== "video"
+      ) {
+        continue
+      }
+      expect(product.provider).toBe("fal")
+      const model = aiModels.find(
+        (m) => m.provider === "fal" && m.modelId === product.modelEngine,
+      )
+      expect(model).toBeDefined()
+    }
   })
 })

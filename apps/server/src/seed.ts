@@ -1,14 +1,36 @@
+import { eq } from "drizzle-orm"
+import readline from "node:readline"
 import { pathToFileURL } from "node:url"
+import { encryptApiKey } from "server/utils/crypto"
 
-import { createAIModel, getSetting, listAIModels } from "db/services/admin"
+import { db } from "db"
+import {
+  adminSettingsTable,
+  aiModelsTable,
+  categoriesTable,
+  productCategoriesTable,
+  productRunsTable,
+  productTagsTable,
+  productVersionsTable,
+  productsTable,
+  tagsTable,
+} from "db/schema"
+import {
+  createAIModel,
+  getSetting,
+  listAIModels,
+  upsertSetting,
+} from "db/services/admin"
 import { createCategory, listCategories } from "db/services/categories"
 import { createProduct, listProducts } from "db/services/products"
 import { createTag, listTags } from "db/services/tags"
 import {
+  type ApiKeyConfig,
   type ApiKeyProvider,
   apiKeyConfigSchema,
   apiKeyProviderSchema,
 } from "utils/api-input"
+import { createCustomId } from "utils/custom-id"
 
 interface InputVariable {
   variableName: string
@@ -48,7 +70,24 @@ interface SeedModel {
   isEnabled: boolean
 }
 
+const API_KEY_SETTING_KEY = "api_keys"
 const DEFAULT_TEXT_MODEL_ID = "nemotron-3-ultra-550b-a55b:free"
+
+const API_KEY_ENV_VARS: Record<ApiKeyProvider, string> = {
+  openai: "OPENAI_API_KEY",
+  openrouter: "OPENROUTER_API_KEY",
+  fal: "FAL_KEY",
+}
+
+const DEFAULT_KEY_NAMES: Record<ApiKeyProvider, string> = {
+  openai: "OpenAI default key",
+  openrouter: "OpenRouter default key",
+  fal: "FAL default key",
+}
+
+function today(): string {
+  return new Date().toISOString().split("T")[0]
+}
 
 export const VALID_PROVIDERS = apiKeyProviderSchema.options
 export const VALID_OUTPUT_FORMATS = ["plain", "json", "image", "video"] as const
@@ -667,51 +706,98 @@ async function seedTags(): Promise<{
   return { ids, created }
 }
 
-async function getActiveApiKeysByProvider(): Promise<
-  Map<ApiKeyProvider, string>
-> {
-  const setting = await getSetting("api_keys")
+async function seedApiKeys(): Promise<Map<ApiKeyProvider, string>> {
+  const setting = await getSetting(API_KEY_SETTING_KEY)
+  const raw = setting?.settingValue
+  const parsed = apiKeyConfigSchema.array().safeParse(raw)
+  const hasExisting = Array.isArray(raw) && raw.length > 0
+
+  if (hasExisting && !parsed.success) {
+    console.warn(
+      "Existing API keys setting is invalid; skipping default seeding",
+    )
+    return new Map<ApiKeyProvider, string>()
+  }
+
+  const keys = parsed.success ? [...parsed.data] : []
   const map = new Map<ApiKeyProvider, string>()
 
-  if (!setting?.settingValue) {
-    return map
-  }
-
-  const parsed = apiKeyConfigSchema.array().safeParse(setting.settingValue)
-  if (!parsed.success) {
-    console.error("Failed to parse api_keys setting:", parsed.error.message)
-    return map
-  }
-
-  for (const key of parsed.data) {
+  for (const key of keys) {
     if (key.status === "active" && !map.has(key.provider)) {
       map.set(key.provider, key.id)
     }
   }
 
+  let added = false
+  for (const provider of apiKeyProviderSchema.options) {
+    if (map.has(provider)) continue
+
+    const envValue = process.env[API_KEY_ENV_VARS[provider]]
+    if (!envValue) continue
+
+    const encrypted = encryptApiKey(envValue)
+    const config: ApiKeyConfig = {
+      id: createCustomId(),
+      provider,
+      name: DEFAULT_KEY_NAMES[provider],
+      apiKey: encrypted,
+      status: "active",
+      createdAt: today(),
+      updatedAt: today(),
+    }
+
+    keys.push(config)
+    map.set(provider, config.id)
+    added = true
+    console.info(`Created API key: ${provider}`)
+  }
+
+  if (added) {
+    await upsertSetting(API_KEY_SETTING_KEY, keys)
+  }
+
   return map
 }
 
-async function getDefaultTextModel(): Promise<{
+async function getDefaultTextModel(
+  apiKeyByProvider: Map<ApiKeyProvider, string>,
+): Promise<{
   provider: ApiKeyProvider
   modelId: string
 } | null> {
+  if (apiKeyByProvider.size === 0) {
+    return null
+  }
+
   const models = await listAIModels()
-  const found = models.find(
-    (model) => model.modelId === DEFAULT_TEXT_MODEL_ID && model.isEnabled,
+
+  const preferred = models.find(
+    (model) =>
+      model.modelId === DEFAULT_TEXT_MODEL_ID &&
+      model.isEnabled &&
+      apiKeyByProvider.has(model.provider as ApiKeyProvider),
   )
 
-  if (!found) {
+  if (preferred) {
+    return { provider: "openrouter", modelId: preferred.modelId }
+  }
+
+  const fallback = models.find((model) => {
+    if (!model.isEnabled) return false
+    const parsed = apiKeyProviderSchema.safeParse(model.provider)
+    return parsed.success && apiKeyByProvider.has(parsed.data)
+  })
+
+  if (!fallback) {
     return null
   }
 
-  const parsed = apiKeyProviderSchema.safeParse(found.provider)
+  const parsed = apiKeyProviderSchema.safeParse(fallback.provider)
   if (!parsed.success) {
-    console.warn(`Default text model has unknown provider: ${found.provider}`)
     return null
   }
 
-  return { provider: parsed.data, modelId: found.modelId }
+  return { provider: parsed.data, modelId: fallback.modelId }
 }
 
 async function seedProducts(
@@ -749,8 +835,10 @@ async function seedProducts(
     const apiKeyId = apiKeyByProvider.get(provider) ?? null
     if (!apiKeyId) {
       console.warn(
-        `No active ${provider} API key for ${product.name}; inserting with null apiKeyId`,
+        `No active ${provider} API key for ${product.name}; skipping`,
       )
+      skipped++
+      continue
     }
 
     const productCategoryIds = product.categories
@@ -785,6 +873,50 @@ async function seedProducts(
   return { created, skipped }
 }
 
+function confirm(message: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
+
+  return new Promise((resolve) => {
+    rl.question(`${message} (yes/no) `, (answer) => {
+      rl.close()
+      resolve(answer.trim().toLowerCase() === "yes")
+    })
+  })
+}
+
+async function clearSeedData(): Promise<void> {
+  await db.delete(productRunsTable)
+  await db.delete(productVersionsTable)
+  await db.delete(productTagsTable)
+  await db.delete(productCategoriesTable)
+  await db.delete(productsTable)
+  await db.delete(tagsTable)
+  await db.delete(categoriesTable)
+  await db.delete(aiModelsTable)
+  await db
+    .delete(adminSettingsTable)
+    .where(eq(adminSettingsTable.settingKey, API_KEY_SETTING_KEY))
+
+  console.info("Cleared seed data")
+}
+
+async function main(): Promise<void> {
+  const agreed = await confirm(
+    "Seed will delete all existing seed data and recreate it. Continue?",
+  )
+  if (!agreed) {
+    console.info("Seed cancelled")
+    process.exit(0)
+  }
+
+  await clearSeedData()
+  const result = await runSeed()
+  console.info("Seed complete:", result)
+}
+
 export async function runSeed(): Promise<{
   aiModels: { created: number; skipped: number }
   categories: number
@@ -796,14 +928,12 @@ export async function runSeed(): Promise<{
     `Seeded ${modelResult.created} AI models, skipped ${modelResult.skipped}`,
   )
 
-  const defaultTextModel = await getDefaultTextModel()
-  if (!defaultTextModel) {
-    console.warn(
-      "Default text model not found in database; using product defaults",
-    )
-  }
+  const apiKeyByProvider = await seedApiKeys()
 
-  const apiKeyByProvider = await getActiveApiKeysByProvider()
+  const defaultTextModel = await getDefaultTextModel(apiKeyByProvider)
+  if (!defaultTextModel) {
+    console.warn("No AI models with active API keys found")
+  }
 
   const categoryResult = await seedCategories()
   const tagResult = await seedTags()
@@ -831,7 +961,7 @@ const isMainModule =
   import.meta.url === pathToFileURL(process.argv[1]).href
 
 if (isMainModule) {
-  runSeed()
+  main()
     .then(() => process.exit(0))
     .catch((error) => {
       console.error("Seed failed:", error)
