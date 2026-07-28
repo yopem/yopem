@@ -1,4 +1,4 @@
-export const formatNumberToFixed = (num: number): string => {
+export function formatNumberToFixed(num: number): string {
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(1)}M`
   }
