@@ -264,7 +264,17 @@ export const userRouter = {
 
         const updatedKey: ApiKeyConfig = {
           ...existingKeys[keyIndex],
-          ...input,
+          ...(input.provider !== undefined && {
+            provider: input.provider,
+          }),
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.description !== undefined && {
+            description: input.description,
+          }),
+          ...(input.status !== undefined && { status: input.status }),
+          ...(input.restrictions !== undefined && {
+            restrictions: input.restrictions,
+          }),
           apiKey: encryptedApiKey,
           updatedAt: new Date().toISOString(),
         }

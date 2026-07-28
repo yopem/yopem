@@ -356,7 +356,7 @@ export const getPublicProductById = async (
   const [product] = await db
     .select()
     .from(productsTable)
-    .where(eq(productsTable.id, id))
+    .where(and(eq(productsTable.id, id), eq(productsTable.status, "active")))
 
   if (!product) {
     return null
@@ -369,7 +369,10 @@ export const getPublicProductBySlug = async (
   slug: string,
 ): Promise<PublicProduct | null> => {
   const product = await db.query.productsTable.findFirst({
-    where: eq(productsTable.slug, slug),
+    where: and(
+      eq(productsTable.slug, slug),
+      eq(productsTable.status, "active"),
+    ),
   })
 
   if (!product) {

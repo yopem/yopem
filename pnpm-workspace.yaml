@@ -60,6 +60,9 @@ catalog:
 
 overrides:
   vite: "catalog:"
+  brace-expansion: ^5.0.8
+  esbuild: ^0.25.0
+  minimatch: ^10.2.6
 
 peerDependencyRules:
   allowAny:

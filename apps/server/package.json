@@ -38,7 +38,7 @@
     "@ai-sdk/openai": "catalog:",
     "@ai-sdk/openai-compatible": "catalog:",
     "@aws-sdk/client-s3": "catalog:",
-    "@hono/node-server": "^1.19.12",
+    "@hono/node-server": "^2.0.5",
     "@orpc/server": "^1.14.10",
     "ai": "catalog:",
     "auth": "workspace:*",
@@ -51,7 +51,7 @@
     "ioredis": "catalog:",
     "nanoid": "catalog:",
     "pg": "catalog:",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.0",
     "transliteration": "catalog:",
     "utils": "workspace:*",
     "zod": "catalog:"
