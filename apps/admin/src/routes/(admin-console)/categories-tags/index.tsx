@@ -11,6 +11,8 @@ import { CategoryDialog } from "@/components/categories-tags/category-dialog"
 import { CategoryList } from "@/components/categories-tags/category-list"
 import { TagDialog } from "@/components/categories-tags/tag-dialog"
 import { TagList } from "@/components/categories-tags/tag-list"
+import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
+import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
 export const Route = createFileRoute("/(admin-console)/categories-tags/")({
   component: CategoriesTagsComponent,
@@ -312,14 +314,18 @@ function CategoriesTagsComponent() {
     }
   }
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Categories & Tags" },
+  ]
+
   return (
-    <div className="flex flex-col gap-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Categories & Tags</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage categories and tags for organizing your products
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
+      <GlobalBreadcrumb items={breadcrumbItems} />
+      <GlobalPageHeader
+        title="Categories & Tags"
+        description="Manage categories and tags for organizing your products"
+      />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="flex flex-col gap-4">

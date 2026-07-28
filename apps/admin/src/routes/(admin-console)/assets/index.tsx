@@ -9,6 +9,8 @@ import { AssetCard, type Asset } from "@/components/assets/asset-card"
 import { AssetTypeFilter } from "@/components/assets/asset-type-filter"
 import { UploadDropzone } from "@/components/assets/upload-dropzone"
 import { UploadProgress } from "@/components/assets/upload-progress"
+import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
+import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
 const AssetPreviewDialog = lazy(() =>
   import("@/components/assets/asset-preview-dialog").then((mod) => ({
@@ -131,20 +133,18 @@ function AssetsRouteComponent() {
     [handleUpload, maxSizeMB],
   )
 
+  const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Assets" }]
+
   return (
     <div
-      className="flex flex-1 flex-col gap-8 overflow-y-auto p-8"
+      className="mx-auto flex w-full max-w-350 flex-1 flex-col gap-8 overflow-y-auto p-8"
       onPaste={handlePaste}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
-          <p className="text-muted-foreground">
-            Manage and organize your uploaded files. Max size: {maxSizeMB}MB per
-            file.
-          </p>
-        </div>
-      </div>
+      <GlobalBreadcrumb items={breadcrumbItems} />
+      <GlobalPageHeader
+        title="Assets"
+        description={`Manage and organize your uploaded files. Max size: ${maxSizeMB}MB per file.`}
+      />
 
       <UploadDropzone onUpload={handleUpload} maxSizeMB={maxSizeMB} />
 
