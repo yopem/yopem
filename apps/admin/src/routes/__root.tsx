@@ -72,6 +72,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          type="speculationrules"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              prefetch: [
+                {
+                  source: "document",
+                  where: {
+                    href_matches: "/*",
+                    relative_to: "document",
+                  },
+                  eagerness: "moderate",
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body>
         <Providers>{children}</Providers>
