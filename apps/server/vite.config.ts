@@ -17,6 +17,17 @@ export default defineConfig({
   envDir: "../..",
   envPrefix: ["VITE_", "PUBLIC_"],
 
+  pack: {
+    entry: ["src/seed.ts"],
+    outDir: "dist/seed",
+    clean: false,
+    dts: false,
+    deps: {
+      alwaysBundle: ["db/**", "server/**", "utils/**"],
+    },
+    onSuccess: "node --env-file=../../.env dist/seed/seed.mjs",
+  },
+
   server: {
     port: serverPort,
     host: "0.0.0.0",
