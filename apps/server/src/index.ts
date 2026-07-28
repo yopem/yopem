@@ -1,8 +1,6 @@
 import { serve } from "@hono/node-server"
-import { OpenAPIHandler } from "@orpc/openapi/fetch"
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
-import { ORPCError, onError } from "@orpc/server"
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
+import { ORPCError } from "@orpc/server"
+import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
@@ -33,7 +31,7 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "x-orpc-procedure"],
     exposeHeaders: ["Content-Disposition"],
   }),
 )
@@ -53,58 +51,97 @@ app.get("/health", (c) => {
 
 app.route("/auth", authCallbackRoute)
 
-const orpcHandler = new OpenAPIHandler(router, {
+const orpcHandler = new RPCHandler(router, {
   interceptors: [
-    onError((error) => {
-      if (error instanceof ApiError) {
-        throw new ORPCError(orpcCodeForStatus(error.status), {
-          status: error.status,
-          message: error.message,
-        })
+    async (context) => {
+      try {
+        return await context.next()
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw new ORPCError(orpcCodeForStatus(error.status), {
+            status: error.status,
+            message: error.message,
+          })
+        }
+        console.error(
+          `oRPC error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+        )
+        throw error
       }
-      console.error(
-        `oRPC error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
-      )
-    }),
-  ],
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-      specGenerateOptions: {
-        info: { title: "Yopem RPC API", version: "1.0.0" },
-      },
-      docsPath: "/doc",
-      specPath: "/spec.json",
-      docsConfig: {
-        agent: { disabled: true },
-      },
-    }),
+    },
   ],
 })
 
-const BODY_PARSER_METHODS = [
-  "arrayBuffer",
-  "blob",
-  "formData",
-  "json",
-  "text",
-] as const
+const proxyRequestBody = (original: Request): Request => {
+  let cachedBody: ArrayBuffer | FormData | null = null
+  let bodyType: "arraybuffer" | "formdata" | null = null
 
-type BodyParserMethod = (typeof BODY_PARSER_METHODS)[number]
-
-app.use("/rpc/*", async (c, next) => {
-  const request = new Proxy(c.req.raw, {
-    get(target, prop) {
-      if (
-        typeof prop === "string" &&
-        (BODY_PARSER_METHODS as readonly string[]).includes(prop)
-      ) {
-        const method = prop as BodyParserMethod
-        return () => c.req[method]()
+  const cloneBody = async () => {
+    if (cachedBody === null) {
+      const contentType = original.headers.get("content-type") ?? ""
+      if (contentType.includes("multipart/form-data")) {
+        cachedBody = await original.formData()
+        bodyType = "formdata"
+      } else {
+        cachedBody = await original.arrayBuffer()
+        bodyType = "arraybuffer"
       }
-      return Reflect.get(target, prop, target)
+    }
+    return cachedBody
+  }
+
+  return new Proxy(original, {
+    get(target, prop, receiver) {
+      if (prop === "json") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as JSON")
+          }
+          const text = new TextDecoder().decode(body as ArrayBuffer)
+          return JSON.parse(text)
+        }
+      }
+      if (prop === "text") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as text")
+          }
+          return new TextDecoder().decode(body as ArrayBuffer)
+        }
+      }
+      if (prop === "arrayBuffer") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot convert FormData to ArrayBuffer")
+          }
+          return (body as ArrayBuffer).slice(0)
+        }
+      }
+      if (prop === "formData") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            return body as FormData
+          }
+          throw new Error("Body is not FormData")
+        }
+      }
+      if (prop === "body") {
+        return target.body
+      }
+      if (prop === "bodyUsed") {
+        return false
+      }
+      return Reflect.get(target, prop, receiver)
     },
   })
+}
+
+app.use("/rpc/*", async (c, next) => {
+  const request = proxyRequestBody(c.req.raw)
 
   const { matched, response } = await orpcHandler.handle(request, {
     prefix: "/rpc",

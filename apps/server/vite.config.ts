@@ -20,6 +20,10 @@ export default defineConfig({
   server: {
     port: serverPort,
     host: "0.0.0.0",
+    // Vite+ injects its own CORS middleware that intercepts OPTIONS preflight
+    // before the Hono app runs, dropping the credentials header. Disable it so
+    // the Hono cors() middleware handles all requests (including preflight).
+    cors: false,
   },
   ssr: {
     noExternal: ["ui", "auth", "db", "env", "utils", "cache", "ai", "storage"],
