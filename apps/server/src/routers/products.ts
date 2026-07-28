@@ -1,5 +1,3 @@
-import type { ApiKeyConfig } from "server/llm/api-keys-schema"
-
 import { ORPCError } from "@orpc/server"
 import { executeAIProduct } from "server/llm/executor"
 import { decryptApiKey } from "server/utils/crypto"
@@ -26,6 +24,7 @@ import {
   updateProductStatus,
 } from "db/services/products"
 import { listTags, validateTagIds } from "db/services/tags"
+import type { ApiKeyConfig } from "utils/api-input"
 import { createCustomId } from "utils/custom-id"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"

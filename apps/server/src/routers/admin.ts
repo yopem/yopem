@@ -1,10 +1,4 @@
-import type { ApiKeyConfig } from "server/llm/api-keys-schema"
-
 import { ORPCError } from "@orpc/server"
-import {
-  addApiKeyInputSchema,
-  updateApiKeyInputSchema,
-} from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
 import { z } from "zod"
@@ -24,6 +18,11 @@ import {
   updateAIModelById,
   upsertSetting,
 } from "db/services/admin"
+import {
+  type ApiKeyConfig,
+  addApiKeyInputSchema,
+  updateApiKeyInputSchema,
+} from "utils/api-input"
 import { createCustomId } from "utils/custom-id"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"

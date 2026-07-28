@@ -1,11 +1,4 @@
-import type { ApiKeyConfig } from "server/llm/api-keys-schema"
-
 import { ORPCError } from "@orpc/server"
-import {
-  addApiKeyInputSchema,
-  apiKeyConfigSchema,
-  updateApiKeyInputSchema,
-} from "server/llm/api-keys-schema"
 import { testApiKey } from "server/llm/test-key"
 import { enforceRateLimit } from "server/rate-limit"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
@@ -18,6 +11,12 @@ import {
   getUserStats,
   upsertUserSettings,
 } from "db/services/user"
+import {
+  type ApiKeyConfig,
+  addApiKeyInputSchema,
+  apiKeyConfigSchema,
+  updateApiKeyInputSchema,
+} from "utils/api-input"
 import { createCustomId } from "utils/custom-id"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"

@@ -1,15 +1,14 @@
-import type { ApiKeyProvider } from "server/llm/api-keys-schema"
-
 import { pathToFileURL } from "node:url"
-import {
-  apiKeyConfigSchema,
-  apiKeyProviderSchema,
-} from "server/llm/api-keys-schema"
 
 import { createAIModel, getSetting, listAIModels } from "db/services/admin"
 import { createCategory, listCategories } from "db/services/categories"
 import { createProduct, listProducts } from "db/services/products"
 import { createTag, listTags } from "db/services/tags"
+import {
+  type ApiKeyProvider,
+  apiKeyConfigSchema,
+  apiKeyProviderSchema,
+} from "utils/api-input"
 
 interface InputVariable {
   variableName: string
