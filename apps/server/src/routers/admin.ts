@@ -9,6 +9,7 @@ import { aiModelSchema } from "db/schema/ai-models"
 import {
   createAIModel,
   deleteAIModelById,
+  deleteAIModelsByProvider,
   findAIModelById,
   findAIModelByProviderAndModelId,
   getAiRequestsHistory,
@@ -20,7 +21,9 @@ import {
 } from "db/services/admin"
 import {
   type ApiKeyConfig,
+  type ApiKeyProvider,
   addApiKeyInputSchema,
+  apiKeyProviderSchema,
   updateApiKeyInputSchema,
 } from "utils/api-input"
 import { createCustomId } from "utils/custom-id"
@@ -59,12 +62,18 @@ const assetSettingsOutputSchema = z.object({
   maxUploadSizeMB: z.number(),
 })
 
+export const hasActiveKeyForProvider = (
+  keys: ApiKeyConfig[],
+  provider: ApiKeyProvider,
+): boolean =>
+  keys.some((key) => key.provider === provider && key.status === "active")
+
 const updateAssetSettingsInputSchema = z.object({
   maxUploadSizeMB: z.number().min(1).max(500),
 })
 
 const adminModelCreateInputSchema = z.object({
-  provider: z.string(),
+  provider: apiKeyProviderSchema,
   modelId: z.string().min(1),
   displayName: z.string().min(1),
   isEnabled: z.boolean().default(true),
@@ -72,7 +81,7 @@ const adminModelCreateInputSchema = z.object({
 
 const adminModelUpdateInputSchema = z.object({
   id: z.string(),
-  provider: z.string().optional(),
+  provider: apiKeyProviderSchema.optional(),
   modelId: z.string().min(1).optional(),
   displayName: z.string().min(1).optional(),
   isEnabled: z.boolean().optional(),
@@ -224,8 +233,19 @@ export const adminRouter = {
           updatedAt: new Date().toISOString(),
         }
 
+        const originalProvider = existingKeys[keyIndex].provider
+        const providerChanged =
+          input.provider !== undefined && input.provider !== originalProvider
+        const statusSetInactive = input.status === "inactive"
+
         const updatedKeys = [...existingKeys]
         updatedKeys[keyIndex] = updatedKey
+
+        if (providerChanged || statusSetInactive) {
+          if (!hasActiveKeyForProvider(updatedKeys, originalProvider)) {
+            await deleteAIModelsByProvider(originalProvider)
+          }
+        }
 
         try {
           await upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)
@@ -260,7 +280,14 @@ export const adminRouter = {
         }
 
         const existingKeys = settings.settingValue as ApiKeyConfig[]
+        const deletedKey = existingKeys.find((key) => key.id === id)
         const updatedKeys = existingKeys.filter((key) => key.id !== id)
+
+        if (deletedKey) {
+          if (!hasActiveKeyForProvider(updatedKeys, deletedKey.provider)) {
+            await deleteAIModelsByProvider(deletedKey.provider)
+          }
+        }
 
         try {
           await upsertSetting(API_KEYS_SETTING_KEY, updatedKeys)

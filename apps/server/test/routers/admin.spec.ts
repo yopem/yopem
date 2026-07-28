@@ -17,6 +17,17 @@ const userContext = (
   },
 })
 
+const adminContext = (): { session: SessionUser } => ({
+  session: {
+    id: "u_1",
+    email: "u@example.com",
+    name: null,
+    username: "u",
+    image: null,
+    role: "admin",
+  },
+})
+
 describe("admin router", () => {
   test("exports thirteen procedures nested under admin", () => {
     const keys = Object.keys(adminRouter.admin).sort()
@@ -59,5 +70,20 @@ describe("admin router", () => {
         context: userContext("user"),
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
+  })
+
+  test("modelCreate rejects an invalid provider with BAD_REQUEST", async () => {
+    await expect(
+      call(
+        adminRouter.admin.modelCreate,
+        {
+          provider: "invalid-provider" as "openai",
+          modelId: "x",
+          displayName: "X",
+          isEnabled: true,
+        },
+        { context: adminContext() },
+      ),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" })
   })
 })

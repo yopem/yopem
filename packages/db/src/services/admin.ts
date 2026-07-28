@@ -65,7 +65,7 @@ export const findAIModelByProviderAndModelId = async (
   modelId: string,
 ) => {
   const [existing] = await db
-    .select({ id: aiModelsTable.id })
+    .select({ id: aiModelsTable.id, isEnabled: aiModelsTable.isEnabled })
     .from(aiModelsTable)
     .where(
       and(
@@ -135,6 +135,10 @@ export const updateAIModelById = async (
 
 export const deleteAIModelById = async (id: string) => {
   await db.delete(aiModelsTable).where(eq(aiModelsTable.id, id))
+}
+
+export const deleteAIModelsByProvider = async (provider: string) => {
+  await db.delete(aiModelsTable).where(eq(aiModelsTable.provider, provider))
 }
 
 export const getApiKeyStats = async (): Promise<{

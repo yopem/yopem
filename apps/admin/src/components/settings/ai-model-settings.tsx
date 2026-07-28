@@ -11,12 +11,13 @@ import { Input } from "ui/input"
 import { Label } from "ui/label"
 import { Switch } from "ui/switch"
 import { toastManager } from "ui/toast"
+import type { ApiKeyProvider } from "utils/api-input"
 
 const modelOptions = [
   { value: "openai", label: "OpenAI" },
   { value: "openrouter", label: "OpenRouter" },
   { value: "fal", label: "fal.ai" },
-]
+] as const satisfies { value: ApiKeyProvider; label: string }[]
 
 export const AIModelsSettings = memo(() => {
   const queryClient = useQueryClient()
@@ -63,7 +64,7 @@ export const AIModelsSettings = memo(() => {
     if (!newModelId.trim() || !newDisplayName.trim()) return
     try {
       await addMutation.mutateAsync({
-        provider: newProvider,
+        provider: newProvider as ApiKeyProvider,
         modelId: newModelId.trim(),
         displayName: newDisplayName.trim(),
         isEnabled: true,

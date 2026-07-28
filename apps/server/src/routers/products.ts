@@ -6,7 +6,7 @@ import { z } from "zod"
 import { redisCache } from "cache"
 import { getOrCompute } from "cache/services/with-cache"
 import { insertProductSchema, updateProductSchema } from "db/schema"
-import { getSetting } from "db/services/admin"
+import { findAIModelByProviderAndModelId, getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
 import { listCategories, validateCategoryIds } from "db/services/categories"
 import {
@@ -24,7 +24,7 @@ import {
   updateProductStatus,
 } from "db/services/products"
 import { listTags, validateTagIds } from "db/services/tags"
-import type { ApiKeyConfig } from "utils/api-input"
+import { type ApiKeyConfig, apiKeyProviderSchema } from "utils/api-input"
 import { createCustomId } from "utils/custom-id"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
@@ -92,6 +92,39 @@ const getApiKeys = () =>
     },
     SETTINGS_CACHE_TTL,
   )
+
+export async function validateModelForKey(
+  key: ApiKeyConfig,
+  modelEngine: string,
+  findModel: (
+    provider: string,
+    modelId: string,
+  ) => Promise<{ isEnabled: boolean } | null> = findAIModelByProviderAndModelId,
+): Promise<void> {
+  const parsedProvider = apiKeyProviderSchema.safeParse(key.provider)
+  if (!parsedProvider.success) {
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      status: 500,
+      message: `API key ${key.id} has invalid provider "${key.provider}"`,
+    })
+  }
+
+  const model = await findModel(key.provider, modelEngine)
+
+  if (!model) {
+    throw new ORPCError("BAD_REQUEST", {
+      status: 400,
+      message: `Model "${modelEngine}" is not configured for provider "${key.provider}"`,
+    })
+  }
+
+  if (!model.isEnabled) {
+    throw new ORPCError("BAD_REQUEST", {
+      status: 400,
+      message: `Model "${modelEngine}" is disabled`,
+    })
+  }
+}
 
 const productListInputSchema = z.object({
   limit: z.number().min(1).max(100).optional(),
@@ -306,6 +339,8 @@ export const productsRouter = {
           }
         }
 
+        await validateModelForKey(selectedKey, productConfig.modelEngine)
+
         try {
           execResult = await executeAIProduct({
             systemRole: product.systemRole ?? "",
@@ -400,6 +435,8 @@ export const productsRouter = {
             totalTokens: number
           }
         }
+
+        await validateModelForKey(selectedKey, input.config.modelEngine)
 
         try {
           execResult = await executeAIProduct({

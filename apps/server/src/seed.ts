@@ -17,6 +17,8 @@ import {
 } from "db/schema"
 import {
   createAIModel,
+  deleteAIModelById,
+  findAIModelByProviderAndModelId,
   getSetting,
   listAIModels,
   upsertSetting,
@@ -641,27 +643,78 @@ export const products: SeedProduct[] = [
   },
 ]
 
-async function seedAIModels(): Promise<{ created: number; skipped: number }> {
-  const existing = await listAIModels()
+export function planModelSeed(
+  existing: { provider: string; modelId: string }[],
+  allowedProviders: Set<ApiKeyProvider>,
+): {
+  created: SeedModel[]
+  skipped: number
+  removed: { provider: string; modelId: string; displayName: string }[]
+} {
   const existingKeys = new Set(
     existing.map((model) => `${model.provider}:${model.modelId}`),
   )
-
-  let created = 0
+  const created: SeedModel[] = []
   let skipped = 0
+  const removed: { provider: string; modelId: string; displayName: string }[] =
+    []
 
   for (const model of aiModels) {
+    if (!allowedProviders.has(model.provider)) {
+      if (existingKeys.has(`${model.provider}:${model.modelId}`)) {
+        removed.push({
+          provider: model.provider,
+          modelId: model.modelId,
+          displayName: model.displayName,
+        })
+      }
+      continue
+    }
+
     if (existingKeys.has(`${model.provider}:${model.modelId}`)) {
       skipped++
       continue
     }
 
+    created.push(model)
+  }
+
+  return { created, skipped, removed }
+}
+
+export async function seedAIModels(
+  apiKeyByProvider: Map<ApiKeyProvider, string>,
+): Promise<{ created: number; skipped: number; removed: number }> {
+  const existing = await listAIModels()
+  const allowedProviders = new Set(apiKeyByProvider.keys())
+  const { created, skipped, removed } = planModelSeed(
+    existing,
+    allowedProviders,
+  )
+
+  for (const model of removed) {
+    await deleteAIModelByProviderAndModelId(model.provider, model.modelId)
+    console.info(
+      `Removed AI model: ${model.displayName} (${model.provider}) — no API key`,
+    )
+  }
+
+  for (const model of created) {
     await createAIModel(model)
-    created++
     console.info(`Created AI model: ${model.displayName} (${model.provider})`)
   }
 
-  return { created, skipped }
+  return { created: created.length, skipped, removed: removed.length }
+}
+
+async function deleteAIModelByProviderAndModelId(
+  provider: string,
+  modelId: string,
+): Promise<void> {
+  const model = await findAIModelByProviderAndModelId(provider, modelId)
+  if (model) {
+    await deleteAIModelById(model.id)
+  }
 }
 
 async function seedCategories(): Promise<{
@@ -918,17 +971,17 @@ async function main(): Promise<void> {
 }
 
 export async function runSeed(): Promise<{
-  aiModels: { created: number; skipped: number }
+  aiModels: { created: number; skipped: number; removed: number }
   categories: number
   tags: number
   products: { created: number; skipped: number }
 }> {
-  const modelResult = await seedAIModels()
-  console.info(
-    `Seeded ${modelResult.created} AI models, skipped ${modelResult.skipped}`,
-  )
-
   const apiKeyByProvider = await seedApiKeys()
+
+  const modelResult = await seedAIModels(apiKeyByProvider)
+  console.info(
+    `Seeded ${modelResult.created} AI models, skipped ${modelResult.skipped}, removed ${modelResult.removed}`,
+  )
 
   const defaultTextModel = await getDefaultTextModel(apiKeyByProvider)
   if (!defaultTextModel) {
