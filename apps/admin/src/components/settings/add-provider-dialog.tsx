@@ -23,6 +23,13 @@ import { Switch } from "ui/switch"
 import { Textarea } from "ui/textarea"
 import type { AddApiKeyInput } from "utils/api-input"
 
+import { providerNames } from "./provider-card"
+
+const providerOptions = Object.entries(providerNames).map(([value, label]) => ({
+  value,
+  label,
+}))
+
 interface AddProviderDialogProps {
   open: boolean
   formData: AddApiKeyInput
@@ -58,20 +65,29 @@ export function AddProviderDialog({
               <Select
                 value={formData.provider}
                 onValueChange={(value) => {
-                  if (value)
+                  if (typeof value === "string") {
                     onFormDataChange({
                       ...formData,
                       provider: value,
                     })
+                  }
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select provider">
+                    {
+                      providerOptions.find(
+                        (opt) => opt.value === formData.provider,
+                      )?.label
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="openai">OpenAI</SelectItem>
-                  <SelectItem value="openrouter">OpenRouter</SelectItem>
-                  <SelectItem value="fal">fal.ai</SelectItem>
+                  {providerOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

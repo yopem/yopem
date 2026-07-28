@@ -9,15 +9,23 @@ import { Button } from "ui/button"
 import { Card, CardPanel, CardHeader } from "ui/card"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "ui/select"
 import { Switch } from "ui/switch"
 import { toastManager } from "ui/toast"
 import type { ApiKeyProvider } from "utils/api-input"
 
-const modelOptions = [
-  { value: "openai", label: "OpenAI" },
-  { value: "openrouter", label: "OpenRouter" },
-  { value: "fal", label: "fal.ai" },
-] as const satisfies { value: ApiKeyProvider; label: string }[]
+import { providerNames } from "./provider-card"
+
+const providerOptions = Object.entries(providerNames).map(([value, label]) => ({
+  value,
+  label,
+}))
 
 export const AIModelsSettings = memo(() => {
   const queryClient = useQueryClient()
@@ -170,17 +178,28 @@ export const AIModelsSettings = memo(() => {
           <div className="flex flex-wrap gap-3">
             <div className="flex min-w-32 flex-1 flex-col gap-1">
               <Label className="text-xs">Provider</Label>
-              <select
-                className="border-border bg-background text-foreground h-9 rounded-md border px-3 text-sm"
+              <Select
                 value={newProvider}
-                onChange={(e) => setNewProvider(e.target.value)}
+                onValueChange={(value) => {
+                  if (typeof value === "string") setNewProvider(value)
+                }}
               >
-                {modelOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select provider">
+                    {
+                      providerOptions.find((opt) => opt.value === newProvider)
+                        ?.label
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {providerOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex min-w-40 flex-1 flex-col gap-1">
               <Label className="text-xs">Model ID</Label>

@@ -7,7 +7,11 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Separator } from "ui/separator"
 import { toastManager } from "ui/toast"
-import type { AddApiKeyInput, ApiKeyConfig } from "utils/api-input"
+import type {
+  AddApiKeyInput,
+  ApiKeyConfig,
+  UpdateApiKeyInput,
+} from "utils/api-input"
 import { formatDateTime } from "utils/format-date"
 
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
@@ -39,6 +43,8 @@ function SettingsRouteComponent() {
   const [editingProvider, setEditingProvider] = useState<ApiKeyConfig | null>(
     null,
   )
+  const [editApiKey, setEditApiKey] = useState("")
+  const [editSkipValidation, setEditSkipValidation] = useState(false)
   const [deletingProvider, setDeletingProvider] = useState<ApiKeyConfig | null>(
     null,
   )
@@ -100,6 +106,8 @@ function SettingsRouteComponent() {
         toastManager.add({ title: "Provider updated", type: "success" })
         setEditDialogOpen(false)
         setEditingProvider(null)
+        setEditApiKey("")
+        setEditSkipValidation(false)
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.apiKeyList.queryKey(),
         })
@@ -126,6 +134,9 @@ function SettingsRouteComponent() {
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.apiKeyStats.queryKey(),
         })
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.admin.modelList.queryKey(),
+        })
       },
       onError: (e: Error) => {
         toastManager.add({
@@ -148,6 +159,8 @@ function SettingsRouteComponent() {
 
   const handleEditProvider = useCallback((provider: ApiKeyConfig) => {
     setEditingProvider(provider)
+    setEditApiKey("")
+    setEditSkipValidation(false)
     setEditDialogOpen(true)
   }, [])
 
@@ -255,21 +268,33 @@ function SettingsRouteComponent() {
         <EditProviderDialog
           open={editDialogOpen}
           provider={editingProvider}
+          newApiKey={editApiKey}
+          skipValidation={editSkipValidation}
           isPending={updateKeyMutation.isPending}
           onOpenChange={setEditDialogOpen}
           onProviderChange={setEditingProvider}
+          onNewApiKeyChange={setEditApiKey}
+          onSkipValidationChange={setEditSkipValidation}
           onSubmit={() => {
             const p = editingProvider
-            updateKeyMutation.mutate({
+            const payload: UpdateApiKeyInput = {
               id: p.id,
               name: p.name,
               description: p.description,
               status: p.status === "active" ? "active" : "inactive",
-            })
+              skipValidation: editSkipValidation,
+            }
+            const trimmedKey = editApiKey.trim()
+            if (trimmedKey) {
+              payload.apiKey = trimmedKey
+            }
+            updateKeyMutation.mutate(payload)
           }}
           onCancel={() => {
             setEditDialogOpen(false)
             setEditingProvider(null)
+            setEditApiKey("")
+            setEditSkipValidation(false)
           }}
         />
       )}
