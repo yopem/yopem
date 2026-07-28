@@ -51,7 +51,12 @@ export function Layout({
         <header className="flex items-center gap-2 p-4">
           <SidebarTrigger />
         </header>
-        {children}
+        <div
+          className="relative flex-1"
+          style={{ viewTransitionName: "main-content" }}
+        >
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
