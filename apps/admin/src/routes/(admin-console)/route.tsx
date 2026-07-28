@@ -6,7 +6,6 @@ import {
   SettingsIcon,
   TagsIcon,
 } from "lucide-react"
-import { Shimmer } from "shimmer-from-structure"
 
 import { Layout } from "@/components/layout/layout"
 
@@ -18,7 +17,6 @@ export const Route = createFileRoute("/(admin-console)")({
     return { session: context.session }
   },
   component: AdminConsoleLayoutComponent,
-  pendingComponent: AdminConsolePendingComponent,
 })
 
 function AdminConsoleLayoutComponent() {
@@ -67,13 +65,5 @@ function AdminConsoleLayoutComponent() {
     >
       <Outlet />
     </Layout>
-  )
-}
-
-function AdminConsolePendingComponent() {
-  return (
-    <Shimmer loading={true}>
-      <div className="bg-muted size-full" />
-    </Shimmer>
   )
 }
