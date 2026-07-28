@@ -15,7 +15,7 @@ import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
 export const Route = createFileRoute("/(admin-console)/categories-tags/")({
-  component: CategoriesTagsComponent,
+  component: CategoriesTagsRouteComponent,
 })
 
 interface CategoryDialogState {
@@ -50,7 +50,7 @@ type Action =
   | { type: "RESET_CATEGORY_FORM" }
   | { type: "RESET_TAG_FORM" }
 
-function CategoriesTagsComponent() {
+function CategoriesTagsRouteComponent() {
   const initialState: State = {
     categoryDialog: {
       open: false,
