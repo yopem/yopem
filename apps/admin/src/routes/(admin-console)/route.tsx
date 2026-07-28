@@ -46,7 +46,7 @@ function AdminConsoleLayoutComponent() {
     {
       icon: <SettingsIcon className="size-4.5" />,
       label: "Settings",
-      href: "/setting",
+      href: "/settings",
     },
   ]
 
