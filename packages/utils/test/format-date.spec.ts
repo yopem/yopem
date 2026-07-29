@@ -3,9 +3,9 @@ import { describe, expect, test } from "vite-plus/test"
 import { formatDateOnly, formatDateTime } from "utils/format-date"
 
 describe("formatDateTime", () => {
-  test("returns empty string for null, undefined, or empty input", () => {
-    expect(formatDateTime(null)).toBe("")
-    expect(formatDateTime(undefined)).toBe("")
+  test("returns N/A for null, undefined, or empty input", () => {
+    expect(formatDateTime(null)).toBe("N/A")
+    expect(formatDateTime(undefined)).toBe("N/A")
   })
 
   test("formats a UTC date with month, day, year, and time", () => {
