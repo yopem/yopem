@@ -6,7 +6,7 @@
     "dev": "vp dev --port ${ADMIN_PORT:-3001}",
     "generate-routes": "tsr generate",
     "build": "vp build",
-    "preview": "vite preview",
+    "preview": "vp preview",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "start": "node --env-file=../../.env .output/server/index.mjs",
