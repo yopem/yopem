@@ -1,21 +1,23 @@
+import { useState } from "react"
+
 import { Button } from "ui/button"
 import { Card, CardPanel } from "ui/card"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 
 interface AssetUploadSettingsProps {
-  maxUploadSize: number
+  defaultMaxUploadSize: number
   isLoading: boolean
-  onMaxUploadSizeChange: (value: number) => void
-  onSave: () => void
+  onSave: (maxUploadSizeMB: number) => void
 }
 
 export function AssetUploadSettings({
-  maxUploadSize,
+  defaultMaxUploadSize,
   isLoading,
-  onMaxUploadSizeChange,
   onSave,
 }: AssetUploadSettingsProps) {
+  const [maxUploadSize, setMaxUploadSize] = useState(defaultMaxUploadSize)
+
   return (
     <div className="mt-8">
       <div className="mb-4 flex items-center justify-between">
@@ -34,13 +36,13 @@ export function AssetUploadSettings({
                 min={1}
                 max={500}
                 value={maxUploadSize}
-                onChange={(e) => onMaxUploadSizeChange(Number(e.target.value))}
+                onChange={(e) => setMaxUploadSize(Number(e.target.value))}
               />
               <p className="text-muted-foreground text-xs">
                 Set the maximum file size allowed for uploads (1-500 MB)
               </p>
             </div>
-            <Button onClick={onSave} disabled={isLoading}>
+            <Button onClick={() => onSave(maxUploadSize)} disabled={isLoading}>
               Save Settings
             </Button>
           </div>
