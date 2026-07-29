@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
@@ -67,15 +67,7 @@ function SettingsRouteComponent() {
     queryApi.admin.assetSettingsGet.queryOptions(),
   )
 
-  const [maxUploadSizeMB, setMaxUploadSizeMB] = useState(
-    assetSettings?.maxUploadSizeMB ?? 50,
-  )
-
-  useEffect(() => {
-    if (assetSettings) {
-      setMaxUploadSizeMB(assetSettings.maxUploadSizeMB)
-    }
-  }, [assetSettings])
+  const defaultMaxUploadSize = assetSettings?.maxUploadSizeMB ?? 50
 
   const addKeyMutation = useMutation(
     queryApi.admin.apiKeyCreate.mutationOptions({
@@ -244,10 +236,9 @@ function SettingsRouteComponent() {
         <Separator />
 
         <AssetUploadSettings
-          maxUploadSize={maxUploadSizeMB}
+          defaultMaxUploadSize={defaultMaxUploadSize}
           isLoading={assetLoading || saveAssetMutation.isPending}
-          onMaxUploadSizeChange={setMaxUploadSizeMB}
-          onSave={() => saveAssetMutation.mutate({ maxUploadSizeMB })}
+          onSave={(size) => saveAssetMutation.mutate({ maxUploadSizeMB: size })}
         />
       </div>
 
