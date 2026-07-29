@@ -52,7 +52,7 @@ function YouTubeFacade({
       )}
       <span className="absolute inset-0 bg-black/30 transition-colors duration-300 group-hover:bg-black/40" />
       <span className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 p-4 shadow-lg transition-transform duration-300 group-hover:scale-110">
-        <PlayIcon className="h-8 w-8 fill-white text-white" />
+        <PlayIcon className="size-8 fill-white text-white" />
       </span>
     </button>
   )
@@ -62,7 +62,7 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg">
       <iframe
-        className="absolute inset-0 h-full w-full border-0"
+        className="absolute inset-0 size-full border-0"
         src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
         title="YouTube video"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -29,7 +29,7 @@ import { cva } from "ui/utils"
 import { CaptionButton } from "./caption"
 
 const inputVariants = cva(
-  "placeholder:text-muted-foreground flex h-[28px] w-full rounded-md border-none bg-transparent px-1.5 py-1 text-base focus-visible:ring-transparent focus-visible:outline-none md:text-sm",
+  "placeholder:text-muted-foreground flex h-7 w-full rounded-md border-none bg-transparent px-1.5 py-1 text-base focus-visible:ring-transparent focus-visible:outline-none md:text-sm",
 )
 
 export function MediaToolbar({
@@ -72,7 +72,7 @@ export function MediaToolbar({
 
       <PopoverContent className="w-auto p-1" initialFocus={false}>
         {isEditing ? (
-          <div className="flex w-[330px] flex-col">
+          <div className="flex w-82.5 flex-col">
             <div className="flex items-center">
               <div className="text-muted-foreground flex items-center pr-1 pl-2">
                 <LinkIcon className="size-4" />

@@ -22,11 +22,11 @@ const editorContainerVariants = cva(
           "has-aria-disabled:border-input has-aria-disabled:bg-muted",
         ),
         compact: cn(
-          "h-auto min-h-[140px] rounded-md border px-3 py-2",
+          "h-auto min-h-35 rounded-md border px-3 py-2",
           "has-data-readonly:border-transparent",
         ),
         default: "h-full",
-        demo: "h-[650px]",
+        demo: "h-162.5",
         select: cn(
           "group border-input ring-offset-background focus-within:ring-ring rounded-md border focus-within:ring-2 focus-within:ring-offset-2",
           "has-data-readonly:w-fit has-data-readonly:cursor-default has-data-readonly:border-transparent has-data-readonly:focus-within:[box-shadow:none]",
