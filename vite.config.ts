@@ -278,7 +278,7 @@ export default defineConfig({
           "tailwindcss/enforce-consistent-important-position": "error",
           "tailwindcss/enforce-negative-arbitrary-values": "error",
           "tailwindcss/enforce-shorthand": "error",
-          "tailwindcss/enforce-sort-order": "warn",
+          "tailwindcss/enforce-sort-order": "off",
           "tailwindcss/no-conflicting-classes": "error",
           "tailwindcss/no-deprecated-classes": "error",
           "tailwindcss/no-unknown-classes": "error",
