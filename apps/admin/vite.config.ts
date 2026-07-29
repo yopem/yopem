@@ -19,6 +19,7 @@ export default defineConfig({
 
   resolve: {
     tsconfigPaths: true,
+    dedupe: ["react", "react-dom"],
   },
 
   test: {
@@ -26,9 +27,23 @@ export default defineConfig({
     environment: "jsdom",
   },
 
+  optimizeDeps: {
+    include: [
+      "use-sync-external-store",
+      "use-sync-external-store/shim/index.js",
+    ],
+  },
+
   plugins: lazyPlugins(() => [
     devtools(),
-    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
+    nitro({
+      rollupConfig: {
+        external: [/^@sentry\//, "react", "react-dom"],
+      },
+      experimental: {
+        asyncContext: true,
+      },
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),
