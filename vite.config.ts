@@ -114,7 +114,17 @@ export default defineConfig({
     },
   },
   lint: {
-    plugins: ["eslint", "import", "oxc", "promise", "typescript", "unicorn"],
+    plugins: [
+      "eslint",
+      "import",
+      "jsx-a11y",
+      "oxc",
+      "promise",
+      "react",
+      "react-perf",
+      "typescript",
+      "unicorn",
+    ],
     categories: {
       correctness: "error",
     },
