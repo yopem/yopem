@@ -190,6 +190,7 @@ export default defineConfig({
       "prefer-const": "error",
       "prefer-rest-params": "error",
       "prefer-spread": "error",
+      "react/react-compiler": "error",
       "require-await": "error",
       "require-yield": "error",
       "use-isnan": "error",
