@@ -10,12 +10,8 @@ describe("createORPCLink", () => {
   })
 
   test("accepts a custom fetch function", () => {
-    const customFetch = async (
-      _input: RequestInfo | URL,
-      _init?: RequestInit,
-    ) => {
-      return new Response("{}", { status: 200 })
-    }
+    const customFetch = (_input: RequestInfo | URL, _init?: RequestInit) =>
+      Promise.resolve(new Response("{}", { status: 200 }))
     const link = createORPCLink(customFetch)
     expect(link).toBeDefined()
   })

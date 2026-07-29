@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query"
-import { describe, expect, test, vi } from "vite-plus/test"
+import { describe, expect, test } from "vite-plus/test"
 
 import { prefetchQueries } from "rpc/prefetch"
 
@@ -14,9 +14,7 @@ describe("prefetchQueries", () => {
 
     expect(dehydrated).toBeDefined()
     expect(dehydrated.queries).toBeDefined()
-    expect(
-      queryClient.getQueryData(["test"]),
-    ).toBe("data")
+    expect(queryClient.getQueryData(["test"])).toBe("data")
   })
 
   test("handles empty queries array", async () => {
