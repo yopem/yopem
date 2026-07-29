@@ -12,6 +12,7 @@ import {
   insertAsset,
   listAssets,
 } from "db/services/assets"
+import { generateUniqueAssetFilename } from "db/services/slug"
 import { r2Domain } from "env"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
@@ -106,6 +107,11 @@ export const assetsRouter = {
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         const r2 = getR2Storage()
+        const type = r2.classifyFileType(
+          file.type || "application/octet-stream",
+          file.name,
+        )
+        const filename = await generateUniqueAssetFilename(file.name, type)
 
         let uploadResult: {
           url: string
@@ -119,6 +125,7 @@ export const assetsRouter = {
             buffer,
             file.name,
             file.type || "application/octet-stream",
+            filename,
           )
         } catch (error) {
           throw new ORPCError("BAD_REQUEST", {
@@ -127,7 +134,7 @@ export const assetsRouter = {
           })
         }
 
-        const { url, type, size, key } = uploadResult
+        const { url, size, key } = uploadResult
 
         const asset = await insertAsset({
           filename: key.split("/").pop()!,

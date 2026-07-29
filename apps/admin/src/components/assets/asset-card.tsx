@@ -76,7 +76,10 @@ export const AssetCard = memo(
           </div>
         </CardPanel>
         <CardHeader className="p-3">
-          <p className="truncate text-sm font-medium">{asset.originalName}</p>
+          <p className="truncate text-sm font-medium">{asset.filename}</p>
+          <p className="text-muted-foreground truncate text-xs">
+            {asset.originalName}
+          </p>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               {asset.type}

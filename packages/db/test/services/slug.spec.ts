@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 
 import {
+  generateUniqueAssetFilename,
   generateUniqueCategorySlug,
   generateUniqueProductSlug,
   generateUniqueTagSlug,
@@ -37,6 +38,18 @@ describe("slug service", () => {
     mockDb.setReturn([[]])
     const result = await generateUniqueCategorySlug("Category")
     expect(result).toBe("category")
+  })
+
+  test("generateUniqueAssetFilename returns slugified filename", async () => {
+    mockDb.setReturn([[]])
+    const result = await generateUniqueAssetFilename("My Photo.png", "images")
+    expect(result).toBe("my-photo.webp")
+  })
+
+  test("generateUniqueAssetFilename appends suffix when filename exists", async () => {
+    mockDb.setReturn([[{ id: "a1" }], [{ id: "a2" }], []])
+    const result = await generateUniqueAssetFilename("Report.pdf", "documents")
+    expect(result).toBe("report-3.pdf")
   })
 
   test("generateUniqueTagSlug excludes id", async () => {

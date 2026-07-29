@@ -2,7 +2,13 @@ import { and, eq, ne } from "drizzle-orm"
 import { transliterate as tr } from "transliteration"
 
 import { db } from "db"
-import { categoriesTable, productsTable, tagsTable } from "db/schema"
+import {
+  assetsTable,
+  categoriesTable,
+  productsTable,
+  tagsTable,
+} from "db/schema"
+import type { AssetType } from "db/schema/assets"
 
 function slugify(text: string) {
   return tr(text)
@@ -98,4 +104,32 @@ export const generateUniqueTagSlug = async (
   }
 
   return uniqueSlug
+}
+
+export const generateUniqueAssetFilename = async (
+  originalName: string,
+  type: AssetType,
+): Promise<string> => {
+  const baseSlug = slugify(originalName.replace(/\.[^/.]+$/, ""))
+  const extension =
+    type === "images" ? "webp" : (originalName.split(".").pop() ?? "bin")
+
+  const ext = extension.toLowerCase()
+  let filename = `${baseSlug}.${ext}`
+  let suffix = 1
+
+  while (true) {
+    const existing = await db
+      .select({ id: assetsTable.id })
+      .from(assetsTable)
+      .where(eq(assetsTable.filename, filename))
+      .limit(1)
+
+    if (existing.length === 0) break
+
+    suffix++
+    filename = `${baseSlug}-${suffix}.${ext}`
+  }
+
+  return filename
 }

@@ -272,24 +272,36 @@ class R2Storage {
     buffer: Buffer,
     originalFilename: string,
     mimeType: string,
+    filename?: string,
   ): Promise<{ url: string; type: AssetType; size: number; key: string }> {
     const type = this.classifyFileType(mimeType, originalFilename)
 
     let uploadBuffer = buffer
     let uploadMimeType = mimeType
-    let extension = originalFilename.split(".").pop() ?? "bin"
+    let extension = filename
+      ? (filename.split(".").pop() ?? "bin")
+      : (originalFilename.split(".").pop() ?? "bin")
 
     if (type === "images") {
       uploadBuffer = await this.processImage(buffer)
       uploadMimeType = "image/webp"
       extension = "webp"
+
+      if (filename) {
+        filename = `${filename.replace(/\.[^/.]+$/, "")}.webp`
+      }
     }
 
-    const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
-    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
-    const uniqueId = nanoid(6)
-    const filename = `${sanitizedBaseName}_${uniqueId}.${extension}`
-    const key = `${type}/${filename}`
+    const finalFilename =
+      filename ??
+      (() => {
+        const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
+        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
+        const uniqueId = nanoid(6)
+        return `${sanitizedBaseName}_${uniqueId}.${extension}`
+      })()
+
+    const key = `${type}/${finalFilename}`
 
     await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
 

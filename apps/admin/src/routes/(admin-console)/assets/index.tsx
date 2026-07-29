@@ -105,7 +105,12 @@ function AssetsRouteComponent() {
 
   const handleUpload = useCallback(
     (file: File) => {
-      uploadMutation.mutate(file)
+      const cleanName = file.name.replace(/^.*[/\\]/, "")
+      const cleanFile =
+        cleanName === file.name
+          ? file
+          : new File([file], cleanName, { type: file.type })
+      uploadMutation.mutate(cleanFile)
     },
     [uploadMutation],
   )
