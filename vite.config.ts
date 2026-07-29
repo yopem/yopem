@@ -114,17 +114,7 @@ export default defineConfig({
     },
   },
   lint: {
-    plugins: [
-      "eslint",
-      "import",
-      "jsx-a11y",
-      "oxc",
-      "promise",
-      "react",
-      "react-perf",
-      "typescript",
-      "unicorn",
-    ],
+    plugins: ["eslint", "import", "oxc", "promise", "typescript", "unicorn"],
     categories: {
       correctness: "error",
     },
@@ -200,7 +190,6 @@ export default defineConfig({
       "prefer-const": "error",
       "prefer-rest-params": "error",
       "prefer-spread": "error",
-      "react/react-compiler": "error",
       "require-await": "error",
       "require-yield": "error",
       "use-isnan": "error",
@@ -264,7 +253,12 @@ export default defineConfig({
     },
     overrides: [
       {
-        files: ["apps/admin/**", "packages/editor/**", "packages/ui/**"],
+        files: [
+          "apps/admin/**",
+          "apps/web/**",
+          "packages/editor/**",
+          "packages/ui/**",
+        ],
         plugins: [
           "eslint",
           "import",
@@ -278,12 +272,18 @@ export default defineConfig({
         ],
         jsPlugins: ["oxlint-tailwindcss"],
         rules: {
+          "react/react-compiler": "error",
           "react/rules-of-hooks": "error",
+          "tailwindcss/enforce-canonical": "error",
+          "tailwindcss/enforce-consistent-important-position": "error",
+          "tailwindcss/enforce-negative-arbitrary-values": "error",
+          "tailwindcss/enforce-shorthand": "error",
+          "tailwindcss/enforce-sort-order": "warn",
           "tailwindcss/no-conflicting-classes": "error",
           "tailwindcss/no-deprecated-classes": "error",
           "tailwindcss/no-unknown-classes": "error",
+          "tailwindcss/no-unnecessary-arbitrary-value": "error",
           "tailwindcss/no-unnecessary-whitespace": "error",
-          "tailwindcss/enforce-sort-order": "off",
         },
       },
     ],
