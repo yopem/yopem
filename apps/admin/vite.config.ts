@@ -27,13 +27,6 @@ export default defineConfig({
     environment: "jsdom",
   },
 
-  optimizeDeps: {
-    include: [
-      "use-sync-external-store",
-      "use-sync-external-store/shim/index.js",
-    ],
-  },
-
   plugins: lazyPlugins(() => [
     devtools(),
     nitro({
