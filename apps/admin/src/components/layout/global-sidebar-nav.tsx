@@ -57,17 +57,13 @@ export function GlobalSidebarNav({ items }: GlobalSidebarNavProps) {
                     [item.href]: !prev[item.href],
                   }))
                 }
-                className={`group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                 }`}
               >
-                <span
-                  className={`transition-colors ${isActive ? "" : "group-hover:text-sidebar-accent-foreground"}`}
-                >
-                  {item.icon}
-                </span>
+                <span className="transition-colors">{item.icon}</span>
                 <span className="flex-1 text-left">{item.label}</span>
                 <ChevronRightIcon
                   className={`size-3.5 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
@@ -76,17 +72,13 @@ export function GlobalSidebarNav({ items }: GlobalSidebarNavProps) {
             ) : (
               <Link
                 to={item.href}
-                className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                 }`}
               >
-                <span
-                  className={`transition-colors ${isActive ? "" : "group-hover:text-sidebar-accent-foreground"}`}
-                >
-                  {item.icon}
-                </span>
+                <span className="transition-colors">{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             )}
