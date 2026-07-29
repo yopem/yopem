@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port ${ADMIN_PORT:-3001}",
+    "dev": "vp dev --port ${ADMIN_PORT:-3001}",
     "generate-routes": "tsr generate",
-    "build": "vite build && node scripts/fix-ssr-bundle.mjs",
+    "build": "vp build",
     "preview": "vite preview",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",

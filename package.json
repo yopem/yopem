@@ -12,6 +12,7 @@
   "type": "module",
   "scripts": {
     "build": "vp run -r build",
+    "build:admin": "vp run --filter admin build",
     "build:server": "vp run --filter server build",
     "check": "vp check",
     "db:generate": "vp run --filter db db:generate",
