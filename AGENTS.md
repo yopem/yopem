@@ -19,7 +19,7 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 
 ## Stack
 
-- **Package manager:** pnpm 10.12.1 (workspaces, `catalog:` deps)
+- **Package manager:** pnpm 11.17.0 (workspaces, `catalog:` deps)
 - **Runtime:** Node.js (Docker: `node:24-alpine`), ESM (`"type": "module"`)
 - **Language:** TypeScript 7
 - **Frontend:** React 19, TanStack Start (SSR), TanStack Router (file-based), TanStack React Query, TanStack React Form
