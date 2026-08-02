@@ -25,6 +25,11 @@ export default defineConfig({
   test: {
     name: "admin",
     environment: "jsdom",
+    server: {
+      deps: {
+        inline: [/editor/, /platejs/, /@platejs\//, /react-tweet/],
+      },
+    },
   },
 
   plugins: lazyPlugins(() => [
