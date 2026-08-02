@@ -335,6 +335,7 @@ const buildPublicProduct = async (
     slug: product.slug,
     name: product.name,
     description: product.description,
+    descriptionContent: product.descriptionContent,
     excerpt: product.excerpt,
     isPublic: product.isPublic,
     costPerRun: product.costPerRun,

@@ -15,6 +15,13 @@
       "when": 1785010554853,
       "tag": "0001_pale_loa",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785703466276,
+      "tag": "0002_strange_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }

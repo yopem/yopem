@@ -33,6 +33,7 @@ export const productsTable = pgTable("products", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
+  descriptionContent: jsonb("description_content").$type<unknown[]>(),
   excerpt: text("excerpt"),
   status: text("status", { enum: productStatusEnum })
     .default("draft")
