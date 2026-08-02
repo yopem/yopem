@@ -18,16 +18,12 @@ import { Label } from "ui/label"
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "ui/menu"
 import type { ApiKeyConfig } from "utils/api-input"
 
+import { providerNames } from "@/lib/utils/provider"
+
 const providerIcons: Record<string, ReactNode> = {
   openai: <BotIcon className="text-background" />,
   openrouter: <KeyIcon className="text-background" />,
   fal: <SparklesIcon className="text-background" />,
-}
-
-export const providerNames: Record<string, string> = {
-  openai: "OpenAI",
-  openrouter: "OpenRouter",
-  fal: "fal.ai",
 }
 
 interface ProviderCardProps {

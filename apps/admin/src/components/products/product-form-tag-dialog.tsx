@@ -1,0 +1,63 @@
+"use client"
+
+import type { UseMutationResult } from "@tanstack/react-query"
+
+import { Button } from "ui/button"
+import { Dialog, DialogPopup } from "ui/dialog"
+import { Field, FieldLabel } from "ui/field"
+import { Input } from "ui/input"
+
+interface ProductFormTagDialogProps {
+  open: boolean
+  name: string
+  createMutation: UseMutationResult<unknown, Error, { name: string }, unknown>
+  onOpenChange: (open: boolean) => void
+  onNameChange: (value: string) => void
+  onCancel: () => void
+}
+
+export function ProductFormTagDialog({
+  open,
+  name,
+  createMutation,
+  onOpenChange,
+  onNameChange,
+  onCancel,
+}: ProductFormTagDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup>
+        <div className="flex flex-col gap-4 p-6">
+          <div>
+            <h2 className="text-lg font-semibold">Create New Tag</h2>
+            <p className="text-muted-foreground text-sm">
+              Add a new tag to label your products
+            </p>
+          </div>
+
+          <Field>
+            <FieldLabel>Name</FieldLabel>
+            <Input
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder="Enter tag name"
+            />
+          </Field>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => createMutation.mutate({ name })}
+              disabled={!name.trim() || createMutation.isPending}
+            >
+              {createMutation.isPending ? "Creating..." : "Create"}
+            </Button>
+          </div>
+        </div>
+      </DialogPopup>
+    </Dialog>
+  )
+}
