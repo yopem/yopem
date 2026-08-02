@@ -1,11 +1,19 @@
 "use client"
 
-import { Image } from "@unpic/react"
 import { ChevronUpIcon, HomeIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { useState } from "react"
 
 import { siteUrl } from "env"
-import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import {
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuLinkItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "ui/menu"
 
 import { logoutFn } from "@/lib/auth"
 
@@ -19,8 +27,21 @@ interface GlobalSidebarFooterProps {
   user: User
 }
 
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase()
+  }
+  return parts
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+}
+
 export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const initials = getInitials(user.name)
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -40,44 +61,54 @@ export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
   return (
     <Menu>
       <MenuTrigger
-        className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring w-full rounded-md transition-colors outline-none focus-visible:ring-2"
         render={
           <button
             type="button"
-            className="flex items-center gap-3 p-2"
-            id="user-sidebar-footer-trigger"
+            className="ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-colors focus-visible:ring-2"
           >
-            <div className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground flex size-7 w-full items-center justify-center rounded-full border text-xs font-bold">
-              {user.avatar ? (
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  layout="fixed"
-                  width={32}
-                  height={32}
-                  className="size-7 w-full rounded-full object-cover"
-                />
-              ) : (
-                user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)
-              )}
-            </div>
-            <div className="flex flex-1 flex-col items-start">
-              <p className="text-sidebar-foreground text-sm font-medium">
+            <Avatar className="size-8 shrink-0">
+              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-1 flex-col items-start group-data-[collapsible=icon]:hidden">
+              <span className="text-sidebar-foreground truncate text-sm font-medium">
                 {user.name}
-              </p>
-              <p className="text-muted-foreground text-xs">{user.email}</p>
+              </span>
+              <span className="text-muted-foreground truncate text-xs">
+                {user.email}
+              </span>
             </div>
-            <ChevronUpIcon className="text-muted-foreground size-4" />
+            <ChevronUpIcon className="text-muted-foreground ms-2 size-4 shrink-0 group-data-[collapsible=icon]:hidden" />
           </button>
         }
       />
-      <MenuPopup side="top" align="end" sideOffset={8} className="min-w-56">
-        <MenuItem
+      <MenuPopup
+        side="top"
+        align="start"
+        sideOffset={4}
+        positionMethod="fixed"
+        className="min-w-56"
+      >
+        <MenuGroup>
+          <div className="flex items-center gap-3 px-2 py-1.5">
+            <Avatar className="size-8 shrink-0">
+              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-col">
+              <p className="truncate text-sm font-medium">{user.name}</p>
+              <p className="text-muted-foreground truncate text-xs">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuLinkItem
           render={
             <a href={siteUrl}>
               <HomeIcon className="mr-2 size-4" />
@@ -85,7 +116,7 @@ export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
             </a>
           }
         />
-        <MenuItem
+        <MenuLinkItem
           render={
             <a href={`${siteUrl}/profile`}>
               <UserIcon className="mr-2 size-4" />

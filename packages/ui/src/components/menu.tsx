@@ -39,6 +39,7 @@ export function MenuPopup({
   side = "bottom",
   anchor,
   portalProps,
+  positionMethod = "absolute",
   ...props
 }: MenuPrimitive.Popup.Props & {
   align?: MenuPrimitive.Positioner.Props["align"]
@@ -47,6 +48,7 @@ export function MenuPopup({
   side?: MenuPrimitive.Positioner.Props["side"]
   anchor?: MenuPrimitive.Positioner.Props["anchor"]
   portalProps?: MenuPrimitive.Portal.Props
+  positionMethod?: MenuPrimitive.Positioner.Props["positionMethod"]
 }): React.ReactElement {
   return (
     <MenuPortal {...portalProps}>
@@ -56,6 +58,7 @@ export function MenuPopup({
         anchor={anchor}
         className="z-50"
         data-slot="menu-positioner"
+        positionMethod={positionMethod}
         side={side}
         sideOffset={sideOffset}
       >

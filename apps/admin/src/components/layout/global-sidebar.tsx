@@ -53,7 +53,7 @@ export function GlobalSidebar({
       <SidebarContent className="px-6">
         <GlobalSidebarNav items={navItems} />
       </SidebarContent>
-      <SidebarFooter className="border-sidebar-border space-y-3 border-t p-4">
+      <SidebarFooter className="border-sidebar-border border-t p-4">
         <div className="flex items-center justify-center">
           <ThemeSwitcher />
         </div>
