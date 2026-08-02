@@ -23,7 +23,7 @@ import { Switch } from "ui/switch"
 import { Textarea } from "ui/textarea"
 import type { AddApiKeyInput } from "utils/api-input"
 
-import { providerNames } from "./provider-card"
+import { providerNames } from "@/lib/utils/provider"
 
 const providerOptions = Object.entries(providerNames).map(([value, label]) => ({
   value,

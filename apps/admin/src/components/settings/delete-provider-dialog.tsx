@@ -12,7 +12,7 @@ import {
 } from "ui/dialog"
 import type { ApiKeyConfig } from "utils/api-input"
 
-import { providerNames } from "./provider-card"
+import { providerNames } from "@/lib/utils/provider"
 
 interface DeleteProviderDialogProps {
   open: boolean
