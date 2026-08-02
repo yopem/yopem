@@ -20,7 +20,7 @@ import { Switch } from "ui/switch"
 import { toastManager } from "ui/toast"
 import type { ApiKeyProvider } from "utils/api-input"
 
-import { providerNames } from "./provider-card"
+import { providerNames } from "@/lib/utils/provider"
 
 const providerOptions = Object.entries(providerNames).map(([value, label]) => ({
   value,
