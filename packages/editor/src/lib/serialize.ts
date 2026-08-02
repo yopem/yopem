@@ -25,3 +25,5 @@ export async function serializeSlateToHtml(value: TElement[]): Promise<string> {
     stripDataAttributes: true,
   })
 }
+
+export { slateToPlainText } from "./plain-text"
