@@ -6,6 +6,8 @@ import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react"
 import { z } from "zod"
 
 import { insertProductSchema, type SelectProduct } from "db/schema"
+import type { TElement } from "editor"
+import { deserializeHtmlToSlate } from "editor/serialize"
 import { queryApi } from "rpc/query"
 import { toastManager } from "ui/toast"
 import type { ApiKeyConfig } from "utils/api-input"
@@ -34,6 +36,19 @@ const productFormSchema = insertProductSchema
   .extend({
     name: z.string().min(1, "Product name is required").trim(),
     description: z.string().min(1, "Product description is required").trim(),
+    descriptionContent: z.array(z.record(z.string(), z.unknown())).refine(
+      (value) => {
+        if (!Array.isArray(value) || value.length === 0) return false
+        const isEmptySingleParagraph =
+          value.length === 1 &&
+          (value[0] as { type?: string })?.type === "p" &&
+          (
+            (value[0] as { children?: { text?: string }[] })?.children ?? []
+          ).every((child) => (child.text ?? "") === "")
+        return !isEmptySingleParagraph
+      },
+      { message: "Product description is required" },
+    ),
     excerpt: z.string().max(500).optional(),
     systemRole: z.string().min(1, "System role is required").trim(),
     userInstructionTemplate: z
@@ -261,6 +276,7 @@ export function useProductForm({
     defaultValues: {
       name: "",
       description: "",
+      descriptionContent: [] as TElement[],
       excerpt: "",
       inputFields: [] as {
         id: string
@@ -286,6 +302,7 @@ export function useProductForm({
       const formData = {
         name: value.name,
         description: value.description,
+        descriptionContent: value.descriptionContent,
         excerpt: value.excerpt || undefined,
         systemRole: value.systemRole,
         userInstructionTemplate: value.userInstructionTemplate,
@@ -371,6 +388,7 @@ export function useProductForm({
     return {
       name: formData.name,
       description: formData.description,
+      descriptionContent: formData.descriptionContent,
       excerpt: formData.excerpt || undefined,
       systemRole: formData.systemRole,
       userInstructionTemplate: formData.userInstructionTemplate,
@@ -418,6 +436,21 @@ export function useProductForm({
     if (mode === "edit" && initialData) {
       form.setFieldValue("name", initialData.name)
       form.setFieldValue("description", initialData.description ?? "")
+      const existingContent = (
+        initialData as { descriptionContent?: TElement[] }
+      ).descriptionContent
+      if (
+        existingContent &&
+        Array.isArray(existingContent) &&
+        existingContent.length > 0
+      ) {
+        form.setFieldValue("descriptionContent", existingContent)
+      } else if (initialData.description) {
+        form.setFieldValue(
+          "descriptionContent",
+          deserializeHtmlToSlate(initialData.description),
+        )
+      }
       form.setFieldValue("excerpt", initialData.excerpt ?? "")
       form.setFieldValue("systemRole", initialData.systemRole ?? "")
       form.setFieldValue(
