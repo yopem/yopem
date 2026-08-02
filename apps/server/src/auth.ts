@@ -11,6 +11,9 @@ import type { AppContext } from "./context"
 
 export type { SessionUser }
 
+const ACCESS_TOKEN_MAX_AGE = 86400
+const REFRESH_TOKEN_MAX_AGE = 604800
+
 const isSecure = () => {
   return !!cookieDomain || isProd
 }
@@ -22,7 +25,6 @@ const getCookieOptions = () => {
     secure: isSecure(),
     httpOnly: true,
     path: "/",
-    maxAge: 34560000,
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   }
 }
@@ -33,8 +35,14 @@ const setTokenCookies = (
   refresh: string,
 ) => {
   const options = getCookieOptions()
-  setCookie(c, "access_token", access, options)
-  setCookie(c, "refresh_token", refresh, options)
+  setCookie(c, "access_token", access, {
+    ...options,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+  })
+  setCookie(c, "refresh_token", refresh, {
+    ...options,
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  })
 }
 
 export const authMiddleware: MiddlewareHandler<AppContext> = async (

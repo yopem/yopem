@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { roleSchema } from "auth/roles"
+
 import { os, requireAuthMiddleware } from "./orpc"
 
 const sessionOutputSchema = z.object({
@@ -8,7 +10,7 @@ const sessionOutputSchema = z.object({
   name: z.string().nullable(),
   username: z.string(),
   image: z.string().nullable(),
-  role: z.enum(["user", "member", "admin"]),
+  role: roleSchema,
 })
 
 export const sessionRouter = {

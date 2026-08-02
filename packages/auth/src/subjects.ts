@@ -1,6 +1,8 @@
 import { createSubjects } from "@openauthjs/openauth/subject"
 import z from "zod"
 
+import { roleSchema } from "./roles"
+
 export const subjects = createSubjects({
   user: z.object({
     id: z.string(),
@@ -8,6 +10,6 @@ export const subjects = createSubjects({
     name: z.string().nullable(),
     username: z.string(),
     image: z.string().nullable(),
-    role: z.enum(["user", "member", "admin"]).default("user"),
+    role: roleSchema.default("user"),
   }),
 })

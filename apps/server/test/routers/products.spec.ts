@@ -2,9 +2,16 @@ import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
 import { productsRouter, validateModelForKey } from "server/routers/products"
-import { describe, expect, test } from "vite-plus/test"
+import { describe, expect, test, vi } from "vite-plus/test"
 
 import type { ApiKeyConfig } from "utils/api-input"
+
+const listProductsSpy = vi.hoisted(() => vi.fn().mockResolvedValue([]))
+
+vi.mock("db/services/products", async (importOriginal) => {
+  const original = (await importOriginal()) as Record<string, unknown>
+  return { ...original, listProducts: listProductsSpy }
+})
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -127,5 +134,40 @@ describe("products router", () => {
     for (const key of publicKeys) {
       expect(productsRouter.products[key]).toBeDefined()
     }
+  })
+})
+
+describe("products.list status clamping", () => {
+  test("clamps status to active for unauthenticated callers requesting all", async () => {
+    listProductsSpy.mockClear()
+    await call(
+      productsRouter.products.list,
+      { status: "all" },
+      { context: { session: null } },
+    )
+    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "active" })
+  })
+
+  test("clamps status to active for non-admin callers requesting draft", async () => {
+    listProductsSpy.mockClear()
+    await call(
+      productsRouter.products.list,
+      { status: "draft" },
+      { context: userContext("user") },
+    )
+    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "active" })
+  })
+
+  test("preserves requested status for admin callers", async () => {
+    listProductsSpy.mockClear()
+    await call(
+      productsRouter.products.list,
+      { status: "all" },
+      { context: userContext("admin") },
+    )
+    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "all" })
   })
 })

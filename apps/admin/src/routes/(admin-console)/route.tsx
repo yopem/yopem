@@ -14,6 +14,9 @@ export const Route = createFileRoute("/(admin-console)")({
     if (!context.session) {
       throw redirect({ to: "/auth/login" })
     }
+    if (context.session.role !== "admin") {
+      throw redirect({ to: "/forbidden" })
+    }
     return { session: context.session }
   },
   component: AdminConsoleLayoutComponent,

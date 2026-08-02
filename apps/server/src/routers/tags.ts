@@ -10,7 +10,7 @@ import {
   updateTag,
 } from "db/services/tags"
 
-import { os, requireAdminMiddleware } from "./orpc"
+import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
 export const tagsRouter = {
   tags: {
@@ -36,6 +36,7 @@ export const tagsRouter = {
 
     create: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
         z.object({ name: z.string().min(1, "Tag name is required").trim() }),
@@ -45,6 +46,7 @@ export const tagsRouter = {
 
     update: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
         z.object({
@@ -72,6 +74,7 @@ export const tagsRouter = {
 
     delete: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(z.object({ id: z.string() }))
       .output(z.object({ success: z.boolean() }))

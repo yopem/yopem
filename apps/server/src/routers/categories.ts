@@ -10,7 +10,7 @@ import {
   updateCategory,
 } from "db/services/categories"
 
-import { os, requireAdminMiddleware } from "./orpc"
+import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
 export const categoriesRouter = {
   categories: {
@@ -36,6 +36,7 @@ export const categoriesRouter = {
 
     create: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
         z.object({
@@ -48,6 +49,7 @@ export const categoriesRouter = {
 
     update: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
         z.object({
@@ -76,6 +78,7 @@ export const categoriesRouter = {
 
     delete: os
       .route({ method: "POST" })
+      .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(z.object({ id: z.string() }))
       .output(z.object({ success: z.boolean() }))

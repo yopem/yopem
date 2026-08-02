@@ -195,17 +195,18 @@ export const productsRouter = {
     list: os
       .route({ method: "GET" })
       .input(productListInputSchema)
-      .handler(({ input }) =>
-        listProducts({
+      .handler(({ input, context }) => {
+        const isAdmin = context.session?.role === "admin"
+        return listProducts({
           limit: input.limit,
           cursor: input.cursor,
           search: input.search,
           categoryIds: input.categoryIds,
-          status: input.status,
+          status: isAdmin ? input.status : "active",
           priceFilter: input.priceFilter,
           tagIds: input.tagIds,
-        }),
-      ),
+        })
+      }),
 
     byId: os
       .route({ method: "GET" })

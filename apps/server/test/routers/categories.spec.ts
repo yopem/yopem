@@ -14,12 +14,30 @@ describe("categories router", () => {
     }
   })
 
-  test("admin procedures reject null sessions with FORBIDDEN", async () => {
+  test("admin procedures reject unauthenticated sessions with UNAUTHORIZED", async () => {
     await expect(
       call(
         categoriesRouter.categories.create,
         { name: "x" },
         { context: { session: null } },
+      ),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
+  })
+
+  test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
+    const nonAdminSession = {
+      id: "user-1",
+      email: "user@example.com",
+      name: null,
+      username: "user",
+      image: null,
+      role: "user" as const,
+    }
+    await expect(
+      call(
+        categoriesRouter.categories.create,
+        { name: "x" },
+        { context: { session: nonAdminSession } },
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
