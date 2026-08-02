@@ -118,7 +118,10 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **Separate type imports** (`import type { X } from "..."`).
 - **No `await import()`** — use static `import` always. If lazy loading is genuinely needed, inline the pattern directly in the codebase; don't write ad-hoc `await import()` calls.
 - **No semicolons**, double quotes, 80-char width, trailing commas.
-- **TanStack Query `queryOptions`**: use flat (i.e `queryApi.assetList.queryOptions`) directly. Spread (i.e `...queryApi.assetList.queryOptions`) only when extending or overriding.
+- **TanStack Query via oRPC** — every query and mutation must be wrapped in the generated `queryOptions` / `mutationOptions`:
+  - Queries: `useQuery(queryApi.admin.apiKeyList.queryOptions())` — use flat, never spread (`...queryOptions()`) except when extending/overriding.
+  - Mutations: `useMutation(queryApi.products.create.mutationOptions({ onSuccess, onError }))` — never write a custom `mutationFn`.
+  - Never call the client directly (`.call(...)`); pass the typed input straight to `.mutate(...)`.
 - **Import order:** type-imports → external → workspace types → workspace values → internal → parent/sibling/index.
 - **`no-explicit-any: error`**, **`no-unused-vars`** (prefix with `_` to ignore), **`require-await: error`**, **`prefer-const: error`**.
 - **No comments or JSDoc** — code must be self-documenting through clear naming and structure.
