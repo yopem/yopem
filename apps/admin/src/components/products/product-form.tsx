@@ -1,8 +1,9 @@
 "use client"
 
-import { useImperativeHandle, type Ref } from "react"
+import { useImperativeHandle, useState, type Ref } from "react"
 
 import type { SelectProduct } from "db/schema"
+import { slateToPlainText } from "editor/serialize"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import { Separator } from "ui/separator"
@@ -10,6 +11,8 @@ import { Textarea } from "ui/textarea"
 import type { ApiKeyConfig } from "utils/api-input"
 
 import { ConfigurationPanel } from "./configuration-panel"
+import { DescriptionEditor } from "./description-editor"
+import { FeatureBuilderTabs } from "./feature-builder-tabs"
 import { InputVariableSection } from "./input-variable-section"
 import { ProductFormCategoryDialog } from "./product-form-category-dialog"
 import { ProductFormTagDialog } from "./product-form-tag-dialog"
@@ -59,6 +62,8 @@ export function ProductForm({
     handleDeleteField,
   } = useProductForm({ mode, initialData, onSubmit, apiKeys })
 
+  const [activeTab, setActiveTab] = useState("builder")
+
   useImperativeHandle(ref, () => ({
     submit: () => {
       void form.handleSubmit()
@@ -104,20 +109,6 @@ export function ProductForm({
             </Field>
           )}
 
-          <form.Field name="description">
-            {(field) => (
-              <Field>
-                <FieldLabel>Product Description</FieldLabel>
-                <Textarea
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter product description"
-                  rows={3}
-                />
-              </Field>
-            )}
-          </form.Field>
-
           <form.Field name="excerpt">
             {(field) => (
               <Field>
@@ -129,70 +120,118 @@ export function ProductForm({
                   rows={2}
                 />
                 <p className="text-muted-foreground mt-1 text-xs">
-                  A short summary that appears on product cards. If empty, the
-                  description will be used.
+                  A short summary that appears on product cards. Auto-filled
+                  from the description if left empty.
                 </p>
               </Field>
             )}
           </form.Field>
         </div>
 
-        <Separator />
+        <div className="mt-4">
+          <FeatureBuilderTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            disabledTabs={["history", "api"]}
+          />
+        </div>
 
-        <form.Subscribe
-          selector={(state) => ({
-            inputFields: state.values.inputFields,
-          })}
-        >
-          {({ inputFields }) => (
-            <InputVariableSection
-              fields={inputFields}
-              onAddField={handleAddField}
-              onUpdateField={handleUpdateField}
-              onDeleteField={handleDeleteField}
-            />
-          )}
-        </form.Subscribe>
+        {activeTab === "builder" && (
+          <>
+            <Separator />
 
-        <Separator />
+            <form.Subscribe
+              selector={(state) => ({
+                inputFields: state.values.inputFields,
+              })}
+            >
+              {({ inputFields }) => (
+                <InputVariableSection
+                  fields={inputFields}
+                  onAddField={handleAddField}
+                  onUpdateField={handleUpdateField}
+                  onDeleteField={handleDeleteField}
+                />
+              )}
+            </form.Subscribe>
 
-        <form.Subscribe
-          selector={(state) => ({
-            systemRole: state.values.systemRole,
-            userInstructionTemplate: state.values.userInstructionTemplate,
-            inputFields: state.values.inputFields,
-          })}
-        >
-          {({ systemRole, userInstructionTemplate, inputFields }) => (
-            <PromptLogicSection
-              systemRole={systemRole}
-              userInstructionTemplate={userInstructionTemplate}
-              variables={inputFields
-                .filter((f) => f.variableName && f.variableName.trim() !== "")
-                .map((f) => ({
-                  name: f.variableName,
-                  isOptional: f.isOptional ?? false,
-                }))}
-              onSystemRoleChange={(value) =>
-                form.setFieldValue("systemRole", value)
-              }
-              onUserInstructionChange={(value) =>
-                form.setFieldValue("userInstructionTemplate", value)
-              }
-              onInsertVariable={(variable) =>
-                handleInsertVariable(variable, "userInstruction")
-              }
-              onInsertSystemRoleVariable={(variable) =>
-                handleInsertVariable(variable, "systemRole")
-              }
-              onRestoreVersion={() => {
-                return
-              }}
-              systemRoleRef={systemRoleRef}
-              userInstructionRef={userInstructionRef}
-            />
-          )}
-        </form.Subscribe>
+            <Separator />
+
+            <form.Subscribe
+              selector={(state) => ({
+                systemRole: state.values.systemRole,
+                userInstructionTemplate: state.values.userInstructionTemplate,
+                inputFields: state.values.inputFields,
+              })}
+            >
+              {({ systemRole, userInstructionTemplate, inputFields }) => (
+                <PromptLogicSection
+                  systemRole={systemRole}
+                  userInstructionTemplate={userInstructionTemplate}
+                  variables={inputFields
+                    .filter(
+                      (f) => f.variableName && f.variableName.trim() !== "",
+                    )
+                    .map((f) => ({
+                      name: f.variableName,
+                      isOptional: f.isOptional ?? false,
+                    }))}
+                  onSystemRoleChange={(value) =>
+                    form.setFieldValue("systemRole", value)
+                  }
+                  onUserInstructionChange={(value) =>
+                    form.setFieldValue("userInstructionTemplate", value)
+                  }
+                  onInsertVariable={(variable) =>
+                    handleInsertVariable(variable, "userInstruction")
+                  }
+                  onInsertSystemRoleVariable={(variable) =>
+                    handleInsertVariable(variable, "systemRole")
+                  }
+                  onRestoreVersion={() => {
+                    return
+                  }}
+                  systemRoleRef={systemRoleRef}
+                  userInstructionRef={userInstructionRef}
+                />
+              )}
+            </form.Subscribe>
+          </>
+        )}
+
+        {activeTab === "description" && (
+          <form.Subscribe
+            selector={(state) => ({
+              descriptionContent: state.values.descriptionContent,
+            })}
+          >
+            {({ descriptionContent }) => (
+              <DescriptionEditor
+                initialValue={descriptionContent}
+                onChange={(value, html) => {
+                  form.setFieldValue("descriptionContent", value)
+                  form.setFieldValue("description", html)
+                }}
+                onBlur={() => {
+                  const currentExcerpt = form.getFieldValue("excerpt")
+                  if (!currentExcerpt || currentExcerpt.trim() === "") {
+                    const currentContent =
+                      form.getFieldValue("descriptionContent")
+                    const plain = slateToPlainText(currentContent)
+                    const trimmed = plain.slice(0, 150)
+                    const snippet =
+                      plain.length > 150
+                        ? trimmed.slice(0, trimmed.lastIndexOf(" ")) + "…"
+                        : trimmed
+                    if (snippet) {
+                      form.setFieldValue("excerpt", snippet)
+                    }
+                  }
+                }}
+              />
+            )}
+          </form.Subscribe>
+        )}
       </div>
 
       <form.Subscribe

@@ -4,11 +4,9 @@ import { useCallback, useRef, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
-import { Separator } from "ui/separator"
 import { toastManager } from "ui/toast"
 
 import { FeatureBuilderHeader } from "@/components/products/feature-builder-header"
-import { FeatureBuilderTabs } from "@/components/products/feature-builder-tabs"
 import {
   ProductForm,
   type ProductFormRef,
@@ -27,7 +25,6 @@ function ProductEditRouteComponent() {
   const { data: apiKeys } = useQuery(queryApi.admin.apiKeyList.queryOptions())
 
   const formRef = useRef<ProductFormRef>(null)
-  const [activeTab, setActiveTab] = useState("builder")
   const [previewSheetOpen, setPreviewSheetOpen] = useState(false)
   const [previewResult, setPreviewResult] = useState<string | null>(null)
   const [currentInputVariables, setCurrentInputVariables] = useState<
@@ -235,13 +232,6 @@ function ProductEditRouteComponent() {
                 apiKeys={apiKeys ?? []}
               />
             )}
-            <div className="p-8">
-              <FeatureBuilderTabs
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-              <Separator className="mt-8" />
-            </div>
           </>
         )}
       </Shimmer>
