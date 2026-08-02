@@ -6,7 +6,6 @@ import type { SelectProduct } from "db/schema"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import { Separator } from "ui/separator"
-import { Tabs, TabsList, TabsPanel, TabsTab } from "ui/tabs"
 import { Textarea } from "ui/textarea"
 import type { ApiKeyConfig } from "utils/api-input"
 
@@ -80,116 +79,120 @@ export function ProductForm({
           </p>
         </div>
 
-        <Tabs defaultValue="details">
-          <TabsList className="w-full">
-            <TabsTab value="details">Details</TabsTab>
-            <TabsTab value="description">Description</TabsTab>
-            <TabsTab value="prompt">Prompt Logic</TabsTab>
-          </TabsList>
-
-          <TabsPanel value="details" className="flex flex-col gap-4 pt-4">
-            <form.Field name="name">
-              {(field) => (
-                <Field>
-                  <FieldLabel>Product Name</FieldLabel>
-                  <Input
-                    nativeInput={mode === "create"}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter product name"
-                  />
-                </Field>
-              )}
-            </form.Field>
-
-            {showSlug && mode === "edit" && initialData?.slug && (
+        <div className="flex flex-col gap-4">
+          <form.Field name="name">
+            {(field) => (
               <Field>
-                <FieldLabel>Slug</FieldLabel>
-                <Input value={initialData.slug} disabled />
+                <FieldLabel>Product Name</FieldLabel>
+                <Input
+                  nativeInput={mode === "create"}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter product name"
+                />
+              </Field>
+            )}
+          </form.Field>
+
+          {showSlug && mode === "edit" && initialData?.slug && (
+            <Field>
+              <FieldLabel>Slug</FieldLabel>
+              <Input value={initialData.slug} disabled />
+              <p className="text-muted-foreground mt-1 text-xs">
+                URL-friendly identifier (auto-generated from name)
+              </p>
+            </Field>
+          )}
+
+          <form.Field name="description">
+            {(field) => (
+              <Field>
+                <FieldLabel>Product Description</FieldLabel>
+                <Textarea
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter product description"
+                  rows={3}
+                />
+              </Field>
+            )}
+          </form.Field>
+
+          <form.Field name="excerpt">
+            {(field) => (
+              <Field>
+                <FieldLabel>Excerpt (optional)</FieldLabel>
+                <Textarea
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Short summary for product cards (max 500 chars)"
+                  rows={2}
+                />
                 <p className="text-muted-foreground mt-1 text-xs">
-                  URL-friendly identifier (auto-generated from name)
+                  A short summary that appears on product cards. If empty, the
+                  description will be used.
                 </p>
               </Field>
             )}
+          </form.Field>
+        </div>
 
-            <form.Field name="excerpt">
-              {(field) => (
-                <Field>
-                  <FieldLabel>Excerpt (optional)</FieldLabel>
-                  <Textarea
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Short summary for product cards (max 500 chars)"
-                    rows={2}
-                  />
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    A short summary that appears on product cards. If empty, the
-                    description will be used.
-                  </p>
-                </Field>
-              )}
-            </form.Field>
-          </TabsPanel>
+        <Separator />
 
-          <TabsPanel value="prompt" className="flex flex-col gap-8 pt-4">
-            <form.Subscribe
-              selector={(state) => ({
-                inputFields: state.values.inputFields,
-              })}
-            >
-              {({ inputFields }) => (
-                <InputVariableSection
-                  fields={inputFields}
-                  onAddField={handleAddField}
-                  onUpdateField={handleUpdateField}
-                  onDeleteField={handleDeleteField}
-                />
-              )}
-            </form.Subscribe>
+        <form.Subscribe
+          selector={(state) => ({
+            inputFields: state.values.inputFields,
+          })}
+        >
+          {({ inputFields }) => (
+            <InputVariableSection
+              fields={inputFields}
+              onAddField={handleAddField}
+              onUpdateField={handleUpdateField}
+              onDeleteField={handleDeleteField}
+            />
+          )}
+        </form.Subscribe>
 
-            <Separator />
+        <Separator />
 
-            <form.Subscribe
-              selector={(state) => ({
-                systemRole: state.values.systemRole,
-                userInstructionTemplate: state.values.userInstructionTemplate,
-                inputFields: state.values.inputFields,
-              })}
-            >
-              {({ systemRole, userInstructionTemplate, inputFields }) => (
-                <PromptLogicSection
-                  systemRole={systemRole}
-                  userInstructionTemplate={userInstructionTemplate}
-                  variables={inputFields
-                    .filter(
-                      (f) => f.variableName && f.variableName.trim() !== "",
-                    )
-                    .map((f) => ({
-                      name: f.variableName,
-                      isOptional: f.isOptional ?? false,
-                    }))}
-                  onSystemRoleChange={(value) =>
-                    form.setFieldValue("systemRole", value)
-                  }
-                  onUserInstructionChange={(value) =>
-                    form.setFieldValue("userInstructionTemplate", value)
-                  }
-                  onInsertVariable={(variable) =>
-                    handleInsertVariable(variable, "userInstruction")
-                  }
-                  onInsertSystemRoleVariable={(variable) =>
-                    handleInsertVariable(variable, "systemRole")
-                  }
-                  onRestoreVersion={() => {
-                    return
-                  }}
-                  systemRoleRef={systemRoleRef}
-                  userInstructionRef={userInstructionRef}
-                />
-              )}
-            </form.Subscribe>
-          </TabsPanel>
-        </Tabs>
+        <form.Subscribe
+          selector={(state) => ({
+            systemRole: state.values.systemRole,
+            userInstructionTemplate: state.values.userInstructionTemplate,
+            inputFields: state.values.inputFields,
+          })}
+        >
+          {({ systemRole, userInstructionTemplate, inputFields }) => (
+            <PromptLogicSection
+              systemRole={systemRole}
+              userInstructionTemplate={userInstructionTemplate}
+              variables={inputFields
+                .filter((f) => f.variableName && f.variableName.trim() !== "")
+                .map((f) => ({
+                  name: f.variableName,
+                  isOptional: f.isOptional ?? false,
+                }))}
+              onSystemRoleChange={(value) =>
+                form.setFieldValue("systemRole", value)
+              }
+              onUserInstructionChange={(value) =>
+                form.setFieldValue("userInstructionTemplate", value)
+              }
+              onInsertVariable={(variable) =>
+                handleInsertVariable(variable, "userInstruction")
+              }
+              onInsertSystemRoleVariable={(variable) =>
+                handleInsertVariable(variable, "systemRole")
+              }
+              onRestoreVersion={() => {
+                return
+              }}
+              systemRoleRef={systemRoleRef}
+              userInstructionRef={userInstructionRef}
+            />
+          )}
+        </form.Subscribe>
       </div>
 
       <form.Subscribe
