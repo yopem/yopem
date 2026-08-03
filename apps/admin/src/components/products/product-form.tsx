@@ -200,37 +200,28 @@ export function ProductForm({
         )}
 
         {activeTab === "description" && (
-          <form.Subscribe
-            selector={(state) => ({
-              descriptionContent: state.values.descriptionContent,
-            })}
-          >
-            {({ descriptionContent }) => (
-              <DescriptionEditor
-                initialValue={descriptionContent}
-                onChange={(value, html) => {
-                  form.setFieldValue("descriptionContent", value)
-                  form.setFieldValue("description", html)
-                }}
-                onBlur={() => {
-                  const currentExcerpt = form.getFieldValue("excerpt")
-                  if (!currentExcerpt || currentExcerpt.trim() === "") {
-                    const currentContent =
-                      form.getFieldValue("descriptionContent")
-                    const plain = slateToPlainText(currentContent)
-                    const trimmed = plain.slice(0, 150)
-                    const snippet =
-                      plain.length > 150
-                        ? trimmed.slice(0, trimmed.lastIndexOf(" ")) + "…"
-                        : trimmed
-                    if (snippet) {
-                      form.setFieldValue("excerpt", snippet)
-                    }
-                  }
-                }}
-              />
-            )}
-          </form.Subscribe>
+          <DescriptionEditor
+            initialValue={form.getFieldValue("descriptionContent")}
+            onChange={(value, html) => {
+              form.setFieldValue("descriptionContent", value)
+              form.setFieldValue("description", html)
+            }}
+            onBlur={() => {
+              const currentExcerpt = form.getFieldValue("excerpt")
+              if (!currentExcerpt || currentExcerpt.trim() === "") {
+                const currentContent = form.getFieldValue("descriptionContent")
+                const plain = slateToPlainText(currentContent)
+                const trimmed = plain.slice(0, 150)
+                const snippet =
+                  plain.length > 150
+                    ? trimmed.slice(0, trimmed.lastIndexOf(" ")) + "…"
+                    : trimmed
+                if (snippet) {
+                  form.setFieldValue("excerpt", snippet)
+                }
+              }
+            }}
+          />
         )}
       </div>
 

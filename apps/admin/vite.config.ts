@@ -22,6 +22,10 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
 
+  ssr: {
+    noExternal: [/editor/, /platejs/, /@platejs\//, /react-tweet/],
+  },
+
   test: {
     name: "admin",
     environment: "jsdom",

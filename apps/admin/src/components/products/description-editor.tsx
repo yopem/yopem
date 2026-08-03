@@ -81,7 +81,7 @@ export function DescriptionEditor({
       <EditorContainer
         variant="default"
         onBlurCapture={handleBlur}
-        className="selection:bg-primary/20 [&_.slate-selection-area]:border-muted-foreground/30 [&_.slate-selection-area]:bg-muted"
+        className="[&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
       >
         <Editor variant="default" />
         <FloatingToolbar>
