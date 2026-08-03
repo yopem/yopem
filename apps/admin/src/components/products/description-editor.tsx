@@ -83,7 +83,7 @@ export function DescriptionEditor({
         onBlurCapture={handleBlur}
         className="[&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
       >
-        <Editor variant="default" />
+        <Editor variant="default" className="pt-0 pr-2 pl-6 sm:pr-2 sm:pl-6" />
         <FloatingToolbar>
           <FloatingToolbarButtons />
         </FloatingToolbar>
