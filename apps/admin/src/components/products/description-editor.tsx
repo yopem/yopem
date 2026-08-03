@@ -29,26 +29,33 @@ export function DescriptionEditor({
   )
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onChangeRef = useRef(onChange)
+  const onBlurRef = useRef(onBlur)
 
-  const handleChange = useCallback(
-    ({ value }: { value: TElement[] }) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        void serializeSlateToHtml(value)
-          .then((html) => onChange(value, html))
-          .catch((error: unknown) => {
-            console.error("Failed to serialize description to HTML:", error)
-            onChange(value, "")
-          })
-      }, 300)
-    },
-    [onChange],
-  )
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    onBlurRef.current = onBlur
+  }, [onBlur])
 
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
+  }, [])
+
+  const handleChange = useCallback(({ value }: { value: TElement[] }) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      void serializeSlateToHtml(value)
+        .then((html) => onChangeRef.current(value, html))
+        .catch((error: unknown) => {
+          console.error("Failed to serialize description to HTML:", error)
+          onChangeRef.current(value, "")
+        })
+    }, 300)
   }, [])
 
   const handleBlur = useCallback(() => {
@@ -59,19 +66,23 @@ export function DescriptionEditor({
     const value = editor?.children ?? []
     if (value.length > 0) {
       void serializeSlateToHtml(value)
-        .then((html) => onChange(value, html))
+        .then((html) => onChangeRef.current(value, html))
         .catch((error: unknown) => {
           console.error("Failed to serialize description on blur:", error)
         })
     }
-    onBlur?.()
-  }, [editor, onChange, onBlur])
+    onBlurRef.current?.()
+  }, [editor])
 
   if (!editor) return null
 
   return (
     <Plate editor={editor} onChange={handleChange}>
-      <EditorContainer variant="default" onBlurCapture={handleBlur}>
+      <EditorContainer
+        variant="default"
+        onBlurCapture={handleBlur}
+        className="selection:bg-primary/20 [&_.slate-selection-area]:border-muted-foreground/30 [&_.slate-selection-area]:bg-muted"
+      >
         <Editor variant="default" />
         <FloatingToolbar>
           <FloatingToolbarButtons />

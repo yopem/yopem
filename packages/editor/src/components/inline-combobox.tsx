@@ -45,19 +45,26 @@ interface ItemRegistration {
 function createVisibleStore() {
   const items = new Map<string, ItemRegistration>()
   const listeners = new Set<() => void>()
+  let cachedSnapshot: string[] = []
+  let snapshotDirty = true
 
   function emit() {
+    snapshotDirty = true
     for (const listener of listeners) listener()
   }
 
   return {
     getItem: (itemValue: string) => items.get(itemValue),
     getSnapshot: () => {
-      const next: string[] = []
-      for (const [key, item] of items.entries()) {
-        if (item.visible) next.push(key)
+      if (snapshotDirty) {
+        const next: string[] = []
+        for (const [key, item] of items.entries()) {
+          if (item.visible) next.push(key)
+        }
+        cachedSnapshot = next
+        snapshotDirty = false
       }
-      return next
+      return cachedSnapshot
     },
     register: (itemValue: string, visible: boolean, onSelect: () => void) => {
       items.set(itemValue, { onSelect, visible })
