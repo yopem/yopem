@@ -35,7 +35,7 @@ export function IconList(
 
   return (
     <IconList
-      className="relative m-0 p-0"
+      className="relative m-0 mb-2 space-y-2 p-0 [&_li_p]:mb-0"
       style={{ listStyleType }}
       start={listStart}
     >

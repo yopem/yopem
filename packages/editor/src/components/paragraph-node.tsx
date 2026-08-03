@@ -8,7 +8,7 @@ import { cn } from "ui/utils"
 
 export function ParagraphElement(props: PlateElementProps) {
   return (
-    <PlateElement {...props} className={cn("m-0 px-0 py-1")}>
+    <PlateElement {...props} className={cn("mb-2")}>
       {props.children}
     </PlateElement>
   )
