@@ -74,16 +74,6 @@ export function ProductForm({
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Configure Feature Workflow
-          </h2>
-          <p className="text-muted-foreground max-w-2xl">
-            Define the input variables, structure your prompt logic, and
-            configure the AI model behavior for this feature.
-          </p>
-        </div>
-
         <div className="flex flex-col gap-4">
           <form.Field name="name">
             {(field) => (
