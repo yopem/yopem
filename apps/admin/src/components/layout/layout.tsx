@@ -4,6 +4,7 @@ import { type ReactNode } from "react"
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "ui/sidebar"
 
+import { GlobalSearch } from "./global-search"
 import { GlobalSidebar } from "./global-sidebar"
 
 interface NavSubItem {
@@ -48,8 +49,10 @@ export function Layout({
         user={user}
       />
       <SidebarInset className="flex flex-col">
-        <header className="flex items-center gap-2 p-4">
+        <header className="flex items-center gap-4 p-4">
           <SidebarTrigger />
+          <GlobalSearch />
+          <div className="flex-1" />
         </header>
         <div
           className="relative flex-1"

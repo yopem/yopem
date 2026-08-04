@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useReducer } from "react"
+import { useEffect, useReducer } from "react"
+import { z } from "zod"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
@@ -14,7 +15,13 @@ import { TagList } from "@/components/categories-tags/tag-list"
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
+const categoriesTagsSearchSchema = z.object({
+  categoryId: z.string().optional(),
+  tagId: z.string().optional(),
+})
+
 export const Route = createFileRoute("/(admin-console)/categories-tags/")({
+  validateSearch: categoriesTagsSearchSchema,
   component: CategoriesTagsRouteComponent,
 })
 
@@ -159,6 +166,9 @@ function CategoriesTagsRouteComponent() {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+
+  const search = Route.useSearch()
 
   const { data: categories, isLoading: isLoadingCategories } = useQuery(
     queryApi.categories.list.queryOptions(),
@@ -167,6 +177,43 @@ function CategoriesTagsRouteComponent() {
   const { data: tags, isLoading: isLoadingTags } = useQuery(
     queryApi.tags.list.queryOptions(),
   )
+
+  useEffect(() => {
+    if (!search.categoryId || !categories) return
+    const category = categories.find((c) => c.id === search.categoryId)
+    if (category) dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
+  }, [search.categoryId, categories])
+
+  useEffect(() => {
+    if (!search.tagId || !tags) return
+    const tag = tags.find((t) => t.id === search.tagId)
+    if (tag) dispatch({ type: "OPEN_TAG_DIALOG", tag })
+  }, [search.tagId, tags])
+
+  const handleCategoryOpenChange = (open: boolean) => {
+    if (open) {
+      dispatch({ type: "OPEN_CATEGORY_DIALOG" })
+      return
+    }
+    dispatch({ type: "CLOSE_CATEGORY_DIALOG" })
+    if (search.categoryId) {
+      void navigate({ to: "/categories-tags", search: { tagId: search.tagId } })
+    }
+  }
+
+  const handleTagOpenChange = (open: boolean) => {
+    if (open) {
+      dispatch({ type: "OPEN_TAG_DIALOG" })
+      return
+    }
+    dispatch({ type: "CLOSE_TAG_DIALOG" })
+    if (search.tagId) {
+      void navigate({
+        to: "/categories-tags",
+        search: { categoryId: search.categoryId },
+      })
+    }
+  }
 
   const createCategoryMutation = useMutation(
     queryApi.categories.create.mutationOptions({
@@ -398,11 +445,7 @@ function CategoriesTagsRouteComponent() {
         description={state.categoryDialog.description}
         parentId={state.categoryDialog.parentId}
         categories={categories ?? []}
-        onOpenChange={(open) =>
-          open
-            ? dispatch({ type: "OPEN_CATEGORY_DIALOG" })
-            : dispatch({ type: "CLOSE_CATEGORY_DIALOG" })
-        }
+        onOpenChange={handleCategoryOpenChange}
         onNameChange={(value) =>
           dispatch({ type: "SET_CATEGORY_NAME", payload: value })
         }
@@ -422,11 +465,7 @@ function CategoriesTagsRouteComponent() {
         open={state.tagDialog.open}
         editing={state.tagDialog.editing}
         name={state.tagDialog.name}
-        onOpenChange={(open) =>
-          open
-            ? dispatch({ type: "OPEN_TAG_DIALOG" })
-            : dispatch({ type: "CLOSE_TAG_DIALOG" })
-        }
+        onOpenChange={handleTagOpenChange}
         onNameChange={(value) =>
           dispatch({ type: "SET_TAG_NAME", payload: value })
         }
