@@ -42,6 +42,7 @@ export const categoriesRouter = {
         z.object({
           name: z.string().min(1, "Category name is required").trim(),
           description: z.string().optional(),
+          parentId: z.string().optional(),
         }),
       )
       .output(categorySchema)
@@ -56,6 +57,7 @@ export const categoriesRouter = {
           id: z.string(),
           name: z.string().min(1, "Category name is required").trim(),
           description: z.string().optional(),
+          parentId: z.string().optional(),
         }),
       )
       .output(categorySchema)

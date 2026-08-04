@@ -9,9 +9,11 @@ import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import { Input } from "ui/input"
 
+import { flattenCategoryTree } from "./category-tree"
+
 export type CategorySelectorType = Pick<
   SelectCategory,
-  "id" | "name" | "slug" | "description"
+  "id" | "name" | "slug" | "description" | "parentId" | "sortOrder"
 >
 
 interface CategorySelectorProps {
@@ -41,9 +43,13 @@ export function CategorySelector({
     selectedIds.includes(cat.id),
   )
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const tree = flattenCategoryTree(categories)
+
+  const filteredTree = tree.filter(({ node }) =>
+    node.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  const baseIndent = 1.5
 
   return (
     <div className="border-border flex flex-col gap-3 rounded-lg border">
@@ -73,21 +79,22 @@ export function CategorySelector({
             <p className="text-muted-foreground py-2 text-center text-xs">
               No categories available
             </p>
-          ) : filteredCategories.length === 0 ? (
+          ) : filteredTree.length === 0 ? (
             <p className="text-muted-foreground py-2 text-center text-xs">
               No matching categories
             </p>
           ) : (
-            filteredCategories.map((category) => (
+            filteredTree.map(({ node, depth }) => (
               <label
-                key={category.id}
+                key={node.id}
                 className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
+                style={{ paddingLeft: `${depth * baseIndent}rem` }}
               >
                 <Checkbox
-                  checked={selectedIds.includes(category.id)}
-                  onCheckedChange={() => toggleCategory(category.id)}
+                  checked={selectedIds.includes(node.id)}
+                  onCheckedChange={() => toggleCategory(node.id)}
                 />
-                <span className="text-sm">{category.name}</span>
+                <span className="text-sm">{node.name}</span>
               </label>
             ))
           )}

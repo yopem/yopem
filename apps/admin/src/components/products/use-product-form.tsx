@@ -113,6 +113,7 @@ interface DialogState {
   open: boolean
   name: string
   description?: string
+  parentId?: string
 }
 
 interface TagDialogState {
@@ -130,6 +131,7 @@ type ProductFormDialogsAction =
   | { type: "CLOSE_CATEGORY_DIALOG" }
   | { type: "SET_CATEGORY_NAME"; payload: string }
   | { type: "SET_CATEGORY_DESCRIPTION"; payload: string }
+  | { type: "SET_CATEGORY_PARENT_ID"; payload: string }
   | { type: "RESET_CATEGORY_FORM" }
   | { type: "OPEN_TAG_DIALOG" }
   | { type: "CLOSE_TAG_DIALOG" }
@@ -137,7 +139,7 @@ type ProductFormDialogsAction =
   | { type: "RESET_TAG_FORM" }
 
 const dialogsInitialState: ProductFormDialogsState = {
-  category: { open: false, name: "", description: "" },
+  category: { open: false, name: "", description: "", parentId: "" },
   tag: { open: false, name: "" },
 }
 
@@ -169,10 +171,18 @@ function dialogsReducer(
           description: action.payload,
         },
       }
+    case "SET_CATEGORY_PARENT_ID":
+      return {
+        ...state,
+        category: {
+          ...state.category,
+          parentId: action.payload,
+        },
+      }
     case "RESET_CATEGORY_FORM":
       return {
         ...state,
-        category: { open: false, name: "", description: "" },
+        category: { open: false, name: "", description: "", parentId: "" },
       }
     case "OPEN_TAG_DIALOG":
       return { ...state, tag: { ...state.tag, open: true } }

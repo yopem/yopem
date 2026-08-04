@@ -23,6 +23,7 @@ interface CategoryDialogState {
   editing: { id: string; name: string; description?: string | null } | null
   name: string
   description: string
+  parentId: string | undefined
 }
 
 interface TagDialogState {
@@ -39,11 +40,17 @@ interface State {
 type Action =
   | {
       type: "OPEN_CATEGORY_DIALOG"
-      category?: { id: string; name: string; description?: string | null }
+      category?: {
+        id: string
+        name: string
+        description?: string | null
+        parentId?: string | null
+      }
     }
   | { type: "CLOSE_CATEGORY_DIALOG" }
   | { type: "SET_CATEGORY_NAME"; payload: string }
   | { type: "SET_CATEGORY_DESCRIPTION"; payload: string }
+  | { type: "SET_CATEGORY_PARENT_ID"; payload: string | undefined }
   | { type: "OPEN_TAG_DIALOG"; tag?: { id: string; name: string } }
   | { type: "CLOSE_TAG_DIALOG" }
   | { type: "SET_TAG_NAME"; payload: string }
@@ -57,6 +64,7 @@ function CategoriesTagsRouteComponent() {
       editing: null,
       name: "",
       description: "",
+      parentId: undefined,
     },
     tagDialog: {
       open: false,
@@ -75,6 +83,7 @@ function CategoriesTagsRouteComponent() {
             editing: action.category ?? null,
             name: action.category?.name ?? "",
             description: action.category?.description ?? "",
+            parentId: action.category?.parentId ?? undefined,
           },
         }
       case "CLOSE_CATEGORY_DIALOG":
@@ -93,6 +102,14 @@ function CategoriesTagsRouteComponent() {
           categoryDialog: {
             ...state.categoryDialog,
             description: action.payload,
+          },
+        }
+      case "SET_CATEGORY_PARENT_ID":
+        return {
+          ...state,
+          categoryDialog: {
+            ...state.categoryDialog,
+            parentId: action.payload,
           },
         }
       case "OPEN_TAG_DIALOG":
@@ -122,6 +139,7 @@ function CategoriesTagsRouteComponent() {
             editing: null,
             name: "",
             description: "",
+            parentId: undefined,
           },
         }
       case "RESET_TAG_FORM":
@@ -292,11 +310,13 @@ function CategoriesTagsRouteComponent() {
         id: state.categoryDialog.editing.id,
         name: state.categoryDialog.name,
         description: state.categoryDialog.description || undefined,
+        parentId: state.categoryDialog.parentId,
       })
     } else {
       createCategoryMutation.mutate({
         name: state.categoryDialog.name,
         description: state.categoryDialog.description || undefined,
+        parentId: state.categoryDialog.parentId,
       })
     }
   }
@@ -376,6 +396,8 @@ function CategoriesTagsRouteComponent() {
         editing={state.categoryDialog.editing}
         name={state.categoryDialog.name}
         description={state.categoryDialog.description}
+        parentId={state.categoryDialog.parentId}
+        categories={categories ?? []}
         onOpenChange={(open) =>
           open
             ? dispatch({ type: "OPEN_CATEGORY_DIALOG" })
@@ -386,6 +408,9 @@ function CategoriesTagsRouteComponent() {
         }
         onDescriptionChange={(value) =>
           dispatch({ type: "SET_CATEGORY_DESCRIPTION", payload: value })
+        }
+        onParentIdChange={(value) =>
+          dispatch({ type: "SET_CATEGORY_PARENT_ID", payload: value })
         }
         onSubmit={handleCategorySubmit}
         onCancel={() => dispatch({ type: "RESET_CATEGORY_FORM" })}

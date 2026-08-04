@@ -12,6 +12,8 @@ export const listCategories = (): Promise<
     name: string
     slug: string
     description: string | null
+    parentId: string | null
+    sortOrder: number | null
   }[]
 > => {
   return db
@@ -20,6 +22,8 @@ export const listCategories = (): Promise<
       name: categoriesTable.name,
       slug: categoriesTable.slug,
       description: categoriesTable.description,
+      parentId: categoriesTable.parentId,
+      sortOrder: categoriesTable.sortOrder,
     })
     .from(categoriesTable)
     .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
@@ -36,15 +40,78 @@ export const getCategory = async (
   return category ?? null
 }
 
+const getParentChain = async (
+  startParentId: string,
+  excludeId?: string,
+): Promise<string[]> => {
+  const chain: string[] = []
+  let currentId: string | null = startParentId
+
+  while (currentId) {
+    if (excludeId && currentId === excludeId) {
+      return chain.concat(currentId)
+    }
+
+    if (chain.includes(currentId)) {
+      return chain
+    }
+
+    chain.push(currentId)
+
+    const [row] = await db
+      .select({ parentId: categoriesTable.parentId })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.id, currentId))
+      .limit(1)
+
+    currentId = row?.parentId ?? null
+  }
+
+  return chain
+}
+
+const validateParent = async (
+  categoryId: string | undefined,
+  parentId: string | null,
+): Promise<void> => {
+  if (!parentId) return
+
+  const parent = await getCategory(parentId)
+  if (!parent) {
+    throw new Error("Parent category not found")
+  }
+
+  if (categoryId && parentId === categoryId) {
+    throw new Error("A category cannot be its own parent")
+  }
+
+  if (categoryId) {
+    const chain = await getParentChain(parentId, categoryId)
+    if (chain.includes(categoryId)) {
+      throw new Error("Cannot assign a descendant as parent")
+    }
+  }
+}
+
 export const createCategory = async (input: {
   name: string
   description?: string
+  parentId?: string | null
 }): Promise<SelectCategory> => {
   const slug = await generateUniqueCategorySlug(input.name)
 
+  const parentId =
+    input.parentId && input.parentId !== "" ? input.parentId : null
+  await validateParent(undefined, parentId)
+
   const [category] = await db
     .insert(categoriesTable)
-    .values({ name: input.name, slug, description: input.description })
+    .values({
+      name: input.name,
+      slug,
+      description: input.description,
+      parentId,
+    })
     .returning()
 
   if (!category) {
@@ -58,12 +125,36 @@ export const updateCategory = async (input: {
   id: string
   name: string
   description?: string
+  parentId?: string | null
 }): Promise<SelectCategory> => {
   const slug = await generateUniqueCategorySlug(input.name, input.id)
 
+  const parentId =
+    input.parentId === undefined
+      ? undefined
+      : input.parentId && input.parentId !== ""
+        ? input.parentId
+        : null
+  await validateParent(input.id, parentId ?? null)
+
+  const updateData: {
+    name: string
+    slug: string
+    description?: string
+    parentId?: string | null
+  } = {
+    name: input.name,
+    slug,
+    description: input.description,
+  }
+
+  if (parentId !== undefined) {
+    updateData.parentId = parentId
+  }
+
   const [category] = await db
     .update(categoriesTable)
-    .set({ name: input.name, slug, description: input.description })
+    .set(updateData)
     .where(eq(categoriesTable.id, input.id))
     .returning()
 

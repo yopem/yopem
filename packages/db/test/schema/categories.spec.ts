@@ -30,6 +30,7 @@ describe("categories schema", () => {
       slug: "example",
       description: null,
       icon: null,
+      parentId: null,
       sortOrder: 0,
       createdAt: new Date(),
     })
@@ -42,6 +43,8 @@ describe("categories schema", () => {
       name: "Example",
       slug: "example",
       description: null,
+      parentId: null,
+      sortOrder: 0,
     })
     expect(result.success).toBe(true)
   })

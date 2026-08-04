@@ -289,6 +289,8 @@ export function ProductForm({
         open={dialogsState.category.open}
         name={dialogsState.category.name}
         description={dialogsState.category.description}
+        parentId={dialogsState.category.parentId}
+        categories={categories}
         createMutation={createCategoryMutation}
         onOpenChange={(open) =>
           open
@@ -305,6 +307,12 @@ export function ProductForm({
           dialogsDispatch({
             type: "SET_CATEGORY_DESCRIPTION",
             payload: value,
+          })
+        }
+        onParentIdChange={(value) =>
+          dialogsDispatch({
+            type: "SET_CATEGORY_PARENT_ID",
+            payload: value ?? "",
           })
         }
         onCancel={() => dialogsDispatch({ type: "CLOSE_CATEGORY_DIALOG" })}
