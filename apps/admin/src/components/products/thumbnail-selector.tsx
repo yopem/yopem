@@ -4,6 +4,7 @@ import { useCallback, useEffect, useReducer } from "react"
 
 import type { SelectAsset } from "db/schema"
 import { queryApi } from "rpc/query"
+import { CollapsibleCard } from "ui/collapsible-card"
 import { Dialog, DialogPopup } from "ui/dialog"
 import { toastManager } from "ui/toast"
 
@@ -196,18 +197,13 @@ export function ThumbnailSelector({ value, onChange }: ThumbnailSelectorProps) {
 
   return (
     <>
-      <div className="border-border flex flex-col gap-3 rounded-lg border">
-        <div className="border-border flex items-center justify-between border-b p-3">
-          <h4 className="text-sm font-semibold">Thumbnail</h4>
-        </div>
-        <div className="flex flex-col gap-2 px-3 pb-3">
-          <ThumbnailDisplay
-            thumbnail={currentThumbnail}
-            onChange={() => dispatch({ type: "OPEN_DIALOG" })}
-            onClear={handleClear}
-          />
-        </div>
-      </div>
+      <CollapsibleCard title="Thumbnail">
+        <ThumbnailDisplay
+          thumbnail={currentThumbnail}
+          onChange={() => dispatch({ type: "OPEN_DIALOG" })}
+          onClear={handleClear}
+        />
+      </CollapsibleCard>
 
       <Dialog
         open={dialogOpen}
