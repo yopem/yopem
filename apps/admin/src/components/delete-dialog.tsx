@@ -40,9 +40,9 @@ export function DeleteDialog({
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{body}</AlertDialogDescription>
         <div className="mt-4 flex justify-end gap-2">
-          <AlertDialogClose>
-            <Button variant="outline">Cancel</Button>
-          </AlertDialogClose>
+          <AlertDialogClose
+            render={<Button variant="outline">Cancel</Button>}
+          />
           <Button
             variant="destructive"
             onClick={onConfirm}
