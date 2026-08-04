@@ -9,12 +9,16 @@ import { Input } from "ui/input"
 import { Textarea } from "ui/textarea"
 import type { ApiKeyConfig } from "utils/api-input"
 
+import { CategorySelector } from "@/components/categories-tags/category-selector"
+
 import { ConfigurationPanel } from "./configuration-panel"
 import { DescriptionEditor } from "./description-editor"
 import { ProductBuilderTips } from "./product-builder-tips"
 import { ProductFormCategoryDialog } from "./product-form-category-dialog"
 import { ProductFormTabs, type ProductFormStep } from "./product-form-tabs"
 import { ProductFormTagDialog } from "./product-form-tag-dialog"
+import { TagSelector } from "./tag-selector"
+import { ThumbnailSelector } from "./thumbnail-selector"
 import {
   useProductForm,
   type ProductFormData,
@@ -126,6 +130,62 @@ export function ProductForm({
               )}
             </form.Field>
 
+            <form.Subscribe
+              selector={(state) => ({
+                categoryIds: state.values.categoryIds,
+                tagIds: state.values.tagIds,
+                thumbnailId: state.values.thumbnailId,
+              })}
+            >
+              {({ categoryIds, tagIds, thumbnailId }) => (
+                <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+                  <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+                    <div className="border-border border-b p-4">
+                      <span className="text-sm font-semibold">
+                        Organization
+                      </span>
+                    </div>
+                    <div className="grid gap-6 p-6 md:grid-cols-2">
+                      <CategorySelector
+                        categories={categories}
+                        selectedIds={categoryIds}
+                        onChange={(value) =>
+                          form.setFieldValue("categoryIds", value)
+                        }
+                        onAddNew={() =>
+                          dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
+                        }
+                      />
+                      <TagSelector
+                        tags={tags}
+                        selectedIds={tagIds}
+                        onChange={(value) =>
+                          form.setFieldValue("tagIds", value)
+                        }
+                        onAddNew={() =>
+                          dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+                    <div className="border-border border-b p-4">
+                      <span className="text-sm font-semibold">Thumbnail</span>
+                    </div>
+                    <div className="p-6">
+                      <ThumbnailSelector
+                        value={thumbnailId}
+                        onChange={(value) =>
+                          form.setFieldValue("thumbnailId", value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </form.Subscribe>
+
             <Field>
               <FieldLabel>Description</FieldLabel>
               <DescriptionEditor
@@ -182,21 +242,9 @@ export function ProductForm({
               markup: state.values.markup,
               apiKeyId: state.values.apiKeyId,
               apiKeyError: state.values.apiKeyError,
-              categoryIds: state.values.categoryIds,
-              tagIds: state.values.tagIds,
-              thumbnailId: state.values.thumbnailId,
             })}
           >
-            {({
-              outputFormat,
-              costPerRun,
-              markup,
-              apiKeyId,
-              apiKeyError,
-              categoryIds,
-              tagIds,
-              thumbnailId,
-            }) => (
+            {({ outputFormat, costPerRun, markup, apiKeyId, apiKeyError }) => (
               <ConfigurationPanel
                 config={{
                   outputFormat,
@@ -205,11 +253,6 @@ export function ProductForm({
                   apiKeyId,
                   apiKeyError,
                   availableApiKeys: safeApiKeys,
-                  categoryIds,
-                  tagIds,
-                  categories,
-                  tags,
-                  thumbnailId,
                 }}
                 handlers={{
                   onOutputFormatChange: (value) =>
@@ -222,15 +265,6 @@ export function ProductForm({
                     form.setFieldValue("apiKeyId", value)
                     form.setFieldValue("apiKeyError", "")
                   },
-                  onCategoriesChange: (value) =>
-                    form.setFieldValue("categoryIds", value),
-                  onTagsChange: (value) => form.setFieldValue("tagIds", value),
-                  onAddNewCategory: () =>
-                    dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" }),
-                  onAddNewTag: () =>
-                    dialogsDispatch({ type: "OPEN_TAG_DIALOG" }),
-                  onThumbnailIdChange: (value) =>
-                    form.setFieldValue("thumbnailId", value),
                 }}
               />
             )}

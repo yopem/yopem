@@ -23,7 +23,7 @@ const steps: {
   {
     id: "basics",
     label: "Basics",
-    description: "Name & description",
+    description: "Name, description & organization",
     icon: PencilIcon,
   },
   {
@@ -35,7 +35,7 @@ const steps: {
   {
     id: "configure",
     label: "Configure",
-    description: "Model & pricing",
+    description: "API key, output & pricing",
     icon: SlidersHorizontalIcon,
   },
 ]

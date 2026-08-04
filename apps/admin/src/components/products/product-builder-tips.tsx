@@ -22,7 +22,7 @@ const stepTips: Record<
   basics: {
     title: "Start with the basics",
     description:
-      "Give your product a clear name and a short description. The description is what users read before trying it.",
+      "Give your product a clear name and description, then organize it with categories, tags, and a thumbnail.",
   },
   workflow: {
     title: "Build the workflow",
@@ -30,9 +30,9 @@ const stepTips: Record<
       "Add Input, AI, Output, Condition, and Loop nodes. Connect them to define how user inputs turn into results.",
   },
   configure: {
-    title: "Choose model and pricing",
+    title: "Choose API key, output, and pricing",
     description:
-      "Pick the default API key and model, set the output format, and adjust pricing. Categories and tags are optional.",
+      "Pick the default API key, set the output format, and adjust usage pricing.",
   },
 }
 

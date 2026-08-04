@@ -10,15 +10,8 @@ import {
 } from "ui/select"
 import type { ApiKeyConfig } from "utils/api-input"
 
-import {
-  CategorySelector,
-  type CategorySelectorType,
-} from "@/components/categories-tags/category-selector"
-
 import { ApiKeySelector } from "./api-key-selector"
 import { PricingSection } from "./pricing-section"
-import { TagSelector, type TagSelectorType } from "./tag-selector"
-import { ThumbnailSelector } from "./thumbnail-selector"
 
 interface ConfigValues {
   outputFormat: "plain" | "json" | "image" | "video"
@@ -27,11 +20,6 @@ interface ConfigValues {
   apiKeyId?: string
   apiKeyError?: string
   availableApiKeys: ApiKeyConfig[]
-  categoryIds?: string[]
-  tagIds?: string[]
-  categories?: CategorySelectorType[]
-  tags?: TagSelectorType[]
-  thumbnailId?: string
 }
 
 interface ConfigHandlers {
@@ -39,11 +27,6 @@ interface ConfigHandlers {
   onCostPerRunChange: (value: number) => void
   onMarkupChange: (value: number) => void
   onApiKeyIdChange?: (value: string) => void
-  onCategoriesChange?: (value: string[]) => void
-  onTagsChange?: (value: string[]) => void
-  onAddNewCategory?: () => void
-  onAddNewTag?: () => void
-  onThumbnailIdChange?: (value: string | undefined) => void
 }
 
 interface ConfigurationPanelProps {
@@ -62,11 +45,6 @@ export function ConfigurationPanel({
     apiKeyId,
     availableApiKeys,
     apiKeyError,
-    categoryIds = [],
-    tagIds = [],
-    categories = [],
-    tags = [],
-    thumbnailId,
   } = config
 
   const {
@@ -74,11 +52,6 @@ export function ConfigurationPanel({
     onCostPerRunChange,
     onMarkupChange,
     onApiKeyIdChange,
-    onCategoriesChange,
-    onTagsChange,
-    onAddNewCategory,
-    onAddNewTag,
-    onThumbnailIdChange,
   } = handlers
 
   return (
@@ -86,8 +59,7 @@ export function ConfigurationPanel({
       <div className="flex flex-col gap-1">
         <h3 className="text-lg font-semibold">Configure</h3>
         <p className="text-muted-foreground max-w-2xl text-sm">
-          Choose the AI provider and model, set pricing, and organize how the
-          product appears.
+          Choose the API key, set the output format, and adjust pricing.
         </p>
       </div>
 
@@ -135,61 +107,19 @@ export function ConfigurationPanel({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-          <div className="border-border border-b p-4">
-            <span className="text-sm font-semibold">Usage Pricing</span>
-          </div>
-          <div className="p-6">
-            <PricingSection
-              costPerRun={costPerRun}
-              markup={markup}
-              onCostPerRunChange={onCostPerRunChange}
-              onMarkupChange={onMarkupChange}
-            />
-          </div>
+      <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+        <div className="border-border border-b p-4">
+          <span className="text-sm font-semibold">Usage Pricing</span>
         </div>
-
-        {onThumbnailIdChange && (
-          <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-            <div className="border-border border-b p-4">
-              <span className="text-sm font-semibold">Thumbnail</span>
-            </div>
-            <div className="p-6">
-              <ThumbnailSelector
-                value={thumbnailId}
-                onChange={onThumbnailIdChange}
-              />
-            </div>
-          </div>
-        )}
+        <div className="p-6">
+          <PricingSection
+            costPerRun={costPerRun}
+            markup={markup}
+            onCostPerRunChange={onCostPerRunChange}
+            onMarkupChange={onMarkupChange}
+          />
+        </div>
       </div>
-
-      {[onCategoriesChange, onTagsChange].some(Boolean) && (
-        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-          <div className="border-border border-b p-4">
-            <span className="text-sm font-semibold">Organization</span>
-          </div>
-          <div className="grid gap-6 p-6 md:grid-cols-2">
-            {onCategoriesChange && (
-              <CategorySelector
-                categories={categories}
-                selectedIds={categoryIds}
-                onChange={onCategoriesChange}
-                onAddNew={onAddNewCategory}
-              />
-            )}
-            {onTagsChange && (
-              <TagSelector
-                tags={tags}
-                selectedIds={tagIds}
-                onChange={onTagsChange}
-                onAddNew={onAddNewTag}
-              />
-            )}
-          </div>
-        </div>
-      )}
     </section>
   )
 }
