@@ -88,130 +88,134 @@ export function ProductForm({
               </p>
             </div>
 
-            <form.Field name="name">
-              {(field) => (
+            <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+              <div className="flex flex-col gap-6">
+                <form.Field name="name">
+                  {(field) => (
+                    <Field>
+                      <FieldLabel>Product Name</FieldLabel>
+                      <Input
+                        nativeInput={mode === "create"}
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Enter product name"
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                {showSlug && mode === "edit" && initialData?.slug && (
+                  <Field>
+                    <FieldLabel>Slug</FieldLabel>
+                    <Input value={initialData.slug} disabled />
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      URL-friendly identifier (auto-generated from name)
+                    </p>
+                  </Field>
+                )}
+
+                <form.Field name="excerpt">
+                  {(field) => (
+                    <Field>
+                      <FieldLabel>Excerpt (optional)</FieldLabel>
+                      <Textarea
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Short summary for product cards (max 500 chars)"
+                        rows={2}
+                      />
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        A short summary that appears on product cards.
+                        Auto-filled from the description if left empty.
+                      </p>
+                    </Field>
+                  )}
+                </form.Field>
+
                 <Field>
-                  <FieldLabel>Product Name</FieldLabel>
-                  <Input
-                    nativeInput={mode === "create"}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter product name"
+                  <FieldLabel>Description</FieldLabel>
+                  <DescriptionEditor
+                    initialValue={form.getFieldValue("descriptionContent")}
+                    onChange={(value, html) => {
+                      form.setFieldValue("descriptionContent", value)
+                      form.setFieldValue("description", html)
+                    }}
+                    onBlur={() => {
+                      const currentExcerpt = form.getFieldValue("excerpt")
+                      if (!currentExcerpt || currentExcerpt.trim() === "") {
+                        const currentContent =
+                          form.getFieldValue("descriptionContent")
+                        const plain = slateToPlainText(currentContent)
+                        const trimmed = plain.slice(0, 150)
+                        const snippet =
+                          plain.length > 150
+                            ? trimmed.slice(0, trimmed.lastIndexOf(" ")) + "…"
+                            : trimmed
+                        if (snippet) {
+                          form.setFieldValue("excerpt", snippet)
+                        }
+                      }
+                    }}
                   />
                 </Field>
-              )}
-            </form.Field>
+              </div>
 
-            {showSlug && mode === "edit" && initialData?.slug && (
-              <Field>
-                <FieldLabel>Slug</FieldLabel>
-                <Input value={initialData.slug} disabled />
-                <p className="text-muted-foreground mt-1 text-xs">
-                  URL-friendly identifier (auto-generated from name)
-                </p>
-              </Field>
-            )}
-
-            <form.Field name="excerpt">
-              {(field) => (
-                <Field>
-                  <FieldLabel>Excerpt (optional)</FieldLabel>
-                  <Textarea
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Short summary for product cards (max 500 chars)"
-                    rows={2}
-                  />
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    A short summary that appears on product cards. Auto-filled
-                    from the description if left empty.
-                  </p>
-                </Field>
-              )}
-            </form.Field>
-
-            <form.Subscribe
-              selector={(state) => ({
-                categoryIds: state.values.categoryIds,
-                tagIds: state.values.tagIds,
-                thumbnailId: state.values.thumbnailId,
-              })}
-            >
-              {({ categoryIds, tagIds, thumbnailId }) => (
-                <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-                  <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-                    <div className="border-border border-b p-4">
-                      <span className="text-sm font-semibold">
-                        Organization
-                      </span>
+              <form.Subscribe
+                selector={(state) => ({
+                  categoryIds: state.values.categoryIds,
+                  tagIds: state.values.tagIds,
+                  thumbnailId: state.values.thumbnailId,
+                })}
+              >
+                {({ categoryIds, tagIds, thumbnailId }) => (
+                  <aside className="flex flex-col gap-6 lg:sticky lg:top-0">
+                    <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+                      <div className="border-border border-b p-4">
+                        <span className="text-sm font-semibold">
+                          Organization
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-6 p-6">
+                        <CategorySelector
+                          categories={categories}
+                          selectedIds={categoryIds}
+                          onChange={(value) =>
+                            form.setFieldValue("categoryIds", value)
+                          }
+                          onAddNew={() =>
+                            dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
+                          }
+                        />
+                        <TagSelector
+                          tags={tags}
+                          selectedIds={tagIds}
+                          onChange={(value) =>
+                            form.setFieldValue("tagIds", value)
+                          }
+                          onAddNew={() =>
+                            dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
+                          }
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-6 p-6 md:grid-cols-2">
-                      <CategorySelector
-                        categories={categories}
-                        selectedIds={categoryIds}
-                        onChange={(value) =>
-                          form.setFieldValue("categoryIds", value)
-                        }
-                        onAddNew={() =>
-                          dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
-                        }
-                      />
-                      <TagSelector
-                        tags={tags}
-                        selectedIds={tagIds}
-                        onChange={(value) =>
-                          form.setFieldValue("tagIds", value)
-                        }
-                        onAddNew={() =>
-                          dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
-                        }
-                      />
-                    </div>
-                  </div>
 
-                  <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-                    <div className="border-border border-b p-4">
-                      <span className="text-sm font-semibold">Thumbnail</span>
+                    <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+                      <div className="border-border border-b p-4">
+                        <span className="text-sm font-semibold">Thumbnail</span>
+                      </div>
+                      <div className="p-6">
+                        <ThumbnailSelector
+                          value={thumbnailId}
+                          onChange={(value) =>
+                            form.setFieldValue("thumbnailId", value)
+                          }
+                        />
+                      </div>
                     </div>
-                    <div className="p-6">
-                      <ThumbnailSelector
-                        value={thumbnailId}
-                        onChange={(value) =>
-                          form.setFieldValue("thumbnailId", value)
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </form.Subscribe>
-
-            <Field>
-              <FieldLabel>Description</FieldLabel>
-              <DescriptionEditor
-                initialValue={form.getFieldValue("descriptionContent")}
-                onChange={(value, html) => {
-                  form.setFieldValue("descriptionContent", value)
-                  form.setFieldValue("description", html)
-                }}
-                onBlur={() => {
-                  const currentExcerpt = form.getFieldValue("excerpt")
-                  if (!currentExcerpt || currentExcerpt.trim() === "") {
-                    const currentContent =
-                      form.getFieldValue("descriptionContent")
-                    const plain = slateToPlainText(currentContent)
-                    const trimmed = plain.slice(0, 150)
-                    const snippet =
-                      plain.length > 150
-                        ? trimmed.slice(0, trimmed.lastIndexOf(" ")) + "…"
-                        : trimmed
-                    if (snippet) {
-                      form.setFieldValue("excerpt", snippet)
-                    }
-                  }
-                }}
-              />
-            </Field>
+                  </aside>
+                )}
+              </form.Subscribe>
+            </div>
           </div>
         )}
 
