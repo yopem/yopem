@@ -169,49 +169,30 @@ export function ProductForm({
               >
                 {({ categoryIds, tagIds, thumbnailId }) => (
                   <aside className="flex flex-col gap-6 lg:sticky lg:top-0">
-                    <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-                      <div className="border-border border-b p-4">
-                        <span className="text-sm font-semibold">
-                          Organization
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-6 p-6">
-                        <CategorySelector
-                          categories={categories}
-                          selectedIds={categoryIds}
-                          onChange={(value) =>
-                            form.setFieldValue("categoryIds", value)
-                          }
-                          onAddNew={() =>
-                            dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
-                          }
-                        />
-                        <TagSelector
-                          tags={tags}
-                          selectedIds={tagIds}
-                          onChange={(value) =>
-                            form.setFieldValue("tagIds", value)
-                          }
-                          onAddNew={() =>
-                            dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
-                      <div className="border-border border-b p-4">
-                        <span className="text-sm font-semibold">Thumbnail</span>
-                      </div>
-                      <div className="p-6">
-                        <ThumbnailSelector
-                          value={thumbnailId}
-                          onChange={(value) =>
-                            form.setFieldValue("thumbnailId", value)
-                          }
-                        />
-                      </div>
-                    </div>
+                    <ThumbnailSelector
+                      value={thumbnailId}
+                      onChange={(value) =>
+                        form.setFieldValue("thumbnailId", value)
+                      }
+                    />
+                    <CategorySelector
+                      categories={categories}
+                      selectedIds={categoryIds}
+                      onChange={(value) =>
+                        form.setFieldValue("categoryIds", value)
+                      }
+                      onAddNew={() =>
+                        dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
+                      }
+                    />
+                    <TagSelector
+                      tags={tags}
+                      selectedIds={tagIds}
+                      onChange={(value) => form.setFieldValue("tagIds", value)}
+                      onAddNew={() =>
+                        dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
+                      }
+                    />
                   </aside>
                 )}
               </form.Subscribe>
