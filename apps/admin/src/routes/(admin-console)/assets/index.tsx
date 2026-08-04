@@ -9,18 +9,13 @@ import { AssetCard, type Asset } from "@/components/assets/asset-card"
 import { AssetTypeFilter } from "@/components/assets/asset-type-filter"
 import { UploadDropzone } from "@/components/assets/upload-dropzone"
 import { UploadProgress } from "@/components/assets/upload-progress"
+import { DeleteDialog } from "@/components/delete-dialog"
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
 const AssetPreviewDialog = lazy(() =>
   import("@/components/assets/asset-preview-dialog").then((mod) => ({
     default: mod.AssetPreviewDialog,
-  })),
-)
-
-const DeleteAssetDialog = lazy(() =>
-  import("@/components/assets/delete-asset-dialog").then((mod) => ({
-    default: mod.DeleteAssetDialog,
   })),
 )
 
@@ -191,13 +186,15 @@ function AssetsRouteComponent() {
         }}
       />
 
-      <DeleteAssetDialog
-        asset={deleteAsset}
-        onClose={() => setDeleteAsset(null)}
+      <DeleteDialog
+        open={deleteAsset !== null}
+        onOpenChange={(open) => !open && setDeleteAsset(null)}
+        title="Delete Asset"
+        name={deleteAsset?.originalName}
         onConfirm={() =>
           deleteAsset && deleteMutation.mutate({ id: deleteAsset.id })
         }
-        isDeleting={deleteMutation.isPending}
+        isPending={deleteMutation.isPending}
       />
     </div>
   )

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useEffect, useReducer } from "react"
+import { useEffect, useReducer, useRef } from "react"
 import { z } from "zod"
 
 import { queryApi } from "rpc/query"
@@ -54,12 +54,10 @@ type Action =
         parentId?: string | null
       }
     }
-  | { type: "CLOSE_CATEGORY_DIALOG" }
   | { type: "SET_CATEGORY_NAME"; payload: string }
   | { type: "SET_CATEGORY_DESCRIPTION"; payload: string }
   | { type: "SET_CATEGORY_PARENT_ID"; payload: string | undefined }
   | { type: "OPEN_TAG_DIALOG"; tag?: { id: string; name: string } }
-  | { type: "CLOSE_TAG_DIALOG" }
   | { type: "SET_TAG_NAME"; payload: string }
   | { type: "RESET_CATEGORY_FORM" }
   | { type: "RESET_TAG_FORM" }
@@ -93,11 +91,6 @@ function CategoriesTagsRouteComponent() {
             parentId: action.category?.parentId ?? undefined,
           },
         }
-      case "CLOSE_CATEGORY_DIALOG":
-        return {
-          ...state,
-          categoryDialog: { ...state.categoryDialog, open: false },
-        }
       case "SET_CATEGORY_NAME":
         return {
           ...state,
@@ -127,11 +120,6 @@ function CategoriesTagsRouteComponent() {
             editing: action.tag ?? null,
             name: action.tag?.name ?? "",
           },
-        }
-      case "CLOSE_TAG_DIALOG":
-        return {
-          ...state,
-          tagDialog: { ...state.tagDialog, open: false },
         }
       case "SET_TAG_NAME":
         return {
@@ -170,6 +158,9 @@ function CategoriesTagsRouteComponent() {
 
   const search = Route.useSearch()
 
+  const openedCategoryFromSearch = useRef<string | null>(null)
+  const openedTagFromSearch = useRef<string | null>(null)
+
   const { data: categories, isLoading: isLoadingCategories } = useQuery(
     queryApi.categories.list.queryOptions(),
   )
@@ -179,15 +170,27 @@ function CategoriesTagsRouteComponent() {
   )
 
   useEffect(() => {
-    if (!search.categoryId || !categories) return
+    if (!search.categoryId || !categories) {
+      openedCategoryFromSearch.current = null
+      return
+    }
+    if (openedCategoryFromSearch.current === search.categoryId) return
     const category = categories.find((c) => c.id === search.categoryId)
-    if (category) dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
+    if (!category) return
+    openedCategoryFromSearch.current = search.categoryId
+    dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
   }, [search.categoryId, categories])
 
   useEffect(() => {
-    if (!search.tagId || !tags) return
+    if (!search.tagId || !tags) {
+      openedTagFromSearch.current = null
+      return
+    }
+    if (openedTagFromSearch.current === search.tagId) return
     const tag = tags.find((t) => t.id === search.tagId)
-    if (tag) dispatch({ type: "OPEN_TAG_DIALOG", tag })
+    if (!tag) return
+    openedTagFromSearch.current = search.tagId
+    dispatch({ type: "OPEN_TAG_DIALOG", tag })
   }, [search.tagId, tags])
 
   const handleCategoryOpenChange = (open: boolean) => {
@@ -195,7 +198,7 @@ function CategoriesTagsRouteComponent() {
       dispatch({ type: "OPEN_CATEGORY_DIALOG" })
       return
     }
-    dispatch({ type: "CLOSE_CATEGORY_DIALOG" })
+    dispatch({ type: "RESET_CATEGORY_FORM" })
     if (search.categoryId) {
       void navigate({ to: "/categories-tags", search: { tagId: search.tagId } })
     }
@@ -206,7 +209,7 @@ function CategoriesTagsRouteComponent() {
       dispatch({ type: "OPEN_TAG_DIALOG" })
       return
     }
-    dispatch({ type: "CLOSE_TAG_DIALOG" })
+    dispatch({ type: "RESET_TAG_FORM" })
     if (search.tagId) {
       void navigate({
         to: "/categories-tags",
@@ -456,7 +459,7 @@ function CategoriesTagsRouteComponent() {
           dispatch({ type: "SET_CATEGORY_PARENT_ID", payload: value })
         }
         onSubmit={handleCategorySubmit}
-        onCancel={() => dispatch({ type: "RESET_CATEGORY_FORM" })}
+        onCancel={() => handleCategoryOpenChange(false)}
         createMutation={createCategoryMutation}
         updateMutation={updateCategoryMutation}
       />
@@ -470,7 +473,7 @@ function CategoriesTagsRouteComponent() {
           dispatch({ type: "SET_TAG_NAME", payload: value })
         }
         onSubmit={handleTagSubmit}
-        onCancel={() => dispatch({ type: "RESET_TAG_FORM" })}
+        onCancel={() => handleTagOpenChange(false)}
         createMutation={createTagMutation}
         updateMutation={updateTagMutation}
       />

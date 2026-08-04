@@ -1,17 +1,25 @@
+interface EnvMeta {
+  [key: string]: string | boolean | undefined
+  DEV?: boolean
+  PROD?: boolean
+}
+
+const metaEnv = (import.meta as ImportMeta & { env?: EnvMeta }).env
+
 const getString = (key: string, fallback = ""): string =>
-  (process.env[key] ?? import.meta.env?.[key] ?? fallback) as string
+  (process.env[key] ?? metaEnv?.[key] ?? fallback) as string
 
 const getNumber = (key: string, fallback: number): number => {
-  const value = process.env[key] ?? import.meta.env?.[key]
+  const value = process.env[key] ?? metaEnv?.[key]
   if (value === undefined) return fallback
   const parsed = Number(value)
   return Number.isNaN(parsed) ? fallback : parsed
 }
 
 const getBoolean = (key: string): boolean =>
-  (process.env[key] ?? import.meta.env?.[key]) === "true"
+  (process.env[key] ?? metaEnv?.[key]) === "true"
 
-const protocol = import.meta.env?.DEV ? "http://" : "https://"
+const protocol = metaEnv?.DEV ? "http://" : "https://"
 
 export const databaseUrl = getString("DATABASE_URL")
 export const redisUrl = getString("REDIS_URL")
@@ -74,5 +82,5 @@ export const whatsappChannelUsername = getString(
 export const xUsername = getString("PUBLIC_X_USERNAME")
 export const youtubeUsername = getString("PUBLIC_YOUTUBE_USERNAME")
 
-export const isDev = import.meta.env?.DEV ?? getBoolean("DEV")
-export const isProd = import.meta.env?.PROD ?? !isDev
+export const isDev = metaEnv?.DEV ?? getBoolean("DEV")
+export const isProd = metaEnv?.PROD ?? !isDev

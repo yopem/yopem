@@ -104,7 +104,10 @@ export function GlobalSearch() {
         {
           value: "Products",
           icon: <BotIcon className="size-4" />,
-          items: (productsData?.products ?? []).map((product) => ({
+          items: (deferredQuery.trim()
+            ? (productsData?.products ?? [])
+            : []
+          ).map((product) => ({
             id: product.id,
             label: product.name,
             type: "product" as const,
@@ -131,7 +134,7 @@ export function GlobalSearch() {
           })),
         },
       ].filter((group) => group.items.length > 0),
-    [productsData, filteredCategories, filteredTags],
+    [productsData, filteredCategories, filteredTags, deferredQuery],
   )
 
   const handleSelect = (item: SearchResult) => {

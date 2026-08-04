@@ -6,15 +6,9 @@ import { PencilIcon, Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogPopup,
-  AlertDialogTitle,
-} from "ui/alert-dialog"
 import { Button } from "ui/button"
+
+import { DeleteDialog } from "@/components/delete-dialog"
 
 import { flattenCategoryTree, getCategoryDescendantIds } from "./category-tree"
 
@@ -141,65 +135,27 @@ export function CategoryList({
         </Shimmer>
       </div>
 
-      <AlertDialog
+      <DeleteDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
           if (!open) cancelDelete()
         }}
-      >
-        <AlertDialogBackdrop />
-        <AlertDialogPopup className="p-5">
-          <AlertDialogTitle>Delete Category</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete "{pendingDelete?.name}"? This action
-            cannot be undone.
-          </AlertDialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
-            <AlertDialogClose>
-              <Button variant="outline" onClick={cancelDelete}>
-                Cancel
-              </Button>
-            </AlertDialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        </AlertDialogPopup>
-      </AlertDialog>
+        title="Delete Category"
+        name={pendingDelete?.name}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+      />
 
-      <AlertDialog
+      <DeleteDialog
         open={pendingDeleteWithChildren !== null}
         onOpenChange={(open) => {
           if (!open) cancelDelete()
         }}
-      >
-        <AlertDialogBackdrop />
-        <AlertDialogPopup className="p-5">
-          <AlertDialogTitle>Delete Category</AlertDialogTitle>
-          <AlertDialogDescription>
-            This category has child categories. Deleting it will move those
-            children to the top level. Are you sure?
-          </AlertDialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
-            <AlertDialogClose>
-              <Button variant="outline" onClick={cancelDelete}>
-                Cancel
-              </Button>
-            </AlertDialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        </AlertDialogPopup>
-      </AlertDialog>
+        title="Delete Category"
+        description="This category has child categories. Deleting it will move those children to the top level. Are you sure?"
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   )
 }

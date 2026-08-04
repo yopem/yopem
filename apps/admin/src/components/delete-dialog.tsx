@@ -1,7 +1,5 @@
 "use client"
 
-import type { UseMutationResult } from "@tanstack/react-query"
-
 import {
   AlertDialog,
   AlertDialogBackdrop,
@@ -12,35 +10,35 @@ import {
 } from "ui/alert-dialog"
 import { Button } from "ui/button"
 
-interface DeleteProductDialogProps {
+interface DeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  productName: string | undefined
+  title: string
+  name?: string
+  description?: string
   onConfirm: () => void
-  deleteMutation: UseMutationResult<
-    { success: boolean },
-    Error,
-    { id: string },
-    unknown
-  >
+  isPending: boolean
 }
 
-export function DeleteProductDialog({
+export function DeleteDialog({
   open,
   onOpenChange,
-  productName,
+  title,
+  name,
+  description,
   onConfirm,
-  deleteMutation,
-}: DeleteProductDialogProps) {
+  isPending,
+}: DeleteDialogProps) {
+  const body = description ?? (
+    <>Are you sure you want to delete "{name}"? This action cannot be undone.</>
+  )
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogBackdrop />
       <AlertDialogPopup>
-        <AlertDialogTitle>Delete Product</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to delete "{productName}"? This action cannot be
-          undone.
-        </AlertDialogDescription>
+        <AlertDialogTitle>{title}</AlertDialogTitle>
+        <AlertDialogDescription>{body}</AlertDialogDescription>
         <div className="mt-4 flex justify-end gap-2">
           <AlertDialogClose>
             <Button variant="outline">Cancel</Button>
@@ -48,9 +46,9 @@ export function DeleteProductDialog({
           <Button
             variant="destructive"
             onClick={onConfirm}
-            disabled={deleteMutation.isPending}
+            disabled={isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            {isPending ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </AlertDialogPopup>

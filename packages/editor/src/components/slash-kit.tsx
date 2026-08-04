@@ -8,6 +8,7 @@ export const SlashKit = [
   SlashPlugin.configure({
     options: {
       trigger: "/",
+      triggerPreviousCharPattern: /.*/,
     },
   }),
   SlashInputPlugin.withComponent(SlashInputElement),

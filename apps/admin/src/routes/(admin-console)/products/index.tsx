@@ -12,7 +12,7 @@ import { toastManager } from "ui/toast"
 
 import type { Product } from "@/components/products/product-actions"
 
-import { DeleteProductDialog } from "@/components/products/delete-product-dialog"
+import { DeleteDialog } from "@/components/delete-dialog"
 import { ProductsTable } from "@/components/products/products-table"
 
 const productsSearchSchema = z.object({
@@ -255,12 +255,13 @@ function ProductsRouteComponent() {
           </Button>
         </div>
 
-        <DeleteProductDialog
+        <DeleteDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
-          productName={selectedProduct?.name}
+          title="Delete Product"
+          name={selectedProduct?.name}
           onConfirm={handleConfirmDelete}
-          deleteMutation={deleteProductMutation}
+          isPending={deleteProductMutation.isPending}
         />
       </div>
     </>

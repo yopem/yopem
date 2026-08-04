@@ -6,15 +6,9 @@ import { PencilIcon, Trash2Icon } from "lucide-react"
 import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogClose,
-  AlertDialogDescription,
-  AlertDialogPopup,
-  AlertDialogTitle,
-} from "ui/alert-dialog"
 import { Button } from "ui/button"
+
+import { DeleteDialog } from "@/components/delete-dialog"
 
 interface Tag {
   id: string
@@ -95,33 +89,16 @@ export function TagList({
         </Shimmer>
       </div>
 
-      <AlertDialog
+      <DeleteDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
           if (!open) setPendingDelete(null)
         }}
-      >
-        <AlertDialogBackdrop />
-        <AlertDialogPopup className="p-5">
-          <AlertDialogTitle>Delete Tag</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete "{pendingDelete?.name}"? This action
-            cannot be undone.
-          </AlertDialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
-            <AlertDialogClose>
-              <Button variant="outline">Cancel</Button>
-            </AlertDialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleConfirm}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        </AlertDialogPopup>
-      </AlertDialog>
+        title="Delete Tag"
+        name={pendingDelete?.name}
+        onConfirm={handleConfirm}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   )
 }
