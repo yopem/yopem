@@ -45,6 +45,7 @@ function decodeCursor(cursor: string): { createdAt: string; id: string } {
 export const listProducts = async (input?: {
   limit?: number
   cursor?: string
+  offset?: number
   search?: string
   categoryIds?: string[]
   status?: "draft" | "active" | "archived" | "all"
@@ -161,6 +162,7 @@ export const listProducts = async (input?: {
     .leftJoin(assetsTable, eq(productsTable.thumbnailId, assetsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(productsTable.createdAt), desc(productsTable.id))
+    .offset(input?.offset ?? 0)
     .limit(limit + 1)
 
   const productIds = products.map((t) => t.id)

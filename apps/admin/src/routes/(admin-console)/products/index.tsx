@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
+import { z } from "zod"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
@@ -14,7 +15,12 @@ import type { Product } from "@/components/products/product-actions"
 import { DeleteProductDialog } from "@/components/products/delete-product-dialog"
 import { ProductsTable } from "@/components/products/products-table"
 
+const productsSearchSchema = z.object({
+  page: z.coerce.number().int().min(1).catch(1).optional(),
+})
+
 export const Route = createFileRoute("/(admin-console)/products/")({
+  validateSearch: productsSearchSchema,
   component: ProductsRouteComponent,
 })
 
@@ -29,8 +35,10 @@ function ProductsRouteComponent() {
     productId: string
   } | null>(null)
 
-  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined])
-  const [pageIndex, setPageIndex] = useState(0)
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  const pageIndex = (search.page ?? 1) - 1
 
   const {
     data: productsData,
@@ -40,7 +48,7 @@ function ProductsRouteComponent() {
     queryApi.products.list.queryOptions({
       input: {
         limit: 20,
-        cursor: cursors[pageIndex] ?? undefined,
+        offset: pageIndex * 20,
         status: "all",
       },
     }),
@@ -225,7 +233,7 @@ function ProductsRouteComponent() {
             variant="outline"
             size="sm"
             disabled={pageIndex === 0 || isLoading}
-            onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+            onClick={() => void navigate({ search: { page: pageIndex } })}
           >
             <ChevronLeftIcon className="size-4" />
             Previous
@@ -239,12 +247,7 @@ function ProductsRouteComponent() {
             disabled={!productsData?.nextCursor || isLoading}
             onClick={() => {
               if (!productsData?.nextCursor) return
-              setCursors((prev) => {
-                const next = [...prev]
-                next[pageIndex + 1] = productsData.nextCursor
-                return next
-              })
-              setPageIndex((i) => i + 1)
+              void navigate({ search: { page: pageIndex + 2 } })
             }}
           >
             Next

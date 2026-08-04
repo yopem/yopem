@@ -119,6 +119,7 @@ export async function validateModelForKey(
 
 const productListInputSchema = z.object({
   limit: z.number().min(1).max(100).optional(),
+  offset: z.number().min(0).optional(),
   cursor: z.string().optional(),
   search: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
@@ -165,6 +166,7 @@ export const productsRouter = {
         const isAdmin = context.session?.role === "admin"
         return listProducts({
           limit: input.limit,
+          offset: input.offset,
           cursor: input.cursor,
           search: input.search,
           categoryIds: input.categoryIds,
