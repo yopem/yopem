@@ -186,7 +186,7 @@ export function WorkflowEditor({
         <NodeToolbar onAdd={addNode} />
       </div>
 
-      <div className="border-border flex h-[28rem] overflow-hidden rounded-lg border">
+      <div className="border-border flex h-112 overflow-hidden rounded-lg border">
         <div className="flex-1">
           <ReactFlow
             nodes={nodes}
