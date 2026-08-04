@@ -29,17 +29,33 @@
   fill: currentColor !important;
 }
 
+.react-flow__selection {
+  background: hsl(var(--primary) / 0.15) !important;
+  border-color: hsl(var(--primary) / 0.5) !important;
+}
+
+.react-flow__nodesselection-rect,
+.react-flow__nodesselection {
+  background: hsl(var(--primary) / 0.15) !important;
+  border-color: hsl(var(--primary) / 0.5) !important;
+}
+
+.react-flow__node.selected,
+.react-flow__node:focus {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5) !important;
+}
+
 .react-flow__minimap {
   background: hsl(var(--background)) !important;
 }
 
 .react-flow__minimap-mask {
-  fill: hsl(var(--muted) / 0.6) !important;
+  fill: hsl(var(--foreground) / 0.12) !important;
 }
 
 .react-flow__minimap-node {
-  fill: hsl(var(--muted)) !important;
-  stroke: hsl(var(--border)) !important;
+  fill: hsl(var(--foreground) / 0.7) !important;
+  stroke: hsl(var(--foreground) / 0.4) !important;
 }
 
 .react-flow__minimap-node-text {
