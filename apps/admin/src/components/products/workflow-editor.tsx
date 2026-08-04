@@ -17,6 +17,8 @@ import {
   type NodeTypes,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
+
+import "./workflow-editor.css"
 import {
   BotIcon,
   GitBranchIcon,
