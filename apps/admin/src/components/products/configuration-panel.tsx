@@ -1,5 +1,9 @@
 "use client"
 
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import { useState } from "react"
+
+import { Button } from "ui/button"
 import { Label } from "ui/label"
 import {
   Select,
@@ -8,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select"
+import { cn } from "ui/utils"
 import type { ApiKeyConfig } from "utils/api-input"
 
 import {
@@ -59,6 +64,8 @@ export function ConfigurationPanel({
   config,
   handlers,
 }: ConfigurationPanelProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
   const {
     modelEngine,
     outputFormat,
@@ -87,40 +94,17 @@ export function ConfigurationPanel({
     onThumbnailIdChange,
   } = handlers
 
+  const hasAdvanced = [
+    onCategoriesChange,
+    onTagsChange,
+    onThumbnailIdChange,
+  ].some(Boolean)
+
   return (
     <aside className="bg-background border-border flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
       <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase">
         Configuration
       </h3>
-
-      {onCategoriesChange && (
-        <CategorySelector
-          categories={categories}
-          selectedIds={categoryIds}
-          onChange={onCategoriesChange}
-          onAddNew={onAddNewCategory}
-        />
-      )}
-
-      {onTagsChange && (
-        <TagSelector
-          tags={tags}
-          selectedIds={tagIds}
-          onChange={onTagsChange}
-          onAddNew={onAddNewTag}
-        />
-      )}
-
-      <div className="bg-border h-px w-full" />
-
-      {onThumbnailIdChange && (
-        <ThumbnailSelector
-          value={config.thumbnailId}
-          onChange={onThumbnailIdChange}
-        />
-      )}
-
-      <div className="bg-border h-px w-full" />
 
       <div className="flex flex-col gap-5">
         {onApiKeyIdChange && (
@@ -179,6 +163,60 @@ export function ConfigurationPanel({
         onCostPerRunChange={onCostPerRunChange}
         onMarkupChange={onMarkupChange}
       />
+
+      {hasAdvanced && (
+        <>
+          <div className="bg-border h-px w-full" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced((prev) => !prev)}
+            className="justify-between"
+          >
+            <span className="text-muted-foreground text-sm font-medium">
+              Advanced options
+            </span>
+            {showAdvanced ? (
+              <ChevronUpIcon className="size-4" />
+            ) : (
+              <ChevronDownIcon className="size-4" />
+            )}
+          </Button>
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows] duration-200 ease-out",
+              showAdvanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+            )}
+          >
+            <div className="flex min-h-0 flex-col gap-6 overflow-hidden">
+              {onCategoriesChange && (
+                <CategorySelector
+                  categories={categories}
+                  selectedIds={categoryIds}
+                  onChange={onCategoriesChange}
+                  onAddNew={onAddNewCategory}
+                />
+              )}
+
+              {onTagsChange && (
+                <TagSelector
+                  tags={tags}
+                  selectedIds={tagIds}
+                  onChange={onTagsChange}
+                  onAddNew={onAddNewTag}
+                />
+              )}
+
+              {onThumbnailIdChange && (
+                <ThumbnailSelector
+                  value={config.thumbnailId}
+                  onChange={onThumbnailIdChange}
+                />
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </aside>
   )
 }

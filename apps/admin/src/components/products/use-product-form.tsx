@@ -591,7 +591,15 @@ export function useProductForm({
     }
   }
 
-  const handleAddField = () => {
+  const handleAddField = (
+    initial?: Partial<{
+      variableName: string
+      type: InputFieldType
+      description: string
+      options: SelectOption[]
+      isOptional: boolean
+    }>,
+  ) => {
     const newId = String(Date.now())
     const currentFields = form.getFieldValue("inputFields")
     form.setFieldValue("inputFields", [
@@ -601,6 +609,7 @@ export function useProductForm({
         variableName: "",
         type: "text" as const,
         description: "",
+        ...initial,
       },
     ])
   }

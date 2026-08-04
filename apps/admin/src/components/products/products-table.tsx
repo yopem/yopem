@@ -4,7 +4,6 @@ import type { UseMutationResult } from "@tanstack/react-query"
 
 import { Link } from "@tanstack/react-router"
 
-import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import {
   Table,
@@ -15,6 +14,8 @@ import {
   TableRow,
 } from "ui/table"
 import { formatDateOnly } from "utils/format-date"
+
+import { EmptyProductState } from "@/components/onboarding/empty-product-state"
 
 import { ProductActions, type Product } from "./product-actions"
 
@@ -86,13 +87,8 @@ export function ProductsTable({
           ))
         ) : products.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="py-8 text-center">
-              <p className="text-muted-foreground">No products found</p>
-              <Link to="/products/add" className="mt-2 inline-block">
-                <Button variant="outline" size="sm">
-                  Create your first product
-                </Button>
-              </Link>
+            <TableCell colSpan={6} className="p-0">
+              <EmptyProductState />
             </TableCell>
           </TableRow>
         ) : (

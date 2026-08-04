@@ -14,6 +14,7 @@ import { ConfigurationPanel } from "./configuration-panel"
 import { DescriptionEditor } from "./description-editor"
 import { FeatureBuilderTabs } from "./feature-builder-tabs"
 import { InputVariableSection } from "./input-variable-section"
+import { ProductBuilderTips } from "./product-builder-tips"
 import { ProductFormCategoryDialog } from "./product-form-category-dialog"
 import { ProductFormTagDialog } from "./product-form-tag-dialog"
 import { PromptLogicSection } from "./prompt-logic-section"
@@ -74,6 +75,8 @@ export function ProductForm({
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
+        <ProductBuilderTips mode={mode} />
+
         <div className="flex flex-col gap-4">
           <form.Field name="name">
             {(field) => (
