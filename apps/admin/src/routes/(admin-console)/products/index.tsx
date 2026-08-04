@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Navigate, createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
-import { PlusIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
@@ -29,6 +29,9 @@ function ProductsRouteComponent() {
     productId: string
   } | null>(null)
 
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined])
+  const [pageIndex, setPageIndex] = useState(0)
+
   const {
     data: productsData,
     isLoading,
@@ -36,7 +39,8 @@ function ProductsRouteComponent() {
   } = useQuery(
     queryApi.products.list.queryOptions({
       input: {
-        limit: 100,
+        limit: 20,
+        cursor: cursors[pageIndex] ?? undefined,
         status: "all",
       },
     }),
@@ -214,6 +218,38 @@ function ProductsRouteComponent() {
               duplicateMutation={duplicateProductMutation}
             />
           </Shimmer>
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pageIndex === 0 || isLoading}
+            onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+          >
+            <ChevronLeftIcon className="size-4" />
+            Previous
+          </Button>
+          <span className="text-muted-foreground text-sm">
+            Page {pageIndex + 1}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!productsData?.nextCursor || isLoading}
+            onClick={() => {
+              if (!productsData?.nextCursor) return
+              setCursors((prev) => {
+                const next = [...prev]
+                next[pageIndex + 1] = productsData.nextCursor
+                return next
+              })
+              setPageIndex((i) => i + 1)
+            }}
+          >
+            Next
+            <ChevronRightIcon className="size-4" />
+          </Button>
         </div>
 
         <DeleteProductDialog

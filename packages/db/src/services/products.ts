@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, inArray, lt, or, sql } from "drizzle-orm"
 
 import { db } from "db"
 import {
@@ -16,6 +16,31 @@ import type { InsertProduct, SelectProduct } from "db/schema/products"
 import { createCustomId } from "utils/custom-id"
 
 import { generateUniqueProductSlug } from "./slug"
+
+function encodeCursor(product: { id: string; createdAt: Date | null }): string {
+  return Buffer.from(
+    JSON.stringify({
+      createdAt: product.createdAt?.toISOString(),
+      id: product.id,
+    }),
+    "utf8",
+  ).toString("base64url")
+}
+
+function decodeCursor(cursor: string): { createdAt: string; id: string } {
+  const parsed = JSON.parse(
+    Buffer.from(cursor, "base64url").toString("utf8"),
+  ) as unknown
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    !("createdAt" in parsed) ||
+    !("id" in parsed)
+  ) {
+    throw new Error("Invalid cursor")
+  }
+  return parsed as { createdAt: string; id: string }
+}
 
 export const listProducts = async (input?: {
   limit?: number
@@ -73,7 +98,10 @@ export const listProducts = async (input?: {
 
   if (input?.search) {
     conditions.push(
-      sql`(${ilike(productsTable.name, `%${input.search}%`).getSQL()} OR ${ilike(productsTable.description, `%${input.search}%`).getSQL()})`,
+      or(
+        ilike(productsTable.name, `%${input.search}%`),
+        ilike(productsTable.description, `%${input.search}%`),
+      ),
     )
   }
 
@@ -102,6 +130,19 @@ export const listProducts = async (input?: {
     }
   }
 
+  if (input?.cursor) {
+    const { createdAt, id } = decodeCursor(input.cursor)
+    conditions.push(
+      or(
+        lt(productsTable.createdAt, new Date(createdAt)),
+        and(
+          eq(productsTable.createdAt, new Date(createdAt)),
+          lt(productsTable.id, id),
+        ),
+      ),
+    )
+  }
+
   const products = await db
     .select({
       id: productsTable.id,
@@ -119,7 +160,7 @@ export const listProducts = async (input?: {
     .from(productsTable)
     .leftJoin(assetsTable, eq(productsTable.thumbnailId, assetsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(productsTable.createdAt))
+    .orderBy(desc(productsTable.createdAt), desc(productsTable.id))
     .limit(limit + 1)
 
   const productIds = products.map((t) => t.id)
@@ -171,7 +212,9 @@ export const listProducts = async (input?: {
   let nextCursor: string | undefined = undefined
   if (productsWithCategories.length > limit) {
     const nextItem = productsWithCategories.pop()
-    nextCursor = nextItem?.id
+    if (nextItem) {
+      nextCursor = encodeCursor(nextItem)
+    }
   }
 
   return { products: productsWithCategories, nextCursor }

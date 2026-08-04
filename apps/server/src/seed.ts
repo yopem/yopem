@@ -16,7 +16,10 @@ import {
   productsTable,
   tagsTable,
 } from "db/schema"
-import { type InputField } from "db/schema/product-workflow"
+import {
+  type InputField,
+  type ProductWorkflow,
+} from "db/schema/product-workflow"
 import {
   createAIModel,
   deleteAIModelById,
@@ -97,6 +100,85 @@ const DEFAULT_KEY_NAMES: Record<ApiKeyProvider, string> = {
 
 function today(): string {
   return new Date().toISOString().split("T")[0]
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+}
+
+interface PlateNode {
+  type?: string
+  [key: string]: unknown
+}
+
+function buildRichDescription(
+  summary: string,
+  highlights: string[],
+): { content: PlateNode[]; html: string } {
+  const safeSummary = escapeHtml(summary)
+  const safeHighlights = highlights.map((h) => escapeHtml(h))
+
+  const content: PlateNode[] = [
+    { type: "h2", children: [{ text: "What it does" }] },
+    { type: "p", children: [{ text: safeSummary }] },
+    { type: "h2", children: [{ text: "Highlights" }] },
+    {
+      type: "ul",
+      listStyleType: "disc",
+      children: safeHighlights.map((text) => ({
+        type: "li",
+        children: [{ type: "p", children: [{ text }] }],
+      })),
+    },
+    {
+      type: "blockquote",
+      children: [
+        {
+          type: "p",
+          children: [
+            {
+              text: "Fill in the inputs, run the workflow, and get a production-ready result you can copy or refine.",
+            },
+          ],
+        },
+      ],
+    },
+  ]
+
+  const listItems = safeHighlights
+    .map((text) => `    <li>${text}</li>`)
+    .join("\n")
+
+  const html = `<h2>What it does</h2>
+<p>${safeSummary}</p>
+<h2>Highlights</h2>
+<ul>
+${listItems}
+</ul>
+<blockquote>
+  <p>Fill in the inputs, run the workflow, and get a production-ready result you can copy or refine.</p>
+</blockquote>
+`.trim()
+
+  return { content, html }
+}
+
+function defaultHighlights(product: SeedProduct): string[] {
+  const formatLabel =
+    product.outputFormat === "image" || product.outputFormat === "video"
+      ? "visual asset"
+      : product.outputFormat === "json"
+        ? "structured result"
+        : "ready-to-use content"
+  return [
+    `Generates a polished ${formatLabel} from just a few inputs.`,
+    `Designed for ${product.categories.slice(0, 2).join(" and ") || "production"} workflows.`,
+    `Editable output you can copy, tweak, and reuse across your projects.`,
+  ]
 }
 
 export const VALID_PROVIDERS = apiKeyProviderSchema.options
@@ -1824,10 +1906,16 @@ async function seedProducts(
       product.outputFormat,
     )
 
+    const { content, html } = buildRichDescription(
+      product.description,
+      defaultHighlights(product),
+    )
+
     await createProduct({
       name: product.name,
       excerpt: product.excerpt,
-      description: product.description,
+      description: html,
+      descriptionContent: content,
       status: "active",
       config: { modelEngine },
       workflow,
@@ -1852,55 +1940,223 @@ function buildWorkflowFromSeed(
   userInstructionTemplate: string,
   inputVariable: InputVariable[],
   outputFormat: "plain" | "json" | "image" | "video",
-) {
+): ProductWorkflow {
   const inputNodeId = "input_1"
+  const nodes: ProductWorkflow["nodes"] = [
+    {
+      id: inputNodeId,
+      type: "input",
+      position: { x: 100, y: 100 },
+      data: {
+        label: `${name} Inputs`,
+        fields: inputVariable.map((v) => ({
+          variableName: v.variableName,
+          description: v.description,
+          type: v.type as InputField["type"],
+          ...(v.options && { options: v.options }),
+        })),
+      },
+    },
+  ]
+  const edges: ProductWorkflow["edges"] = []
+
+  const countVar = inputVariable.find((v) => v.variableName === "count")
+  const branchVar =
+    inputVariable.find(
+      (v) =>
+        v.variableName === "platform" && v.options && v.options.length >= 2,
+    ) ??
+    inputVariable.find(
+      (v) => v.variableName === "style" && v.options && v.options.length >= 2,
+    ) ??
+    inputVariable.find(
+      (v) => v.variableName === "tone" && v.options && v.options.length >= 2,
+    )
+
+  if (countVar) {
+    const loopId = "loop_1"
+    nodes.push({
+      id: loopId,
+      type: "loop",
+      position: { x: 400, y: 100 },
+      data: {
+        label: "Generate variants",
+        itemsExpression: `Array.from({length: Number('{{${countVar.variableName}}}')}).map((_, i) => i + 1)`,
+        itemName: "iteration",
+        maxIterations: 10,
+      },
+    })
+    edges.push({
+      id: "e_input_loop",
+      source: inputNodeId,
+      target: loopId,
+    })
+
+    const aiLoopId = "ai_variant"
+    const loopTemplate = `${userInstructionTemplate
+      .replaceAll(`{{${countVar.variableName}}}`, "1")
+      .trim()}\n\nOnly generate option number {{iteration}}. Do not include any other options.`
+
+    nodes.push({
+      id: aiLoopId,
+      type: "ai",
+      position: { x: 700, y: 100 },
+      data: {
+        label: "Generate variant",
+        systemRole,
+        userInstructionTemplate: loopTemplate,
+        outputName: "variantResult",
+        outputFormat,
+      },
+    })
+    edges.push({
+      id: "e_loop_ai",
+      source: loopId,
+      target: aiLoopId,
+    })
+
+    const outputNodeId = "output_1"
+    nodes.push({
+      id: outputNodeId,
+      type: "output",
+      position: { x: 1000, y: 100 },
+      data: {
+        label: "Final Output",
+        template: `{{${loopId}_result}}`,
+        outputName: "finalOutput",
+      },
+    })
+    edges.push({
+      id: "e_loop_output",
+      source: loopId,
+      target: outputNodeId,
+    })
+
+    return { nodes, edges }
+  }
+
+  if (branchVar?.options && branchVar.options.length >= 2) {
+    const conditionId = "condition_1"
+    const firstOption = branchVar.options[0].value
+    nodes.push({
+      id: conditionId,
+      type: "condition",
+      position: { x: 400, y: 100 },
+      data: {
+        label: `Branch on ${branchVar.variableName}`,
+        expression: `'{{${branchVar.variableName}}}' === '${firstOption}'`,
+      },
+    })
+    edges.push({
+      id: "e_input_condition",
+      source: inputNodeId,
+      target: conditionId,
+    })
+
+    const aiTrueId = "ai_branch_true"
+    const aiFalseId = "ai_branch_false"
+    const trueSystemRole = `${systemRole}\n\nOptimize the output specifically for the "${firstOption}" ${branchVar.variableName}.`
+    const falseSystemRole = `${systemRole}\n\nKeep the output flexible for any ${branchVar.variableName}.`
+
+    nodes.push({
+      id: aiTrueId,
+      type: "ai",
+      position: { x: 700, y: 50 },
+      data: {
+        label: `For ${firstOption}`,
+        systemRole: trueSystemRole,
+        userInstructionTemplate,
+        outputName: "result",
+        outputFormat,
+      },
+    })
+    nodes.push({
+      id: aiFalseId,
+      type: "ai",
+      position: { x: 700, y: 200 },
+      data: {
+        label: `For other ${branchVar.variableName}`,
+        systemRole: falseSystemRole,
+        userInstructionTemplate,
+        outputName: "result",
+        outputFormat,
+      },
+    })
+
+    edges.push({
+      id: "e_cond_true",
+      source: conditionId,
+      target: aiTrueId,
+      sourceHandle: `{{${conditionId}_result}}`,
+    })
+    edges.push({
+      id: "e_cond_false",
+      source: conditionId,
+      target: aiFalseId,
+      sourceHandle: `!{{${conditionId}_result}}`,
+    })
+
+    const outputNodeId = "output_1"
+    nodes.push({
+      id: outputNodeId,
+      type: "output",
+      position: { x: 1000, y: 100 },
+      data: {
+        label: "Final Output",
+        template: "{{result}}",
+        outputName: "finalOutput",
+      },
+    })
+    edges.push({
+      id: "e_true_out",
+      source: aiTrueId,
+      target: outputNodeId,
+    })
+    edges.push({
+      id: "e_false_out",
+      source: aiFalseId,
+      target: outputNodeId,
+    })
+
+    return { nodes, edges }
+  }
+
   const aiNodeId = "ai_1"
   const outputNodeId = "output_1"
+  nodes.push({
+    id: aiNodeId,
+    type: "ai",
+    position: { x: 400, y: 100 },
+    data: {
+      label: "Generate",
+      systemRole,
+      userInstructionTemplate,
+      outputName: "result",
+      outputFormat,
+    },
+  })
+  nodes.push({
+    id: outputNodeId,
+    type: "output",
+    position: { x: 700, y: 100 },
+    data: {
+      label: "Final Output",
+      template: "{{result}}",
+      outputName: "finalOutput",
+    },
+  })
+  edges.push({
+    id: "e1",
+    source: inputNodeId,
+    target: aiNodeId,
+  })
+  edges.push({
+    id: "e2",
+    source: aiNodeId,
+    target: outputNodeId,
+  })
 
-  return {
-    nodes: [
-      {
-        id: inputNodeId,
-        type: "input" as const,
-        position: { x: 100, y: 100 },
-        data: {
-          label: `${name} Inputs`,
-          fields: inputVariable.map((v) => ({
-            variableName: v.variableName,
-            description: v.description,
-            type: v.type as InputField["type"],
-            ...(v.options && { options: v.options }),
-          })),
-        },
-      },
-      {
-        id: aiNodeId,
-        type: "ai" as const,
-        position: { x: 400, y: 100 },
-        data: {
-          label: "Generate",
-          systemRole,
-          userInstructionTemplate,
-          outputName: "result",
-          outputFormat,
-        },
-      },
-      {
-        id: outputNodeId,
-        type: "output" as const,
-        position: { x: 700, y: 100 },
-        data: {
-          label: "Final Output",
-          template: "{{result}}",
-          outputName: "finalOutput",
-        },
-      },
-    ],
-    edges: [
-      { id: "e1", source: inputNodeId, target: aiNodeId },
-      { id: "e2", source: aiNodeId, target: outputNodeId },
-    ],
-  }
+  return { nodes, edges }
 }
 
 function confirm(message: string): Promise<boolean> {
