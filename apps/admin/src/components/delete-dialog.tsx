@@ -36,7 +36,7 @@ export function DeleteDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogBackdrop />
-      <AlertDialogPopup>
+      <AlertDialogPopup className="space-y-3 p-5">
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{body}</AlertDialogDescription>
         <div className="mt-4 flex justify-end gap-2">
