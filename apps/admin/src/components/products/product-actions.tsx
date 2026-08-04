@@ -12,7 +12,14 @@ import {
 
 import type { SelectProduct } from "db/schema/products"
 import { Button } from "ui/button"
-import { Menu, MenuGroup, MenuItem, MenuPopup, MenuTrigger } from "ui/menu"
+import {
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuLinkItem,
+  MenuPopup,
+  MenuTrigger,
+} from "ui/menu"
 
 export type Product = Pick<
   SelectProduct,
@@ -46,7 +53,7 @@ export function ProductActions({
       />
       <MenuPopup>
         <MenuGroup>
-          <MenuItem
+          <MenuLinkItem
             render={
               <Link
                 className="text-foreground hover:bg-accent"
