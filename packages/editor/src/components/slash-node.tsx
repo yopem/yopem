@@ -144,7 +144,7 @@ export function SlashInputElement(
                     group={group}
                     keywords={keywords}
                   >
-                    <div className="text-muted-foreground mr-2">{icon}</div>
+                    {icon}
                     {label ?? value}
                   </InlineComboboxItem>
                 ),

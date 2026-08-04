@@ -2,6 +2,7 @@ import type { TElement } from "platejs"
 import type { ComponentProps } from "react"
 
 import {
+  ChevronDownIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -107,21 +108,21 @@ export function TurnIntoToolbarButton(props: ComponentProps<typeof Menu>) {
       <MenuTrigger
         render={
           <ToolbarButton
-            className="min-w-40"
+            aria-label="Turn into"
             data-pressed={open}
             data-tooltip="Turn into"
-            data-is-dropdown
+            size="default"
           />
         }
       >
-        {selectedItem.label}
+        <span className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">{selectedItem.icon}</span>
+          {selectedItem.label}
+          <ChevronDownIcon className="text-muted-foreground size-3.5" />
+        </span>
       </MenuTrigger>
 
-      <MenuPopup
-        className="ignore-click-outside/toolbar min-w-0"
-        finalFocus={false}
-        align="start"
-      >
+      <MenuPopup align="start" finalFocus={false}>
         <MenuRadioGroup
           value={value ?? KEYS.p}
           onValueChange={(type: string) => {
@@ -131,7 +132,7 @@ export function TurnIntoToolbarButton(props: ComponentProps<typeof Menu>) {
           {turnIntoItems.map(({ icon, label, value: itemValue }) => (
             <MenuRadioItem
               key={itemValue}
-              className="flex min-w-64 items-center gap-2 pl-2 *:first:[span]:hidden"
+              className="flex min-w-56 items-center gap-2"
               value={itemValue}
             >
               {icon}

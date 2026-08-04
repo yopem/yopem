@@ -16,6 +16,15 @@ export function MarkToolbarButton({
 }) {
   const state = useMarkToolbarButtonState({ clear, nodeType })
   const { props: buttonProps } = useMarkToolbarButton(state)
+  const { pressed, ...restButtonProps } = buttonProps
 
-  return <ToolbarButton {...props} {...buttonProps} />
+  return (
+    <ToolbarButton
+      {...props}
+      {...restButtonProps}
+      aria-pressed={pressed}
+      data-pressed={pressed ? "" : undefined}
+      data-active={pressed ? "" : undefined}
+    />
+  )
 }

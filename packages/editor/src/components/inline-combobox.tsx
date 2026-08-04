@@ -397,7 +397,7 @@ export function InlineComboboxContent({
       role="listbox"
       aria-label="Suggestions"
       className={cn(
-        "bg-popover max-h-72 w-75 overflow-y-auto rounded-lg shadow-lg/5",
+        "bg-popover text-popover-foreground max-h-80 w-80 overflow-y-auto rounded-xl border p-1 shadow-lg/5",
         !open && "hidden",
         className,
       )}
@@ -412,14 +412,14 @@ export function InlineComboboxContent({
 }
 
 const comboboxItemVariants = cva(
-  "text-foreground relative mx-1 flex h-7 items-center rounded-sm px-2 text-sm outline-none select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "text-foreground relative flex min-h-8 items-center gap-3 rounded-md px-2 py-1 text-sm outline-none select-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     defaultVariants: {
       interactive: true,
     },
     variants: {
       interactive: {
-        false: "",
+        false: "text-muted-foreground",
         true: "hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground cursor-pointer transition-colors",
       },
     },
@@ -540,15 +540,7 @@ export function InlineComboboxGroup({
   className,
   ...props
 }: ComponentProps<"div">) {
-  return (
-    <div
-      className={cn(
-        "hidden py-1.5 not-last:border-b has-[[role=option]]:block",
-        className,
-      )}
-      {...props}
-    />
-  )
+  return <div className={cn("py-1 not-last:border-b", className)} {...props} />
 }
 
 export function InlineComboboxGroupLabel({
@@ -558,7 +550,7 @@ export function InlineComboboxGroupLabel({
   return (
     <div
       className={cn(
-        "text-muted-foreground mt-1.5 mb-2 px-3 text-xs font-medium",
+        "text-muted-foreground px-2 py-1.5 text-xs font-medium",
         className,
       )}
       {...props}
