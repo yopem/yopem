@@ -1,9 +1,5 @@
 "use client"
 
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
-import { useState } from "react"
-
-import { Button } from "ui/button"
 import { Label } from "ui/label"
 import {
   Select,
@@ -12,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "ui/select"
-import { cn } from "ui/utils"
 import type { ApiKeyConfig } from "utils/api-input"
 
 import {
@@ -64,8 +59,6 @@ export function ConfigurationPanel({
   config,
   handlers,
 }: ConfigurationPanelProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false)
-
   const {
     modelEngine,
     outputFormat,
@@ -79,6 +72,7 @@ export function ConfigurationPanel({
     tagIds = [],
     categories = [],
     tags = [],
+    thumbnailId,
   } = config
 
   const {
@@ -94,129 +88,124 @@ export function ConfigurationPanel({
     onThumbnailIdChange,
   } = handlers
 
-  const hasAdvanced = [
-    onCategoriesChange,
-    onTagsChange,
-    onThumbnailIdChange,
-  ].some(Boolean)
-
   return (
-    <aside className="bg-background border-border flex w-80 flex-col gap-6 overflow-y-auto border-l p-6">
-      <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase">
-        Configuration
-      </h3>
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-lg font-semibold">Configure</h3>
+        <p className="text-muted-foreground max-w-2xl text-sm">
+          Choose the AI provider and model, set pricing, and organize how the
+          product appears.
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-5">
-        {onApiKeyIdChange && (
-          <ApiKeySelector
-            value={apiKeyId}
-            onChange={onApiKeyIdChange}
-            availableKeys={availableApiKeys}
-            error={apiKeyError}
-          />
-        )}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="model-engine">Model Engine</Label>
-          <ModelSelector
-            id="model-engine"
-            value={modelEngine}
-            onChange={onModelEngineChange}
-            options={modelOptions}
-          />
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+          <div className="grid gap-5 p-6 md:grid-cols-2">
+            {onApiKeyIdChange && (
+              <ApiKeySelector
+                value={apiKeyId}
+                onChange={onApiKeyIdChange}
+                availableKeys={availableApiKeys}
+                error={apiKeyError}
+              />
+            )}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="model-engine">Model Engine</Label>
+              <ModelSelector
+                id="model-engine"
+                value={modelEngine}
+                onChange={onModelEngineChange}
+                options={modelOptions}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+          <div className="flex flex-col gap-2 p-6">
+            <Label htmlFor="output-format">Output Format</Label>
+            <Select
+              value={outputFormat}
+              onValueChange={(value) => {
+                if (
+                  value === "plain" ||
+                  value === "json" ||
+                  value === "image" ||
+                  value === "video"
+                ) {
+                  onOutputFormatChange(value)
+                }
+              }}
+            >
+              <SelectTrigger id="output-format">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectPopup>
+                <SelectItem value="plain">Plain Text</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
+                <SelectItem value="image">Image</SelectItem>
+                <SelectItem value="video">Video</SelectItem>
+              </SelectPopup>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="bg-border h-px w-full" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+          <div className="border-border border-b p-4">
+            <span className="text-sm font-semibold">Usage Pricing</span>
+          </div>
+          <div className="p-6">
+            <PricingSection
+              costPerRun={costPerRun}
+              markup={markup}
+              onCostPerRunChange={onCostPerRunChange}
+              onMarkupChange={onMarkupChange}
+            />
+          </div>
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="output-format">Output Format</Label>
-        <Select
-          value={outputFormat}
-          onValueChange={(value) => {
-            if (
-              value === "plain" ||
-              value === "json" ||
-              value === "image" ||
-              value === "video"
-            ) {
-              onOutputFormatChange(value)
-            }
-          }}
-        >
-          <SelectTrigger id="output-format">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value="plain">Plain Text</SelectItem>
-            <SelectItem value="json">JSON</SelectItem>
-            <SelectItem value="image">Image</SelectItem>
-            <SelectItem value="video">Video</SelectItem>
-          </SelectPopup>
-        </Select>
-      </div>
-
-      <div className="bg-border h-px w-full" />
-
-      <PricingSection
-        costPerRun={costPerRun}
-        markup={markup}
-        onCostPerRunChange={onCostPerRunChange}
-        onMarkupChange={onMarkupChange}
-      />
-
-      {hasAdvanced && (
-        <>
-          <div className="bg-border h-px w-full" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAdvanced((prev) => !prev)}
-            className="justify-between"
-          >
-            <span className="text-muted-foreground text-sm font-medium">
-              Advanced options
-            </span>
-            {showAdvanced ? (
-              <ChevronUpIcon className="size-4" />
-            ) : (
-              <ChevronDownIcon className="size-4" />
-            )}
-          </Button>
-          <div
-            className={cn(
-              "grid transition-[grid-template-rows] duration-200 ease-out",
-              showAdvanced ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-            )}
-          >
-            <div className="flex min-h-0 flex-col gap-6 overflow-hidden">
-              {onCategoriesChange && (
-                <CategorySelector
-                  categories={categories}
-                  selectedIds={categoryIds}
-                  onChange={onCategoriesChange}
-                  onAddNew={onAddNewCategory}
-                />
-              )}
-
-              {onTagsChange && (
-                <TagSelector
-                  tags={tags}
-                  selectedIds={tagIds}
-                  onChange={onTagsChange}
-                  onAddNew={onAddNewTag}
-                />
-              )}
-
-              {onThumbnailIdChange && (
-                <ThumbnailSelector
-                  value={config.thumbnailId}
-                  onChange={onThumbnailIdChange}
-                />
-              )}
+        {onThumbnailIdChange && (
+          <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+            <div className="border-border border-b p-4">
+              <span className="text-sm font-semibold">Thumbnail</span>
+            </div>
+            <div className="p-6">
+              <ThumbnailSelector
+                value={thumbnailId}
+                onChange={onThumbnailIdChange}
+              />
             </div>
           </div>
-        </>
+        )}
+      </div>
+
+      {[onCategoriesChange, onTagsChange].some(Boolean) && (
+        <div className="bg-card text-card-foreground relative flex flex-col rounded-2xl border shadow-xs/5">
+          <div className="border-border border-b p-4">
+            <span className="text-sm font-semibold">Organization</span>
+          </div>
+          <div className="grid gap-6 p-6 md:grid-cols-2">
+            {onCategoriesChange && (
+              <CategorySelector
+                categories={categories}
+                selectedIds={categoryIds}
+                onChange={onCategoriesChange}
+                onAddNew={onAddNewCategory}
+              />
+            )}
+            {onTagsChange && (
+              <TagSelector
+                tags={tags}
+                selectedIds={tagIds}
+                onChange={onTagsChange}
+                onAddNew={onAddNewTag}
+              />
+            )}
+          </div>
+        </div>
       )}
-    </aside>
+    </section>
   )
 }

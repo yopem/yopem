@@ -81,9 +81,9 @@ export function DescriptionEditor({
       <EditorContainer
         variant="default"
         onBlurCapture={handleBlur}
-        className="[&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
+        className="border-input bg-background focus-within:border-ring focus-within:ring-ring/24 min-h-80 rounded-lg border shadow-xs/5 transition-shadow focus-within:ring-[3px] [&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
       >
-        <Editor variant="default" className="pt-0 pr-2 pl-6 sm:pr-2 sm:pl-6" />
+        <Editor variant="default" className="px-4 pt-4 pb-20 sm:px-4 sm:pl-4" />
         <FloatingToolbar>
           <FloatingToolbarButtons />
         </FloatingToolbar>

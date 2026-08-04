@@ -1,5 +1,7 @@
 "use client"
 
+import { Label } from "ui/label"
+
 interface PricingSectionProps {
   costPerRun: number
   markup: number
@@ -16,47 +18,47 @@ export function PricingSection({
   const markupPercentage = Math.round(markup * 100)
 
   return (
-    <div className="flex flex-col gap-4">
-      <span className="text-sm font-medium">Usage Pricing</span>
-      <div className="bg-muted/50 flex flex-col gap-3 rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-xs font-medium">
-            Cost per run
-          </span>
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground">$</span>
-            <input
-              type="number"
-              value={costPerRun}
-              onChange={(e) => {
-                const newValue = Number(e.target.value)
-                onCostPerRunChange(newValue)
-              }}
-              className="border-input focus:border-foreground w-16 border-b bg-transparent p-0 text-right font-mono text-sm focus:outline-none"
-            />
-          </div>
+    <div className="grid gap-5 sm:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="cost-per-run">Cost per run</Label>
+        <div className="border-input bg-background flex items-center gap-2 rounded-lg border px-3 py-2">
+          <span className="text-muted-foreground text-sm">$</span>
+          <input
+            id="cost-per-run"
+            type="number"
+            min={0}
+            step={0.01}
+            value={costPerRun}
+            onChange={(e) => {
+              const value = Number(e.target.value)
+              if (value >= 0) {
+                onCostPerRunChange(value)
+              }
+            }}
+            className="w-full bg-transparent text-right text-sm outline-none"
+          />
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-xs font-medium">
-            Markup
-          </span>
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={markupPercentage}
-              onChange={(e) => {
-                const percentage = Number(e.target.value)
-                if (percentage >= 0 && percentage <= 100) {
-                  onMarkupChange(percentage / 100)
-                }
-              }}
-              className="border-input focus:border-foreground w-12 border-b bg-transparent p-0 text-right font-mono text-sm focus:outline-none"
-            />
-            <span className="text-muted-foreground font-mono text-xs">%</span>
-          </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="markup">Markup</Label>
+        <div className="border-input bg-background flex items-center gap-2 rounded-lg border px-3 py-2">
+          <input
+            id="markup"
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={markupPercentage}
+            onChange={(e) => {
+              const percentage = Number(e.target.value)
+              if (percentage >= 0 && percentage <= 100) {
+                onMarkupChange(percentage / 100)
+              }
+            }}
+            className="w-full bg-transparent text-right text-sm outline-none"
+          />
+          <span className="text-muted-foreground text-sm">%</span>
         </div>
       </div>
     </div>

@@ -2,10 +2,9 @@
 
 import type { RefObject } from "react"
 
-import { HelpCircleIcon, HistoryIcon } from "lucide-react"
+import { HelpCircleIcon } from "lucide-react"
 
-import { Button } from "ui/button"
-import { Label } from "ui/label"
+import { Card, CardHeader, CardPanel, CardTitle } from "ui/card"
 import { Textarea } from "ui/textarea"
 import {
   Tooltip,
@@ -28,7 +27,6 @@ interface PromptLogicSectionProps {
   onUserInstructionChange?: (value: string) => void
   onInsertVariable?: (variable: string) => void
   onInsertSystemRoleVariable?: (variable: string) => void
-  onRestoreVersion?: () => void
   systemRoleRef?: RefObject<HTMLTextAreaElement | null>
   userInstructionRef?: RefObject<HTMLTextAreaElement | null>
 }
@@ -45,7 +43,6 @@ export function PromptLogicSection({
   onUserInstructionChange,
   onInsertVariable,
   onInsertSystemRoleVariable,
-  onRestoreVersion,
   systemRoleRef,
   userInstructionRef,
 }: PromptLogicSectionProps) {
@@ -57,24 +54,21 @@ export function PromptLogicSection({
       : safeVariableNames.map((name) => ({ name, isOptional: false }))
 
   return (
-    <section className="flex flex-col gap-4 pb-12">
-      <div className="flex items-center justify-between">
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
         <h3 className="text-lg font-semibold">Prompt Logic</h3>
-        <Button variant="ghost" size="xs" onClick={onRestoreVersion} disabled>
-          <HistoryIcon className="size-3.5" />
-          <span>Restore Version</span>
-        </Button>
+        <p className="text-muted-foreground max-w-2xl text-sm">
+          Tell the AI how to behave and what to produce. Click a variable chip
+          to insert it into the active text area.
+        </p>
       </div>
+
       <TooltipProvider>
-        <div className="flex flex-col overflow-hidden rounded-xl border">
-          <div className="bg-muted/50 border-border border-b">
-            <div className="p-4">
-              <div className="mb-2 flex items-center gap-1.5">
-                <Label htmlFor="system-role">
-                  <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                    System Role
-                  </span>
-                </Label>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="flex flex-col">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">System Role</CardTitle>
                 <Tooltip>
                   <TooltipTrigger
                     render={
@@ -82,7 +76,7 @@ export function PromptLogicSection({
                         type="button"
                         aria-label="What is the system role?"
                       >
-                        <HelpCircleIcon className="text-muted-foreground size-3.5" />
+                        <HelpCircleIcon className="text-muted-foreground size-4" />
                       </button>
                     }
                   />
@@ -92,50 +86,31 @@ export function PromptLogicSection({
                   </TooltipPopup>
                 </Tooltip>
               </div>
+            </CardHeader>
+            <CardPanel className="flex flex-1 flex-col gap-4 pt-0">
               <Textarea
-                id="system-role"
                 ref={systemRoleRef}
                 value={systemRole}
                 onChange={(e) => onSystemRoleChange?.(e.target.value)}
                 placeholder="Define the AI persona..."
                 className="font-mono text-sm"
-                rows={2}
-                unstyled
+                rows={4}
               />
-            </div>
-            {variableList.length > 0 && (
-              <div className="bg-muted/30 border-border flex flex-wrap items-center gap-2 border-t px-4 py-2">
-                <span className="text-muted-foreground text-xs">
-                  Insert variable:
-                </span>
-                {variableList.map((variable) => (
-                  <button
-                    key={variable.name}
-                    type="button"
-                    onClick={() => onInsertSystemRoleVariable?.(variable.name)}
-                    className={`rounded-sm border px-2 py-1 font-mono text-xs transition-colors ${
-                      variable.isOptional
-                        ? `bg-muted/50 text-muted-foreground hover:bg-muted border-dashed`
-                        : `bg-background hover:bg-muted`
-                    }`}
-                  >
-                    + {variable.name}
-                    {variable.isOptional && (
-                      <span className="ml-1 text-[10px] opacity-60">?</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="bg-background flex flex-col">
-            <div className="p-4">
-              <div className="mb-2 flex items-center gap-1.5">
-                <Label htmlFor="user-instruction">
-                  <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                    User Instruction Template
-                  </span>
-                </Label>
+              {variableList.length > 0 && (
+                <VariableChips
+                  variables={variableList}
+                  onInsert={onInsertSystemRoleVariable}
+                />
+              )}
+            </CardPanel>
+          </Card>
+
+          <Card className="flex flex-col">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">
+                  User Instruction Template
+                </CardTitle>
                 <Tooltip>
                   <TooltipTrigger
                     render={
@@ -143,7 +118,7 @@ export function PromptLogicSection({
                         type="button"
                         aria-label="What is the user instruction template?"
                       >
-                        <HelpCircleIcon className="text-muted-foreground size-3.5" />
+                        <HelpCircleIcon className="text-muted-foreground size-4" />
                       </button>
                     }
                   />
@@ -153,43 +128,57 @@ export function PromptLogicSection({
                   </TooltipPopup>
                 </Tooltip>
               </div>
+            </CardHeader>
+            <CardPanel className="flex flex-1 flex-col gap-4 pt-0">
               <Textarea
-                id="user-instruction"
                 ref={userInstructionRef}
                 value={userInstructionTemplate}
                 onChange={(e) => onUserInstructionChange?.(e.target.value)}
                 placeholder="Write your prompt here..."
-                className="h-full min-h-37.5 font-mono text-sm"
-                unstyled
+                className="min-h-48 font-mono text-sm"
+                rows={8}
               />
-            </div>
-            {variableList.length > 0 && (
-              <div className="bg-muted/30 border-border flex flex-wrap items-center gap-2 border-t px-4 py-2">
-                <span className="text-muted-foreground text-xs">
-                  Insert variable:
-                </span>
-                {variableList.map((variable) => (
-                  <button
-                    key={variable.name}
-                    type="button"
-                    onClick={() => onInsertVariable?.(variable.name)}
-                    className={`rounded-sm border px-2 py-1 font-mono text-xs transition-colors ${
-                      variable.isOptional
-                        ? `bg-muted/50 text-muted-foreground hover:bg-muted border-dashed`
-                        : `bg-background hover:bg-muted`
-                    }`}
-                  >
-                    + {variable.name}
-                    {variable.isOptional && (
-                      <span className="ml-1 text-[10px] opacity-60">?</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+              {variableList.length > 0 && (
+                <VariableChips
+                  variables={variableList}
+                  onInsert={onInsertVariable}
+                />
+              )}
+            </CardPanel>
+          </Card>
         </div>
       </TooltipProvider>
     </section>
+  )
+}
+
+function VariableChips({
+  variables,
+  onInsert,
+}: {
+  variables: VariableInfo[]
+  onInsert?: (variable: string) => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-muted-foreground text-xs">Insert variable:</span>
+      {variables.map((variable) => (
+        <button
+          key={variable.name}
+          type="button"
+          onClick={() => onInsert?.(variable.name)}
+          className={`rounded-sm border px-2 py-1 font-mono text-xs transition-colors ${
+            variable.isOptional
+              ? `bg-muted/50 text-muted-foreground hover:bg-muted border-dashed`
+              : `bg-background hover:bg-muted`
+          }`}
+        >
+          + {variable.name}
+          {variable.isOptional && (
+            <span className="ml-1 text-[10px] opacity-60">?</span>
+          )}
+        </button>
+      ))}
+    </div>
   )
 }

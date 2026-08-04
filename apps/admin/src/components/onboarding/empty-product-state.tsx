@@ -27,13 +27,16 @@ export function EmptyProductState() {
       <EmptyContent>
         <div className="flex flex-col gap-2 text-sm">
           <span className="text-muted-foreground">
-            1. Define what information the user provides
+            1. Name and describe your product
           </span>
           <span className="text-muted-foreground">
-            2. Write the system role and user instruction
+            2. Define what information the user provides
           </span>
           <span className="text-muted-foreground">
-            3. Choose a model and publish
+            3. Write the system role and user instruction
+          </span>
+          <span className="text-muted-foreground">
+            4. Choose a model and publish
           </span>
         </div>
         <Button render={<Link to="/products/add" />}>

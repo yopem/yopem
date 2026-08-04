@@ -6,13 +6,42 @@ import { useState } from "react"
 import { Button } from "ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "ui/card"
 
+import type { ProductFormStep } from "./product-form-tabs"
+
 const DISMISS_KEY = "yopem:product-builder-tips-dismissed"
 
 interface ProductBuilderTipsProps {
   mode: "create" | "edit"
+  step: ProductFormStep
 }
 
-export function ProductBuilderTips({ mode }: ProductBuilderTipsProps) {
+const stepTips: Record<
+  ProductFormStep,
+  { title: string; description: string }
+> = {
+  basics: {
+    title: "Start with the basics",
+    description:
+      "Give your product a clear name and a short description. The description is what users read before trying it.",
+  },
+  inputs: {
+    title: "Add user inputs",
+    description:
+      "Define the fields users fill out. Start simple with one variable like topic or style — you can add more later.",
+  },
+  prompt: {
+    title: "Write the prompt",
+    description:
+      "Set the AI persona in System Role, then write the main instruction. Click variable chips to insert values.",
+  },
+  configure: {
+    title: "Choose model and pricing",
+    description:
+      "Pick the API key and model, set the output format, and adjust pricing. Categories and tags are optional.",
+  },
+}
+
+export function ProductBuilderTips({ mode, step }: ProductBuilderTipsProps) {
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return true
     return !localStorage.getItem(DISMISS_KEY)
@@ -26,6 +55,8 @@ export function ProductBuilderTips({ mode }: ProductBuilderTipsProps) {
   }
 
   if (!visible) return null
+
+  const tip = stepTips[step]
 
   return (
     <Card className="border-dashed">
@@ -42,16 +73,10 @@ export function ProductBuilderTips({ mode }: ProductBuilderTipsProps) {
         <div className="flex items-center gap-2">
           <LightbulbIcon className="text-warning size-4" />
           <CardTitle className="text-base">
-            {mode === "create"
-              ? "Building your first product"
-              : "Editing your product"}
+            {mode === "create" ? tip.title : `Editing — ${tip.title}`}
           </CardTitle>
         </div>
-        <CardDescription>
-          {mode === "create"
-            ? "Start simple: name your product, add one input variable, write a short prompt, then choose a model. You can customize everything later."
-            : "Review the prompt logic and input variables, then adjust model or pricing in the configuration panel."}
-        </CardDescription>
+        <CardDescription>{tip.description}</CardDescription>
       </CardHeader>
     </Card>
   )
