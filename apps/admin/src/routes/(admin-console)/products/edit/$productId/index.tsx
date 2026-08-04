@@ -3,12 +3,15 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
+import { getInputFieldsFromWorkflow } from "db/schema"
 import { queryApi } from "rpc/query"
+import type { ProductInputVariable } from "ui/product-input-field"
 import { toastManager } from "ui/toast"
 
 import { FeatureBuilderHeader } from "@/components/products/feature-builder-header"
 import {
   ProductForm,
+  type ProductFormData,
   type ProductFormRef,
 } from "@/components/products/product-form"
 import { ProductPreviewSheet } from "@/components/products/product-preview-sheet"
@@ -27,14 +30,11 @@ function ProductEditRouteComponent() {
   const formRef = useRef<ProductFormRef>(null)
   const [previewSheetOpen, setPreviewSheetOpen] = useState(false)
   const [previewResult, setPreviewResult] = useState<string | null>(null)
-  const [currentInputVariables, setCurrentInputVariables] = useState<
-    {
-      variableName: string
-      description: string
-      type: string
-      options?: { label: string; value: string }[]
-    }[]
+  const [previewSteps, setPreviewSteps] = useState<
+    { nodeId: string; outputName: string; value: string; status: string }[]
   >([])
+  const [currentFormData, setCurrentFormData] =
+    useState<ProductFormData | null>(null)
 
   const {
     data: product,
@@ -69,6 +69,14 @@ function ProductEditRouteComponent() {
     queryApi.products.preview.mutationOptions({
       onSuccess: (data) => {
         setPreviewResult(data.output)
+        setPreviewSteps(
+          (data.steps ?? []).map((s) => ({
+            nodeId: s.nodeId,
+            outputName: s.outputName,
+            value: s.value,
+            status: s.status,
+          })),
+        )
         toastManager.add({
           title: "Preview completed",
           description:
@@ -97,15 +105,11 @@ function ProductEditRouteComponent() {
       return
     }
 
-    if (
-      !formData.systemRole ||
-      !formData.userInstructionTemplate ||
-      formData.inputVariable.length === 0
-    ) {
+    const inputFields = getInputFieldsFromWorkflow(formData.workflow)
+    if (inputFields.length === 0) {
       toastManager.add({
         title: "Cannot preview",
-        description:
-          "Please complete the form: system role, user instruction template, and at least one input variable are required",
+        description: "Workflow must contain at least one input field",
         type: "error",
       })
       return
@@ -121,9 +125,7 @@ function ProductEditRouteComponent() {
       return
     }
 
-    const productConfig = formData.config as {
-      modelEngine?: string
-    } | null
+    const productConfig = formData.config as { modelEngine?: string } | null
     if (!productConfig?.modelEngine) {
       toastManager.add({
         title: "Cannot preview",
@@ -134,37 +136,34 @@ function ProductEditRouteComponent() {
       return
     }
 
-    setCurrentInputVariables(
-      formData.inputVariable.map((v) => ({
+    setCurrentFormData(formData)
+    setPreviewResult(null)
+    setPreviewSteps([])
+    setPreviewSheetOpen(true)
+  }, [])
+
+  const currentInputVariables: ProductInputVariable[] = currentFormData
+    ? getInputFieldsFromWorkflow(currentFormData.workflow).map((v) => ({
         variableName: v.variableName,
         description: v.description,
         type: v.type,
         ...(v.options && { options: v.options }),
-      })),
-    )
-
-    setPreviewResult(null)
-    setPreviewSheetOpen(true)
-  }, [])
+      }))
+    : []
 
   const handleExecutePreview = useCallback(
     (inputs: Record<string, string>) => {
-      const formData = formRef.current?.getValues()
-      if (!formData) return
+      if (!currentFormData) return
 
       executePreviewMutation.mutate({
-        systemRole: formData.systemRole,
-        userInstructionTemplate: formData.userInstructionTemplate,
-        inputVariable: formData.inputVariable,
-        config: formData.config as {
-          modelEngine: string
-        },
-        outputFormat: formData.outputFormat ?? "plain",
+        workflow: currentFormData.workflow,
+        config: currentFormData.config as { modelEngine: string },
+        outputFormat: currentFormData.outputFormat ?? "plain",
         inputs,
-        apiKeyId: formData.apiKeyId,
+        apiKeyId: currentFormData.apiKeyId,
       })
     },
-    [executePreviewMutation],
+    [executePreviewMutation, currentFormData],
   )
 
   const handleSaveDraft = useCallback(() => {
@@ -243,6 +242,7 @@ function ProductEditRouteComponent() {
         onExecute={handleExecutePreview}
         isExecuting={executePreviewMutation.isPending}
         result={previewResult}
+        steps={previewSteps}
       />
     </>
   )

@@ -15,6 +15,7 @@ import {
   productsTable,
   tagsTable,
 } from "db/schema"
+import { type InputField } from "db/schema/product-workflow"
 import {
   createAIModel,
   deleteAIModelById,
@@ -902,15 +903,21 @@ async function seedProducts(
       .map((name) => tagIds.get(name))
       .filter((id): id is string => id !== undefined)
 
+    const workflow = buildWorkflowFromSeed(
+      product.name,
+      product.systemRole,
+      product.userInstructionTemplate,
+      product.inputVariable,
+      product.outputFormat,
+    )
+
     await createProduct({
       name: product.name,
       excerpt: product.excerpt,
       description: product.description,
       status: "active",
       config: { modelEngine },
-      systemRole: product.systemRole,
-      userInstructionTemplate: product.userInstructionTemplate,
-      inputVariable: product.inputVariable,
+      workflow,
       outputFormat: product.outputFormat,
       costPerRun: product.costPerRun,
       isPublic: true,
@@ -924,6 +931,63 @@ async function seedProducts(
   }
 
   return { created, skipped }
+}
+
+function buildWorkflowFromSeed(
+  name: string,
+  systemRole: string,
+  userInstructionTemplate: string,
+  inputVariable: InputVariable[],
+  outputFormat: "plain" | "json" | "image" | "video",
+) {
+  const inputNodeId = "input_1"
+  const aiNodeId = "ai_1"
+  const outputNodeId = "output_1"
+
+  return {
+    nodes: [
+      {
+        id: inputNodeId,
+        type: "input" as const,
+        position: { x: 100, y: 100 },
+        data: {
+          label: `${name} Inputs`,
+          fields: inputVariable.map((v) => ({
+            variableName: v.variableName,
+            description: v.description,
+            type: v.type as InputField["type"],
+            ...(v.options && { options: v.options }),
+          })),
+        },
+      },
+      {
+        id: aiNodeId,
+        type: "ai" as const,
+        position: { x: 400, y: 100 },
+        data: {
+          label: "Generate",
+          systemRole,
+          userInstructionTemplate,
+          outputName: "result",
+          outputFormat,
+        },
+      },
+      {
+        id: outputNodeId,
+        type: "output" as const,
+        position: { x: 700, y: 100 },
+        data: {
+          label: "Final Output",
+          template: "{{result}}",
+          outputName: "finalOutput",
+        },
+      },
+    ],
+    edges: [
+      { id: "e1", source: inputNodeId, target: aiNodeId },
+      { id: "e2", source: aiNodeId, target: outputNodeId },
+    ],
+  }
 }
 
 function confirm(message: string): Promise<boolean> {

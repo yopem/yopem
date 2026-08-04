@@ -36,6 +36,33 @@ const sampleKey: ApiKeyConfig = {
   updatedAt: "2024-01-01",
 }
 
+const minimalWorkflow = {
+  nodes: [
+    {
+      id: "input_1",
+      type: "input" as const,
+      position: { x: 0, y: 0 },
+      data: {
+        label: "Input",
+        fields: [
+          {
+            variableName: "x",
+            description: "x",
+            type: "text" as const,
+          },
+        ],
+      },
+    },
+    {
+      id: "output_1",
+      type: "output" as const,
+      position: { x: 200, y: 0 },
+      data: { label: "Output", template: "{{x}}", outputName: "final" },
+    },
+  ],
+  edges: [{ id: "e1", source: "input_1", target: "output_1" }],
+}
+
 describe("products router", () => {
   test("exports fifteen procedures nested under products", () => {
     const keys = Object.keys(productsRouter.products).sort()
@@ -105,7 +132,7 @@ describe("products router", () => {
     await expect(
       call(
         productsRouter.products.create,
-        { name: "x" },
+        { name: "x", workflow: minimalWorkflow },
         { context: { session: null } },
       ),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
@@ -115,7 +142,7 @@ describe("products router", () => {
     await expect(
       call(
         productsRouter.products.create,
-        { name: "x" },
+        { name: "x", workflow: minimalWorkflow },
         { context: userContext("user") },
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })

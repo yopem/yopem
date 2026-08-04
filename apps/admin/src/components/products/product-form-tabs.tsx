@@ -2,13 +2,12 @@
 
 import {
   CheckIcon,
+  GitBranchIcon,
   PencilIcon,
   SlidersHorizontalIcon,
-  SparklesIcon,
-  TextCursorInputIcon,
 } from "lucide-react"
 
-export type ProductFormStep = "basics" | "inputs" | "prompt" | "configure"
+export type ProductFormStep = "basics" | "workflow" | "configure"
 
 interface ProductFormTabsProps {
   activeStep: ProductFormStep
@@ -28,16 +27,10 @@ const steps: {
     icon: PencilIcon,
   },
   {
-    id: "inputs",
-    label: "Inputs",
-    description: "User fields",
-    icon: TextCursorInputIcon,
-  },
-  {
-    id: "prompt",
-    label: "Prompt",
-    description: "AI instructions",
-    icon: SparklesIcon,
+    id: "workflow",
+    label: "Workflow",
+    description: "Steps & AI nodes",
+    icon: GitBranchIcon,
   },
   {
     id: "configure",

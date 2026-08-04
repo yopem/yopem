@@ -1,11 +1,15 @@
 import { ORPCError } from "@orpc/server"
-import { executeAIProduct } from "server/llm/executor"
-import { decryptApiKey } from "server/utils/crypto"
+import { executeWorkflow } from "server/llm/workflow"
 import { z } from "zod"
 
 import { redisCache } from "cache"
 import { getOrCompute } from "cache/services/with-cache"
-import { insertProductSchema, updateProductSchema } from "db/schema"
+import {
+  productWorkflowSchema,
+  insertProductSchema,
+  updateProductSchema,
+  type ProductWorkflow,
+} from "db/schema"
 import { findAIModelByProviderAndModelId, getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
 import { listCategories, validateCategoryIds } from "db/services/categories"
@@ -32,46 +36,33 @@ import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 const API_KEYS_SETTING_KEY = "api_keys"
 const SETTINGS_CACHE_TTL = 300
 
-function validateRequiredInputs(
+function validateWorkflow(workflow: unknown): void {
+  const result = productWorkflowSchema.safeParse(workflow)
+  if (!result.success) {
+    throw new ORPCError("BAD_REQUEST", {
+      status: 400,
+      message: `Invalid workflow: ${result.error.issues[0]?.message ?? "unknown"}`,
+    })
+  }
+}
+
+function validateWorkflowInputs(
   inputs: Record<string, string>,
-  inputVariables: { variableName: string; isOptional?: boolean }[],
+  workflow: ProductWorkflow,
 ): void {
-  const requiredInputs = inputVariables.filter((v) => !v.isOptional)
-  const missingInputs = requiredInputs
-    .filter((v) => !inputs[v.variableName])
-    .map((v) => v.variableName)
+  const inputNodes = workflow.nodes.filter(
+    (n): n is Extract<(typeof workflow.nodes)[number], { type: "input" }> =>
+      n.type === "input",
+  )
+  const allFields = inputNodes.flatMap((n) => n.data.fields)
+  const missing = allFields
+    .filter((f) => !f.isOptional && !inputs[f.variableName])
+    .map((f) => f.variableName)
 
-  if (missingInputs.length > 0) {
+  if (missing.length > 0) {
     throw new ORPCError("BAD_REQUEST", {
       status: 400,
-      message: `Missing required inputs: ${missingInputs.join(", ")}`,
-    })
-  }
-}
-
-function validateSystemRole(systemRole: string): void {
-  if (!systemRole || systemRole.trim() === "") {
-    throw new ORPCError("BAD_REQUEST", {
-      status: 400,
-      message: "System role is required",
-    })
-  }
-}
-
-function validateUserInstructionTemplate(template: string): void {
-  if (!template || template.trim() === "") {
-    throw new ORPCError("BAD_REQUEST", {
-      status: 400,
-      message: "User instruction template is required",
-    })
-  }
-}
-
-function validateApiKeyId(apiKeyId: string): void {
-  if (!apiKeyId) {
-    throw new ORPCError("BAD_REQUEST", {
-      status: 400,
-      message: "API key is required for preview execution",
+      message: `Missing required inputs: ${missing.join(", ")}`,
     })
   }
 }
@@ -147,32 +138,7 @@ const productExecuteInputSchema = z.object({
 })
 
 const previewInputSchema = z.object({
-  systemRole: z.string(),
-  userInstructionTemplate: z.string(),
-  inputVariable: z.array(
-    z.object({
-      variableName: z.string(),
-      type: z.enum([
-        "text",
-        "long_text",
-        "number",
-        "boolean",
-        "select",
-        "image",
-        "video",
-      ]),
-      description: z.string(),
-      options: z
-        .array(
-          z.object({
-            label: z.string(),
-            value: z.string(),
-          }),
-        )
-        .optional(),
-      isOptional: z.boolean().optional(),
-    }),
-  ),
+  workflow: productWorkflowSchema,
   inputs: z.record(z.string(), z.string()),
   config: z.object({
     modelEngine: z.string(),
@@ -286,42 +252,22 @@ export const productsRouter = {
           })
         }
 
-        if (product.apiKeyId === null) {
+        if (!product.workflow) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
-            message: "Product is not configured with an API key",
+            message: "Product workflow is missing",
           })
         }
+
+        validateWorkflow(product.workflow)
+        validateWorkflowInputs(
+          inputs as Record<string, string>,
+          product.workflow,
+        )
 
         const apiKeys = await getApiKeys()
-        const selectedKey = apiKeys.find((key) => key.id === product.apiKeyId)
-
-        if (!selectedKey) {
-          throw new ORPCError("NOT_FOUND", {
-            status: 404,
-            message: "The API key configured for this product no longer exists",
-          })
-        }
-
-        if (selectedKey.status !== "active") {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "The API key configured for this product is inactive",
-          })
-        }
-
-        const cost = Number(product.costPerRun ?? 0)
-
-        const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
-        if (!decryptedKey) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            status: 500,
-            message: "Failed to decrypt API key",
-          })
-        }
 
         const productConfig = product.config as { modelEngine: string } | null
-
         if (productConfig === null) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
@@ -330,28 +276,45 @@ export const productsRouter = {
         }
 
         const runId = createCustomId()
-
-        let execResult: {
-          output: string
-          usage?: {
-            promptTokens: number
-            completionTokens: number
-            totalTokens: number
-          }
-        }
-
-        await validateModelForKey(selectedKey, productConfig.modelEngine)
+        const cost = Number(product.costPerRun ?? 0)
 
         try {
-          execResult = await executeAIProduct({
-            systemRole: product.systemRole ?? "",
-            userInstructionTemplate: product.userInstructionTemplate ?? "",
+          const result = await executeWorkflow({
+            workflow: product.workflow,
             inputs,
-            config: productConfig,
-            outputFormat: product.outputFormat ?? "plain",
-            apiKey: decryptedKey,
-            provider: selectedKey.provider,
+            productConfig: {
+              modelEngine: productConfig.modelEngine,
+              outputFormat: product.outputFormat ?? "plain",
+            },
+            productApiKeyId: product.apiKeyId,
+            apiKeys,
           })
+
+          await insertProductRun({
+            id: runId,
+            productId,
+            userId: session.id,
+            inputs,
+            outputs: {
+              finalOutputName: result.finalOutputName,
+              finalOutput: result.finalOutput,
+              steps: result.steps.map((s) => ({
+                nodeId: s.nodeId,
+                outputName: s.outputName,
+                value: s.value,
+                status: s.status,
+              })),
+            },
+            status: "completed",
+            cost: String(cost),
+            completedAt: new Date(),
+          })
+
+          return {
+            runId,
+            output: result.finalOutput,
+            cost,
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
@@ -367,28 +330,9 @@ export const productsRouter = {
           })
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
             status: 500,
-            message: `AI execution failed: ${errorMessage}`,
+            message: `Workflow execution failed: ${errorMessage}`,
             cause: error,
           })
-        }
-
-        const output = execResult.output
-
-        await insertProductRun({
-          id: runId,
-          productId,
-          userId: session.id,
-          inputs,
-          outputs: { result: output },
-          status: "completed",
-          cost: String(cost),
-          completedAt: new Date(),
-        })
-
-        return {
-          runId,
-          output,
-          cost,
         }
       }),
 
@@ -398,57 +342,28 @@ export const productsRouter = {
       .use(requireAdminMiddleware)
       .input(previewInputSchema)
       .handler(async ({ input }) => {
-        validateRequiredInputs(input.inputs, input.inputVariable)
-        validateSystemRole(input.systemRole)
-        validateUserInstructionTemplate(input.userInstructionTemplate)
-        validateApiKeyId(input.apiKeyId)
+        validateWorkflow(input.workflow)
+        validateWorkflowInputs(input.inputs, input.workflow)
 
         const apiKeys = await getApiKeys()
-        const selectedKey = apiKeys.find((key) => key.id === input.apiKeyId)
-
-        if (!selectedKey) {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "Selected API key not found",
-          })
-        }
-
-        if (selectedKey.status !== "active") {
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "Selected API key is inactive",
-          })
-        }
-
-        const decryptedKey = decryptApiKey(selectedKey.apiKey).trim()
-        if (!decryptedKey) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            status: 500,
-            message: "Failed to decrypt API key",
-          })
-        }
-
-        let execResult: {
-          output: string
-          usage?: {
-            promptTokens: number
-            completionTokens: number
-            totalTokens: number
-          }
-        }
-
-        await validateModelForKey(selectedKey, input.config.modelEngine)
 
         try {
-          execResult = await executeAIProduct({
-            systemRole: input.systemRole,
-            userInstructionTemplate: input.userInstructionTemplate,
+          const result = await executeWorkflow({
+            workflow: input.workflow,
             inputs: input.inputs,
-            config: input.config,
-            outputFormat: input.outputFormat,
-            apiKey: decryptedKey,
-            provider: selectedKey.provider,
+            productConfig: {
+              modelEngine: input.config.modelEngine,
+              outputFormat: input.outputFormat,
+            },
+            productApiKeyId: input.apiKeyId,
+            apiKeys,
           })
+
+          return {
+            output: result.finalOutput,
+            steps: result.steps,
+            cost: 0,
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
@@ -461,20 +376,15 @@ export const productsRouter = {
           ) {
             throw new ORPCError("BAD_REQUEST", {
               status: 400,
-              message: `AI execution failed: ${errorMessage}`,
+              message: `Workflow execution failed: ${errorMessage}`,
             })
           }
 
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
             status: 500,
-            message: `AI execution failed: ${errorMessage}`,
+            message: `Workflow execution failed: ${errorMessage}`,
             cause: error,
           })
-        }
-
-        return {
-          output: execResult.output,
-          cost: 0,
         }
       }),
 

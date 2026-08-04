@@ -16,19 +16,16 @@ import {
 } from "@/components/categories-tags/category-selector"
 
 import { ApiKeySelector } from "./api-key-selector"
-import { ModelSelector } from "./model-selector"
 import { PricingSection } from "./pricing-section"
 import { TagSelector, type TagSelectorType } from "./tag-selector"
 import { ThumbnailSelector } from "./thumbnail-selector"
 
 interface ConfigValues {
-  modelEngine: string
   outputFormat: "plain" | "json" | "image" | "video"
   costPerRun: number
   markup: number
   apiKeyId?: string
   apiKeyError?: string
-  modelOptions: string[]
   availableApiKeys: ApiKeyConfig[]
   categoryIds?: string[]
   tagIds?: string[]
@@ -38,7 +35,6 @@ interface ConfigValues {
 }
 
 interface ConfigHandlers {
-  onModelEngineChange: (value: string) => void
   onOutputFormatChange: (value: "plain" | "json" | "image" | "video") => void
   onCostPerRunChange: (value: number) => void
   onMarkupChange: (value: number) => void
@@ -60,11 +56,9 @@ export function ConfigurationPanel({
   handlers,
 }: ConfigurationPanelProps) {
   const {
-    modelEngine,
     outputFormat,
     costPerRun,
     markup,
-    modelOptions,
     apiKeyId,
     availableApiKeys,
     apiKeyError,
@@ -76,7 +70,6 @@ export function ConfigurationPanel({
   } = config
 
   const {
-    onModelEngineChange,
     onOutputFormatChange,
     onCostPerRunChange,
     onMarkupChange,
@@ -109,15 +102,6 @@ export function ConfigurationPanel({
                 error={apiKeyError}
               />
             )}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="model-engine">Model Engine</Label>
-              <ModelSelector
-                id="model-engine"
-                value={modelEngine}
-                onChange={onModelEngineChange}
-                options={modelOptions}
-              />
-            </div>
           </div>
         </div>
 

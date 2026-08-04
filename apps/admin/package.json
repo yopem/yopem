@@ -19,6 +19,7 @@
     "@tanstack/react-router-ssr-query": "catalog:",
     "@tanstack/react-start": "catalog:",
     "@unpic/react": "catalog:",
+    "@xyflow/react": "^12.11.2",
     "auth": "workspace:*",
     "db": "workspace:*",
     "editor": "workspace:*",

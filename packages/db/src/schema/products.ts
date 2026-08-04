@@ -15,6 +15,8 @@ import { z } from "zod"
 
 import { createCustomId } from "utils/custom-id"
 
+import { productWorkflowSchema, type ProductWorkflow } from "./product-workflow"
+
 export const productStatusEnum = ["draft", "active", "archived"] as const
 export type ProductStatus = (typeof productStatusEnum)[number]
 
@@ -39,16 +41,7 @@ export const productsTable = pgTable("products", {
     .default("draft")
     .notNull(),
   config: jsonb("config"),
-  systemRole: text("system_role"),
-  userInstructionTemplate: text("user_instruction_template"),
-  inputVariable: jsonb("input_variable").$type<
-    {
-      variableName: string
-      description: string
-      type: string
-      options?: { label: string; value: string }[]
-    }[]
-  >(),
+  workflow: jsonb("workflow").$type<ProductWorkflow>(),
   outputFormat: text("output_format", {
     enum: productOutputFormatEnum,
   }).default("plain"),
@@ -62,23 +55,33 @@ export const productsTable = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 })
 
-export const insertProductSchema = createInsertSchema(productsTable).extend({
-  slug: z.string().optional(),
-  tagIds: z.array(z.string()).optional(),
-  categoryIds: z.array(z.string()).optional(),
-  thumbnailId: z.string().optional(),
+const workflowJsonSchema = z.custom<ProductWorkflow>((value) => {
+  if (value === null || value === undefined) return true
+  return productWorkflowSchema.safeParse(value).success
 })
-export const updateProductSchema = createUpdateSchema(productsTable).extend({
-  tagIds: z.array(z.string()).optional(),
-  categoryIds: z.array(z.string()).optional(),
-  thumbnailId: z.string().optional(),
-})
+
+export const insertProductSchema = createInsertSchema(productsTable)
+  .omit({ workflow: true })
+  .extend({
+    slug: z.string().optional(),
+    tagIds: z.array(z.string()).optional(),
+    categoryIds: z.array(z.string()).optional(),
+    thumbnailId: z.string().optional(),
+    workflow: workflowJsonSchema.optional(),
+  })
+export const updateProductSchema = createUpdateSchema(productsTable)
+  .omit({ workflow: true })
+  .extend({
+    id: z.string().optional(),
+    tagIds: z.array(z.string()).optional(),
+    categoryIds: z.array(z.string()).optional(),
+    thumbnailId: z.string().optional(),
+    workflow: workflowJsonSchema.optional(),
+  })
 export const productSchema = createSelectSchema(productsTable)
 export const publicProductSchema = productSchema.omit({
   apiKeyId: true,
   config: true,
-  systemRole: true,
-  userInstructionTemplate: true,
   thumbnailId: true,
   createdBy: true,
 })

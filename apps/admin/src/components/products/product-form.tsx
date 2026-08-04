@@ -11,17 +11,16 @@ import type { ApiKeyConfig } from "utils/api-input"
 
 import { ConfigurationPanel } from "./configuration-panel"
 import { DescriptionEditor } from "./description-editor"
-import { InputVariableSection } from "./input-variable-section"
 import { ProductBuilderTips } from "./product-builder-tips"
 import { ProductFormCategoryDialog } from "./product-form-category-dialog"
 import { ProductFormTabs, type ProductFormStep } from "./product-form-tabs"
 import { ProductFormTagDialog } from "./product-form-tag-dialog"
-import { PromptLogicSection } from "./prompt-logic-section"
 import {
   useProductForm,
   type ProductFormData,
   type ProductFormRef,
 } from "./use-product-form"
+import { WorkflowEditor } from "./workflow-editor"
 
 export type { ProductFormData, ProductFormRef }
 
@@ -47,8 +46,6 @@ export function ProductForm({
     form,
     getFormValues,
     safeApiKeys,
-    systemRoleRef,
-    userInstructionRef,
     availableModels,
     categories,
     tags,
@@ -56,10 +53,7 @@ export function ProductForm({
     dialogsDispatch,
     createCategoryMutation,
     createTagMutation,
-    handleInsertVariable,
-    handleAddField,
-    handleUpdateField,
-    handleDeleteField,
+    handleWorkflowChange,
   } = useProductForm({ mode, initialData, onSubmit, apiKeys })
 
   const [activeStep, setActiveStep] = useState<ProductFormStep>("basics")
@@ -161,55 +155,20 @@ export function ProductForm({
           </div>
         )}
 
-        {activeStep === "inputs" && (
+        {activeStep === "workflow" && (
           <form.Subscribe
             selector={(state) => ({
-              inputFields: state.values.inputFields,
+              workflow: state.values.workflow,
+              apiKeyId: state.values.apiKeyId,
             })}
           >
-            {({ inputFields }) => (
-              <InputVariableSection
-                fields={inputFields}
-                onAddField={handleAddField}
-                onUpdateField={handleUpdateField}
-                onDeleteField={handleDeleteField}
-              />
-            )}
-          </form.Subscribe>
-        )}
-
-        {activeStep === "prompt" && (
-          <form.Subscribe
-            selector={(state) => ({
-              systemRole: state.values.systemRole,
-              userInstructionTemplate: state.values.userInstructionTemplate,
-              inputFields: state.values.inputFields,
-            })}
-          >
-            {({ systemRole, userInstructionTemplate, inputFields }) => (
-              <PromptLogicSection
-                systemRole={systemRole}
-                userInstructionTemplate={userInstructionTemplate}
-                variables={inputFields
-                  .filter((f) => f.variableName && f.variableName.trim() !== "")
-                  .map((f) => ({
-                    name: f.variableName,
-                    isOptional: f.isOptional ?? false,
-                  }))}
-                onSystemRoleChange={(value) =>
-                  form.setFieldValue("systemRole", value)
-                }
-                onUserInstructionChange={(value) =>
-                  form.setFieldValue("userInstructionTemplate", value)
-                }
-                onInsertVariable={(variable) =>
-                  handleInsertVariable(variable, "userInstruction")
-                }
-                onInsertSystemRoleVariable={(variable) =>
-                  handleInsertVariable(variable, "systemRole")
-                }
-                systemRoleRef={systemRoleRef}
-                userInstructionRef={userInstructionRef}
+            {({ workflow, apiKeyId }) => (
+              <WorkflowEditor
+                workflow={workflow}
+                apiKeys={safeApiKeys}
+                availableModels={availableModels}
+                defaultApiKeyId={apiKeyId}
+                onChange={handleWorkflowChange}
               />
             )}
           </form.Subscribe>
@@ -218,7 +177,6 @@ export function ProductForm({
         {activeStep === "configure" && (
           <form.Subscribe
             selector={(state) => ({
-              modelEngine: state.values.modelEngine,
               outputFormat: state.values.outputFormat,
               costPerRun: state.values.costPerRun,
               markup: state.values.markup,
@@ -230,7 +188,6 @@ export function ProductForm({
             })}
           >
             {({
-              modelEngine,
               outputFormat,
               costPerRun,
               markup,
@@ -242,13 +199,11 @@ export function ProductForm({
             }) => (
               <ConfigurationPanel
                 config={{
-                  modelEngine,
                   outputFormat,
                   costPerRun,
                   markup,
                   apiKeyId,
                   apiKeyError,
-                  modelOptions: availableModels,
                   availableApiKeys: safeApiKeys,
                   categoryIds,
                   tagIds,
@@ -257,8 +212,6 @@ export function ProductForm({
                   thumbnailId,
                 }}
                 handlers={{
-                  onModelEngineChange: (value) =>
-                    form.setFieldValue("modelEngine", value),
                   onOutputFormatChange: (value) =>
                     form.setFieldValue("outputFormat", value),
                   onCostPerRunChange: (value) =>

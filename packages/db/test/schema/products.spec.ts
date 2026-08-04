@@ -43,8 +43,7 @@ describe("products schema", () => {
       "slug",
       "apiKeyId",
       "config",
-      "systemRole",
-      "userInstructionTemplate",
+      "workflow",
     ]) {
       expect(keys).toContain(field)
     }
@@ -55,8 +54,6 @@ describe("products schema", () => {
     for (const sensitive of [
       "apiKeyId",
       "config",
-      "systemRole",
-      "userInstructionTemplate",
       "thumbnailId",
       "createdBy",
     ]) {
@@ -65,5 +62,6 @@ describe("products schema", () => {
     expect(keys).toContain("id")
     expect(keys).toContain("name")
     expect(keys).toContain("slug")
+    expect(keys).toContain("workflow")
   })
 })

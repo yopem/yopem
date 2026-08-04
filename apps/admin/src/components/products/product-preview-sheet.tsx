@@ -1,7 +1,7 @@
 "use client"
 
 import { LoaderCircleIcon, XIcon } from "lucide-react"
-import { useEffect, useReducer, useRef } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
 
 import { Button } from "ui/button"
 import { Field, FieldLabel } from "ui/field"
@@ -10,6 +10,14 @@ import {
   type ProductInputVariable,
 } from "ui/product-input-field"
 import { ScrollArea } from "ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "ui/tabs"
+
+interface PreviewStep {
+  nodeId: string
+  outputName: string
+  value: string
+  status: string
+}
 
 interface ProductPreviewSheetProps {
   open: boolean
@@ -18,6 +26,7 @@ interface ProductPreviewSheetProps {
   onExecute: (inputs: Record<string, string>) => void
   isExecuting: boolean
   result: string | null
+  steps?: PreviewStep[]
 }
 
 interface SheetState {
@@ -69,11 +78,13 @@ export function ProductPreviewSheet({
   onExecute,
   isExecuting,
   result,
+  steps = [],
 }: ProductPreviewSheetProps) {
   const [{ previewInputs, isVisible, validationErrors }, dispatch] = useReducer(
     sheetReducer,
     sheetInitialState,
   )
+  const [mode, setMode] = useState<"user" | "admin">("user")
   const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileReaderRef = useRef<FileReader | null>(null)
@@ -202,7 +213,7 @@ export function ProductPreviewSheet({
       />
 
       <div
-        className={`bg-popover text-popover-foreground fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l shadow-lg transition-transform duration-200 ease-in-out ${
+        className={`bg-popover text-popover-foreground fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l shadow-lg transition-transform duration-200 ease-in-out ${
           isVisible ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -225,51 +236,208 @@ export function ProductPreviewSheet({
           </p>
         </div>
 
+        <div className="border-border border-b p-4">
+          <Tabs
+            value={mode}
+            onValueChange={(v) => setMode(v as "user" | "admin")}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="user">User View</TabsTrigger>
+              <TabsTrigger value="admin">Admin Steps</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         <ScrollArea className="flex-1">
           <div className="flex flex-col gap-4 p-6">
-            {inputVariables.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {inputVariables.map((field) => (
-                  <Field key={field.variableName}>
-                    <FieldLabel>{field.variableName}</FieldLabel>
-                    <ProductInputField
-                      field={field}
-                      value={previewInputs[field.variableName] || ""}
-                      error={validationErrors[field.variableName]}
-                      fileReaderRef={fileReaderRef}
-                      onChange={handleInputChange}
-                      onClearError={handleClearError}
-                    />
-                    {validationErrors[field.variableName] && (
-                      <p className="text-destructive mt-1 text-xs">
-                        {validationErrors[field.variableName]}
-                      </p>
-                    )}
-                  </Field>
-                ))}
-              </div>
-            )}
-
-            <Button onClick={handleExecutePreview} disabled={isExecuting}>
-              {isExecuting ? (
-                <>
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                  <span>Executing...</span>
-                </>
-              ) : (
-                "Execute Preview"
-              )}
-            </Button>
-
-            {result && (
-              <div className="bg-muted mt-4 rounded-lg border p-4">
-                <h4 className="mb-2 font-semibold">Result:</h4>
-                <pre className="text-sm whitespace-pre-wrap">{result}</pre>
-              </div>
+            {mode === "user" ? (
+              <UserPreviewTab
+                inputVariables={inputVariables}
+                previewInputs={previewInputs}
+                validationErrors={validationErrors}
+                isExecuting={isExecuting}
+                result={result}
+                fileReaderRef={fileReaderRef}
+                onInputChange={handleInputChange}
+                onClearError={handleClearError}
+                onExecute={handleExecutePreview}
+              />
+            ) : (
+              <AdminPreviewTab
+                inputVariables={inputVariables}
+                previewInputs={previewInputs}
+                validationErrors={validationErrors}
+                isExecuting={isExecuting}
+                result={result}
+                steps={steps}
+                fileReaderRef={fileReaderRef}
+                onInputChange={handleInputChange}
+                onClearError={handleClearError}
+                onExecute={handleExecutePreview}
+              />
             )}
           </div>
         </ScrollArea>
       </div>
+    </>
+  )
+}
+
+function UserPreviewTab({
+  inputVariables,
+  previewInputs,
+  validationErrors,
+  isExecuting,
+  result,
+  fileReaderRef,
+  onInputChange,
+  onClearError,
+  onExecute,
+}: {
+  inputVariables: ProductInputVariable[]
+  previewInputs: Record<string, string>
+  validationErrors: Record<string, string>
+  isExecuting: boolean
+  result: string | null
+  fileReaderRef: React.RefObject<FileReader | null>
+  onInputChange: (variableName: string, value: string) => void
+  onClearError: (variableName: string) => void
+  onExecute: () => void
+}) {
+  return (
+    <>
+      <div className="flex flex-col gap-4">
+        {inputVariables.map((field) => (
+          <Field key={field.variableName}>
+            <FieldLabel>{field.variableName}</FieldLabel>
+            <ProductInputField
+              field={field}
+              value={previewInputs[field.variableName] || ""}
+              error={validationErrors[field.variableName]}
+              fileReaderRef={fileReaderRef}
+              onChange={onInputChange}
+              onClearError={onClearError}
+            />
+            {validationErrors[field.variableName] && (
+              <p className="text-destructive mt-1 text-xs">
+                {validationErrors[field.variableName]}
+              </p>
+            )}
+          </Field>
+        ))}
+      </div>
+
+      <Button onClick={onExecute} disabled={isExecuting}>
+        {isExecuting ? (
+          <>
+            <LoaderCircleIcon className="size-4 animate-spin" />
+            <span>Executing...</span>
+          </>
+        ) : (
+          "Execute Preview"
+        )}
+      </Button>
+
+      {result && (
+        <div className="bg-muted mt-4 rounded-lg border p-4">
+          <h4 className="mb-2 font-semibold">Result:</h4>
+          <pre className="text-sm whitespace-pre-wrap">{result}</pre>
+        </div>
+      )}
+    </>
+  )
+}
+
+function AdminPreviewTab({
+  inputVariables,
+  previewInputs,
+  validationErrors,
+  isExecuting,
+  result,
+  steps,
+  fileReaderRef,
+  onInputChange,
+  onClearError,
+  onExecute,
+}: {
+  inputVariables: ProductInputVariable[]
+  previewInputs: Record<string, string>
+  validationErrors: Record<string, string>
+  isExecuting: boolean
+  result: string | null
+  steps: PreviewStep[]
+  fileReaderRef: React.RefObject<FileReader | null>
+  onInputChange: (variableName: string, value: string) => void
+  onClearError: (variableName: string) => void
+  onExecute: () => void
+}) {
+  return (
+    <>
+      <div className="flex flex-col gap-4">
+        {inputVariables.map((field) => (
+          <Field key={field.variableName}>
+            <FieldLabel>{field.variableName}</FieldLabel>
+            <ProductInputField
+              field={field}
+              value={previewInputs[field.variableName] || ""}
+              error={validationErrors[field.variableName]}
+              fileReaderRef={fileReaderRef}
+              onChange={onInputChange}
+              onClearError={onClearError}
+            />
+          </Field>
+        ))}
+      </div>
+
+      <Button onClick={onExecute} disabled={isExecuting}>
+        {isExecuting ? (
+          <>
+            <LoaderCircleIcon className="size-4 animate-spin" />
+            <span>Running workflow...</span>
+          </>
+        ) : (
+          "Run workflow"
+        )}
+      </Button>
+
+      {steps.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h4 className="font-semibold">Step outputs</h4>
+          {steps.map((step, index) => (
+            <div
+              key={`${step.nodeId}-${index}`}
+              className="bg-muted rounded-lg border p-3"
+            >
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase">
+                  {step.outputName}
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    step.status === "completed"
+                      ? "text-green-600"
+                      : step.status === "failed"
+                        ? "text-destructive"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {step.status}
+                </span>
+              </div>
+              <pre className="text-muted-foreground max-h-32 overflow-auto text-xs whitespace-pre-wrap">
+                {step.value}
+              </pre>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {result && (
+        <div className="bg-muted rounded-lg border p-4">
+          <h4 className="mb-2 font-semibold">Final Output</h4>
+          <pre className="text-sm whitespace-pre-wrap">{result}</pre>
+        </div>
+      )}
     </>
   )
 }

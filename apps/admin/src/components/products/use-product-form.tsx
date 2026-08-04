@@ -2,10 +2,17 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react"
+import { useEffect, useEffectEvent, useMemo, useReducer } from "react"
 import { z } from "zod"
 
-import { insertProductSchema, type SelectProduct } from "db/schema"
+import {
+  insertProductSchema,
+  type SelectProduct,
+  createDefaultWorkflow,
+  getInputFieldsFromWorkflow,
+  productWorkflowSchema,
+  type ProductWorkflow,
+} from "db/schema"
 import type { TElement } from "editor"
 import { deserializeHtmlToSlate } from "editor/serialize"
 import { queryApi } from "rpc/query"
@@ -14,16 +21,11 @@ import type { ApiKeyConfig } from "utils/api-input"
 
 import { validateModelProviderMatch } from "@/lib/utils/provider"
 
-import type { InputFieldType, SelectOption } from "./input-variable-row"
-
 const productFormSchema = insertProductSchema
   .pick({
     name: true,
     description: true,
     excerpt: true,
-    systemRole: true,
-    userInstructionTemplate: true,
-    inputVariable: true,
     outputFormat: true,
     costPerRun: true,
     config: true,
@@ -50,50 +52,7 @@ const productFormSchema = insertProductSchema
       { message: "Product description is required" },
     ),
     excerpt: z.string().max(500).optional(),
-    systemRole: z.string().min(1, "System role is required").trim(),
-    userInstructionTemplate: z
-      .string()
-      .min(1, "User instruction template is required")
-      .trim(),
-    inputVariable: z
-      .array(
-        z.object({
-          variableName: z.string().min(1),
-          type: z.enum([
-            "text",
-            "long_text",
-            "number",
-            "boolean",
-            "select",
-            "image",
-            "video",
-          ]),
-          description: z.string(),
-          options: z
-            .array(
-              z.object({
-                label: z.string(),
-                value: z.string(),
-              }),
-            )
-            .optional(),
-          isOptional: z.boolean().optional(),
-        }),
-      )
-      .min(1, "At least one input field is required")
-      .refine(
-        (fields) => {
-          return fields.every((field) => {
-            if (field.type === "select") {
-              return field.options && field.options.length > 0
-            }
-            return true
-          })
-        },
-        {
-          message: "Select type fields must have at least one option",
-        },
-      ),
+    workflow: productWorkflowSchema,
     apiKeyId: z.string().min(1, "API key is required"),
     categoryIds: z.array(z.string()).optional(),
     tagIds: z.array(z.string()).optional(),
@@ -212,8 +171,6 @@ export function useProductForm({
 }: UseProductFormOptions) {
   const queryClient = useQueryClient()
   const safeApiKeys = apiKeys ?? EMPTY_API_KEYS
-  const systemRoleRef = useRef<HTMLTextAreaElement>(null)
-  const userInstructionRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: availableModelsData } = useQuery(
     queryApi.admin.modelList.queryOptions({
@@ -282,23 +239,15 @@ export function useProductForm({
     }),
   )
 
+  const defaultWorkflow = useMemo(() => createDefaultWorkflow("", "plain"), [])
+
   const form = useForm({
     defaultValues: {
       name: "",
       description: "",
       descriptionContent: [] as TElement[],
       excerpt: "",
-      inputFields: [] as {
-        id: string
-        variableName: string
-        type: InputFieldType
-        description: string
-        options?: SelectOption[]
-        isOptional?: boolean
-      }[],
-      systemRole: "",
-      userInstructionTemplate: "",
-      modelEngine: "",
+      workflow: defaultWorkflow,
       outputFormat: "plain" as "plain" | "json" | "image" | "video",
       costPerRun: mode === "create" ? 0 : 0.05,
       markup: 0.2,
@@ -314,21 +263,11 @@ export function useProductForm({
         description: value.description,
         descriptionContent: value.descriptionContent,
         excerpt: value.excerpt || undefined,
-        systemRole: value.systemRole,
-        userInstructionTemplate: value.userInstructionTemplate,
-        inputVariable: value.inputFields.map((field) => ({
-          variableName: field.variableName,
-          type: field.type,
-          description: field.description,
-          ...(field.options && { options: field.options }),
-          ...(field.isOptional !== undefined && {
-            isOptional: field.isOptional,
-          }),
-        })),
+        workflow: value.workflow,
         outputFormat: value.outputFormat,
         costPerRun: String(value.costPerRun),
         config: {
-          modelEngine: value.modelEngine,
+          modelEngine: getDefaultModelFromWorkflow(value.workflow),
         },
         status: "draft" as const,
         apiKeyId: value.apiKeyId,
@@ -393,6 +332,11 @@ export function useProductForm({
     return tagsData
   }, [tagsData])
 
+  const inputFields = useMemo(
+    () => getInputFieldsFromWorkflow(form.state.values.workflow),
+    [form.state.values.workflow],
+  )
+
   const getFormValues = (): ProductFormData => {
     const formData = form.state.values
     return {
@@ -400,21 +344,11 @@ export function useProductForm({
       description: formData.description,
       descriptionContent: formData.descriptionContent,
       excerpt: formData.excerpt || undefined,
-      systemRole: formData.systemRole,
-      userInstructionTemplate: formData.userInstructionTemplate,
-      inputVariable: formData.inputFields.map((field) => ({
-        variableName: field.variableName,
-        type: field.type,
-        description: field.description,
-        ...(field.options && { options: field.options }),
-        ...(field.isOptional !== undefined && {
-          isOptional: field.isOptional,
-        }),
-      })),
+      workflow: formData.workflow,
       outputFormat: formData.outputFormat,
       costPerRun: String(formData.costPerRun),
       config: {
-        modelEngine: formData.modelEngine,
+        modelEngine: getDefaultModelFromWorkflow(formData.workflow),
       },
       status: "draft" as const,
       apiKeyId: formData.apiKeyId,
@@ -433,8 +367,14 @@ export function useProductForm({
   }
 
   const onModelsAvailable = useEffectEvent(() => {
-    if (availableModels.length > 0 && !form.getFieldValue("modelEngine")) {
-      form.setFieldValue("modelEngine", availableModels[0])
+    const workflow = form.getFieldValue("workflow")
+    const currentModel = getDefaultModelFromWorkflow(workflow)
+    if (availableModels.length > 0 && !currentModel) {
+      const firstAiNode = workflow.nodes.find((n) => n.type === "ai")
+      if (firstAiNode?.type === "ai") {
+        firstAiNode.data.modelEngine = availableModels[0]
+        form.setFieldValue("workflow", { ...workflow })
+      }
     }
   })
 
@@ -462,38 +402,9 @@ export function useProductForm({
         )
       }
       form.setFieldValue("excerpt", initialData.excerpt ?? "")
-      form.setFieldValue("systemRole", initialData.systemRole ?? "")
-      form.setFieldValue(
-        "userInstructionTemplate",
-        initialData.userInstructionTemplate ?? "",
-      )
 
-      if (
-        initialData.inputVariable &&
-        Array.isArray(initialData.inputVariable)
-      ) {
-        form.setFieldValue(
-          "inputFields",
-          (
-            initialData.inputVariable as {
-              variableName: string
-              type: InputFieldType
-              description: string
-              options?: SelectOption[]
-            }[]
-          ).map((field, index) => ({
-            id: String(index + 1),
-            ...field,
-          })),
-        )
-      }
-
-      if (initialData.config && typeof initialData.config === "object") {
-        const config = initialData.config as {
-          modelEngine?: string
-        }
-        if (config.modelEngine)
-          form.setFieldValue("modelEngine", config.modelEngine)
+      if (initialData.workflow && typeof initialData.workflow === "object") {
+        form.setFieldValue("workflow", initialData.workflow)
       }
 
       if (initialData.outputFormat) {
@@ -546,7 +457,9 @@ export function useProductForm({
 
   const onApiKeyOrModelChange = useEffectEvent(() => {
     const apiKeyId = form.getFieldValue("apiKeyId")
-    const modelEngine = form.getFieldValue("modelEngine")
+    const modelEngine = getDefaultModelFromWorkflow(
+      form.getFieldValue("workflow"),
+    )
 
     if (apiKeyId && modelEngine) {
       const selectedKey = safeApiKeys.find((key) => key.id === apiKeyId)
@@ -570,99 +483,32 @@ export function useProductForm({
 
   useEffect(() => {
     onApiKeyOrModelChange()
-  }, [form.state.values.apiKeyId, form.state.values.modelEngine, safeApiKeys])
+  }, [form.state.values.apiKeyId, form.state.values.workflow, safeApiKeys])
 
-  const handleInsertVariable = (
-    variable: string,
-    target: "systemRole" | "userInstruction",
-  ) => {
-    const fieldName =
-      target === "systemRole" ? "systemRole" : "userInstructionTemplate"
-    const currentValue = form.getFieldValue(fieldName)
-    const ref = target === "systemRole" ? systemRoleRef : userInstructionRef
-
-    const textarea = ref.current
-    if (textarea && textarea === document.activeElement) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const newValue =
-        currentValue.substring(0, start) +
-        `{{${variable}}}` +
-        currentValue.substring(end)
-      form.setFieldValue(fieldName, newValue)
-
-      setTimeout(() => {
-        const newPosition = start + variable.length + 4
-        textarea.selectionStart = textarea.selectionEnd = newPosition
-        textarea.focus()
-      }, 0)
-    } else {
-      form.setFieldValue(fieldName, `${currentValue}\n{{${variable}}}`)
-    }
-  }
-
-  const handleAddField = (
-    initial?: Partial<{
-      variableName: string
-      type: InputFieldType
-      description: string
-      options: SelectOption[]
-      isOptional: boolean
-    }>,
-  ) => {
-    const newId = String(Date.now())
-    const currentFields = form.getFieldValue("inputFields")
-    form.setFieldValue("inputFields", [
-      ...currentFields,
-      {
-        id: newId,
-        variableName: "",
-        type: "text" as const,
-        description: "",
-        ...initial,
-      },
-    ])
-  }
-
-  const handleUpdateField = (
-    id: string,
-    updates: Partial<{
-      variableName: string
-      type: InputFieldType
-      description: string
-      options: SelectOption[]
-      isOptional: boolean
-    }>,
-  ) => {
-    const currentFields = form.getFieldValue("inputFields")
-    const updatedFields = currentFields.map((field) =>
-      field.id === id ? { ...field, ...updates } : field,
-    )
-    form.setFieldValue("inputFields", updatedFields)
-  }
-
-  const handleDeleteField = (id: string) => {
-    const currentFields = form.getFieldValue("inputFields")
-    const filteredFields = currentFields.filter((field) => field.id !== id)
-    form.setFieldValue("inputFields", filteredFields)
+  const handleWorkflowChange = (workflow: ProductWorkflow) => {
+    form.setFieldValue("workflow", workflow)
   }
 
   return {
     form,
     getFormValues,
     safeApiKeys,
-    systemRoleRef,
-    userInstructionRef,
     availableModels,
     categories,
     tags,
+    inputFields,
     dialogsState,
     dialogsDispatch,
     createCategoryMutation,
     createTagMutation,
-    handleInsertVariable,
-    handleAddField,
-    handleUpdateField,
-    handleDeleteField,
+    handleWorkflowChange,
   }
+}
+
+function getDefaultModelFromWorkflow(workflow: ProductWorkflow): string {
+  const aiNode = workflow.nodes.find((n) => n.type === "ai")
+  if (aiNode?.type === "ai" && aiNode.data.modelEngine) {
+    return aiNode.data.modelEngine
+  }
+  return ""
 }

@@ -24,20 +24,15 @@ const stepTips: Record<
     description:
       "Give your product a clear name and a short description. The description is what users read before trying it.",
   },
-  inputs: {
-    title: "Add user inputs",
+  workflow: {
+    title: "Build the workflow",
     description:
-      "Define the fields users fill out. Start simple with one variable like topic or style — you can add more later.",
-  },
-  prompt: {
-    title: "Write the prompt",
-    description:
-      "Set the AI persona in System Role, then write the main instruction. Click variable chips to insert values.",
+      "Add Input, AI, Output, Condition, and Loop nodes. Connect them to define how user inputs turn into results.",
   },
   configure: {
     title: "Choose model and pricing",
     description:
-      "Pick the API key and model, set the output format, and adjust pricing. Categories and tags are optional.",
+      "Pick the default API key and model, set the output format, and adjust pricing. Categories and tags are optional.",
   },
 }
 

@@ -282,12 +282,7 @@ export const getProductBySlug = async (
 
 export type PublicProduct = Omit<
   typeof productsTable.$inferSelect,
-  | "apiKeyId"
-  | "config"
-  | "systemRole"
-  | "userInstructionTemplate"
-  | "thumbnailId"
-  | "createdBy"
+  "apiKeyId" | "config" | "thumbnailId" | "createdBy"
 > & {
   categories: { id: string; name: string; slug: string }[]
   tags: { id: string; name: string; slug: string }[]
@@ -345,7 +340,7 @@ const buildPublicProduct = async (
     tags: tagsResult,
     thumbnail: thumbnailResult[0] ?? null,
     outputFormat: product.outputFormat,
-    inputVariable: product.inputVariable,
+    workflow: product.workflow,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   }
