@@ -66,14 +66,14 @@ export function ProductActions({
             }
           />
           <MenuItem
-            onSelect={() => duplicateMutation.mutate({ id: product.id })}
+            onClick={() => duplicateMutation.mutate({ id: product.id })}
             disabled={duplicateMutation.isPending}
           >
             <CopyIcon className="size-4" />
             {duplicateMutation.isPending ? "Duplicating..." : "Duplicate"}
           </MenuItem>
           <MenuItem
-            onSelect={() =>
+            onClick={() =>
               onDelete({
                 id: product.id,
                 name: product.name,
