@@ -97,6 +97,8 @@ export const createCategory = async (input: {
   name: string
   description?: string
   parentId?: string | null
+  icon?: string
+  sortOrder?: number
 }): Promise<SelectCategory> => {
   const slug = await generateUniqueCategorySlug(input.name)
 
@@ -111,6 +113,8 @@ export const createCategory = async (input: {
       slug,
       description: input.description,
       parentId,
+      icon: input.icon,
+      sortOrder: input.sortOrder,
     })
     .returning()
 
