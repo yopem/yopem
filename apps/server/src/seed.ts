@@ -2087,13 +2087,13 @@ function buildWorkflowFromSeed(
       id: "e_cond_true",
       source: conditionId,
       target: aiTrueId,
-      sourceHandle: `{{${conditionId}_result}}`,
+      sourceHandle: "true",
     })
     edges.push({
       id: "e_cond_false",
       source: conditionId,
       target: aiFalseId,
-      sourceHandle: `!{{${conditionId}_result}}`,
+      sourceHandle: "false",
     })
 
     const outputNodeId = "output_1"
