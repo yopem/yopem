@@ -54,7 +54,7 @@ export function CategorySelector({
   return (
     <div className="border-border flex flex-col gap-3 rounded-lg border">
       <div className="border-border flex items-center justify-between border-b p-3">
-        <h4 className="text-sm font-semibold">Category</h4>
+        <h4 className="text-sm font-semibold">Categories</h4>
         {onAddNew && (
           <Button
             type="button"
