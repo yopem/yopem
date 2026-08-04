@@ -389,11 +389,21 @@ export function useProductForm({
       const existingContent = (
         initialData as { descriptionContent?: TElement[] }
       ).descriptionContent
-      if (
+      const hasContent =
         existingContent &&
         Array.isArray(existingContent) &&
-        existingContent.length > 0
-      ) {
+        existingContent.some(
+          (node) =>
+            node &&
+            typeof node === "object" &&
+            (("children" in node &&
+              Array.isArray(node.children) &&
+              node.children.length > 0) ||
+              ("text" in node &&
+                typeof node.text === "string" &&
+                node.text.trim() !== "")),
+        )
+      if (hasContent) {
         form.setFieldValue("descriptionContent", existingContent)
       } else if (initialData.description) {
         form.setFieldValue(

@@ -128,10 +128,9 @@ function buildRichDescription(
     { type: "h2", children: [{ text: "Highlights" }] },
     {
       type: "ul",
-      listStyleType: "disc",
       children: safeHighlights.map((text) => ({
         type: "li",
-        children: [{ type: "p", children: [{ text }] }],
+        children: [{ text }],
       })),
     },
     {
