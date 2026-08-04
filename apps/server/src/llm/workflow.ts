@@ -310,9 +310,14 @@ export async function executeWorkflow(
 
       const outgoing = workflow.edges.filter((e) => e.source === node.id)
       for (const edge of outgoing) {
-        const branchMatches = edge.sourceHandle
-          ? evaluateCondition(edge.sourceHandle, variables)
-          : matched
+        const branchMatches =
+          edge.sourceHandle === "true"
+            ? matched
+            : edge.sourceHandle === "false"
+              ? !matched
+              : edge.sourceHandle
+                ? evaluateCondition(edge.sourceHandle, variables)
+                : matched
         if (!branchMatches) {
           activeIds.delete(edge.target)
         }
