@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
+import { useForm, useStore } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useState } from "react"
 import * as v from "valibot"
@@ -28,6 +28,7 @@ const productFormSchema = v.object({
     "excerpt",
     "outputFormat",
     "costPerRun",
+    "markup",
     "config",
     "status",
     "apiKeyId",
@@ -183,6 +184,7 @@ export function useProductForm({
         workflow: value.workflow,
         outputFormat: value.outputFormat,
         costPerRun: String(value.costPerRun),
+        markup: String(value.markup),
         config: {
           modelEngine: getDefaultModelFromWorkflow(value.workflow),
         },
@@ -215,11 +217,13 @@ export function useProductForm({
     },
   })
 
+  const formValues = useStore(form.store, (state) => state.values)
+
   const selectedApiKeyProvider = useMemo(() => {
-    if (!form.state.values.apiKeyId || !safeApiKeys) return undefined
-    const key = safeApiKeys.find((k) => k.id === form.state.values.apiKeyId)
+    if (!formValues.apiKeyId || !safeApiKeys) return undefined
+    const key = safeApiKeys.find((k) => k.id === formValues.apiKeyId)
     return key?.provider
-  }, [form.state.values.apiKeyId, safeApiKeys])
+  }, [formValues.apiKeyId, safeApiKeys])
 
   const availableModels = useMemo(() => {
     if (!availableModelsData || availableModelsData.length === 0) {
@@ -250,8 +254,8 @@ export function useProductForm({
   }, [tagsData])
 
   const inputFields = useMemo(
-    () => getInputFieldsFromWorkflow(form.state.values.workflow),
-    [form.state.values.workflow],
+    () => getInputFieldsFromWorkflow(formValues.workflow),
+    [formValues.workflow],
   )
 
   const getFormValues = (): ProductFormData => {
@@ -264,6 +268,7 @@ export function useProductForm({
       workflow: formData.workflow,
       outputFormat: formData.outputFormat,
       costPerRun: String(formData.costPerRun),
+      markup: String(formData.markup),
       config: {
         modelEngine: getDefaultModelFromWorkflow(formData.workflow),
       },
@@ -410,7 +415,7 @@ export function useProductForm({
 
   useEffect(() => {
     onApiKeyOrModelChange()
-  }, [form.state.values.apiKeyId, form.state.values.workflow, safeApiKeys])
+  }, [formValues.apiKeyId, formValues.workflow, safeApiKeys])
 
   const handleWorkflowChange = (workflow: ProductWorkflow) => {
     form.setFieldValue("workflow", workflow)
