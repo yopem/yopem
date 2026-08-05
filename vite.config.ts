@@ -281,7 +281,20 @@ export default defineConfig({
           "tailwindcss/enforce-sort-order": "off",
           "tailwindcss/no-conflicting-classes": "error",
           "tailwindcss/no-deprecated-classes": "error",
-          "tailwindcss/no-unknown-classes": "error",
+          "tailwindcss/no-unknown-classes": [
+            "error",
+            {
+              allowlist: [
+                "group/container",
+                "group/editor",
+                "group/media",
+                "group/menu-item",
+                "group/menu-sub-item",
+                "group/sidebar-wrapper",
+                "peer/menu-button",
+              ],
+            },
+          ],
           "tailwindcss/no-unnecessary-arbitrary-value": "error",
           "tailwindcss/no-unnecessary-whitespace": "error",
         },

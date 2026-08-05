@@ -9,7 +9,7 @@ import type { ApiKeyConfig } from "utils/api-input"
 const listProductsSpy = vi.hoisted(() => vi.fn().mockResolvedValue([]))
 
 vi.mock("db/services/products", async (importOriginal) => {
-  const original = (await importOriginal()) as Record<string, unknown>
+  const original = await importOriginal<Record<string, unknown>>()
   return { ...original, listProducts: listProductsSpy }
 })
 
