@@ -6,6 +6,12 @@ import { useSyncExternalStore } from "react"
 
 import { Button } from "./button"
 
+const themes = [
+  { name: "light", icon: SunIcon, label: "Light" },
+  { name: "dark", icon: MoonIcon, label: "Dark" },
+  { name: "system", icon: MonitorIcon, label: "System" },
+]
+
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
   const mounted = useSyncExternalStore(
@@ -23,12 +29,6 @@ export function ThemeSwitcher() {
       </div>
     )
   }
-
-  const themes = [
-    { name: "light", icon: SunIcon, label: "Light" },
-    { name: "dark", icon: MoonIcon, label: "Dark" },
-    { name: "system", icon: MonitorIcon, label: "System" },
-  ]
 
   return (
     <div className="bg-muted/70 inline-flex items-center gap-0.5 rounded-md border p-0.5">
