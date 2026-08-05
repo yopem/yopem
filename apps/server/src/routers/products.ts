@@ -120,7 +120,6 @@ export async function validateModelForKey(
 const productListInputSchema = v.object({
   limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
   offset: v.optional(v.pipe(v.number(), v.minValue(0))),
-  cursor: v.optional(v.string()),
   search: v.optional(v.string()),
   categoryIds: v.optional(v.array(v.string())),
   status: v.optional(v.picklist(["draft", "active", "archived", "all"])),
@@ -168,7 +167,6 @@ export const productsRouter = {
         return listProducts({
           limit: input.limit,
           offset: input.offset,
-          cursor: input.cursor,
           search: input.search,
           categoryIds: input.categoryIds,
           status: isAdmin ? input.status : "active",

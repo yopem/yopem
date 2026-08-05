@@ -44,6 +44,7 @@ function ProductsRouteComponent() {
   const navigate = Route.useNavigate()
 
   const pageIndex = (search.page ?? 1) - 1
+  const pageSize = 20
 
   const {
     data: productsData,
@@ -52,8 +53,8 @@ function ProductsRouteComponent() {
   } = useQuery(
     queryApi.products.list.queryOptions({
       input: {
-        limit: 20,
-        offset: pageIndex * 20,
+        limit: pageSize,
+        offset: pageIndex * pageSize,
         status: "all",
       },
     }),
@@ -62,6 +63,11 @@ function ProductsRouteComponent() {
   const products = useMemo(
     () => (productsData?.products as Product[]) ?? [],
     [productsData],
+  )
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil((productsData?.total ?? 0) / pageSize),
   )
 
   const deleteProductMutation = useMutation(
@@ -244,14 +250,13 @@ function ProductsRouteComponent() {
             Previous
           </Button>
           <span className="text-muted-foreground text-sm">
-            Page {pageIndex + 1}
+            Page {pageIndex + 1} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            disabled={!productsData?.nextCursor || isLoading}
+            disabled={pageIndex + 1 >= totalPages || isLoading}
             onClick={() => {
-              if (!productsData?.nextCursor) return
               void navigate({ search: { page: pageIndex + 2 } })
             }}
           >

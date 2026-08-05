@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, lt, or, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 
 import { db } from "db"
 import {
@@ -17,34 +17,8 @@ import { createCustomId } from "utils/custom-id"
 
 import { generateUniqueProductSlug } from "./slug"
 
-function encodeCursor(product: { id: string; createdAt: Date | null }): string {
-  return Buffer.from(
-    JSON.stringify({
-      createdAt: product.createdAt?.toISOString(),
-      id: product.id,
-    }),
-    "utf8",
-  ).toString("base64url")
-}
-
-function decodeCursor(cursor: string): { createdAt: string; id: string } {
-  const parsed = JSON.parse(
-    Buffer.from(cursor, "base64url").toString("utf8"),
-  ) as unknown
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !("createdAt" in parsed) ||
-    !("id" in parsed)
-  ) {
-    throw new Error("Invalid cursor")
-  }
-  return parsed as { createdAt: string; id: string }
-}
-
 export const listProducts = async (input?: {
   limit?: number
-  cursor?: string
   offset?: number
   search?: string
   categoryIds?: string[]
@@ -65,7 +39,8 @@ export const listProducts = async (input?: {
     categories: { id: string; name: string; slug: string }[]
     thumbnail: { id: string; url: string } | null
   }[]
-  nextCursor?: string
+  total: number
+  hasMore: boolean
 }> => {
   const limit = input?.limit ?? 20
   const conditions = []
@@ -131,18 +106,10 @@ export const listProducts = async (input?: {
     }
   }
 
-  if (input?.cursor) {
-    const { createdAt, id } = decodeCursor(input.cursor)
-    conditions.push(
-      or(
-        lt(productsTable.createdAt, new Date(createdAt)),
-        and(
-          eq(productsTable.createdAt, new Date(createdAt)),
-          lt(productsTable.id, id),
-        ),
-      ),
-    )
-  }
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(productsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
 
   const products = await db
     .select({
@@ -211,15 +178,16 @@ export const listProducts = async (input?: {
     }
   })
 
-  let nextCursor: string | undefined = undefined
-  if (productsWithCategories.length > limit) {
-    const nextItem = productsWithCategories.pop()
-    if (nextItem) {
-      nextCursor = encodeCursor(nextItem)
-    }
+  const hasMore = productsWithCategories.length > limit
+  if (hasMore) {
+    productsWithCategories.pop()
   }
 
-  return { products: productsWithCategories, nextCursor }
+  return {
+    products: productsWithCategories,
+    total: Number(countResult?.count ?? 0),
+    hasMore,
+  }
 }
 
 export const getProductById = async (
