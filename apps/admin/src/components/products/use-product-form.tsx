@@ -27,8 +27,7 @@ const productFormSchema = v.object({
     "description",
     "excerpt",
     "outputFormat",
-    "costPerRun",
-    "markup",
+    "creditsPerRun",
     "config",
     "status",
     "apiKeyId",
@@ -167,8 +166,7 @@ export function useProductForm({
       excerpt: "",
       workflow: defaultWorkflow,
       outputFormat: "plain" as "plain" | "json" | "image" | "video",
-      costPerRun: mode === "create" ? 0 : 0.05,
-      markup: 0.2,
+      creditsPerRun: 0,
       apiKeyId: "",
       apiKeyError: "",
       categoryIds: [] as string[],
@@ -183,8 +181,7 @@ export function useProductForm({
         excerpt: value.excerpt || undefined,
         workflow: value.workflow,
         outputFormat: value.outputFormat,
-        costPerRun: String(value.costPerRun),
-        markup: String(value.markup),
+        creditsPerRun: value.creditsPerRun,
         config: {
           modelEngine: getDefaultModelFromWorkflow(value.workflow),
         },
@@ -267,8 +264,7 @@ export function useProductForm({
       excerpt: formData.excerpt || undefined,
       workflow: formData.workflow,
       outputFormat: formData.outputFormat,
-      costPerRun: String(formData.costPerRun),
-      markup: String(formData.markup),
+      creditsPerRun: formData.creditsPerRun,
       config: {
         modelEngine: getDefaultModelFromWorkflow(formData.workflow),
       },
@@ -343,12 +339,8 @@ export function useProductForm({
         form.setFieldValue("outputFormat", initialData.outputFormat)
       }
 
-      if (initialData.costPerRun) {
-        form.setFieldValue("costPerRun", Number(initialData.costPerRun))
-      }
-
-      if (initialData.markup) {
-        form.setFieldValue("markup", Number(initialData.markup))
+      if (initialData.creditsPerRun !== undefined) {
+        form.setFieldValue("creditsPerRun", initialData.creditsPerRun)
       }
 
       if (initialData.apiKeyId) {

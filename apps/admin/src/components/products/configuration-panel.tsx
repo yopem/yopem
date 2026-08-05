@@ -15,8 +15,7 @@ import { PricingSection } from "./pricing-section"
 
 interface ConfigValues {
   outputFormat: "plain" | "json" | "image" | "video"
-  costPerRun: number
-  markup: number
+  creditsPerRun: number
   apiKeyId?: string
   apiKeyError?: string
   availableApiKeys: ApiKeyConfig[]
@@ -24,8 +23,7 @@ interface ConfigValues {
 
 interface ConfigHandlers {
   onOutputFormatChange: (value: "plain" | "json" | "image" | "video") => void
-  onCostPerRunChange: (value: number) => void
-  onMarkupChange: (value: number) => void
+  onCreditsPerRunChange: (value: number) => void
   onApiKeyIdChange?: (value: string) => void
 }
 
@@ -40,19 +38,14 @@ export function ConfigurationPanel({
 }: ConfigurationPanelProps) {
   const {
     outputFormat,
-    costPerRun,
-    markup,
+    creditsPerRun,
     apiKeyId,
     availableApiKeys,
     apiKeyError,
   } = config
 
-  const {
-    onOutputFormatChange,
-    onCostPerRunChange,
-    onMarkupChange,
-    onApiKeyIdChange,
-  } = handlers
+  const { onOutputFormatChange, onCreditsPerRunChange, onApiKeyIdChange } =
+    handlers
 
   return (
     <section className="flex flex-col gap-6">
@@ -113,10 +106,8 @@ export function ConfigurationPanel({
         </div>
         <div className="p-6">
           <PricingSection
-            costPerRun={costPerRun}
-            markup={markup}
-            onCostPerRunChange={onCostPerRunChange}
-            onMarkupChange={onMarkupChange}
+            creditsPerRun={creditsPerRun}
+            onCreditsPerRunChange={onCreditsPerRunChange}
           />
         </div>
       </div>

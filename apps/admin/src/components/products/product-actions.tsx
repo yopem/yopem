@@ -23,7 +23,7 @@ import {
 
 export type Product = Pick<
   SelectProduct,
-  "id" | "name" | "description" | "status" | "costPerRun" | "createdAt"
+  "id" | "name" | "description" | "status" | "creditsPerRun" | "createdAt"
 >
 
 interface ProductActionsProps {

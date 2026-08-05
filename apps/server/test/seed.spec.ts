@@ -66,10 +66,10 @@ describe("seed data", () => {
     }
   })
 
-  test("every product costPerRun is a valid decimal", () => {
+  test("every product has a non-negative integer creditsPerRun", () => {
     for (const product of products) {
-      expect(/^\d+(\.\d+)?$/.test(product.costPerRun)).toBe(true)
-      expect(Number(product.costPerRun)).not.toBeNaN()
+      expect(Number.isInteger(product.creditsPerRun)).toBe(true)
+      expect(product.creditsPerRun).toBeGreaterThanOrEqual(0)
     }
   })
 

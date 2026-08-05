@@ -277,7 +277,7 @@ export const productsRouter = {
         }
 
         const runId = createCustomId()
-        const cost = Number(product.costPerRun ?? 0)
+        const cost = Number(product.creditsPerRun ?? 0)
 
         try {
           const result = await executeWorkflow({

@@ -1,6 +1,6 @@
 import {
   boolean,
-  decimal,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -45,8 +45,7 @@ export const productsTable = pgTable("products", {
   outputFormat: text("output_format", {
     enum: productOutputFormatEnum,
   }).default("plain"),
-  costPerRun: decimal("cost_per_run", { precision: 10, scale: 4 }).default("0"),
-  markup: decimal("markup", { precision: 5, scale: 4 }).default("0.2000"),
+  creditsPerRun: integer("credits_per_run").default(0).notNull(),
   isPublic: boolean("is_public").default(true),
   apiKeyId: text("api_key_id"),
   thumbnailId: text("thumbnail_id"),

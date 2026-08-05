@@ -221,18 +221,16 @@ export function ProductForm({
           <form.Subscribe
             selector={(state) => ({
               outputFormat: state.values.outputFormat,
-              costPerRun: state.values.costPerRun,
-              markup: state.values.markup,
+              creditsPerRun: state.values.creditsPerRun,
               apiKeyId: state.values.apiKeyId,
               apiKeyError: state.values.apiKeyError,
             })}
           >
-            {({ outputFormat, costPerRun, markup, apiKeyId, apiKeyError }) => (
+            {({ outputFormat, creditsPerRun, apiKeyId, apiKeyError }) => (
               <ConfigurationPanel
                 config={{
                   outputFormat,
-                  costPerRun,
-                  markup,
+                  creditsPerRun,
                   apiKeyId,
                   apiKeyError,
                   availableApiKeys: safeApiKeys,
@@ -240,10 +238,8 @@ export function ProductForm({
                 handlers={{
                   onOutputFormatChange: (value) =>
                     form.setFieldValue("outputFormat", value),
-                  onCostPerRunChange: (value) =>
-                    form.setFieldValue("costPerRun", value),
-                  onMarkupChange: (value) =>
-                    form.setFieldValue("markup", value),
+                  onCreditsPerRunChange: (value) =>
+                    form.setFieldValue("creditsPerRun", value),
                   onApiKeyIdChange: (value) => {
                     form.setFieldValue("apiKeyId", value)
                     form.setFieldValue("apiKeyError", "")

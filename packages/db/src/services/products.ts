@@ -33,7 +33,7 @@ export const listProducts = async (input?: {
     excerpt: string | null
     description: string | null
     status: "draft" | "active" | "archived"
-    costPerRun: string | null
+    creditsPerRun: number | null
     createdAt: Date | null
     thumbnailId: string | null
     categories: { id: string; name: string; slug: string }[]
@@ -82,9 +82,9 @@ export const listProducts = async (input?: {
   }
 
   if (input?.priceFilter === "free") {
-    conditions.push(eq(productsTable.costPerRun, "0"))
+    conditions.push(eq(productsTable.creditsPerRun, 0))
   } else if (input?.priceFilter === "paid") {
-    conditions.push(sql`${productsTable.costPerRun} > 0`)
+    conditions.push(sql`${productsTable.creditsPerRun} > 0`)
   }
 
   if (input?.tagIds && input.tagIds.length > 0) {
@@ -119,7 +119,7 @@ export const listProducts = async (input?: {
       excerpt: productsTable.excerpt,
       description: productsTable.description,
       status: productsTable.status,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       createdAt: productsTable.createdAt,
       thumbnailId: productsTable.thumbnailId,
       thumbnailUrl: assetsTable.url,
@@ -346,8 +346,7 @@ const buildPublicProduct = async (
     descriptionContent: product.descriptionContent,
     excerpt: product.excerpt,
     isPublic: product.isPublic,
-    costPerRun: product.costPerRun,
-    markup: product.markup,
+    creditsPerRun: product.creditsPerRun,
     status: product.status,
     categories: categoriesResult,
     tags: tagsResult,
@@ -603,7 +602,7 @@ export const getPopularProducts = async (
     slug: string
     name: string
     description: string | null
-    costPerRun: string | null
+    creditsPerRun: number | null
     thumbnailId: string | null
     thumbnail: { id: string; url: string } | null
   }[]
@@ -614,7 +613,7 @@ export const getPopularProducts = async (
       slug: productsTable.slug,
       name: productsTable.name,
       description: productsTable.description,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       thumbnailId: productsTable.thumbnailId,
       thumbnailUrl: assetsTable.url,
       thumbnailAssetId: assetsTable.id,
@@ -686,7 +685,7 @@ export const searchProducts = async (
     slug: string
     name: string
     excerpt: string | null
-    costPerRun: string | null
+    creditsPerRun: number | null
     thumbnail: { id: string; url: string } | null
   }[]
 > => {
@@ -696,7 +695,7 @@ export const searchProducts = async (
       slug: productsTable.slug,
       name: productsTable.name,
       excerpt: productsTable.excerpt,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       thumbnailUrl: assetsTable.url,
       thumbnailAssetId: assetsTable.id,
     })
