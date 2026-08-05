@@ -8,7 +8,7 @@ import * as v from "valibot"
 
 import { Button } from "ui/button"
 import { Dialog, DialogPopup } from "ui/dialog"
-import { Field, FieldError, FieldLabel } from "ui/field"
+import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import {
   Select,
@@ -140,7 +140,7 @@ export function CategoryDialog({
               }}
             >
               {(field) => (
-                <Field>
+                <Field invalid={field.state.meta.errors.length > 0}>
                   <FieldLabel>Name</FieldLabel>
                   <Input
                     value={field.state.value}
@@ -148,9 +148,9 @@ export function CategoryDialog({
                     placeholder="Enter category name"
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </Field>
               )}

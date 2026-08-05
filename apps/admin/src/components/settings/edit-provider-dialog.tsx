@@ -13,7 +13,6 @@ import {
   DialogPanel,
   DialogTitle,
 } from "ui/dialog"
-import { FieldError } from "ui/field"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 import {
@@ -108,9 +107,9 @@ export function EditProviderDialog({
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}
@@ -132,9 +131,9 @@ export function EditProviderDialog({
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}

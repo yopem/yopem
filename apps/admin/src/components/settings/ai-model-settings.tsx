@@ -9,7 +9,6 @@ import * as v from "valibot"
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Card, CardPanel, CardHeader } from "ui/card"
-import { FieldError } from "ui/field"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 import {
@@ -247,9 +246,9 @@ export const AIModelsSettings = memo(() => {
                       placeholder="e.g. kimi-k3"
                     />
                     {field.state.meta.errors.length > 0 && (
-                      <FieldError>
+                      <p className="text-destructive-foreground text-xs">
                         {field.state.meta.errors[0]?.message}
-                      </FieldError>
+                      </p>
                     )}
                   </div>
                 )}
@@ -273,9 +272,9 @@ export const AIModelsSettings = memo(() => {
                       placeholder="e.g. Kimi K3"
                     />
                     {field.state.meta.errors.length > 0 && (
-                      <FieldError>
+                      <p className="text-destructive-foreground text-xs">
                         {field.state.meta.errors[0]?.message}
-                      </FieldError>
+                      </p>
                     )}
                   </div>
                 )}

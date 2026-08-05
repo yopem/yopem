@@ -13,7 +13,6 @@ import {
   DialogPanel,
   DialogTitle,
 } from "ui/dialog"
-import { FieldError } from "ui/field"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 import {
@@ -144,9 +143,9 @@ export function AddProviderDialog({
                     placeholder="e.g., Production OpenAI"
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}
@@ -167,9 +166,9 @@ export function AddProviderDialog({
                     placeholder="e.g., Used for GPT-4 and Embeddings"
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}
@@ -195,9 +194,9 @@ export function AddProviderDialog({
                     placeholder="sk-proj-..."
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}

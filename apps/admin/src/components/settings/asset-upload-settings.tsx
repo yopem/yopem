@@ -5,7 +5,6 @@ import * as v from "valibot"
 
 import { Button } from "ui/button"
 import { Card, CardPanel } from "ui/card"
-import { FieldError } from "ui/field"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 
@@ -70,9 +69,9 @@ export function AssetUploadSettings({
                     Set the maximum file size allowed for uploads (1-500 MB)
                   </p>
                   {field.state.meta.errors.length > 0 && (
-                    <FieldError>
+                    <p className="text-destructive-foreground text-xs">
                       {field.state.meta.errors[0]?.message}
-                    </FieldError>
+                    </p>
                   )}
                 </div>
               )}
