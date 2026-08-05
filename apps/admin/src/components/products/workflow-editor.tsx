@@ -5,7 +5,6 @@ import {
   Background,
   Controls,
   Handle,
-  MiniMap,
   Position,
   ReactFlow,
   useEdgesState,
@@ -175,7 +174,7 @@ export function WorkflowEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-1">
           <h3 className="text-lg font-semibold">Workflow</h3>
           <p className="text-muted-foreground max-w-2xl text-sm">
@@ -186,8 +185,8 @@ export function WorkflowEditor({
         <NodeToolbar onAdd={addNode} />
       </div>
 
-      <div className="border-border flex h-112 overflow-hidden rounded-lg border">
-        <div className="flex-1">
+      <div className="border-border flex flex-col overflow-hidden rounded-lg border lg:h-112 lg:flex-row">
+        <div className="h-72 lg:h-auto lg:min-h-0 lg:flex-1">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -198,14 +197,14 @@ export function WorkflowEditor({
             onPaneClick={() => setSelectedNodeId(null)}
             nodeTypes={nodeTypes}
             fitView
+            proOptions={{ hideAttribution: true }}
           >
             <Background />
             <Controls />
-            <MiniMap className="bg-background!" />
           </ReactFlow>
         </div>
 
-        <div className="border-border w-80 border-l">
+        <div className="border-border w-full border-t lg:h-full lg:w-80 lg:border-t-0 lg:border-l">
           {selectedNode ? (
             <NodeEditorPanel
               node={selectedNode}

@@ -51,7 +51,7 @@ export function ProductFormTabs({
   return (
     <nav
       aria-label="Product builder steps"
-      className="relative w-full px-8 py-5"
+      className="relative w-full p-4 sm:px-8 sm:py-5"
     >
       {/* connector line */}
       <div className="bg-muted absolute inset-x-12 top-9 h-0.5 rounded-full">
@@ -105,7 +105,7 @@ export function ProductFormTabs({
                   >
                     {step.label}
                   </span>
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground hidden text-xs sm:block">
                     {step.description}
                   </span>
                 </div>

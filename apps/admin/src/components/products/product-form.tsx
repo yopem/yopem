@@ -74,11 +74,11 @@ export function ProductForm({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-border border-b px-8">
+      <div className="border-border border-b px-4 sm:px-8">
         <ProductFormTabs activeStep={activeStep} onStepChange={setActiveStep} />
       </div>
 
-      <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-8">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:gap-8 sm:p-8">
         <ProductBuilderTips mode={mode} step={activeStep} />
 
         {activeStep === "basics" && (

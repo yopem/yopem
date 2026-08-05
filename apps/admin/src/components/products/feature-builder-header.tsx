@@ -51,7 +51,7 @@ export function FeatureBuilderHeader({
         : "outline"
 
   return (
-    <header className="border-border flex h-16 shrink-0 items-center justify-between border-b px-8">
+    <header className="border-border flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-8">
       <div className="flex items-center gap-2">
         {breadcrumbItems.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export function FeatureBuilderHeader({
         )}
       </div>
       <TooltipProvider>
-        <div className="flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <Tooltip>
             <TooltipTrigger
               render={
@@ -88,7 +88,7 @@ export function FeatureBuilderHeader({
                   disabled={isLoading}
                 >
                   <PlayIcon className="size-4" />
-                  <span>Preview</span>
+                  <span className="hidden sm:inline">Preview</span>
                 </Button>
               }
             />
@@ -110,7 +110,7 @@ export function FeatureBuilderHeader({
                   ) : (
                     <FileTextIcon className="size-4" />
                   )}
-                  <span>Save as Draft</span>
+                  <span className="hidden sm:inline">Save as Draft</span>
                 </Button>
               }
             />
@@ -127,7 +127,9 @@ export function FeatureBuilderHeader({
                   ) : (
                     <CheckCircleIcon className="size-4" />
                   )}
-                  <span>{mode === "edit" ? "Update" : "Publish"}</span>
+                  <span className="hidden sm:inline">
+                    {mode === "edit" ? "Update" : "Publish"}
+                  </span>
                 </Button>
               }
             />
