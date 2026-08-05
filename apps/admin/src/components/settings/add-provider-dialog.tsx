@@ -128,6 +128,7 @@ export function AddProviderDialog({
             <form.Field
               name="name"
               validators={{
+                onBlur: addApiKeyInputSchema.entries.name,
                 onSubmit: addApiKeyInputSchema.entries.name,
               }}
             >
@@ -174,6 +175,7 @@ export function AddProviderDialog({
             <form.Field
               name="apiKey"
               validators={{
+                onBlur: addApiKeyInputSchema.entries.apiKey,
                 onSubmit: addApiKeyInputSchema.entries.apiKey,
               }}
             >

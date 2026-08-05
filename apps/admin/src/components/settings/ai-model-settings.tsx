@@ -197,7 +197,10 @@ export const AIModelsSettings = memo(() => {
               <Label className="text-xs">Provider</Label>
               <form.Field
                 name="provider"
-                validators={{ onSubmit: providerValidator }}
+                validators={{
+                  onBlur: providerValidator,
+                  onSubmit: providerValidator,
+                }}
               >
                 {(field) => (
                   <Select
@@ -232,7 +235,10 @@ export const AIModelsSettings = memo(() => {
               <Label className="text-xs">Model ID</Label>
               <form.Field
                 name="modelId"
-                validators={{ onSubmit: modelIdValidator }}
+                validators={{
+                  onBlur: modelIdValidator,
+                  onSubmit: modelIdValidator,
+                }}
               >
                 {(field) => (
                   <div className="flex flex-col gap-1">
@@ -252,7 +258,10 @@ export const AIModelsSettings = memo(() => {
               <Label className="text-xs">Display Name</Label>
               <form.Field
                 name="displayName"
-                validators={{ onSubmit: displayNameValidator }}
+                validators={{
+                  onBlur: displayNameValidator,
+                  onSubmit: displayNameValidator,
+                }}
               >
                 {(field) => (
                   <div className="flex flex-col gap-1">

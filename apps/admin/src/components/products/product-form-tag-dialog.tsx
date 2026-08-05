@@ -59,6 +59,7 @@ export function ProductFormTagDialog({
           <form.Field
             name="name"
             validators={{
+              onBlur: nameValidator,
               onSubmit: nameValidator,
             }}
           >

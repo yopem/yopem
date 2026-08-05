@@ -90,6 +90,7 @@ export function ProductFormCategoryDialog({
             <form.Field
               name="name"
               validators={{
+                onBlur: nameValidator,
                 onSubmit: nameValidator,
               }}
             >

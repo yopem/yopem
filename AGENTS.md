@@ -122,6 +122,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
   - Queries: `useQuery(queryApi.admin.apiKeyList.queryOptions())` — use flat, never spread (`...queryOptions()`) except when extending/overriding.
   - Mutations: `useMutation(queryApi.products.create.mutationOptions({ onSuccess, onError }))` — never write a custom `mutationFn`.
   - Never call the client directly (`.call(...)`); pass the typed input straight to `.mutate(...)`.
+- **TanStack React Form** — all forms must be built with `@tanstack/react-form` `useForm` and validated with Valibot `validators`. Required/not-empty fields use `onBlur` + `onSubmit` validators (never `onChange`/`onMount`) so empty-pristine fields show no error until the user leaves the field or submits.
 - **Import order:** type-imports → external → workspace types → workspace values → internal → parent/sibling/index.
 - **`no-explicit-any: error`**, **`no-unused-vars`** (prefix with `_` to ignore), **`require-await: error`**, **`prefer-const: error`**.
 - **No comments or JSDoc** — code must be self-documenting through clear naming and structure.

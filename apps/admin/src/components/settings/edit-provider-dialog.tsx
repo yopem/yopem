@@ -95,6 +95,7 @@ export function EditProviderDialog({
             <form.Field
               name="name"
               validators={{
+                onBlur: updateApiKeyInputSchema.entries.name.wrapped,
                 onSubmit: updateApiKeyInputSchema.entries.name.wrapped,
               }}
             >
