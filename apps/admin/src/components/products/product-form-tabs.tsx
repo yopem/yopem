@@ -56,7 +56,7 @@ export function ProductFormTabs({
       {/* connector line */}
       <div className="bg-muted absolute inset-x-12 top-9 h-0.5 rounded-full">
         <div
-          className="h-full rounded-full transition-all duration-300"
+          className="h-full rounded-full"
           style={{
             background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${progress}%, hsl(var(--muted)) ${progress}%, hsl(var(--muted)) 100%)`,
           }}

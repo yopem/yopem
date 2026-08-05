@@ -403,9 +403,9 @@ function AdminPreviewTab({
       {steps.length > 0 && (
         <div className="flex flex-col gap-3">
           <h4 className="font-semibold">Step outputs</h4>
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div
-              key={`${step.nodeId}-${index}`}
+              key={`${step.nodeId}-${step.outputName}`}
               className="bg-muted rounded-lg border p-3"
             >
               <div className="mb-1 flex items-center justify-between">

@@ -28,7 +28,6 @@
     "nitro": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "recharts": "catalog:",
     "rpc": "workspace:*",
     "shimmer-from-structure": "catalog:",
     "tailwindcss": "catalog:",

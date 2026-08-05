@@ -19,6 +19,9 @@ import { NotFound } from "@/components/not-found"
 import { Providers } from "@/components/providers"
 import appCss from "@/styles.css?url"
 
+const SPECULATION_RULES =
+  '{"prefetch":[{"source":"document","where":{"href_matches":"/*","relative_to":"document"},"eagerness":"moderate"}]}'
+
 type Session = Exclude<Awaited<ReturnType<typeof getSession>>, false>
 
 export interface RouterContext {
@@ -86,20 +89,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           type="speculationrules"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              prefetch: [
-                {
-                  source: "document",
-                  where: {
-                    href_matches: "/*",
-                    relative_to: "document",
-                  },
-                  eagerness: "moderate",
-                },
-              ],
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: SPECULATION_RULES }}
         />
       </head>
       <body>

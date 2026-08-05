@@ -42,6 +42,7 @@ export function ProductsTable({
   onDelete,
   duplicateMutation,
 }: ProductsTableProps) {
+  const selectedSet = new Set(selectedProductIds)
   return (
     <Table>
       <TableHeader>
@@ -100,7 +101,7 @@ export function ProductsTable({
             <TableRow key={product.id}>
               <TableCell>
                 <Checkbox
-                  checked={selectedProductIds.includes(product.id)}
+                  checked={selectedSet.has(product.id)}
                   onCheckedChange={() => onToggleProduct(product.id)}
                 />
               </TableCell>

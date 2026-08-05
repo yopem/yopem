@@ -1,7 +1,7 @@
 "use client"
 
 import { LightbulbIcon, XIcon } from "lucide-react"
-import { useState } from "react"
+import { useSyncExternalStore } from "react"
 
 import { Button } from "ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "ui/card"
@@ -9,6 +9,22 @@ import { Card, CardDescription, CardHeader, CardTitle } from "ui/card"
 import type { ProductFormStep } from "./product-form-tabs"
 
 const DISMISS_KEY = "yopem:product-builder-tips-dismissed"
+
+const listeners = new Set<() => void>()
+
+function subscribe(cb: () => void) {
+  listeners.add(cb)
+  return () => listeners.delete(cb)
+}
+
+function emitChange() {
+  for (const cb of listeners) cb()
+}
+
+function handleDismiss() {
+  localStorage.setItem(DISMISS_KEY, "1")
+  emitChange()
+}
 
 interface ProductBuilderTipsProps {
   mode: "create" | "edit"
@@ -37,17 +53,11 @@ const stepTips: Record<
 }
 
 export function ProductBuilderTips({ mode, step }: ProductBuilderTipsProps) {
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === "undefined") return true
-    return !localStorage.getItem(DISMISS_KEY)
-  })
-
-  const handleDismiss = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(DISMISS_KEY, "1")
-    }
-    setVisible(false)
-  }
+  const visible = useSyncExternalStore(
+    subscribe,
+    () => !localStorage.getItem(DISMISS_KEY),
+    () => true,
+  )
 
   if (!visible) return null
 

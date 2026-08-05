@@ -41,9 +41,9 @@ export function CategorySelector({
     }
   }
 
-  const selectedCategories = categories.filter((cat) =>
-    selectedIds.includes(cat.id),
-  )
+  const selectedSet = new Set(selectedIds)
+
+  const selectedCategories = categories.filter((cat) => selectedSet.has(cat.id))
 
   const tree = flattenCategoryTree(categories)
 
@@ -94,7 +94,7 @@ export function CategorySelector({
                 style={{ paddingLeft: `${depth * baseIndent}rem` }}
               >
                 <Checkbox
-                  checked={selectedIds.includes(node.id)}
+                  checked={selectedSet.has(node.id)}
                   onCheckedChange={() => toggleCategory(node.id)}
                 />
                 <span className="text-sm">{node.name}</span>
@@ -112,6 +112,7 @@ export function CategorySelector({
                 type="button"
                 onClick={() => toggleCategory(category.id)}
                 className="hover:text-destructive ml-1"
+                aria-label={`Remove ${category.name}`}
               >
                 <XIcon className="size-3" />
               </button>

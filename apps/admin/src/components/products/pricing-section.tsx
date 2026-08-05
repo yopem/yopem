@@ -22,8 +22,8 @@ export function PricingSection({
           step={1}
           value={creditsPerRun}
           onChange={(e) => {
-            const value = Number(e.target.value)
-            if (value >= 0) {
+            const value = e.currentTarget.valueAsNumber
+            if (Number.isFinite(value) && value >= 0) {
               onCreditsPerRunChange(Math.floor(value))
             }
           }}

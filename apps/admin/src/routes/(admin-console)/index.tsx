@@ -20,9 +20,9 @@ export const Route = createFileRoute("/(admin-console)/")({
   component: AdminConsoleComponent,
 })
 
-function AdminConsoleComponent() {
-  const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
+const breadcrumbItems = [{ label: "Home", href: "/" }, { label: "Dashboard" }]
 
+function AdminConsoleComponent() {
   return (
     <div className="mx-auto flex w-full max-w-350 flex-col gap-8 p-8">
       <GlobalBreadcrumb items={breadcrumbItems} />

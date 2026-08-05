@@ -36,7 +36,9 @@ export function TagSelector({
     }
   }
 
-  const selectedTags = tags.filter((tag) => selectedIds.includes(tag.id))
+  const selectedSet = new Set(selectedIds)
+
+  const selectedTags = tags.filter((tag) => selectedSet.has(tag.id))
 
   const filteredTags = tags.filter((tag) =>
     tag.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -82,7 +84,7 @@ export function TagSelector({
                 className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
               >
                 <Checkbox
-                  checked={selectedIds.includes(tag.id)}
+                  checked={selectedSet.has(tag.id)}
                   onCheckedChange={() => toggleTag(tag.id)}
                 />
                 <span className="text-sm">{tag.name}</span>
@@ -100,6 +102,7 @@ export function TagSelector({
                 type="button"
                 onClick={() => toggleTag(tag.id)}
                 className="hover:text-destructive ml-1"
+                aria-label={`Remove ${tag.name}`}
               >
                 <XIcon className="size-3" />
               </button>

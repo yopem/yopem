@@ -11,11 +11,13 @@ export const inputFieldTypeSchema = v.picklist([
 ])
 
 export const selectOptionSchema = v.object({
+  id: v.optional(v.string()),
   label: v.string(),
   value: v.string(),
 })
 
 export const inputFieldSchema = v.object({
+  id: v.optional(v.string()),
   variableName: v.pipe(v.string(), v.minLength(1)),
   description: v.string(),
   type: inputFieldTypeSchema,

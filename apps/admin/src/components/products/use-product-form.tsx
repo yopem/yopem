@@ -288,7 +288,7 @@ export function useProductForm({
     }
   }
 
-  const onModelsAvailable = useEffectEvent(() => {
+  useEffect(() => {
     const workflow = form.getFieldValue("workflow")
     const currentModel = getDefaultModelFromWorkflow(workflow)
     if (availableModels.length > 0 && !currentModel) {
@@ -298,11 +298,7 @@ export function useProductForm({
         form.setFieldValue("workflow", { ...workflow })
       }
     }
-  })
-
-  useEffect(() => {
-    onModelsAvailable()
-  }, [availableModels])
+  }, [availableModels, form])
 
   const onInitialDataLoaded = useEffectEvent(() => {
     if (mode === "edit" && initialData) {
@@ -384,7 +380,7 @@ export function useProductForm({
     onInitialDataLoaded()
   }, [initialData, mode])
 
-  const onApiKeyOrModelChange = useEffectEvent(() => {
+  useEffect(() => {
     const apiKeyId = form.getFieldValue("apiKeyId")
     const modelEngine = getDefaultModelFromWorkflow(
       form.getFieldValue("workflow"),
@@ -408,11 +404,13 @@ export function useProductForm({
         }
       }
     }
-  })
-
-  useEffect(() => {
-    onApiKeyOrModelChange()
-  }, [formValues.apiKeyId, formValues.workflow, safeApiKeys])
+  }, [
+    formValues.apiKeyId,
+    formValues.workflow,
+    safeApiKeys,
+    availableModelsData,
+    form,
+  ])
 
   const handleWorkflowChange = (workflow: ProductWorkflow) => {
     form.setFieldValue("workflow", workflow)

@@ -21,9 +21,11 @@ import { useEditorRef } from "platejs/react"
 import {
   createContext,
   startTransition,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -175,13 +177,16 @@ export function InlineCombobox({
   const currentUserId = editor.meta?.userId
   const isCreator = !elementUserId || elementUserId === currentUserId
 
-  function setValue(newValue: string) {
-    setValueProp?.(newValue)
+  const setValue = useCallback(
+    (newValue: string) => {
+      setValueProp?.(newValue)
 
-    if (!hasValueProp) {
-      setValueState(newValue)
-    }
-  }
+      if (!hasValueProp) {
+        setValueState(newValue)
+      }
+    },
+    [setValueProp, hasValueProp],
+  )
 
   const insertPointRef = useRef<PointRef | null>(null)
 
@@ -247,65 +252,90 @@ export function InlineCombobox({
 
   const activeValue = visibleValues[activeIndexBounded] ?? null
 
-  function setActiveValue(nextValue: string | null) {
-    const index = nextValue ? visibleValues.indexOf(nextValue) : -1
-    if (index >= 0) {
-      setActiveIndex(index)
-    }
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    inputProps.onKeyDown?.(event)
-
-    if (!open) return
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (visibleValues.length === 0) return
-      const nextIndex = (activeIndexBounded + 1) % visibleValues.length
-      const next = visibleValues[nextIndex]
-      startTransition(() => {
-        setActiveIndex(nextIndex)
-        scrollActiveIntoView(listboxRef.current, next)
-      })
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (visibleValues.length === 0) return
-      const nextIndex =
-        (activeIndexBounded - 1 + visibleValues.length) % visibleValues.length
-      const next = visibleValues[nextIndex]
-      startTransition(() => {
-        setActiveIndex(nextIndex)
-        scrollActiveIntoView(listboxRef.current, next)
-      })
-    } else if (event.key === "Enter" && activeValue) {
-      event.preventDefault()
-      event.stopPropagation()
-      const item = store.getItem(activeValue)
-      if (item) {
-        startTransition(() => item.onSelect())
+  const setActiveValue = useCallback(
+    (nextValue: string | null) => {
+      const index = nextValue ? visibleValues.indexOf(nextValue) : -1
+      if (index >= 0) {
+        setActiveIndex(index)
       }
-    }
-  }
+    },
+    [visibleValues],
+  )
 
-  const contextValue = {
-    activeValue,
-    filter,
-    inputProps: { ...inputProps, onKeyDown: handleKeyDown },
-    inputRef,
-    open,
-    register,
-    removeInput,
-    setActiveValue,
-    setHasEmpty,
-    setValue,
-    showTrigger,
-    trigger,
-    value,
-    visibleValues,
-  }
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      inputProps.onKeyDown?.(event)
+
+      if (!open) return
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault()
+        event.stopPropagation()
+        if (visibleValues.length === 0) return
+        const nextIndex = (activeIndexBounded + 1) % visibleValues.length
+        const next = visibleValues[nextIndex]
+        startTransition(() => {
+          setActiveIndex(nextIndex)
+          scrollActiveIntoView(listboxRef.current, next)
+        })
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault()
+        event.stopPropagation()
+        if (visibleValues.length === 0) return
+        const nextIndex =
+          (activeIndexBounded - 1 + visibleValues.length) % visibleValues.length
+        const next = visibleValues[nextIndex]
+        startTransition(() => {
+          setActiveIndex(nextIndex)
+          scrollActiveIntoView(listboxRef.current, next)
+        })
+      } else if (event.key === "Enter" && activeValue) {
+        event.preventDefault()
+        event.stopPropagation()
+        const item = store.getItem(activeValue)
+        if (item) {
+          startTransition(() => item.onSelect())
+        }
+      }
+    },
+    [inputProps, open, visibleValues, activeIndexBounded, activeValue, store],
+  )
+
+  const contextValue = useMemo(
+    () => ({
+      activeValue,
+      filter,
+      inputProps: { ...inputProps, onKeyDown: handleKeyDown },
+      inputRef,
+      open,
+      register,
+      removeInput,
+      setActiveValue,
+      setHasEmpty,
+      setValue,
+      showTrigger,
+      trigger,
+      value,
+      visibleValues,
+    }),
+    [
+      activeValue,
+      filter,
+      handleKeyDown,
+      inputProps,
+      inputRef,
+      open,
+      register,
+      removeInput,
+      setActiveValue,
+      setHasEmpty,
+      setValue,
+      showTrigger,
+      trigger,
+      value,
+      visibleValues,
+    ],
+  )
 
   return (
     <span contentEditable={false}>

@@ -83,22 +83,15 @@ export function AssetLibrary({
       <div className="min-h-0 shrink">
         <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {assets.map((asset) => (
-            <div
+            <button
               key={asset.id}
-              role="button"
-              tabIndex={0}
+              type="button"
               className={`relative aspect-square cursor-pointer overflow-hidden rounded-md border-2 transition-colors ${
                 selectedAssetId === asset.id
                   ? "border-primary"
                   : "hover:border-muted-foreground border-transparent"
               }`}
               onClick={() => onSelect(asset.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  onSelect(asset.id)
-                }
-              }}
             >
               <Image
                 src={asset.url}
@@ -106,7 +99,7 @@ export function AssetLibrary({
                 layout="fullWidth"
                 className="bg-muted absolute inset-0 size-full object-contain p-2"
               />
-            </div>
+            </button>
           ))}
         </div>
       </div>

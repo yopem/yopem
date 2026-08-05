@@ -54,6 +54,7 @@ import {
 } from "ui/tooltip"
 import { cn } from "ui/utils"
 import type { ApiKeyConfig } from "utils/api-input"
+import { createCustomId } from "utils/custom-id"
 
 const nodeTypeClasses: Record<WorkflowNode["type"], string> = {
   input: "border-l-4 border-l-yellow-400",
@@ -318,12 +319,16 @@ function getNodeVariables(node: Node): { name: string; label: string }[] {
   switch (type) {
     case "input": {
       const d = data as Extract<WorkflowNode, { type: "input" }>["data"]
-      return d.fields
-        .filter((field) => field.variableName)
-        .map((field) => ({
-          name: field.variableName,
-          label: `Input: ${field.variableName}`,
-        }))
+      return d.fields.flatMap((field) =>
+        field.variableName
+          ? [
+              {
+                name: field.variableName,
+                label: `Input: ${field.variableName}`,
+              },
+            ]
+          : [],
+      )
     }
     case "ai": {
       const d = data as Extract<WorkflowNode, { type: "ai" }>["data"]
@@ -739,7 +744,7 @@ function InputNodeEditor({
       variableName: string
       description: string
       type: InputFieldType
-      options?: { label: string; value: string }[]
+      options?: { id?: string; label: string; value: string }[]
       isOptional?: boolean
     }>,
   ) => {
@@ -753,7 +758,12 @@ function InputNodeEditor({
     onChange({
       fields: [
         ...data.fields,
-        { variableName: "", description: "", type: "text" },
+        {
+          id: createCustomId(),
+          variableName: "",
+          description: "",
+          type: "text",
+        },
       ],
     })
   }
@@ -765,7 +775,7 @@ function InputNodeEditor({
   return (
     <div className="flex flex-col gap-4">
       {data.fields.map((field, index) => (
-        <Card key={index} className="bg-muted/30">
+        <Card key={field.id} className="bg-muted/30">
           <CardPanel className="flex flex-col gap-3 p-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase">
@@ -862,8 +872,8 @@ function SelectOptionsEditor({
   options,
   onChange,
 }: {
-  options: { label: string; value: string }[]
-  onChange: (options: { label: string; value: string }[]) => void
+  options: { id?: string; label: string; value: string }[]
+  onChange: (options: { id?: string; label: string; value: string }[]) => void
 }) {
   const update = (index: number, field: "label" | "value", value: string) => {
     onChange(
@@ -872,7 +882,7 @@ function SelectOptionsEditor({
   }
 
   const add = () => {
-    onChange([...options, { label: "", value: "" }])
+    onChange([...options, { id: createCustomId(), label: "", value: "" }])
   }
 
   const remove = (index: number) => {
@@ -883,7 +893,7 @@ function SelectOptionsEditor({
     <div className="flex flex-col gap-2">
       <span className="text-xs font-semibold uppercase">Options</span>
       {options.map((option, index) => (
-        <div key={index} className="flex items-center gap-2">
+        <div key={option.id} className="flex items-center gap-2">
           <Input
             nativeInput
             value={option.label}

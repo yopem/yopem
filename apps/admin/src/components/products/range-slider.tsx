@@ -1,5 +1,7 @@
 "use client"
 
+import { useId } from "react"
+
 import { Slider } from "ui/slider"
 
 interface RangeSliderProps {
@@ -24,16 +26,20 @@ export function RangeSlider({
   formatValue,
 }: RangeSliderProps) {
   const format = formatValue ?? defaultFormatValue
+  const sliderId = useId()
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">{label}</label>
+        <label htmlFor={sliderId} className="text-sm font-medium">
+          {label}
+        </label>
         <span className="bg-muted rounded-sm px-1.5 py-0.5 font-mono text-xs">
           {format(value)}
         </span>
       </div>
       <Slider
+        id={sliderId}
         value={[value]}
         min={min}
         max={max}

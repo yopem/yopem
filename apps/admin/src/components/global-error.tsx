@@ -4,6 +4,10 @@ import { useEffect } from "react"
 
 import { Button } from "ui/button"
 
+function formatError(error: unknown): string {
+  return error instanceof Error ? (error.stack ?? error.message) : String(error)
+}
+
 export function GlobalError({
   error,
   reset,
@@ -11,9 +15,6 @@ export function GlobalError({
   error: Error
   reset?: () => void
 }) {
-  const formatError = (error: unknown): string =>
-    error instanceof Error ? (error.stack ?? error.message) : String(error)
-
   useEffect(() => {
     console.error(`Route error: ${formatError(error)}`)
   }, [error])
