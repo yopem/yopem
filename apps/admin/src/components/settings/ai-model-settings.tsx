@@ -192,8 +192,8 @@ export const AIModelsSettings = memo(() => {
 
         <div className="space-y-3">
           <Label className="text-sm font-medium">Add New Model</Label>
-          <div className="flex items-start gap-3">
-            <div className="flex min-w-32 flex-1 flex-col gap-1">
+          <div className="flex flex-col items-start gap-3 sm:flex-row">
+            <div className="flex w-full flex-1 flex-col gap-1 sm:min-w-32">
               <Label className="text-xs">Provider</Label>
               <form.Field
                 name="provider"
@@ -231,7 +231,7 @@ export const AIModelsSettings = memo(() => {
                 )}
               </form.Field>
             </div>
-            <div className="flex min-w-40 flex-1 flex-col gap-1">
+            <div className="flex w-full flex-1 flex-col gap-1 sm:min-w-40">
               <Label className="text-xs">Model ID</Label>
               <form.Field
                 name="modelId"
@@ -254,7 +254,7 @@ export const AIModelsSettings = memo(() => {
                 )}
               </form.Field>
             </div>
-            <div className="flex min-w-40 flex-1 flex-col gap-1">
+            <div className="flex w-full flex-1 flex-col gap-1 sm:min-w-40">
               <Label className="text-xs">Display Name</Label>
               <form.Field
                 name="displayName"
@@ -277,10 +277,11 @@ export const AIModelsSettings = memo(() => {
                 )}
               </form.Field>
             </div>
-            <div className="flex items-start pt-5">
+            <div className="flex w-full items-start sm:w-auto sm:pt-5">
               <form.Subscribe selector={(state) => state.canSubmit}>
                 {(canSubmit) => (
                   <Button
+                    className="w-full sm:w-auto"
                     onClick={() => void form.handleSubmit()}
                     disabled={!canSubmit || addMutation.isPending}
                   >
