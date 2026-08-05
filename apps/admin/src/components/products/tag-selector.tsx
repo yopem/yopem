@@ -9,6 +9,7 @@ import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import { CollapsibleCard } from "ui/collapsible-card"
 import { Input } from "ui/input"
+import { ScrollArea } from "ui/scroll-area"
 
 export type TagSelectorType = Pick<SelectTag, "id" | "name" | "slug">
 
@@ -64,30 +65,32 @@ export function TagSelector({
         placeholder="Search tags..."
         className="h-8 text-sm"
       />
-      <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
-        {tags.length === 0 ? (
-          <p className="text-muted-foreground py-2 text-center text-xs">
-            No tags available
-          </p>
-        ) : filteredTags.length === 0 ? (
-          <p className="text-muted-foreground py-2 text-center text-xs">
-            No matching tags
-          </p>
-        ) : (
-          filteredTags.map((tag) => (
-            <label
-              key={tag.id}
-              className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
-            >
-              <Checkbox
-                checked={selectedIds.includes(tag.id)}
-                onCheckedChange={() => toggleTag(tag.id)}
-              />
-              <span className="text-sm">{tag.name}</span>
-            </label>
-          ))
-        )}
-      </div>
+      <ScrollArea className="h-40">
+        <div className="flex flex-col gap-1">
+          {tags.length === 0 ? (
+            <p className="text-muted-foreground py-2 text-center text-xs">
+              No tags available
+            </p>
+          ) : filteredTags.length === 0 ? (
+            <p className="text-muted-foreground py-2 text-center text-xs">
+              No matching tags
+            </p>
+          ) : (
+            filteredTags.map((tag) => (
+              <label
+                key={tag.id}
+                className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
+              >
+                <Checkbox
+                  checked={selectedIds.includes(tag.id)}
+                  onCheckedChange={() => toggleTag(tag.id)}
+                />
+                <span className="text-sm">{tag.name}</span>
+              </label>
+            ))
+          )}
+        </div>
+      </ScrollArea>
       {selectedTags.length > 0 && (
         <div className="border-border flex flex-wrap gap-1 border-t pt-3">
           {selectedTags.map((tag) => (

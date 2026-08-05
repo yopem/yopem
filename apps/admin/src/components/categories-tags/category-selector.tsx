@@ -9,6 +9,7 @@ import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
 import { CollapsibleCard } from "ui/collapsible-card"
 import { Input } from "ui/input"
+import { ScrollArea } from "ui/scroll-area"
 
 import { flattenCategoryTree } from "./category-tree"
 
@@ -75,31 +76,33 @@ export function CategorySelector({
         placeholder="Search categories..."
         className="h-8 text-sm"
       />
-      <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
-        {categories.length === 0 ? (
-          <p className="text-muted-foreground py-2 text-center text-xs">
-            No categories available
-          </p>
-        ) : filteredTree.length === 0 ? (
-          <p className="text-muted-foreground py-2 text-center text-xs">
-            No matching categories
-          </p>
-        ) : (
-          filteredTree.map(({ node, depth }) => (
-            <label
-              key={node.id}
-              className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
-              style={{ paddingLeft: `${depth * baseIndent}rem` }}
-            >
-              <Checkbox
-                checked={selectedIds.includes(node.id)}
-                onCheckedChange={() => toggleCategory(node.id)}
-              />
-              <span className="text-sm">{node.name}</span>
-            </label>
-          ))
-        )}
-      </div>
+      <ScrollArea className="h-48">
+        <div className="flex flex-col gap-1">
+          {categories.length === 0 ? (
+            <p className="text-muted-foreground py-2 text-center text-xs">
+              No categories available
+            </p>
+          ) : filteredTree.length === 0 ? (
+            <p className="text-muted-foreground py-2 text-center text-xs">
+              No matching categories
+            </p>
+          ) : (
+            filteredTree.map(({ node, depth }) => (
+              <label
+                key={node.id}
+                className="hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-sm p-2 transition-colors"
+                style={{ paddingLeft: `${depth * baseIndent}rem` }}
+              >
+                <Checkbox
+                  checked={selectedIds.includes(node.id)}
+                  onCheckedChange={() => toggleCategory(node.id)}
+                />
+                <span className="text-sm">{node.name}</span>
+              </label>
+            ))
+          )}
+        </div>
+      </ScrollArea>
       {selectedCategories.length > 0 && (
         <div className="border-border flex flex-wrap gap-1 border-t pt-3">
           {selectedCategories.map((category) => (
