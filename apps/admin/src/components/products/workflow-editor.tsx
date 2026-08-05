@@ -28,7 +28,7 @@ import {
   Trash2Icon,
   VariableIcon,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 import type { ProductWorkflow, WorkflowNode } from "db/schema"
 import { badgeVariants } from "ui/badge"
@@ -97,11 +97,13 @@ export function WorkflowEditor({
   const [nodes, setNodes, onNodesChange] = useNodesState(toFlowNodes(workflow))
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflow.edges)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [prevWorkflow, setPrevWorkflow] = useState(workflow)
 
-  useEffect(() => {
+  if (workflow !== prevWorkflow) {
+    setPrevWorkflow(workflow)
     setNodes(toFlowNodes(workflow))
     setEdges(workflow.edges)
-  }, [workflow])
+  }
 
   const emit = useCallback(
     (nextNodes: Node[], nextEdges: Edge[]) => {
