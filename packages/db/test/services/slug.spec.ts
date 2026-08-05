@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 
 import {
+  assertSlugAvailable,
   generateUniqueAssetFilename,
   generateUniqueCategorySlug,
   generateUniqueProductSlug,
   generateUniqueTagSlug,
+  isSlugAvailable,
 } from "db/services/slug"
 import type { MockDb } from "db/test-utils/mock-db"
 
@@ -56,5 +58,30 @@ describe("slug service", () => {
     mockDb.setReturn([[]])
     const result = await generateUniqueTagSlug("Tag", "t1")
     expect(result).toBe("tag")
+  })
+
+  test("isSlugAvailable returns true when no row exists", async () => {
+    mockDb.setReturn([[]])
+    const result = await isSlugAvailable("product", "hello")
+    expect(result).toBe(true)
+  })
+
+  test("isSlugAvailable returns false when row exists", async () => {
+    mockDb.setReturn([[{ id: "p1" }]])
+    const result = await isSlugAvailable("category", "taken")
+    expect(result).toBe(false)
+  })
+
+  test("assertSlugAvailable returns slug when free", async () => {
+    mockDb.setReturn([[]])
+    const result = await assertSlugAvailable("tag", "free")
+    expect(result).toBe("free")
+  })
+
+  test("assertSlugAvailable throws when taken", async () => {
+    mockDb.setReturn([[{ id: "t1" }]])
+    await expect(assertSlugAvailable("tag", "taken")).rejects.toThrow(
+      "already in use",
+    )
   })
 })

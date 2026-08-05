@@ -4,7 +4,7 @@ import { db } from "db"
 import { categoriesTable } from "db/schema"
 import type { SelectCategory } from "db/schema/categories"
 
-import { generateUniqueCategorySlug } from "./slug"
+import { generateUniqueCategorySlug, assertSlugAvailable } from "./slug"
 
 export const listCategories = (): Promise<
   {
@@ -95,12 +95,15 @@ const validateParent = async (
 
 export const createCategory = async (input: {
   name: string
+  slug?: string
   description?: string
   parentId?: string | null
   icon?: string
   sortOrder?: number
 }): Promise<SelectCategory> => {
-  const slug = await generateUniqueCategorySlug(input.name)
+  const slug = input.slug
+    ? await assertSlugAvailable("category", input.slug)
+    : await generateUniqueCategorySlug(input.name)
 
   const parentId =
     input.parentId && input.parentId !== "" ? input.parentId : null
@@ -128,10 +131,13 @@ export const createCategory = async (input: {
 export const updateCategory = async (input: {
   id: string
   name: string
+  slug?: string
   description?: string
   parentId?: string | null
 }): Promise<SelectCategory> => {
-  const slug = await generateUniqueCategorySlug(input.name, input.id)
+  const slug = input.slug
+    ? await assertSlugAvailable("category", input.slug, input.id)
+    : await generateUniqueCategorySlug(input.name, input.id)
 
   const parentId =
     input.parentId === undefined

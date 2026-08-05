@@ -1,5 +1,4 @@
 import { and, eq, ne } from "drizzle-orm"
-import { transliterate as tr } from "transliteration"
 
 import { db } from "db"
 import {
@@ -9,19 +8,42 @@ import {
   tagsTable,
 } from "db/schema"
 import type { AssetType } from "db/schema/assets"
+import { slugify, type SlugEntity } from "utils/slug"
 
-function slugify(text: string) {
-  return tr(text)
-    .toString()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/_/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/-$/g, "")
+const slugEntityTable = {
+  product: productsTable,
+  category: categoriesTable,
+  tag: tagsTable,
+} as const
+
+export const isSlugAvailable = async (
+  entity: SlugEntity,
+  slug: string,
+  excludeId?: string,
+): Promise<boolean> => {
+  const table = slugEntityTable[entity]
+  const [row] = await db
+    .select({ id: table.id })
+    .from(table)
+    .where(
+      excludeId
+        ? and(eq(table.slug, slug), ne(table.id, excludeId))
+        : eq(table.slug, slug),
+    )
+    .limit(1)
+  return !row
+}
+
+export const assertSlugAvailable = async (
+  entity: SlugEntity,
+  slug: string,
+  excludeId?: string,
+): Promise<string> => {
+  const available = await isSlugAvailable(entity, slug, excludeId)
+  if (!available) {
+    throw new Error(`Slug "${slug}" is already in use`)
+  }
+  return slug
 }
 
 export const generateUniqueProductSlug = async (

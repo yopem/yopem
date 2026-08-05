@@ -10,6 +10,7 @@ import { Textarea } from "ui/textarea"
 import type { ApiKeyConfig } from "utils/api-input"
 
 import { CategorySelector } from "@/components/categories-tags/category-selector"
+import { SlugField } from "@/components/slug-field"
 
 import { ConfigurationPanel } from "./configuration-panel"
 import { DescriptionEditor } from "./description-editor"
@@ -106,14 +107,17 @@ export function ProductForm({
                   )}
                 </form.Field>
 
-                {showSlug && mode === "edit" && initialData?.slug && (
-                  <Field>
-                    <FieldLabel>Slug</FieldLabel>
-                    <Input value={initialData.slug} disabled />
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      URL-friendly identifier (auto-generated from name)
-                    </p>
-                  </Field>
+                {showSlug && mode === "edit" && initialData && (
+                  <form.Field name="slug">
+                    {(field) => (
+                      <SlugField
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        entity="product"
+                        excludeId={initialData.id}
+                      />
+                    )}
+                  </form.Field>
                 )}
 
                 <form.Field name="excerpt">

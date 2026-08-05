@@ -11,11 +11,13 @@ import { Dialog, DialogPopup } from "ui/dialog"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 
+import { SlugField } from "@/components/slug-field"
+
 interface TagDialogProps {
   open: boolean
-  editing: { id: string; name: string } | null
+  editing: { id: string; name: string; slug?: string | null } | null
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: { name: string }) => void
+  onSubmit: (values: { name: string; slug?: string }) => void
   onCancel: () => void
   createMutation: Pick<
     UseMutationResult<unknown, Error, unknown, unknown>,
@@ -47,15 +49,19 @@ export function TagDialog({
   const form = useForm({
     defaultValues: {
       name: editing?.name ?? "",
+      slug: editing?.slug ?? "",
     },
     onSubmit: ({ value }) => {
-      onSubmit({ name: value.name })
+      onSubmit({
+        name: value.name,
+        ...(value.slug ? { slug: value.slug } : {}),
+      })
     },
   })
 
   useEffect(() => {
     if (open) {
-      form.reset({ name: editing?.name ?? "" })
+      form.reset({ name: editing?.name ?? "", slug: editing?.slug ?? "" })
     }
   }, [open, editing, form])
 
@@ -97,6 +103,19 @@ export function TagDialog({
               </Field>
             )}
           </form.Field>
+
+          {editing && (
+            <form.Field name="slug">
+              {(field) => (
+                <SlugField
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  entity="tag"
+                  excludeId={editing.id}
+                />
+              )}
+            </form.Field>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel}>

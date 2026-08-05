@@ -40,6 +40,7 @@ const productFormSchema = v.object({
     v.minLength(1, "Product name is required"),
     v.trim(),
   ),
+  slug: v.optional(v.string()),
   description: v.pipe(
     v.string(),
     v.minLength(1, "Product description is required"),
@@ -161,6 +162,7 @@ export function useProductForm({
   const form = useForm({
     defaultValues: {
       name: "",
+      slug: "",
       description: "",
       descriptionContent: [] as TElement[],
       excerpt: "",
@@ -176,6 +178,7 @@ export function useProductForm({
     onSubmit: ({ value }) => {
       const formData = {
         name: value.name,
+        slug: value.slug || undefined,
         description: value.description,
         descriptionContent: value.descriptionContent,
         excerpt: value.excerpt || undefined,
@@ -259,6 +262,7 @@ export function useProductForm({
     const formData = form.state.values
     return {
       name: formData.name,
+      slug: formData.slug || undefined,
       description: formData.description,
       descriptionContent: formData.descriptionContent,
       excerpt: formData.excerpt || undefined,
@@ -303,6 +307,7 @@ export function useProductForm({
   const onInitialDataLoaded = useEffectEvent(() => {
     if (mode === "edit" && initialData) {
       form.setFieldValue("name", initialData.name)
+      form.setFieldValue("slug", initialData.slug ?? "")
       form.setFieldValue("description", initialData.description ?? "")
       const existingContent = (
         initialData as { descriptionContent?: TElement[] }

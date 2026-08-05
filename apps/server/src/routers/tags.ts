@@ -45,6 +45,7 @@ export const tagsRouter = {
             v.trim(),
             v.minLength(1, "Tag name is required"),
           ),
+          slug: v.optional(v.string()),
         }),
       )
       .output(tagSchema)
@@ -62,6 +63,7 @@ export const tagsRouter = {
             v.trim(),
             v.minLength(1, "Tag name is required"),
           ),
+          slug: v.optional(v.string()),
         }),
       )
       .output(tagSchema)

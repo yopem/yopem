@@ -19,6 +19,8 @@ import {
 } from "ui/select"
 import { Textarea } from "ui/textarea"
 
+import { SlugField } from "@/components/slug-field"
+
 import {
   flattenCategoryTree,
   getCategoryDescendantIds,
@@ -37,6 +39,7 @@ interface CategoryDialogProps {
   editing: {
     id: string
     name: string
+    slug?: string | null
     description?: string | null
     parentId?: string | null
   } | null
@@ -44,6 +47,7 @@ interface CategoryDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (values: {
     name: string
+    slug?: string
     description?: string
     parentId?: string
   }) => void
@@ -93,12 +97,14 @@ export function CategoryDialog({
   const form = useForm({
     defaultValues: {
       name: editing?.name ?? "",
+      slug: editing?.slug ?? "",
       description: editing?.description ?? "",
       parentId: editing?.parentId ?? undefined,
     },
     onSubmit: ({ value }) => {
       onSubmit({
         name: value.name,
+        ...(value.slug ? { slug: value.slug } : {}),
         description: value.description || undefined,
         parentId: value.parentId,
       })
@@ -109,6 +115,7 @@ export function CategoryDialog({
     if (open) {
       form.reset({
         name: editing?.name ?? "",
+        slug: editing?.slug ?? "",
         description: editing?.description ?? "",
         parentId: editing?.parentId ?? undefined,
       })
@@ -154,6 +161,18 @@ export function CategoryDialog({
                 </Field>
               )}
             </form.Field>
+            {editing && (
+              <form.Field name="slug">
+                {(field) => (
+                  <SlugField
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    entity="category"
+                    excludeId={editing.id}
+                  />
+                )}
+              </form.Field>
+            )}
             <form.Field name="parentId">
               {(field) => (
                 <Field>

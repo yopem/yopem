@@ -15,7 +15,7 @@ import type { InsertProductVersion } from "db/schema/product-versions"
 import type { InsertProduct, SelectProduct } from "db/schema/products"
 import { createCustomId } from "utils/custom-id"
 
-import { generateUniqueProductSlug } from "./slug"
+import { assertSlugAvailable, generateUniqueProductSlug } from "./slug"
 
 export const listProducts = async (input?: {
   limit?: number
@@ -431,10 +431,12 @@ export const updateProduct = async (
     tagIds?: string[]
   },
 ): Promise<{ success: boolean } | null> => {
-  const { categoryIds, tagIds, ...productData } = data
+  const { categoryIds, tagIds, slug: explicitSlug, ...productData } = data
 
   let slug: string | undefined
-  if (productData.name) {
+  if (explicitSlug) {
+    slug = await assertSlugAvailable("product", explicitSlug, id)
+  } else if (productData.name) {
     const [existingProduct] = await db
       .select({ name: productsTable.name })
       .from(productsTable)

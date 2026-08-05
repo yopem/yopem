@@ -30,6 +30,7 @@ interface CategoryDialogState {
   editing: {
     id: string
     name: string
+    slug?: string | null
     description?: string | null
     parentId?: string | null
   } | null
@@ -51,6 +52,7 @@ type Action =
       category?: {
         id: string
         name: string
+        slug?: string | null
         description?: string | null
         parentId?: string | null
       }
@@ -303,6 +305,7 @@ function CategoriesTagsRouteComponent() {
 
   const handleCategorySubmit = (values: {
     name: string
+    slug?: string
     description?: string
     parentId?: string
   }) => {
@@ -356,7 +359,10 @@ function CategoriesTagsRouteComponent() {
             categories={categories}
             isLoading={isLoadingCategories}
             onEdit={(category) =>
-              dispatch({ type: "OPEN_CATEGORY_DIALOG", category })
+              dispatch({
+                type: "OPEN_CATEGORY_DIALOG",
+                category: categories?.find((c) => c.id === category.id),
+              })
             }
             onDelete={(id) => deleteCategoryMutation.mutate({ id })}
             deleteMutation={deleteCategoryMutation}
@@ -377,7 +383,12 @@ function CategoriesTagsRouteComponent() {
           <TagList
             tags={tags}
             isLoading={isLoadingTags}
-            onEdit={(tag) => dispatch({ type: "OPEN_TAG_DIALOG", tag })}
+            onEdit={(tag) =>
+              dispatch({
+                type: "OPEN_TAG_DIALOG",
+                tag: tags?.find((t) => t.id === tag.id),
+              })
+            }
             onDelete={(id) => deleteTagMutation.mutate({ id })}
             deleteMutation={deleteTagMutation}
           />
