@@ -28,9 +28,10 @@ import {
   Trash2Icon,
   VariableIcon,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import type { ProductWorkflow, WorkflowNode } from "db/schema"
+import { badgeVariants } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardPanel } from "ui/card"
 import { Checkbox } from "ui/checkbox"
@@ -51,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "ui/tooltip"
+import { cn } from "ui/utils"
 import type { ApiKeyConfig } from "utils/api-input"
 
 const nodeTypeClasses: Record<WorkflowNode["type"], string> = {
@@ -210,6 +212,8 @@ export function WorkflowEditor({
             {selectedNode ? (
               <NodeEditorPanel
                 node={selectedNode}
+                nodes={nodes}
+                edges={edges}
                 apiKeys={apiKeys}
                 availableModels={availableModels}
                 onChange={(data) => updateNodeData(selectedNode.id, data)}
@@ -280,6 +284,144 @@ function defaultNodeData(
         maxIterations: 10,
       }
   }
+}
+
+function getUpstreamNodeIds(nodeId: string, edges: Edge[]): Set<string> {
+  const incoming = new Map<string, Set<string>>()
+  for (const edge of edges) {
+    const set = incoming.get(edge.target) ?? new Set<string>()
+    set.add(edge.source)
+    incoming.set(edge.target, set)
+  }
+
+  const visited = new Set<string>()
+  const queue = [nodeId]
+  while (queue.length > 0) {
+    const id = queue.shift()!
+    if (visited.has(id)) continue
+    visited.add(id)
+    for (const source of incoming.get(id) ?? []) {
+      queue.push(source)
+    }
+  }
+
+  visited.delete(nodeId)
+  return visited
+}
+
+function getNodeVariables(node: Node): { name: string; label: string }[] {
+  const type = node.type as WorkflowNode["type"]
+  const data = node.data as WorkflowNode["data"]
+
+  switch (type) {
+    case "input": {
+      const d = data as Extract<WorkflowNode, { type: "input" }>["data"]
+      return d.fields
+        .filter((field) => field.variableName)
+        .map((field) => ({
+          name: field.variableName,
+          label: `Input: ${field.variableName}`,
+        }))
+    }
+    case "ai": {
+      const d = data as Extract<WorkflowNode, { type: "ai" }>["data"]
+      return d.outputName
+        ? [{ name: d.outputName, label: `AI: ${d.outputName}` }]
+        : []
+    }
+    case "output": {
+      const d = data as Extract<WorkflowNode, { type: "output" }>["data"]
+      return d.outputName
+        ? [{ name: d.outputName, label: `Output: ${d.outputName}` }]
+        : []
+    }
+    case "loop": {
+      const d = data as Extract<WorkflowNode, { type: "loop" }>["data"]
+      return [
+        { name: d.itemName, label: `Loop item: ${d.itemName}` },
+        { name: `${node.id}_result`, label: `${d.label ?? "Loop"} result` },
+      ]
+    }
+    case "condition": {
+      return [
+        {
+          name: `${node.id}_result`,
+          label: `${data.label ?? "Condition"} result`,
+        },
+      ]
+    }
+    default:
+      return []
+  }
+}
+
+function getUpstreamVariables(
+  nodeId: string,
+  nodes: Node[],
+  edges: Edge[],
+): { name: string; label: string }[] {
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]))
+  const seen = new Map<string, string>()
+  for (const id of getUpstreamNodeIds(nodeId, edges)) {
+    const upstreamNode = nodeMap.get(id)
+    if (!upstreamNode) continue
+    for (const variable of getNodeVariables(upstreamNode)) {
+      if (!seen.has(variable.name)) seen.set(variable.name, variable.label)
+    }
+  }
+  return Array.from(seen.entries()).map(([name, label]) => ({ name, label }))
+}
+
+function insertVariable(
+  name: string,
+  value: string,
+  onChange: (value: string) => void,
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>,
+) {
+  const element = textareaRef.current
+  const start = element?.selectionStart ?? value.length
+  const end = element?.selectionEnd ?? value.length
+  const wrapped = `{{${name}}}`
+  onChange(value.slice(0, start) + wrapped + value.slice(end))
+  setTimeout(() => {
+    element?.focus()
+    const position = start + wrapped.length
+    element?.setSelectionRange(position, position)
+  }, 0)
+}
+
+function VariableChips({
+  variables,
+  value,
+  onChange,
+  textareaRef,
+}: {
+  variables: { name: string; label: string }[]
+  value: string
+  onChange: (value: string) => void
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
+}) {
+  if (variables.length === 0) return null
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      <span className="text-muted-foreground text-xs">Available:</span>
+      {variables.map((variable) => (
+        <button
+          key={variable.name}
+          type="button"
+          className={cn(
+            badgeVariants({ variant: "secondary", size: "sm" }),
+            "cursor-pointer",
+          )}
+          onClick={() =>
+            insertVariable(variable.name, value, onChange, textareaRef)
+          }
+        >
+          {variable.label}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 function NodeToolbar({
@@ -471,12 +613,16 @@ function LoopNodeComponent(props: NodeProps) {
 
 function NodeEditorPanel({
   node,
+  nodes,
+  edges,
   apiKeys,
   availableModels,
   onChange,
   onDelete,
 }: {
   node: Node
+  nodes: Node[]
+  edges: Edge[]
   apiKeys: ApiKeyConfig[]
   availableModels: string[]
   onChange: (data: Partial<WorkflowNode["data"]>) => void
@@ -484,6 +630,10 @@ function NodeEditorPanel({
 }) {
   const type = node.type as WorkflowNode["type"]
   const data = node.data as WorkflowNode["data"]
+  const availableVariables = useMemo(
+    () => getUpstreamVariables(node.id, nodes, edges),
+    [node.id, nodes, edges],
+  )
 
   return (
     <div className="flex h-full flex-col">
@@ -520,6 +670,7 @@ function NodeEditorPanel({
         {type === "ai" && (
           <AINodeEditor
             data={data as Extract<WorkflowNode, { type: "ai" }>["data"]}
+            variables={availableVariables}
             apiKeys={apiKeys}
             availableModels={availableModels}
             onChange={onChange}
@@ -529,6 +680,7 @@ function NodeEditorPanel({
         {type === "output" && (
           <OutputNodeEditor
             data={data as Extract<WorkflowNode, { type: "output" }>["data"]}
+            variables={availableVariables}
             onChange={onChange}
           />
         )}
@@ -536,6 +688,7 @@ function NodeEditorPanel({
         {type === "condition" && (
           <ConditionNodeEditor
             data={data as Extract<WorkflowNode, { type: "condition" }>["data"]}
+            variables={availableVariables}
             onChange={onChange}
           />
         )}
@@ -543,6 +696,7 @@ function NodeEditorPanel({
         {type === "loop" && (
           <LoopNodeEditor
             data={data as Extract<WorkflowNode, { type: "loop" }>["data"]}
+            variables={availableVariables}
             onChange={onChange}
           />
         )}
@@ -755,20 +909,32 @@ function SelectOptionsEditor({
 
 function AINodeEditor({
   data,
+  variables,
   apiKeys,
   availableModels,
   onChange,
 }: {
   data: Extract<WorkflowNode, { type: "ai" }>["data"]
+  variables: { name: string; label: string }[]
   apiKeys: ApiKeyConfig[]
   availableModels: string[]
   onChange: (data: Partial<WorkflowNode["data"]>) => void
 }) {
+  const systemRoleRef = useRef<HTMLTextAreaElement>(null)
+  const userInstructionRef = useRef<HTMLTextAreaElement>(null)
+
   return (
     <div className="flex flex-col gap-4">
       <Field>
         <FieldLabel>System Role</FieldLabel>
+        <VariableChips
+          variables={variables}
+          value={data.systemRole}
+          onChange={(value) => onChange({ systemRole: value })}
+          textareaRef={systemRoleRef}
+        />
         <Textarea
+          ref={systemRoleRef}
           value={data.systemRole}
           rows={4}
           onChange={(e) => onChange({ systemRole: e.currentTarget.value })}
@@ -777,7 +943,14 @@ function AINodeEditor({
 
       <Field>
         <FieldLabel>User Instruction Template</FieldLabel>
+        <VariableChips
+          variables={variables}
+          value={data.userInstructionTemplate}
+          onChange={(value) => onChange({ userInstructionTemplate: value })}
+          textareaRef={userInstructionRef}
+        />
         <Textarea
+          ref={userInstructionRef}
           value={data.userInstructionTemplate}
           rows={6}
           onChange={(e) =>
@@ -872,16 +1045,27 @@ function AINodeEditor({
 
 function OutputNodeEditor({
   data,
+  variables,
   onChange,
 }: {
   data: Extract<WorkflowNode, { type: "output" }>["data"]
+  variables: { name: string; label: string }[]
   onChange: (data: Partial<WorkflowNode["data"]>) => void
 }) {
+  const templateRef = useRef<HTMLTextAreaElement>(null)
+
   return (
     <div className="flex flex-col gap-4">
       <Field>
         <FieldLabel>Output Template</FieldLabel>
+        <VariableChips
+          variables={variables}
+          value={data.template}
+          onChange={(value) => onChange({ template: value })}
+          textareaRef={templateRef}
+        />
         <Textarea
+          ref={templateRef}
           value={data.template}
           rows={8}
           onChange={(e) => onChange({ template: e.currentTarget.value })}
@@ -902,16 +1086,27 @@ function OutputNodeEditor({
 
 function ConditionNodeEditor({
   data,
+  variables,
   onChange,
 }: {
   data: Extract<WorkflowNode, { type: "condition" }>["data"]
+  variables: { name: string; label: string }[]
   onChange: (data: Partial<WorkflowNode["data"]>) => void
 }) {
+  const expressionRef = useRef<HTMLTextAreaElement>(null)
+
   return (
     <div className="flex flex-col gap-4">
       <Field>
         <FieldLabel>Expression</FieldLabel>
+        <VariableChips
+          variables={variables}
+          value={data.expression}
+          onChange={(value) => onChange({ expression: value })}
+          textareaRef={expressionRef}
+        />
         <Textarea
+          ref={expressionRef}
           value={data.expression}
           rows={3}
           onChange={(e) => onChange({ expression: e.currentTarget.value })}
@@ -927,16 +1122,27 @@ function ConditionNodeEditor({
 
 function LoopNodeEditor({
   data,
+  variables,
   onChange,
 }: {
   data: Extract<WorkflowNode, { type: "loop" }>["data"]
+  variables: { name: string; label: string }[]
   onChange: (data: Partial<WorkflowNode["data"]>) => void
 }) {
+  const itemsExpressionRef = useRef<HTMLTextAreaElement>(null)
+
   return (
     <div className="flex flex-col gap-4">
       <Field>
         <FieldLabel>Items Expression</FieldLabel>
+        <VariableChips
+          variables={variables}
+          value={data.itemsExpression}
+          onChange={(value) => onChange({ itemsExpression: value })}
+          textareaRef={itemsExpressionRef}
+        />
         <Textarea
+          ref={itemsExpressionRef}
           value={data.itemsExpression}
           rows={3}
           onChange={(e) => onChange({ itemsExpression: e.currentTarget.value })}
