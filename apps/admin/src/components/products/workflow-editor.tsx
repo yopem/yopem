@@ -36,6 +36,7 @@ import { Card, CardPanel } from "ui/card"
 import { Checkbox } from "ui/checkbox"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
+import { ScrollArea } from "ui/scroll-area"
 import {
   Select,
   SelectItem,
@@ -204,21 +205,23 @@ export function WorkflowEditor({
           </ReactFlow>
         </div>
 
-        <div className="border-border w-full border-t lg:h-full lg:w-80 lg:border-t-0 lg:border-l">
-          {selectedNode ? (
-            <NodeEditorPanel
-              node={selectedNode}
-              apiKeys={apiKeys}
-              availableModels={availableModels}
-              onChange={(data) => updateNodeData(selectedNode.id, data)}
-              onDelete={() => deleteNode(selectedNode.id)}
-            />
-          ) : (
-            <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm">
-              <VariableIcon className="size-8 opacity-50" />
-              <p>Select a node to edit its settings.</p>
-            </div>
-          )}
+        <div className="border-border flex w-full flex-col lg:h-full lg:w-80 lg:border-t-0 lg:border-l">
+          <ScrollArea className="h-full">
+            {selectedNode ? (
+              <NodeEditorPanel
+                node={selectedNode}
+                apiKeys={apiKeys}
+                availableModels={availableModels}
+                onChange={(data) => updateNodeData(selectedNode.id, data)}
+                onDelete={() => deleteNode(selectedNode.id)}
+              />
+            ) : (
+              <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm">
+                <VariableIcon className="size-8 opacity-50" />
+                <p>Select a node to edit its settings.</p>
+              </div>
+            )}
+          </ScrollArea>
         </div>
       </div>
     </div>
