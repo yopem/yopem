@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm, useStore } from "@tanstack/react-form"
+import { useForm, useSelector } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useState } from "react"
 import * as v from "valibot"
@@ -217,7 +217,7 @@ export function useProductForm({
     },
   })
 
-  const formValues = useStore(form.store, (state) => state.values)
+  const formValues = useSelector(form.store, (state) => state.values)
 
   const selectedApiKeyProvider = useMemo(() => {
     if (!formValues.apiKeyId || !safeApiKeys) return undefined
