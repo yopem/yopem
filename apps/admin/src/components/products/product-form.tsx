@@ -53,8 +53,10 @@ export function ProductForm({
     availableModels,
     categories,
     tags,
-    dialogsState,
-    dialogsDispatch,
+    categoryDialogOpen,
+    setCategoryDialogOpen,
+    tagDialogOpen,
+    setTagDialogOpen,
     createCategoryMutation,
     createTagMutation,
     handleWorkflowChange,
@@ -181,17 +183,13 @@ export function ProductForm({
                       onChange={(value) =>
                         form.setFieldValue("categoryIds", value)
                       }
-                      onAddNew={() =>
-                        dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
-                      }
+                      onAddNew={() => setCategoryDialogOpen(true)}
                     />
                     <TagSelector
                       tags={tags}
                       selectedIds={tagIds}
                       onChange={(value) => form.setFieldValue("tagIds", value)}
-                      onAddNew={() =>
-                        dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
-                      }
+                      onAddNew={() => setTagDialogOpen(true)}
                     />
                   </aside>
                 )}
@@ -258,51 +256,18 @@ export function ProductForm({
       </div>
 
       <ProductFormCategoryDialog
-        open={dialogsState.category.open}
-        name={dialogsState.category.name}
-        description={dialogsState.category.description}
-        parentId={dialogsState.category.parentId}
+        open={categoryDialogOpen}
         categories={categories}
         createMutation={createCategoryMutation}
-        onOpenChange={(open) =>
-          open
-            ? dialogsDispatch({ type: "OPEN_CATEGORY_DIALOG" })
-            : dialogsDispatch({ type: "CLOSE_CATEGORY_DIALOG" })
-        }
-        onNameChange={(value) =>
-          dialogsDispatch({
-            type: "SET_CATEGORY_NAME",
-            payload: value,
-          })
-        }
-        onDescriptionChange={(value) =>
-          dialogsDispatch({
-            type: "SET_CATEGORY_DESCRIPTION",
-            payload: value,
-          })
-        }
-        onParentIdChange={(value) =>
-          dialogsDispatch({
-            type: "SET_CATEGORY_PARENT_ID",
-            payload: value ?? "",
-          })
-        }
-        onCancel={() => dialogsDispatch({ type: "CLOSE_CATEGORY_DIALOG" })}
+        onOpenChange={setCategoryDialogOpen}
+        onCancel={() => setCategoryDialogOpen(false)}
       />
 
       <ProductFormTagDialog
-        open={dialogsState.tag.open}
-        name={dialogsState.tag.name}
+        open={tagDialogOpen}
         createMutation={createTagMutation}
-        onOpenChange={(open) =>
-          open
-            ? dialogsDispatch({ type: "OPEN_TAG_DIALOG" })
-            : dialogsDispatch({ type: "CLOSE_TAG_DIALOG" })
-        }
-        onNameChange={(value) =>
-          dialogsDispatch({ type: "SET_TAG_NAME", payload: value })
-        }
-        onCancel={() => dialogsDispatch({ type: "CLOSE_TAG_DIALOG" })}
+        onOpenChange={setTagDialogOpen}
+        onCancel={() => setTagDialogOpen(false)}
       />
     </div>
   )

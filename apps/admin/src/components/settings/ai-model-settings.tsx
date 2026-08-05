@@ -1,12 +1,15 @@
 "use client"
 
+import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react"
-import { memo, useState } from "react"
+import { memo } from "react"
+import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Card, CardPanel, CardHeader } from "ui/card"
+import { FieldError } from "ui/field"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 import {
@@ -26,6 +29,20 @@ const providerOptions = Object.entries(providerNames).map(([value, label]) => ({
   value,
   label,
 }))
+
+const providerValidator = v.picklist(["openai", "openrouter", "fal"])
+
+const modelIdValidator = v.pipe(
+  v.string(),
+  v.minLength(1, "Model ID is required"),
+  v.trim(),
+)
+
+const displayNameValidator = v.pipe(
+  v.string(),
+  v.minLength(1, "Display name is required"),
+  v.trim(),
+)
 
 export const AIModelsSettings = memo(() => {
   const queryClient = useQueryClient()
@@ -64,33 +81,34 @@ export const AIModelsSettings = memo(() => {
     }),
   )
 
-  const [newProvider, setNewProvider] = useState("openai")
-  const [newModelId, setNewModelId] = useState("")
-  const [newDisplayName, setNewDisplayName] = useState("")
-
-  const handleAdd = async () => {
-    if (!newModelId.trim() || !newDisplayName.trim()) return
-    try {
-      await addMutation.mutateAsync({
-        provider: newProvider as ApiKeyProvider,
-        modelId: newModelId.trim(),
-        displayName: newDisplayName.trim(),
-        isEnabled: true,
-      })
-      setNewModelId("")
-      setNewDisplayName("")
-      toastManager.add({
-        title: "AI model added",
-        type: "success",
-      })
-    } catch (e) {
-      toastManager.add({
-        title: "Failed to add AI model",
-        description: e instanceof Error ? e.message : "Unknown error",
-        type: "error",
-      })
-    }
-  }
+  const form = useForm({
+    defaultValues: {
+      provider: "openai" as ApiKeyProvider,
+      modelId: "",
+      displayName: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await addMutation.mutateAsync({
+          provider: value.provider,
+          modelId: value.modelId.trim(),
+          displayName: value.displayName.trim(),
+          isEnabled: true,
+        })
+        form.reset()
+        toastManager.add({
+          title: "AI model added",
+          type: "success",
+        })
+      } catch (e) {
+        toastManager.add({
+          title: "Failed to add AI model",
+          description: e instanceof Error ? e.message : "Unknown error",
+          type: "error",
+        })
+      }
+    },
+  })
 
   return (
     <Card>
@@ -178,57 +196,103 @@ export const AIModelsSettings = memo(() => {
           <div className="flex flex-wrap gap-3">
             <div className="flex min-w-32 flex-1 flex-col gap-1">
               <Label className="text-xs">Provider</Label>
-              <Select
-                value={newProvider}
-                onValueChange={(value) => {
-                  if (typeof value === "string") setNewProvider(value)
-                }}
+              <form.Field
+                name="provider"
+                validators={{ onChange: providerValidator }}
               >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select provider">
-                    {
-                      providerOptions.find((opt) => opt.value === newProvider)
-                        ?.label
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {providerOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {(field) => (
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => {
+                      if (typeof value === "string") {
+                        field.handleChange(value)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select provider">
+                        {
+                          providerOptions.find(
+                            (opt) => opt.value === field.state.value,
+                          )?.label
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {providerOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </form.Field>
             </div>
             <div className="flex min-w-40 flex-1 flex-col gap-1">
               <Label className="text-xs">Model ID</Label>
-              <Input
-                value={newModelId}
-                onChange={(e) => setNewModelId(e.target.value)}
-                placeholder="e.g. kimi-k3"
-              />
+              <form.Field
+                name="modelId"
+                validators={{
+                  onMount: modelIdValidator,
+                  onChange: modelIdValidator,
+                  onSubmit: modelIdValidator,
+                }}
+              >
+                {(field) => (
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. kimi-k3"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <FieldError>
+                        {field.state.meta.errors[0]?.message}
+                      </FieldError>
+                    )}
+                  </div>
+                )}
+              </form.Field>
             </div>
             <div className="flex min-w-40 flex-1 flex-col gap-1">
               <Label className="text-xs">Display Name</Label>
-              <Input
-                value={newDisplayName}
-                onChange={(e) => setNewDisplayName(e.target.value)}
-                placeholder="e.g. Kimi K3"
-              />
+              <form.Field
+                name="displayName"
+                validators={{
+                  onMount: displayNameValidator,
+                  onChange: displayNameValidator,
+                  onSubmit: displayNameValidator,
+                }}
+              >
+                {(field) => (
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g. Kimi K3"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <FieldError>
+                        {field.state.meta.errors[0]?.message}
+                      </FieldError>
+                    )}
+                  </div>
+                )}
+              </form.Field>
             </div>
             <div className="flex items-end">
-              <Button
-                onClick={handleAdd}
-                disabled={
-                  !newModelId.trim() ||
-                  !newDisplayName.trim() ||
-                  addMutation.isPending
-                }
-              >
-                <PlusIcon className="size-4" />
-                Add
-              </Button>
+              <form.Subscribe selector={(state) => state.canSubmit}>
+                {(canSubmit) => (
+                  <Button
+                    onClick={() => void form.handleSubmit()}
+                    disabled={!canSubmit || addMutation.isPending}
+                  >
+                    <PlusIcon className="size-4" />
+                    Add
+                  </Button>
+                )}
+              </form.Subscribe>
             </div>
           </div>
         </div>

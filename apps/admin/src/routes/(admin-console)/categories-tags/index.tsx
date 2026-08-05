@@ -27,16 +27,17 @@ export const Route = createFileRoute("/(admin-console)/categories-tags/")({
 
 interface CategoryDialogState {
   open: boolean
-  editing: { id: string; name: string; description?: string | null } | null
-  name: string
-  description: string
-  parentId: string | undefined
+  editing: {
+    id: string
+    name: string
+    description?: string | null
+    parentId?: string | null
+  } | null
 }
 
 interface TagDialogState {
   open: boolean
   editing: { id: string; name: string } | null
-  name: string
 }
 
 interface State {
@@ -54,28 +55,14 @@ type Action =
         parentId?: string | null
       }
     }
-  | { type: "SET_CATEGORY_NAME"; payload: string }
-  | { type: "SET_CATEGORY_DESCRIPTION"; payload: string }
-  | { type: "SET_CATEGORY_PARENT_ID"; payload: string | undefined }
   | { type: "OPEN_TAG_DIALOG"; tag?: { id: string; name: string } }
-  | { type: "SET_TAG_NAME"; payload: string }
   | { type: "RESET_CATEGORY_FORM" }
   | { type: "RESET_TAG_FORM" }
 
 function CategoriesTagsRouteComponent() {
   const initialState: State = {
-    categoryDialog: {
-      open: false,
-      editing: null,
-      name: "",
-      description: "",
-      parentId: undefined,
-    },
-    tagDialog: {
-      open: false,
-      editing: null,
-      name: "",
-    },
+    categoryDialog: { open: false, editing: null },
+    tagDialog: { open: false, editing: null },
   }
 
   function reducer(state: State, action: Action): State {
@@ -86,30 +73,6 @@ function CategoriesTagsRouteComponent() {
           categoryDialog: {
             open: true,
             editing: action.category ?? null,
-            name: action.category?.name ?? "",
-            description: action.category?.description ?? "",
-            parentId: action.category?.parentId ?? undefined,
-          },
-        }
-      case "SET_CATEGORY_NAME":
-        return {
-          ...state,
-          categoryDialog: { ...state.categoryDialog, name: action.payload },
-        }
-      case "SET_CATEGORY_DESCRIPTION":
-        return {
-          ...state,
-          categoryDialog: {
-            ...state.categoryDialog,
-            description: action.payload,
-          },
-        }
-      case "SET_CATEGORY_PARENT_ID":
-        return {
-          ...state,
-          categoryDialog: {
-            ...state.categoryDialog,
-            parentId: action.payload,
           },
         }
       case "OPEN_TAG_DIALOG":
@@ -118,33 +81,17 @@ function CategoriesTagsRouteComponent() {
           tagDialog: {
             open: true,
             editing: action.tag ?? null,
-            name: action.tag?.name ?? "",
           },
-        }
-      case "SET_TAG_NAME":
-        return {
-          ...state,
-          tagDialog: { ...state.tagDialog, name: action.payload },
         }
       case "RESET_CATEGORY_FORM":
         return {
           ...state,
-          categoryDialog: {
-            open: false,
-            editing: null,
-            name: "",
-            description: "",
-            parentId: undefined,
-          },
+          categoryDialog: { open: false, editing: null },
         }
       case "RESET_TAG_FORM":
         return {
           ...state,
-          tagDialog: {
-            open: false,
-            editing: null,
-            name: "",
-          },
+          tagDialog: { open: false, editing: null },
         }
       default:
         return state
@@ -220,10 +167,10 @@ function CategoriesTagsRouteComponent() {
 
   const createCategoryMutation = useMutation(
     queryApi.categories.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_value, variables) => {
         toastManager.add({
           title: "Category created",
-          description: `${state.categoryDialog.name} has been created successfully.`,
+          description: `${variables.name} has been created successfully.`,
           type: "success",
         })
         void queryClient.invalidateQueries({
@@ -243,10 +190,10 @@ function CategoriesTagsRouteComponent() {
 
   const updateCategoryMutation = useMutation(
     queryApi.categories.update.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_value, variables) => {
         toastManager.add({
           title: "Category updated",
-          description: `${state.categoryDialog.name} has been updated successfully.`,
+          description: `${variables.name} has been updated successfully.`,
           type: "success",
         })
         void queryClient.invalidateQueries({
@@ -288,10 +235,10 @@ function CategoriesTagsRouteComponent() {
 
   const createTagMutation = useMutation(
     queryApi.tags.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_value, variables) => {
         toastManager.add({
           title: "Tag created",
-          description: `${state.tagDialog.name} has been created successfully.`,
+          description: `${variables.name} has been created successfully.`,
           type: "success",
         })
         void queryClient.invalidateQueries({
@@ -311,10 +258,10 @@ function CategoriesTagsRouteComponent() {
 
   const updateTagMutation = useMutation(
     queryApi.tags.update.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_value, variables) => {
         toastManager.add({
           title: "Tag updated",
-          description: `${state.tagDialog.name} has been updated successfully.`,
+          description: `${variables.name} has been updated successfully.`,
           type: "success",
         })
         void queryClient.invalidateQueries({
@@ -354,33 +301,29 @@ function CategoriesTagsRouteComponent() {
     }),
   )
 
-  const handleCategorySubmit = () => {
+  const handleCategorySubmit = (values: {
+    name: string
+    description?: string
+    parentId?: string
+  }) => {
     if (state.categoryDialog.editing) {
       updateCategoryMutation.mutate({
         id: state.categoryDialog.editing.id,
-        name: state.categoryDialog.name,
-        description: state.categoryDialog.description || undefined,
-        parentId: state.categoryDialog.parentId,
+        ...values,
       })
     } else {
-      createCategoryMutation.mutate({
-        name: state.categoryDialog.name,
-        description: state.categoryDialog.description || undefined,
-        parentId: state.categoryDialog.parentId,
-      })
+      createCategoryMutation.mutate(values)
     }
   }
 
-  const handleTagSubmit = () => {
+  const handleTagSubmit = (values: { name: string }) => {
     if (state.tagDialog.editing) {
       updateTagMutation.mutate({
         id: state.tagDialog.editing.id,
-        name: state.tagDialog.name,
+        ...values,
       })
     } else {
-      createTagMutation.mutate({
-        name: state.tagDialog.name,
-      })
+      createTagMutation.mutate(values)
     }
   }
 
@@ -444,20 +387,8 @@ function CategoriesTagsRouteComponent() {
       <CategoryDialog
         open={state.categoryDialog.open}
         editing={state.categoryDialog.editing}
-        name={state.categoryDialog.name}
-        description={state.categoryDialog.description}
-        parentId={state.categoryDialog.parentId}
         categories={categories ?? []}
         onOpenChange={handleCategoryOpenChange}
-        onNameChange={(value) =>
-          dispatch({ type: "SET_CATEGORY_NAME", payload: value })
-        }
-        onDescriptionChange={(value) =>
-          dispatch({ type: "SET_CATEGORY_DESCRIPTION", payload: value })
-        }
-        onParentIdChange={(value) =>
-          dispatch({ type: "SET_CATEGORY_PARENT_ID", payload: value })
-        }
         onSubmit={handleCategorySubmit}
         onCancel={() => handleCategoryOpenChange(false)}
         createMutation={createCategoryMutation}
@@ -467,11 +398,7 @@ function CategoriesTagsRouteComponent() {
       <TagDialog
         open={state.tagDialog.open}
         editing={state.tagDialog.editing}
-        name={state.tagDialog.name}
         onOpenChange={handleTagOpenChange}
-        onNameChange={(value) =>
-          dispatch({ type: "SET_TAG_NAME", payload: value })
-        }
         onSubmit={handleTagSubmit}
         onCancel={() => handleTagOpenChange(false)}
         createMutation={createTagMutation}

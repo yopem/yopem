@@ -7,11 +7,7 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Separator } from "ui/separator"
 import { toastManager } from "ui/toast"
-import type {
-  AddApiKeyInput,
-  ApiKeyConfig,
-  UpdateApiKeyInput,
-} from "utils/api-input"
+import type { ApiKeyConfig } from "utils/api-input"
 import { formatDateTime } from "utils/format-date"
 
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
@@ -30,21 +26,9 @@ export const Route = createFileRoute("/(admin-console)/settings/")({
 function SettingsRouteComponent() {
   const queryClient = useQueryClient()
 
-  const defaultFormData: AddApiKeyInput = {
-    provider: "openai",
-    name: "",
-    description: "",
-    apiKey: "",
-    status: "active",
-    skipValidation: false,
-  }
-
-  const [formData, setFormData] = useState<AddApiKeyInput>(defaultFormData)
   const [editingProvider, setEditingProvider] = useState<ApiKeyConfig | null>(
     null,
   )
-  const [editApiKey, setEditApiKey] = useState("")
-  const [editSkipValidation, setEditSkipValidation] = useState(false)
   const [deletingProvider, setDeletingProvider] = useState<ApiKeyConfig | null>(
     null,
   )
@@ -74,7 +58,6 @@ function SettingsRouteComponent() {
       onSuccess: () => {
         toastManager.add({ title: "Provider added", type: "success" })
         setAddDialogOpen(false)
-        setFormData(defaultFormData)
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.apiKeyList.queryKey(),
         })
@@ -98,8 +81,6 @@ function SettingsRouteComponent() {
         toastManager.add({ title: "Provider updated", type: "success" })
         setEditDialogOpen(false)
         setEditingProvider(null)
-        setEditApiKey("")
-        setEditSkipValidation(false)
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.apiKeyList.queryKey(),
         })
@@ -151,8 +132,6 @@ function SettingsRouteComponent() {
 
   const handleEditProvider = useCallback((provider: ApiKeyConfig) => {
     setEditingProvider(provider)
-    setEditApiKey("")
-    setEditSkipValidation(false)
     setEditDialogOpen(true)
   }, [])
 
@@ -244,48 +223,22 @@ function SettingsRouteComponent() {
 
       <AddProviderDialog
         open={addDialogOpen}
-        formData={formData}
         isPending={addKeyMutation.isPending}
         onOpenChange={setAddDialogOpen}
-        onFormDataChange={setFormData}
-        onSubmit={() => addKeyMutation.mutate(formData)}
-        onCancel={() => {
-          setAddDialogOpen(false)
-          setFormData(defaultFormData)
-        }}
+        onSubmit={(values) => addKeyMutation.mutate(values)}
+        onCancel={() => setAddDialogOpen(false)}
       />
 
       {editingProvider && (
         <EditProviderDialog
           open={editDialogOpen}
           provider={editingProvider}
-          newApiKey={editApiKey}
-          skipValidation={editSkipValidation}
           isPending={updateKeyMutation.isPending}
           onOpenChange={setEditDialogOpen}
-          onProviderChange={setEditingProvider}
-          onNewApiKeyChange={setEditApiKey}
-          onSkipValidationChange={setEditSkipValidation}
-          onSubmit={() => {
-            const p = editingProvider
-            const payload: UpdateApiKeyInput = {
-              id: p.id,
-              name: p.name,
-              description: p.description,
-              status: p.status === "active" ? "active" : "inactive",
-              skipValidation: editSkipValidation,
-            }
-            const trimmedKey = editApiKey.trim()
-            if (trimmedKey) {
-              payload.apiKey = trimmedKey
-            }
-            updateKeyMutation.mutate(payload)
-          }}
+          onSubmit={(values) => updateKeyMutation.mutate(values)}
           onCancel={() => {
             setEditDialogOpen(false)
             setEditingProvider(null)
-            setEditApiKey("")
-            setEditSkipValidation(false)
           }}
         />
       )}

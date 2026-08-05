@@ -2,18 +2,20 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
+import { useForm } from "@tanstack/react-form"
+import { useEffect } from "react"
+import * as v from "valibot"
+
 import { Button } from "ui/button"
 import { Dialog, DialogPopup } from "ui/dialog"
-import { Field, FieldLabel } from "ui/field"
+import { Field, FieldError, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 
 interface TagDialogProps {
   open: boolean
   editing: { id: string; name: string } | null
-  name: string
   onOpenChange: (open: boolean) => void
-  onNameChange: (value: string) => void
-  onSubmit: () => void
+  onSubmit: (values: { name: string }) => void
   onCancel: () => void
   createMutation: Pick<
     UseMutationResult<unknown, Error, unknown, unknown>,
@@ -25,18 +27,37 @@ interface TagDialogProps {
   >
 }
 
+const nameValidator = v.pipe(
+  v.string(),
+  v.minLength(1, "Name is required"),
+  v.trim(),
+)
+
 export function TagDialog({
   open,
   editing,
-  name,
   onOpenChange,
-  onNameChange,
   onSubmit,
   onCancel,
   createMutation,
   updateMutation,
 }: TagDialogProps) {
   const isPending = createMutation.isPending || updateMutation.isPending
+
+  const form = useForm({
+    defaultValues: {
+      name: editing?.name ?? "",
+    },
+    onSubmit: ({ value }) => {
+      onSubmit({ name: value.name })
+    },
+  })
+
+  useEffect(() => {
+    if (open) {
+      form.reset({ name: editing?.name ?? "" })
+    }
+  }, [open, editing, form])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,22 +74,43 @@ export function TagDialog({
             </p>
           </div>
 
-          <Field>
-            <FieldLabel>Name</FieldLabel>
-            <Input
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Enter tag name"
-            />
-          </Field>
+          <form.Field
+            name="name"
+            validators={{
+              onMount: nameValidator,
+              onChange: nameValidator,
+              onSubmit: nameValidator,
+            }}
+          >
+            {(field) => (
+              <Field>
+                <FieldLabel>Name</FieldLabel>
+                <Input
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter tag name"
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <FieldError>{field.state.meta.errors[0]?.message}</FieldError>
+                )}
+              </Field>
+            )}
+          </form.Field>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button onClick={onSubmit} disabled={!name.trim() || isPending}>
-              {isPending ? "Saving..." : editing ? "Update" : "Create"}
-            </Button>
+            <form.Subscribe selector={(state) => state.canSubmit}>
+              {(canSubmit) => (
+                <Button
+                  onClick={() => void form.handleSubmit()}
+                  disabled={!canSubmit || isPending}
+                >
+                  {isPending ? "Saving..." : editing ? "Update" : "Create"}
+                </Button>
+              )}
+            </form.Subscribe>
           </div>
         </div>
       </DialogPopup>

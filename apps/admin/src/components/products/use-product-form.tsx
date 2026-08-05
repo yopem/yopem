@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useEffectEvent, useMemo, useReducer } from "react"
+import { useEffect, useEffectEvent, useMemo, useState } from "react"
 import * as v from "valibot"
 
 import {
@@ -75,94 +75,6 @@ export interface ProductFormRef {
 
 const EMPTY_API_KEYS: ApiKeyConfig[] = []
 
-interface DialogState {
-  open: boolean
-  name: string
-  description?: string
-  parentId?: string
-}
-
-interface TagDialogState {
-  open: boolean
-  name: string
-}
-
-interface ProductFormDialogsState {
-  category: DialogState
-  tag: TagDialogState
-}
-
-type ProductFormDialogsAction =
-  | { type: "OPEN_CATEGORY_DIALOG" }
-  | { type: "CLOSE_CATEGORY_DIALOG" }
-  | { type: "SET_CATEGORY_NAME"; payload: string }
-  | { type: "SET_CATEGORY_DESCRIPTION"; payload: string }
-  | { type: "SET_CATEGORY_PARENT_ID"; payload: string }
-  | { type: "RESET_CATEGORY_FORM" }
-  | { type: "OPEN_TAG_DIALOG" }
-  | { type: "CLOSE_TAG_DIALOG" }
-  | { type: "SET_TAG_NAME"; payload: string }
-  | { type: "RESET_TAG_FORM" }
-
-const dialogsInitialState: ProductFormDialogsState = {
-  category: { open: false, name: "", description: "", parentId: "" },
-  tag: { open: false, name: "" },
-}
-
-function dialogsReducer(
-  state: ProductFormDialogsState,
-  action: ProductFormDialogsAction,
-): ProductFormDialogsState {
-  switch (action.type) {
-    case "OPEN_CATEGORY_DIALOG":
-      return {
-        ...state,
-        category: { ...state.category, open: true },
-      }
-    case "CLOSE_CATEGORY_DIALOG":
-      return {
-        ...state,
-        category: { ...state.category, open: false },
-      }
-    case "SET_CATEGORY_NAME":
-      return {
-        ...state,
-        category: { ...state.category, name: action.payload },
-      }
-    case "SET_CATEGORY_DESCRIPTION":
-      return {
-        ...state,
-        category: {
-          ...state.category,
-          description: action.payload,
-        },
-      }
-    case "SET_CATEGORY_PARENT_ID":
-      return {
-        ...state,
-        category: {
-          ...state.category,
-          parentId: action.payload,
-        },
-      }
-    case "RESET_CATEGORY_FORM":
-      return {
-        ...state,
-        category: { open: false, name: "", description: "", parentId: "" },
-      }
-    case "OPEN_TAG_DIALOG":
-      return { ...state, tag: { ...state.tag, open: true } }
-    case "CLOSE_TAG_DIALOG":
-      return { ...state, tag: { ...state.tag, open: false } }
-    case "SET_TAG_NAME":
-      return { ...state, tag: { ...state.tag, name: action.payload } }
-    case "RESET_TAG_FORM":
-      return { ...state, tag: { open: false, name: "" } }
-    default:
-      return state
-  }
-}
-
 interface UseProductFormOptions {
   mode: "create" | "edit"
   initialData?: SelectProduct
@@ -191,10 +103,8 @@ export function useProductForm({
 
   const { data: tagsData } = useQuery(queryApi.tags.list.queryOptions())
 
-  const [dialogsState, dialogsDispatch] = useReducer(
-    dialogsReducer,
-    dialogsInitialState,
-  )
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+  const [tagDialogOpen, setTagDialogOpen] = useState(false)
 
   const createCategoryMutation = useMutation(
     queryApi.categories.create.mutationOptions({
@@ -209,7 +119,7 @@ export function useProductForm({
         })
         const currentCategoryIds = form.getFieldValue("categoryIds")
         form.setFieldValue("categoryIds", [...currentCategoryIds, value.id])
-        dialogsDispatch({ type: "RESET_CATEGORY_FORM" })
+        setCategoryDialogOpen(false)
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -234,7 +144,7 @@ export function useProductForm({
         })
         const currentTagIds = form.getFieldValue("tagIds")
         form.setFieldValue("tagIds", [...currentTagIds, value.id])
-        dialogsDispatch({ type: "RESET_TAG_FORM" })
+        setTagDialogOpen(false)
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -514,8 +424,10 @@ export function useProductForm({
     categories,
     tags,
     inputFields,
-    dialogsState,
-    dialogsDispatch,
+    categoryDialogOpen,
+    setCategoryDialogOpen,
+    tagDialogOpen,
+    setTagDialogOpen,
     createCategoryMutation,
     createTagMutation,
     handleWorkflowChange,

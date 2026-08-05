@@ -2,9 +2,13 @@
 
 import type { UseMutationResult } from "@tanstack/react-query"
 
+import { useForm } from "@tanstack/react-form"
+import { useEffect } from "react"
+import * as v from "valibot"
+
 import { Button } from "ui/button"
 import { Dialog, DialogPopup } from "ui/dialog"
-import { Field, FieldLabel } from "ui/field"
+import { Field, FieldError, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
 import {
   Select,
@@ -19,9 +23,6 @@ import { flattenCategoryTree } from "@/components/categories-tags/category-tree"
 
 interface ProductFormCategoryDialogProps {
   open: boolean
-  name: string
-  description: string | undefined
-  parentId: string | undefined
   categories: {
     id: string
     name: string
@@ -35,26 +36,44 @@ interface ProductFormCategoryDialogProps {
     unknown
   >
   onOpenChange: (open: boolean) => void
-  onNameChange: (value: string) => void
-  onDescriptionChange: (value: string) => void
-  onParentIdChange: (value: string | undefined) => void
   onCancel: () => void
 }
 
+const nameValidator = v.pipe(
+  v.string(),
+  v.minLength(1, "Name is required"),
+  v.trim(),
+)
+
 export function ProductFormCategoryDialog({
   open,
-  name,
-  description,
-  parentId,
   categories,
   createMutation,
   onOpenChange,
-  onNameChange,
-  onDescriptionChange,
-  onParentIdChange,
   onCancel,
 }: ProductFormCategoryDialogProps) {
   const tree = flattenCategoryTree(categories)
+
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      description: "",
+      parentId: undefined as string | undefined,
+    },
+    onSubmit: ({ value }) => {
+      createMutation.mutate({
+        name: value.name,
+        description: value.description || undefined,
+        ...(value.parentId ? { parentId: value.parentId } : {}),
+      })
+    },
+  })
+
+  useEffect(() => {
+    if (open) {
+      form.reset({ name: "", description: "", parentId: undefined })
+    }
+  }, [open, form])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,73 +87,97 @@ export function ProductFormCategoryDialog({
           </div>
 
           <div className="flex flex-col gap-4">
-            <Field>
-              <FieldLabel>Name</FieldLabel>
-              <Input
-                value={name}
-                onChange={(e) => onNameChange(e.target.value)}
-                placeholder="Enter category name"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Parent Category</FieldLabel>
-              <Select
-                value={parentId ?? ""}
-                onValueChange={(value) =>
-                  onParentIdChange(value && value !== "" ? value : undefined)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No parent">
-                    {parentId
-                      ? (categories.find((c) => c.id === parentId)?.name ??
-                        "No parent")
-                      : "No parent"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectPopup>
-                  <SelectItem value="">No parent</SelectItem>
-                  {tree.map(({ node, depth }) => (
-                    <SelectItem
-                      key={node.id}
-                      value={node.id}
-                      className="truncate"
-                      style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
-                    >
-                      {node.name}
-                    </SelectItem>
-                  ))}
-                </SelectPopup>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel>Description</FieldLabel>
-              <Textarea
-                value={description}
-                onChange={(e) => onDescriptionChange(e.target.value)}
-                placeholder="Enter category description (optional)"
-                rows={3}
-              />
-            </Field>
+            <form.Field
+              name="name"
+              validators={{
+                onMount: nameValidator,
+                onChange: nameValidator,
+                onSubmit: nameValidator,
+              }}
+            >
+              {(field) => (
+                <Field>
+                  <FieldLabel>Name</FieldLabel>
+                  <Input
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter category name"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <FieldError>
+                      {field.state.meta.errors[0]?.message}
+                    </FieldError>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+            <form.Field name="parentId">
+              {(field) => (
+                <Field>
+                  <FieldLabel>Parent Category</FieldLabel>
+                  <Select
+                    value={field.state.value ?? ""}
+                    onValueChange={(value) =>
+                      field.handleChange(
+                        value && value !== "" ? value : undefined,
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No parent">
+                        {field.state.value
+                          ? (categories.find((c) => c.id === field.state.value)
+                              ?.name ?? "No parent")
+                          : "No parent"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectPopup>
+                      <SelectItem value="">No parent</SelectItem>
+                      {tree.map(({ node, depth }) => (
+                        <SelectItem
+                          key={node.id}
+                          value={node.id}
+                          className="truncate"
+                          style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
+                        >
+                          {node.name}
+                        </SelectItem>
+                      ))}
+                    </SelectPopup>
+                  </Select>
+                </Field>
+              )}
+            </form.Field>
+            <form.Field name="description">
+              {(field) => (
+                <Field>
+                  <FieldLabel>Description</FieldLabel>
+                  <Textarea
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter category description (optional)"
+                    rows={3}
+                  />
+                </Field>
+              )}
+            </form.Field>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              onClick={() =>
-                createMutation.mutate({
-                  name,
-                  description: description ?? undefined,
-                  ...(parentId ? { parentId } : {}),
-                })
-              }
-              disabled={!name.trim() || createMutation.isPending}
-            >
-              {createMutation.isPending ? "Creating..." : "Create"}
-            </Button>
+            <form.Subscribe selector={(state) => state.canSubmit}>
+              {(canSubmit) => (
+                <Button
+                  type="button"
+                  onClick={() => void form.handleSubmit()}
+                  disabled={!canSubmit || createMutation.isPending}
+                >
+                  {createMutation.isPending ? "Creating..." : "Create"}
+                </Button>
+              )}
+            </form.Subscribe>
           </div>
         </div>
       </DialogPopup>
