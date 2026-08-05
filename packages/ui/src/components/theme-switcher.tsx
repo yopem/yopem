@@ -16,7 +16,7 @@ export function ThemeSwitcher() {
 
   if (!mounted) {
     return (
-      <div className="bg-muted/50 inline-flex items-center gap-0.5 rounded-md border p-0.5">
+      <div className="bg-muted/70 inline-flex items-center gap-0.5 rounded-md border p-0.5">
         <div className="size-7" />
         <div className="size-7" />
         <div className="size-7" />
@@ -31,7 +31,7 @@ export function ThemeSwitcher() {
   ]
 
   return (
-    <div className="bg-muted/50 inline-flex items-center gap-0.5 rounded-md border p-0.5">
+    <div className="bg-muted/70 inline-flex items-center gap-0.5 rounded-md border p-0.5">
       {themes.map(({ name, icon: Icon, label }) => (
         <Button
           key={name}
@@ -40,7 +40,7 @@ export function ThemeSwitcher() {
           className={`size-7 p-0 ${
             theme === name
               ? "bg-background shadow-sm"
-              : "hover:bg-background/50"
+              : "hover:bg-background/70"
           }`}
           onClick={() => setTheme(name)}
           aria-label={`${label} theme`}
