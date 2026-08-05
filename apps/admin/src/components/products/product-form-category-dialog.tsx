@@ -90,8 +90,6 @@ export function ProductFormCategoryDialog({
             <form.Field
               name="name"
               validators={{
-                onMount: nameValidator,
-                onChange: nameValidator,
                 onSubmit: nameValidator,
               }}
             >

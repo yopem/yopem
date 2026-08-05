@@ -128,8 +128,6 @@ export function AddProviderDialog({
             <form.Field
               name="name"
               validators={{
-                onMount: addApiKeyInputSchema.entries.name,
-                onChange: addApiKeyInputSchema.entries.name,
                 onSubmit: addApiKeyInputSchema.entries.name,
               }}
             >
@@ -176,8 +174,6 @@ export function AddProviderDialog({
             <form.Field
               name="apiKey"
               validators={{
-                onMount: addApiKeyInputSchema.entries.apiKey,
-                onChange: addApiKeyInputSchema.entries.apiKey,
                 onSubmit: addApiKeyInputSchema.entries.apiKey,
               }}
             >

@@ -77,8 +77,6 @@ export function TagDialog({
           <form.Field
             name="name"
             validators={{
-              onMount: nameValidator,
-              onChange: nameValidator,
               onSubmit: nameValidator,
             }}
           >

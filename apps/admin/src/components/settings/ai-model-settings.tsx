@@ -192,12 +192,12 @@ export const AIModelsSettings = memo(() => {
 
         <div className="space-y-3">
           <Label className="text-sm font-medium">Add New Model</Label>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex items-start gap-3">
             <div className="flex min-w-32 flex-1 flex-col gap-1">
               <Label className="text-xs">Provider</Label>
               <form.Field
                 name="provider"
-                validators={{ onChange: providerValidator }}
+                validators={{ onSubmit: providerValidator }}
               >
                 {(field) => (
                   <Select
@@ -232,11 +232,7 @@ export const AIModelsSettings = memo(() => {
               <Label className="text-xs">Model ID</Label>
               <form.Field
                 name="modelId"
-                validators={{
-                  onMount: modelIdValidator,
-                  onChange: modelIdValidator,
-                  onSubmit: modelIdValidator,
-                }}
+                validators={{ onSubmit: modelIdValidator }}
               >
                 {(field) => (
                   <div className="flex flex-col gap-1">
@@ -245,11 +241,9 @@ export const AIModelsSettings = memo(() => {
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="e.g. kimi-k3"
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-destructive-foreground text-xs">
-                        {field.state.meta.errors[0]?.message}
-                      </p>
-                    )}
+                    <p className="text-destructive-foreground min-h-4 text-xs">
+                      {field.state.meta.errors[0]?.message}
+                    </p>
                   </div>
                 )}
               </form.Field>
@@ -258,11 +252,7 @@ export const AIModelsSettings = memo(() => {
               <Label className="text-xs">Display Name</Label>
               <form.Field
                 name="displayName"
-                validators={{
-                  onMount: displayNameValidator,
-                  onChange: displayNameValidator,
-                  onSubmit: displayNameValidator,
-                }}
+                validators={{ onSubmit: displayNameValidator }}
               >
                 {(field) => (
                   <div className="flex flex-col gap-1">
@@ -271,16 +261,14 @@ export const AIModelsSettings = memo(() => {
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="e.g. Kimi K3"
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-destructive-foreground text-xs">
-                        {field.state.meta.errors[0]?.message}
-                      </p>
-                    )}
+                    <p className="text-destructive-foreground min-h-4 text-xs">
+                      {field.state.meta.errors[0]?.message}
+                    </p>
                   </div>
                 )}
               </form.Field>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-start pt-5">
               <form.Subscribe selector={(state) => state.canSubmit}>
                 {(canSubmit) => (
                   <Button

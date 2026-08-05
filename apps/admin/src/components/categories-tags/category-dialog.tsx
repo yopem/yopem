@@ -134,8 +134,6 @@ export function CategoryDialog({
             <form.Field
               name="name"
               validators={{
-                onMount: nameValidator,
-                onChange: nameValidator,
                 onSubmit: nameValidator,
               }}
             >
