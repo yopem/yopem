@@ -34,7 +34,7 @@
     "tailwindcss": "catalog:",
     "ui": "workspace:*",
     "utils": "workspace:*",
-    "zod": "catalog:"
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@rolldown/plugin-babel": "catalog:",

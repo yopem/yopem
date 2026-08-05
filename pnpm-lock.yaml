@@ -93,9 +93,9 @@ catalogs:
     drizzle-orm:
       specifier: ^0.45.2
       version: 0.45.2
-    drizzle-zod:
-      specifier: ^0.8.3
-      version: 0.8.3
+    drizzle-valibot:
+      specifier: ^0.4.2
+      version: 0.4.2
     ioredis:
       specifier: ^5.11.1
       version: 5.11.1
@@ -138,12 +138,12 @@ catalogs:
     typescript:
       specifier: ^7.0.2
       version: 7.0.2
+    valibot:
+      specifier: ^1.4.2
+      version: 1.4.2
     vite-plus:
       specifier: 0.2.7
       version: 0.2.7
-    zod:
-      specifier: ^4.4.3
-      version: 4.4.3
 
 overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.7
@@ -245,9 +245,9 @@ importers:
       utils:
         specifier: workspace:*
         version: link:../../packages/utils
-      zod:
+      valibot:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 1.4.2(typescript@7.0.2)
     devDependencies:
       '@rolldown/plugin-babel':
         specifier: 'catalog:'
@@ -330,9 +330,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.20.0)(pg@8.22.0)
-      drizzle-zod:
+      drizzle-valibot:
         specifier: 'catalog:'
-        version: 0.8.3(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(zod@4.4.3)
+        version: 0.4.2(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(valibot@1.4.2(typescript@7.0.2))
       env:
         specifier: workspace:*
         version: link:../../packages/env
@@ -357,9 +357,9 @@ importers:
       utils:
         specifier: workspace:*
         version: link:../../packages/utils
-      zod:
+      valibot:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 1.4.2(typescript@7.0.2)
     devDependencies:
       '@hono/vite-build':
         specifier: ^1.5.0
@@ -400,9 +400,9 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.2.8
-      zod:
+      valibot:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 1.4.2(typescript@7.0.2)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -447,9 +447,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.20.0)(pg@8.22.0)
-      drizzle-zod:
+      drizzle-valibot:
         specifier: 'catalog:'
-        version: 0.8.3(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(zod@4.4.3)
+        version: 0.4.2(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(valibot@1.4.2(typescript@7.0.2))
       env:
         specifier: workspace:*
         version: link:../env
@@ -462,9 +462,9 @@ importers:
       utils:
         specifier: workspace:*
         version: link:../utils
-      zod:
+      valibot:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 1.4.2(typescript@7.0.2)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -712,9 +712,9 @@ importers:
       transliteration:
         specifier: 'catalog:'
         version: 2.6.1
-      zod:
+      valibot:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 1.4.2(typescript@7.0.2)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -3909,11 +3909,11 @@ packages:
       sqlite3:
         optional: true
 
-  drizzle-zod@0.8.3:
-    resolution: {integrity: sha512-66yVOuvGhKJnTdiqj1/Xaaz9/qzOdRJADpDa68enqS6g3t0kpNkwNYjUuaeXgZfO/UWuIM9HIhSlJ6C5ZraMww==}
+  drizzle-valibot@0.4.2:
+    resolution: {integrity: sha512-tzjT7g0Di/HX7426marIy8IDtWODjPgrwvgscdevLQRUe5rzYzRhx6bDsYLdDFF9VI/eaYgnjNeF/fznWJoUjg==}
     peerDependencies:
       drizzle-orm: '>=0.36.0'
-      zod: ^3.25.0 || ^4.0.0
+      valibot: '>=1.0.0-beta.7'
 
   electron-to-chromium@1.5.396:
     resolution: {integrity: sha512-yHiw2Y3C3H9U6TMbOfoWK/BPreiOPXRfTWPBwQBoZG6/8TB6eOPnsy5oaRYuatR7Fw2SJ4kKforgufeo7fq0EQ==}
@@ -5254,6 +5254,14 @@ packages:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  valibot@1.4.2:
+    resolution: {integrity: sha512-gjdCvJ6d3RyHAneqxMYMW9QMCwYMb3jpOO0IyHZV1bnRHFBHrX3VkIILt5XYR0WhwHiH7Mty8ovuPZ/O3gamrg==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   victory-vendor@37.3.6:
     resolution: {integrity: sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==}
@@ -8512,10 +8520,10 @@ snapshots:
       '@types/pg': 8.20.0
       pg: 8.22.0
 
-  drizzle-zod@0.8.3(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(zod@4.4.3):
+  drizzle-valibot@0.4.2(drizzle-orm@0.45.2(@types/pg@8.20.0)(pg@8.22.0))(valibot@1.4.2(typescript@7.0.2)):
     dependencies:
       drizzle-orm: 0.45.2(@types/pg@8.20.0)(pg@8.22.0)
-      zod: 4.4.3
+      valibot: 1.4.2(typescript@7.0.2)
 
   electron-to-chromium@1.5.396: {}
 
@@ -9876,6 +9884,10 @@ snapshots:
   use-sync-external-store@1.6.0(react@19.2.8):
     dependencies:
       react: 19.2.8
+
+  valibot@1.4.2(typescript@7.0.2):
+    optionalDependencies:
+      typescript: 7.0.2
 
   victory-vendor@37.3.6:
     dependencies:

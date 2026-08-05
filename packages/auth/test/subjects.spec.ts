@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import { subjects } from "auth/subjects"
@@ -12,11 +13,11 @@ describe("subjects", () => {
       image: null,
       role: "user",
     }
-    const result = subjects.user.safeParse(user)
+    const result = v.safeParse(subjects.user, user)
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.id).toBe("usr_123")
-      expect(result.data.role).toBe("user")
+      expect(result.output.id).toBe("usr_123")
+      expect(result.output.role).toBe("user")
     }
   })
 
@@ -28,10 +29,10 @@ describe("subjects", () => {
       username: "username",
       image: null,
     }
-    const result = subjects.user.safeParse(user)
+    const result = v.safeParse(subjects.user, user)
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.role).toBe("user")
+      expect(result.output.role).toBe("user")
     }
   })
 
@@ -44,12 +45,12 @@ describe("subjects", () => {
       image: null,
       role: "superadmin",
     }
-    const result = subjects.user.safeParse(user)
+    const result = v.safeParse(subjects.user, user)
     expect(result.success).toBe(false)
   })
 
   test("user subject requires id, email, and username", () => {
-    const result = subjects.user.safeParse({ name: null, image: null })
+    const result = v.safeParse(subjects.user, { name: null, image: null })
     expect(result.success).toBe(false)
   })
 })

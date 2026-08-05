@@ -30,7 +30,7 @@ Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/
 - **Cache:** Redis (`ioredis`)
 - **Storage:** Cloudflare R2 (S3-compatible, `@aws-sdk/client-s3`)
 - **AI:** Vercel AI SDK + OpenAI / OpenRouter, `sharp` for media processing
-- **Validation:** Zod 4
+- **Validation:** Valibot 1 (via `import * as v from "valibot"`; drizzle schemas via `drizzle-valibot`)
 - **Env:** `dotenv-cli`
 
 ## Monorepo layout

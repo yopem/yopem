@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { testApiKey } from "server/llm/test-key"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { redisCache } from "cache"
 import { getOrCompute } from "cache/services/with-cache"
@@ -43,23 +43,23 @@ const formatApiKey = (key: ApiKeyConfig) => ({
   })(),
 })
 
-const apiKeyCreateOutputSchema = z.object({
-  success: z.boolean(),
-  id: z.string(),
+const apiKeyCreateOutputSchema = v.object({
+  success: v.boolean(),
+  id: v.string(),
 })
 
-const successOutputSchema = z.object({ success: z.boolean() })
+const successOutputSchema = v.object({ success: v.boolean() })
 
-const apiKeyStatsOutputSchema = z.object({
-  totalRequests: z.number(),
-  activeKeys: z.number(),
-  monthlyCost: z.number(),
-  requestsThisMonth: z.number(),
-  costChange: z.string(),
+const apiKeyStatsOutputSchema = v.object({
+  totalRequests: v.number(),
+  activeKeys: v.number(),
+  monthlyCost: v.number(),
+  requestsThisMonth: v.number(),
+  costChange: v.string(),
 })
 
-const assetSettingsOutputSchema = z.object({
-  maxUploadSizeMB: z.number(),
+const assetSettingsOutputSchema = v.object({
+  maxUploadSizeMB: v.number(),
 })
 
 export const hasActiveKeyForProvider = (
@@ -68,27 +68,27 @@ export const hasActiveKeyForProvider = (
 ): boolean =>
   keys.some((key) => key.provider === provider && key.status === "active")
 
-const updateAssetSettingsInputSchema = z.object({
-  maxUploadSizeMB: z.number().min(1).max(500),
+const updateAssetSettingsInputSchema = v.object({
+  maxUploadSizeMB: v.pipe(v.number(), v.minValue(1), v.maxValue(500)),
 })
 
-const adminModelCreateInputSchema = z.object({
+const adminModelCreateInputSchema = v.object({
   provider: apiKeyProviderSchema,
-  modelId: z.string().min(1),
-  displayName: z.string().min(1),
-  isEnabled: z.boolean().default(true),
+  modelId: v.pipe(v.string(), v.minLength(1)),
+  displayName: v.pipe(v.string(), v.minLength(1)),
+  isEnabled: v.optional(v.boolean(), true),
 })
 
-const adminModelUpdateInputSchema = z.object({
-  id: z.string(),
-  provider: apiKeyProviderSchema.optional(),
-  modelId: z.string().min(1).optional(),
-  displayName: z.string().min(1).optional(),
-  isEnabled: z.boolean().optional(),
+const adminModelUpdateInputSchema = v.object({
+  id: v.string(),
+  provider: v.optional(apiKeyProviderSchema),
+  modelId: v.optional(v.pipe(v.string(), v.minLength(1))),
+  displayName: v.optional(v.pipe(v.string(), v.minLength(1))),
+  isEnabled: v.optional(v.boolean()),
 })
 
-const adminAiRequestsHistoryInputSchema = z.object({
-  timeRange: z.enum(["7d", "30d"]).default("7d"),
+const adminAiRequestsHistoryInputSchema = v.object({
+  timeRange: v.optional(v.picklist(["7d", "30d"]), "7d"),
 })
 
 export const adminRouter = {
@@ -266,7 +266,7 @@ export const adminRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .output(successOutputSchema)
       .handler(async ({ input }) => {
         const { id } = input
@@ -369,7 +369,7 @@ export const adminRouter = {
       .route({ method: "GET" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .output(z.array(aiModelSchema))
+      .output(v.array(aiModelSchema))
       .handler(() => listAIModels()),
 
     modelCreate: os
@@ -423,7 +423,7 @@ export const adminRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .output(successOutputSchema)
       .handler(async ({ input }) => {
         const { id } = input

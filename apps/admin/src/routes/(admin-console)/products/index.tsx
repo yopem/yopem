@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
@@ -15,8 +15,13 @@ import type { Product } from "@/components/products/product-actions"
 import { DeleteDialog } from "@/components/delete-dialog"
 import { ProductsTable } from "@/components/products/products-table"
 
-const productsSearchSchema = z.object({
-  page: z.coerce.number().int().min(1).catch(1).optional(),
+const productsSearchSchema = v.object({
+  page: v.optional(
+    v.fallback(
+      v.pipe(v.unknown(), v.toNumber(), v.integer(), v.minValue(1)),
+      1,
+    ),
+  ),
 })
 
 export const Route = createFileRoute("/(admin-console)/products/")({

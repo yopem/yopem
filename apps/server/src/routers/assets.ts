@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { getR2Storage } from "server/storage"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { redisCache } from "cache"
 import { getOrCompute } from "cache/services/with-cache"
@@ -34,23 +34,23 @@ const getMaxUploadSizeMB = () =>
     SETTINGS_CACHE_TTL,
   )
 
-const uploadSettingsOutputSchema = z.object({
-  maxSizeMB: z.number(),
-  maxSizeBytes: z.number(),
+const uploadSettingsOutputSchema = v.object({
+  maxSizeMB: v.number(),
+  maxSizeBytes: v.number(),
 })
 
-const assetListInputSchema = z.object({
-  limit: z.number().min(1).max(100).default(20).optional(),
-  cursor: z.string().optional(),
-  type: z.enum(assetTypeEnum).optional(),
+const assetListInputSchema = v.object({
+  limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+  cursor: v.optional(v.string()),
+  type: v.optional(v.picklist(assetTypeEnum)),
 })
 
-const assetListOutputSchema = z.object({
-  assets: z.array(assetSchema),
-  nextCursor: z.string().optional(),
+const assetListOutputSchema = v.object({
+  assets: v.array(assetSchema),
+  nextCursor: v.optional(v.string()),
 })
 
-const assetDeleteInputSchema = z.object({ id: z.string() })
+const assetDeleteInputSchema = v.object({ id: v.string() })
 
 export const assetsRouter = {
   assets: {
@@ -82,7 +82,7 @@ export const assetsRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.file())
+      .input(v.file())
       .output(assetSchema)
       .handler(async ({ input }) => {
         const file = input
@@ -152,7 +152,7 @@ export const assetsRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(assetDeleteInputSchema)
-      .output(z.object({ success: z.boolean() }))
+      .output(v.object({ success: v.boolean() }))
       .handler(async ({ input }) => {
         const asset = await getAssetById(input.id)
 

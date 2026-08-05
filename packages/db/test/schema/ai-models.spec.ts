@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -13,7 +14,7 @@ describe("ai-models schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertAIModelSchema.safeParse({
+    const result = v.safeParse(insertAIModelSchema, {
       provider: "openai",
       modelId: "gpt-4",
       displayName: "GPT-4",
@@ -22,7 +23,7 @@ describe("ai-models schema", () => {
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateAIModelSchema.safeParse({
+    const result = v.safeParse(updateAIModelSchema, {
       provider: "openai",
       modelId: "gpt-4",
       displayName: "GPT-4",
@@ -31,7 +32,7 @@ describe("ai-models schema", () => {
   })
 
   test("aiModelSchema validates a full select row", () => {
-    const result = aiModelSchema.safeParse({
+    const result = v.safeParse(aiModelSchema, {
       id: "aim_1",
       provider: "openai",
       modelId: "gpt-4",

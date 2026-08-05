@@ -10,8 +10,8 @@ import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
-} from "drizzle-zod"
-import { z } from "zod"
+} from "drizzle-valibot"
+import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -55,36 +55,35 @@ export const productsTable = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 })
 
-const workflowJsonSchema = z.custom<ProductWorkflow>((value) => {
+const workflowJsonSchema = v.custom<ProductWorkflow>((value) => {
   if (value === null || value === undefined) return true
-  return productWorkflowSchema.safeParse(value).success
+  return v.is(productWorkflowSchema, value)
 })
 
-export const insertProductSchema = createInsertSchema(productsTable)
-  .omit({ workflow: true })
-  .extend({
-    slug: z.string().optional(),
-    tagIds: z.array(z.string()).optional(),
-    categoryIds: z.array(z.string()).optional(),
-    thumbnailId: z.string().optional(),
-    workflow: workflowJsonSchema.optional(),
-  })
-export const updateProductSchema = createUpdateSchema(productsTable)
-  .omit({ workflow: true })
-  .extend({
-    id: z.string().optional(),
-    tagIds: z.array(z.string()).optional(),
-    categoryIds: z.array(z.string()).optional(),
-    thumbnailId: z.string().optional(),
-    workflow: workflowJsonSchema.optional(),
-  })
-export const productSchema = createSelectSchema(productsTable)
-export const publicProductSchema = productSchema.omit({
-  apiKeyId: true,
-  config: true,
-  thumbnailId: true,
-  createdBy: true,
+const productOverrides = {
+  slug: v.optional(v.string()),
+  tagIds: v.optional(v.array(v.string())),
+  categoryIds: v.optional(v.array(v.string())),
+  thumbnailId: v.optional(v.string()),
+  workflow: v.optional(workflowJsonSchema),
+}
+
+export const insertProductSchema = v.object({
+  ...v.omit(createInsertSchema(productsTable), ["workflow"]).entries,
+  ...productOverrides,
 })
+export const updateProductSchema = v.object({
+  ...v.omit(createUpdateSchema(productsTable), ["workflow"]).entries,
+  ...productOverrides,
+  id: v.optional(v.string()),
+})
+export const productSchema = createSelectSchema(productsTable)
+export const publicProductSchema = v.omit(productSchema, [
+  "apiKeyId",
+  "config",
+  "thumbnailId",
+  "createdBy",
+])
 
 export type SelectProduct = typeof productsTable.$inferSelect & {
   categories: { id: string; name: string; slug: string }[]

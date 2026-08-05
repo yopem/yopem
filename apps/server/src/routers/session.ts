@@ -1,15 +1,15 @@
-import { z } from "zod"
+import * as v from "valibot"
 
 import { roleSchema } from "auth/roles"
 
 import { os, requireAuthMiddleware } from "./orpc"
 
-const sessionOutputSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  name: z.string().nullable(),
-  username: z.string(),
-  image: z.string().nullable(),
+const sessionOutputSchema = v.object({
+  id: v.string(),
+  email: v.string(),
+  name: v.nullable(v.string()),
+  username: v.string(),
+  image: v.nullable(v.string()),
   role: roleSchema,
 })
 

@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server"
 import { testApiKey } from "server/llm/test-key"
 import { enforceRateLimit } from "server/rate-limit"
 import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { redisCache } from "cache"
 import {
@@ -21,39 +21,39 @@ import { createCustomId } from "utils/custom-id"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
-const userMeOutputSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  name: z.string().nullable(),
-  username: z.string(),
-  image: z.string().nullable(),
+const userMeOutputSchema = v.object({
+  id: v.string(),
+  email: v.string(),
+  name: v.nullable(v.string()),
+  username: v.string(),
+  image: v.nullable(v.string()),
 })
 
-const userUpdateInputSchema = z.object({
-  name: z.string().optional(),
-  image: z.string().optional(),
+const userUpdateInputSchema = v.object({
+  name: v.optional(v.string()),
+  image: v.optional(v.string()),
 })
 
-const userStatsOutputSchema = z.object({
-  balance: z.string(),
-  overflowBalance: z.string(),
-  totalUsed: z.union([z.string(), z.null()]),
-  totalPurchased: z.union([z.string(), z.null()]),
-  totalRuns: z.number(),
+const userStatsOutputSchema = v.object({
+  balance: v.string(),
+  overflowBalance: v.string(),
+  totalUsed: v.union([v.string(), v.null()]),
+  totalPurchased: v.union([v.string(), v.null()]),
+  totalRuns: v.number(),
 })
 
-const userRunsInputSchema = z.object({
-  limit: z.number().min(1).max(100).default(20).optional(),
-  cursor: z.string().optional(),
+const userRunsInputSchema = v.object({
+  limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+  cursor: v.optional(v.string()),
 })
 
-const apiKeyIdInputSchema = z.object({ id: z.string() })
+const apiKeyIdInputSchema = v.object({ id: v.string() })
 
-const apiKeyStatsOutputSchema = z.object({ activeKeys: z.number() })
+const apiKeyStatsOutputSchema = v.object({ activeKeys: v.number() })
 
-const apiKeyDeleteOutputSchema = z.object({
-  success: z.boolean(),
-  id: z.string(),
+const apiKeyDeleteOutputSchema = v.object({
+  success: v.boolean(),
+  id: v.string(),
 })
 
 export const userRouter = {
@@ -110,7 +110,7 @@ export const userRouter = {
 
         let apiKeys: ApiKeyConfig[]
         try {
-          apiKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+          apiKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
         } catch {
           console.error("Error parsing API keys")
           return []
@@ -177,7 +177,10 @@ export const userRouter = {
 
         if (settings?.apiKeys) {
           try {
-            existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+            existingKeys = v.parse(
+              v.array(apiKeyConfigSchema),
+              settings.apiKeys,
+            )
           } catch {
             console.error("Error parsing existing API keys")
           }
@@ -220,7 +223,7 @@ export const userRouter = {
 
         let existingKeys: ApiKeyConfig[]
         try {
-          existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+          existingKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
         } catch (e) {
           console.error("Error parsing existing API keys:", e)
           throw new ORPCError("BAD_REQUEST", {
@@ -324,7 +327,7 @@ export const userRouter = {
 
         let existingKeys: ApiKeyConfig[]
         try {
-          existingKeys = apiKeyConfigSchema.array().parse(settings.apiKeys)
+          existingKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
         } catch (e) {
           console.error("Error parsing API keys:", e)
           throw new ORPCError("BAD_REQUEST", {
@@ -361,9 +364,10 @@ export const userRouter = {
 
         if (settings?.apiKeys) {
           try {
-            const parsedKeys = apiKeyConfigSchema
-              .array()
-              .parse(settings.apiKeys)
+            const parsedKeys = v.parse(
+              v.array(apiKeyConfigSchema),
+              settings.apiKeys,
+            )
             activeKeys = parsedKeys.filter(
               (key) => key.status === "active",
             ).length

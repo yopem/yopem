@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -12,12 +13,12 @@ describe("user-settings schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertUserSettingsSchema.safeParse({ userId: "u" })
+    const result = v.safeParse(insertUserSettingsSchema, { userId: "u" })
     expect(result.success).toBe(true)
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateUserSettingsSchema.safeParse({ userId: "u" })
+    const result = v.safeParse(updateUserSettingsSchema, { userId: "u" })
     expect(result.success).toBe(true)
   })
 })

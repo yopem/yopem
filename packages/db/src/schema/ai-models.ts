@@ -10,7 +10,7 @@ import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
-} from "drizzle-zod"
+} from "drizzle-valibot"
 
 import { createCustomId } from "utils/custom-id"
 

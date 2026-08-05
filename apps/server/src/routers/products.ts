@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { executeWorkflow } from "server/llm/workflow"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { redisCache } from "cache"
 import { getOrCompute } from "cache/services/with-cache"
@@ -37,11 +37,11 @@ const API_KEYS_SETTING_KEY = "api_keys"
 const SETTINGS_CACHE_TTL = 300
 
 function validateWorkflow(workflow: unknown): void {
-  const result = productWorkflowSchema.safeParse(workflow)
+  const result = v.safeParse(productWorkflowSchema, workflow)
   if (!result.success) {
     throw new ORPCError("BAD_REQUEST", {
       status: 400,
-      message: `Invalid workflow: ${result.error.issues[0]?.message ?? "unknown"}`,
+      message: `Invalid workflow: ${result.issues[0]?.message ?? "unknown"}`,
     })
   }
 }
@@ -92,7 +92,7 @@ export async function validateModelForKey(
     modelId: string,
   ) => Promise<{ isEnabled: boolean } | null> = findAIModelByProviderAndModelId,
 ): Promise<void> {
-  const parsedProvider = apiKeyProviderSchema.safeParse(key.provider)
+  const parsedProvider = v.safeParse(apiKeyProviderSchema, key.provider)
   if (!parsedProvider.success) {
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
       status: 500,
@@ -117,44 +117,45 @@ export async function validateModelForKey(
   }
 }
 
-const productListInputSchema = z.object({
-  limit: z.number().min(1).max(100).optional(),
-  offset: z.number().min(0).optional(),
-  cursor: z.string().optional(),
-  search: z.string().optional(),
-  categoryIds: z.array(z.string()).optional(),
-  status: z.enum(["draft", "active", "archived", "all"]).optional(),
-  priceFilter: z.enum(["all", "free", "paid"]).optional(),
-  tagIds: z.array(z.string()).optional(),
+const productListInputSchema = v.object({
+  limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100))),
+  offset: v.optional(v.pipe(v.number(), v.minValue(0))),
+  cursor: v.optional(v.string()),
+  search: v.optional(v.string()),
+  categoryIds: v.optional(v.array(v.string())),
+  status: v.optional(v.picklist(["draft", "active", "archived", "all"])),
+  priceFilter: v.optional(v.picklist(["all", "free", "paid"])),
+  tagIds: v.optional(v.array(v.string())),
 })
 
-const productSearchInputSchema = z.object({
-  query: z.string().min(1).max(200),
-  limit: z.number().min(1).max(20).default(8).optional(),
+const productSearchInputSchema = v.object({
+  query: v.pipe(v.string(), v.minLength(1), v.maxLength(200)),
+  limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(20)), 8),
 })
 
-const productExecuteInputSchema = z.object({
-  id: z.string(),
-  inputs: z.record(z.string(), z.unknown()),
+const productExecuteInputSchema = v.object({
+  id: v.string(),
+  inputs: v.record(v.string(), v.unknown()),
 })
 
-const previewInputSchema = z.object({
+const previewInputSchema = v.object({
   workflow: productWorkflowSchema,
-  inputs: z.record(z.string(), z.string()),
-  config: z.object({
-    modelEngine: z.string(),
+  inputs: v.record(v.string(), v.string()),
+  config: v.object({
+    modelEngine: v.string(),
   }),
-  outputFormat: z.enum(["plain", "json", "image", "video"]),
-  apiKeyId: z.string(),
+  outputFormat: v.picklist(["plain", "json", "image", "video"]),
+  apiKeyId: v.string(),
 })
 
-const productUpdateInputSchema = updateProductSchema.extend({
-  id: z.string(),
+const productUpdateInputSchema = v.object({
+  ...updateProductSchema.entries,
+  id: v.string(),
 })
 
-const productBulkStatusInputSchema = z.object({
-  ids: z.array(z.string()).min(1),
-  status: z.enum(["draft", "active", "archived"]),
+const productBulkStatusInputSchema = v.object({
+  ids: v.pipe(v.array(v.string()), v.minLength(1)),
+  status: v.picklist(["draft", "active", "archived"]),
 })
 
 export const productsRouter = {
@@ -178,7 +179,7 @@ export const productsRouter = {
 
     byId: os
       .route({ method: "GET" })
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .handler(async ({ input }) => {
         const product = await getPublicProductById(input.id)
 
@@ -194,7 +195,7 @@ export const productsRouter = {
 
     bySlug: os
       .route({ method: "GET" })
-      .input(z.object({ slug: z.string().min(1) }))
+      .input(v.object({ slug: v.pipe(v.string(), v.minLength(1)) }))
       .handler(async ({ input }) => {
         const product = await getPublicProductBySlug(input.slug)
 
@@ -394,7 +395,7 @@ export const productsRouter = {
       .route({ method: "GET" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .handler(async ({ input }) => {
         const product = await getProductById(input.id)
 
@@ -529,8 +530,8 @@ export const productsRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
-      .output(z.object({ success: z.boolean() }))
+      .input(v.object({ id: v.string() }))
+      .output(v.object({ success: v.boolean() }))
       .handler(async ({ input }) => {
         await deleteProduct(input.id)
         return { success: true }
@@ -540,7 +541,7 @@ export const productsRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .handler(async ({ context, input }) => {
         const session = context.session
         const product = await duplicateProduct(input.id, session.id)

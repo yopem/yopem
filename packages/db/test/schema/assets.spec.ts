@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -14,7 +15,7 @@ describe("assets schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertAssetSchema.safeParse({
+    const result = v.safeParse(insertAssetSchema, {
       filename: "a.webp",
       originalName: "a.webp",
       type: "images",
@@ -25,7 +26,7 @@ describe("assets schema", () => {
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateAssetSchema.safeParse({
+    const result = v.safeParse(updateAssetSchema, {
       filename: "a.webp",
       originalName: "a.webp",
       type: "images",
@@ -36,7 +37,7 @@ describe("assets schema", () => {
   })
 
   test("assetSchema validates a full select row", () => {
-    const result = assetSchema.safeParse({
+    const result = v.safeParse(assetSchema, {
       id: "ast_1",
       filename: "a.webp",
       originalName: "a.webp",

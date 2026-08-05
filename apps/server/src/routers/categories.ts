@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { categorySchema, listCategorySchema } from "db/schema/categories"
 import {
@@ -16,12 +16,12 @@ export const categoriesRouter = {
   categories: {
     list: os
       .route({ method: "GET" })
-      .output(z.array(listCategorySchema))
+      .output(v.array(listCategorySchema))
       .handler(() => listCategories()),
 
     byId: os
       .route({ method: "GET" })
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .output(categorySchema)
       .handler(async ({ input }) => {
         const category = await getCategory(input.id)
@@ -39,10 +39,14 @@ export const categoriesRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
-        z.object({
-          name: z.string().min(1, "Category name is required").trim(),
-          description: z.string().optional(),
-          parentId: z.string().optional(),
+        v.object({
+          name: v.pipe(
+            v.string(),
+            v.trim(),
+            v.minLength(1, "Category name is required"),
+          ),
+          description: v.optional(v.string()),
+          parentId: v.optional(v.string()),
         }),
       )
       .output(categorySchema)
@@ -53,11 +57,15 @@ export const categoriesRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
-        z.object({
-          id: z.string(),
-          name: z.string().min(1, "Category name is required").trim(),
-          description: z.string().optional(),
-          parentId: z.string().optional(),
+        v.object({
+          id: v.string(),
+          name: v.pipe(
+            v.string(),
+            v.trim(),
+            v.minLength(1, "Category name is required"),
+          ),
+          description: v.optional(v.string()),
+          parentId: v.optional(v.string()),
         }),
       )
       .output(categorySchema)
@@ -82,8 +90,8 @@ export const categoriesRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
-      .output(z.object({ success: z.boolean() }))
+      .input(v.object({ id: v.string() }))
+      .output(v.object({ success: v.boolean() }))
       .handler(async ({ input }) => {
         await deleteCategory(input.id)
         return { success: true }

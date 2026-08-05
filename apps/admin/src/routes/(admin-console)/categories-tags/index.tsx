@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
 import { useEffect, useReducer, useRef } from "react"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
@@ -15,9 +15,9 @@ import { TagList } from "@/components/categories-tags/tag-list"
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
-const categoriesTagsSearchSchema = z.object({
-  categoryId: z.string().optional(),
-  tagId: z.string().optional(),
+const categoriesTagsSearchSchema = v.object({
+  categoryId: v.optional(v.string()),
+  tagId: v.optional(v.string()),
 })
 
 export const Route = createFileRoute("/(admin-console)/categories-tags/")({

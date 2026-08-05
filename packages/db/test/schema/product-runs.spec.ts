@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -13,7 +14,7 @@ describe("product-runs schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertProductRunSchema.safeParse({
+    const result = v.safeParse(insertProductRunSchema, {
       productId: "p",
       userId: "u",
     })
@@ -21,7 +22,7 @@ describe("product-runs schema", () => {
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateProductRunSchema.safeParse({
+    const result = v.safeParse(updateProductRunSchema, {
       productId: "p",
       userId: "u",
     })

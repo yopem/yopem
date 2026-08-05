@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -13,17 +14,21 @@ describe("admin-settings schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertAdminSettingsSchema.safeParse({ settingKey: "theme" })
+    const result = v.safeParse(insertAdminSettingsSchema, {
+      settingKey: "theme",
+    })
     expect(result.success).toBe(true)
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateAdminSettingsSchema.safeParse({ settingKey: "theme" })
+    const result = v.safeParse(updateAdminSettingsSchema, {
+      settingKey: "theme",
+    })
     expect(result.success).toBe(true)
   })
 
   test("adminSettingSchema validates a full select row", () => {
-    const result = adminSettingSchema.safeParse({
+    const result = v.safeParse(adminSettingSchema, {
       id: "set_1",
       settingKey: "theme",
       settingValue: "dark",

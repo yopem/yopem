@@ -45,7 +45,7 @@
     "cache": "workspace:*",
     "db": "workspace:*",
     "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
+    "drizzle-valibot": "catalog:",
     "env": "workspace:*",
     "hono": "^4.12.9",
     "ioredis": "catalog:",
@@ -54,7 +54,7 @@
     "sharp": "^0.35.0",
     "transliteration": "catalog:",
     "utils": "workspace:*",
-    "zod": "catalog:"
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.5.0",

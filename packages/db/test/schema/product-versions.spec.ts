@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -12,7 +13,7 @@ describe("product-versions schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertProductVersionSchema.safeParse({
+    const result = v.safeParse(insertProductVersionSchema, {
       productId: "p",
       version: 1,
     })
@@ -20,7 +21,7 @@ describe("product-versions schema", () => {
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateProductVersionSchema.safeParse({
+    const result = v.safeParse(updateProductVersionSchema, {
       productId: "p",
       version: 1,
     })

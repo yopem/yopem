@@ -3,7 +3,7 @@
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useReducer } from "react"
-import { z } from "zod"
+import * as v from "valibot"
 
 import {
   insertProductSchema,
@@ -21,45 +21,52 @@ import type { ApiKeyConfig } from "utils/api-input"
 
 import { validateModelProviderMatch } from "@/lib/utils/provider"
 
-const productFormSchema = insertProductSchema
-  .pick({
-    name: true,
-    description: true,
-    excerpt: true,
-    outputFormat: true,
-    costPerRun: true,
-    config: true,
-    status: true,
-    apiKeyId: true,
-    categoryIds: true,
-    tagIds: true,
-    thumbnailId: true,
-  })
-  .extend({
-    name: z.string().min(1, "Product name is required").trim(),
-    description: z.string().min(1, "Product description is required").trim(),
-    descriptionContent: z.array(z.record(z.string(), z.unknown())).refine(
-      (value) => {
-        if (!Array.isArray(value) || value.length === 0) return false
-        const isEmptySingleParagraph =
-          value.length === 1 &&
-          (value[0] as { type?: string })?.type === "p" &&
-          (
-            (value[0] as { children?: { text?: string }[] })?.children ?? []
-          ).every((child) => (child.text ?? "") === "")
-        return !isEmptySingleParagraph
-      },
-      { message: "Product description is required" },
-    ),
-    excerpt: z.string().max(500).optional(),
-    workflow: productWorkflowSchema,
-    apiKeyId: z.string().min(1, "API key is required"),
-    categoryIds: z.array(z.string()).optional(),
-    tagIds: z.array(z.string()).optional(),
-    thumbnailId: z.string().optional(),
-  })
+const productFormSchema = v.object({
+  ...v.pick(insertProductSchema, [
+    "name",
+    "description",
+    "excerpt",
+    "outputFormat",
+    "costPerRun",
+    "config",
+    "status",
+    "apiKeyId",
+    "categoryIds",
+    "tagIds",
+    "thumbnailId",
+  ]).entries,
+  name: v.pipe(
+    v.string(),
+    v.minLength(1, "Product name is required"),
+    v.trim(),
+  ),
+  description: v.pipe(
+    v.string(),
+    v.minLength(1, "Product description is required"),
+    v.trim(),
+  ),
+  descriptionContent: v.pipe(
+    v.array(v.record(v.string(), v.unknown())),
+    v.check((value) => {
+      if (value.length === 0) return false
+      const isEmptySingleParagraph =
+        value.length === 1 &&
+        (value[0] as { type?: string })?.type === "p" &&
+        (
+          (value[0] as { children?: { text?: string }[] })?.children ?? []
+        ).every((child) => (child.text ?? "") === "")
+      return !isEmptySingleParagraph
+    }, "Product description is required"),
+  ),
+  excerpt: v.optional(v.pipe(v.string(), v.maxLength(500))),
+  workflow: productWorkflowSchema,
+  apiKeyId: v.pipe(v.string(), v.minLength(1, "API key is required")),
+  categoryIds: v.optional(v.array(v.string())),
+  tagIds: v.optional(v.array(v.string())),
+  thumbnailId: v.optional(v.string()),
+})
 
-export type ProductFormData = z.infer<typeof productFormSchema>
+export type ProductFormData = v.InferOutput<typeof productFormSchema>
 
 export interface ProductFormRef {
   submit: () => void
@@ -282,10 +289,10 @@ export function useProductForm({
         thumbnailId: value.thumbnailId,
       }
 
-      const result = productFormSchema.safeParse(formData)
+      const result = v.safeParse(productFormSchema, formData)
 
       if (!result.success) {
-        const firstError = result.error.issues[0]
+        const firstError = result.issues[0]
         toastManager.add({
           title: "Validation Error",
           description: firstError.message,

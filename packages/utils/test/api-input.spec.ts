@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -10,19 +11,19 @@ import {
 
 describe("apiKeyProviderSchema", () => {
   test("accepts valid providers", () => {
-    expect(apiKeyProviderSchema.parse("openai")).toBe("openai")
-    expect(apiKeyProviderSchema.parse("openrouter")).toBe("openrouter")
-    expect(apiKeyProviderSchema.parse("fal")).toBe("fal")
+    expect(v.parse(apiKeyProviderSchema, "openai")).toBe("openai")
+    expect(v.parse(apiKeyProviderSchema, "openrouter")).toBe("openrouter")
+    expect(v.parse(apiKeyProviderSchema, "fal")).toBe("fal")
   })
 
   test("rejects invalid providers", () => {
-    expect(() => apiKeyProviderSchema.parse("invalid")).toThrow()
+    expect(() => v.parse(apiKeyProviderSchema, "invalid")).toThrow()
   })
 })
 
 describe("addApiKeyInputSchema", () => {
   test("accepts valid input", () => {
-    const result = addApiKeyInputSchema.parse({
+    const result = v.parse(addApiKeyInputSchema, {
       provider: "openai",
       name: "My Key",
       apiKey: "sk-...",
@@ -33,7 +34,7 @@ describe("addApiKeyInputSchema", () => {
 
   test("rejects empty name", () => {
     expect(() =>
-      addApiKeyInputSchema.parse({
+      v.parse(addApiKeyInputSchema, {
         provider: "openai",
         name: "",
         apiKey: "sk-...",
@@ -44,7 +45,7 @@ describe("addApiKeyInputSchema", () => {
 
 describe("updateApiKeyInputSchema", () => {
   test("accepts partial update", () => {
-    const result = updateApiKeyInputSchema.parse({
+    const result = v.parse(updateApiKeyInputSchema, {
       id: "key_1",
       name: "Updated Key",
     })
@@ -54,14 +55,14 @@ describe("updateApiKeyInputSchema", () => {
 
 describe("deleteApiKeyInputSchema", () => {
   test("requires id", () => {
-    const result = deleteApiKeyInputSchema.parse({ id: "key_1" })
+    const result = v.parse(deleteApiKeyInputSchema, { id: "key_1" })
     expect(result.id).toBe("key_1")
   })
 })
 
 describe("apiKeyConfigSchema", () => {
   test("accepts valid config", () => {
-    const result = apiKeyConfigSchema.parse({
+    const result = v.parse(apiKeyConfigSchema, {
       id: "key_1",
       provider: "openai",
       name: "My Key",

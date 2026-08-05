@@ -31,12 +31,12 @@
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
+    "drizzle-valibot": "catalog:",
     "env": "workspace:*",
     "pg": "catalog:",
     "transliteration": "catalog:",
     "utils": "workspace:*",
-    "zod": "catalog:"
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

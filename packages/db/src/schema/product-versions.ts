@@ -1,5 +1,5 @@
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { createInsertSchema, createUpdateSchema } from "drizzle-valibot"
 
 import { createCustomId } from "utils/custom-id"
 

@@ -1,62 +1,74 @@
-import { z } from "zod"
+import * as v from "valibot"
 
-export const apiKeyProviderSchema = z.enum(["openai", "openrouter", "fal"])
+export const apiKeyProviderSchema = v.picklist(["openai", "openrouter", "fal"])
 
-export type ApiKeyProvider = z.infer<typeof apiKeyProviderSchema>
+export type ApiKeyProvider = v.InferOutput<typeof apiKeyProviderSchema>
 
-const apiKeyStatusSchema = z.enum(["active", "inactive"])
+const apiKeyStatusSchema = v.picklist(["active", "inactive"])
 
-const apiKeyRestrictionsSchema = z.object({
-  enabled: z.boolean(),
-  projectIds: z.array(z.string()).optional(),
+const apiKeyRestrictionsSchema = v.object({
+  enabled: v.boolean(),
+  projectIds: v.optional(v.array(v.string())),
 })
 
-export const apiKeyConfigSchema = z.object({
-  id: z.string(),
+export const apiKeyConfigSchema = v.object({
+  id: v.string(),
   provider: apiKeyProviderSchema,
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  apiKey: z.string().min(1, "API key is required"),
+  name: v.pipe(v.string(), v.minLength(1, "Name is required")),
+  description: v.optional(v.string()),
+  apiKey: v.pipe(v.string(), v.minLength(1, "API key is required")),
   status: apiKeyStatusSchema,
-  restrictions: apiKeyRestrictionsSchema.optional(),
-  lastUsed: z.date().optional(),
-  createdAt: z.string().date(),
-  updatedAt: z.string().date(),
+  restrictions: v.optional(apiKeyRestrictionsSchema),
+  lastUsed: v.optional(v.date()),
+  createdAt: v.pipe(v.string(), v.isoDate()),
+  updatedAt: v.pipe(v.string(), v.isoDate()),
 })
 
-export type ApiKeyConfig = z.infer<typeof apiKeyConfigSchema>
+export type ApiKeyConfig = v.InferOutput<typeof apiKeyConfigSchema>
 
-export const addApiKeyInputSchema = z.object({
+export const addApiKeyInputSchema = v.object({
   provider: apiKeyProviderSchema,
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  description: z.string().max(500, "Description too long").optional(),
-  apiKey: z.string().trim().min(1, "API key is required"),
-  status: apiKeyStatusSchema.default("active"),
-  restrictions: apiKeyRestrictionsSchema.optional(),
-  skipValidation: z.boolean().default(false),
+  name: v.pipe(
+    v.string(),
+    v.minLength(1, "Name is required"),
+    v.maxLength(100, "Name too long"),
+  ),
+  description: v.optional(
+    v.pipe(v.string(), v.maxLength(500, "Description too long")),
+  ),
+  apiKey: v.pipe(v.string(), v.trim(), v.minLength(1, "API key is required")),
+  status: v.optional(apiKeyStatusSchema, "active"),
+  restrictions: v.optional(apiKeyRestrictionsSchema),
+  skipValidation: v.optional(v.boolean(), false),
 })
 
-export type AddApiKeyInput = z.infer<typeof addApiKeyInputSchema>
+export type AddApiKeyInput = v.InferOutput<typeof addApiKeyInputSchema>
 
-export const updateApiKeyInputSchema = z.object({
-  id: z.string(),
-  provider: apiKeyProviderSchema.optional(),
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name too long")
-    .optional(),
-  description: z.string().max(500, "Description too long").optional(),
-  apiKey: z.string().trim().min(1, "API key is required").optional(),
-  status: apiKeyStatusSchema.optional(),
-  restrictions: apiKeyRestrictionsSchema.optional(),
-  skipValidation: z.boolean().default(false),
+export const updateApiKeyInputSchema = v.object({
+  id: v.string(),
+  provider: v.optional(apiKeyProviderSchema),
+  name: v.optional(
+    v.pipe(
+      v.string(),
+      v.minLength(1, "Name is required"),
+      v.maxLength(100, "Name too long"),
+    ),
+  ),
+  description: v.optional(
+    v.pipe(v.string(), v.maxLength(500, "Description too long")),
+  ),
+  apiKey: v.optional(
+    v.pipe(v.string(), v.trim(), v.minLength(1, "API key is required")),
+  ),
+  status: v.optional(apiKeyStatusSchema),
+  restrictions: v.optional(apiKeyRestrictionsSchema),
+  skipValidation: v.optional(v.boolean(), false),
 })
 
-export type UpdateApiKeyInput = z.infer<typeof updateApiKeyInputSchema>
+export type UpdateApiKeyInput = v.InferOutput<typeof updateApiKeyInputSchema>
 
-export const deleteApiKeyInputSchema = z.object({
-  id: z.string(),
+export const deleteApiKeyInputSchema = v.object({
+  id: v.string(),
 })
 
-export type DeleteApiKeyInput = z.infer<typeof deleteApiKeyInputSchema>
+export type DeleteApiKeyInput = v.InferOutput<typeof deleteApiKeyInputSchema>

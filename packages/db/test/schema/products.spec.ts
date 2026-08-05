@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -16,12 +17,18 @@ describe("products schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertProductSchema.safeParse({ name: "Prod", slug: "prod" })
+    const result = v.safeParse(insertProductSchema, {
+      name: "Prod",
+      slug: "prod",
+    })
     expect(result.success).toBe(true)
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateProductSchema.safeParse({ name: "Prod", slug: "prod" })
+    const result = v.safeParse(updateProductSchema, {
+      name: "Prod",
+      slug: "prod",
+    })
     expect(result.success).toBe(true)
   })
 
@@ -36,7 +43,7 @@ describe("products schema", () => {
   })
 
   test("productSchema omits nothing (full select schema)", () => {
-    const keys = Object.keys(productSchema.shape)
+    const keys = Object.keys(productSchema.entries)
     for (const field of [
       "id",
       "name",
@@ -50,7 +57,7 @@ describe("products schema", () => {
   })
 
   test("publicProductSchema omits sensitive fields", () => {
-    const keys = Object.keys(publicProductSchema.shape)
+    const keys = Object.keys(publicProductSchema.entries)
     for (const sensitive of [
       "apiKeyId",
       "config",

@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { z } from "zod"
+import * as v from "valibot"
 
 import { listTagSchema, tagSchema } from "db/schema/tags"
 import {
@@ -16,12 +16,12 @@ export const tagsRouter = {
   tags: {
     list: os
       .route({ method: "GET" })
-      .output(z.array(listTagSchema))
+      .output(v.array(listTagSchema))
       .handler(() => listTags()),
 
     byId: os
       .route({ method: "GET" })
-      .input(z.object({ id: z.string() }))
+      .input(v.object({ id: v.string() }))
       .output(tagSchema)
       .handler(async ({ input }) => {
         const tag = await getTag(input.id)
@@ -39,7 +39,13 @@ export const tagsRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
-        z.object({ name: z.string().min(1, "Tag name is required").trim() }),
+        v.object({
+          name: v.pipe(
+            v.string(),
+            v.trim(),
+            v.minLength(1, "Tag name is required"),
+          ),
+        }),
       )
       .output(tagSchema)
       .handler(({ input }) => createTag(input)),
@@ -49,9 +55,13 @@ export const tagsRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .input(
-        z.object({
-          id: z.string(),
-          name: z.string().min(1, "Tag name is required").trim(),
+        v.object({
+          id: v.string(),
+          name: v.pipe(
+            v.string(),
+            v.trim(),
+            v.minLength(1, "Tag name is required"),
+          ),
         }),
       )
       .output(tagSchema)
@@ -76,8 +86,8 @@ export const tagsRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(z.object({ id: z.string() }))
-      .output(z.object({ success: z.boolean() }))
+      .input(v.object({ id: v.string() }))
+      .output(v.object({ success: v.boolean() }))
       .handler(async ({ input }) => {
         await deleteTag(input.id)
         return { success: true }

@@ -5,7 +5,8 @@ import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
-} from "drizzle-zod"
+} from "drizzle-valibot"
+import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -36,14 +37,14 @@ export const categoriesTable = pgTable(
 export const insertCategorySchema = createInsertSchema(categoriesTable)
 export const updateCategorySchema = createUpdateSchema(categoriesTable)
 export const categorySchema = createSelectSchema(categoriesTable)
-export const listCategorySchema = categorySchema.pick({
-  id: true,
-  name: true,
-  slug: true,
-  description: true,
-  parentId: true,
-  sortOrder: true,
-})
+export const listCategorySchema = v.pick(categorySchema, [
+  "id",
+  "name",
+  "slug",
+  "description",
+  "parentId",
+  "sortOrder",
+])
 
 export type SelectCategory = typeof categoriesTable.$inferSelect
 export type InsertCategory = typeof categoriesTable.$inferInsert

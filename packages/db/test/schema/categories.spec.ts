@@ -1,3 +1,4 @@
+import * as v from "valibot"
 import { describe, expect, test } from "vite-plus/test"
 
 import {
@@ -14,17 +15,23 @@ describe("categories schema", () => {
   })
 
   test("insert schema validates a valid row", () => {
-    const result = insertCategorySchema.safeParse({ name: "Cat", slug: "cat" })
+    const result = v.safeParse(insertCategorySchema, {
+      name: "Cat",
+      slug: "cat",
+    })
     expect(result.success).toBe(true)
   })
 
   test("update schema validates a partial row", () => {
-    const result = updateCategorySchema.safeParse({ name: "Cat", slug: "cat" })
+    const result = v.safeParse(updateCategorySchema, {
+      name: "Cat",
+      slug: "cat",
+    })
     expect(result.success).toBe(true)
   })
 
   test("categorySchema validates a full select row", () => {
-    const result = categorySchema.safeParse({
+    const result = v.safeParse(categorySchema, {
       id: "cat_1",
       name: "Example",
       slug: "example",
@@ -38,7 +45,7 @@ describe("categories schema", () => {
   })
 
   test("listCategorySchema validates the list output shape", () => {
-    const result = listCategorySchema.safeParse({
+    const result = v.safeParse(listCategorySchema, {
       id: "cat_1",
       name: "Example",
       slug: "example",

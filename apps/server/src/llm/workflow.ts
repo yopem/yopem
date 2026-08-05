@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { decryptApiKey } from "server/utils/crypto"
+import * as v from "valibot"
 
 import type { ProductWorkflow, WorkflowNode } from "db/schema/product-workflow"
 import { findAIModelByProviderAndModelId } from "db/services/admin"
@@ -159,7 +160,7 @@ async function resolveKeyAndModel(
     })
   }
 
-  const parsedProvider = apiKeyProviderSchema.safeParse(key.provider)
+  const parsedProvider = v.safeParse(apiKeyProviderSchema, key.provider)
   if (!parsedProvider.success) {
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
       status: 500,
@@ -167,7 +168,7 @@ async function resolveKeyAndModel(
     })
   }
 
-  const provider = parsedProvider.data
+  const provider = parsedProvider.output
 
   const decryptedKey = decryptApiKey(key.apiKey).trim()
   if (!decryptedKey) {

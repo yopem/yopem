@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm"
 import readline from "node:readline"
 import { pathToFileURL } from "node:url"
 import { encryptApiKey } from "server/utils/crypto"
+import * as v from "valibot"
 
 import { db } from "db"
 import {
@@ -1751,7 +1752,7 @@ async function seedTags(): Promise<{
 async function seedApiKeys(): Promise<Map<ApiKeyProvider, string>> {
   const setting = await getSetting(API_KEY_SETTING_KEY)
   const raw = setting?.settingValue
-  const parsed = apiKeyConfigSchema.array().safeParse(raw)
+  const parsed = v.safeParse(v.array(apiKeyConfigSchema), raw)
   const hasExisting = Array.isArray(raw) && raw.length > 0
 
   if (hasExisting && !parsed.success) {
@@ -1761,7 +1762,7 @@ async function seedApiKeys(): Promise<Map<ApiKeyProvider, string>> {
     return new Map<ApiKeyProvider, string>()
   }
 
-  const keys = parsed.success ? [...parsed.data] : []
+  const keys = parsed.success ? [...parsed.output] : []
   const map = new Map<ApiKeyProvider, string>()
 
   for (const key of keys) {
@@ -1832,20 +1833,20 @@ async function getDefaultTextModel(
 
   const fallback = models.find((model) => {
     if (!model.isEnabled) return false
-    const parsed = apiKeyProviderSchema.safeParse(model.provider)
-    return parsed.success && apiKeyByProvider.has(parsed.data)
+    const parsed = v.safeParse(apiKeyProviderSchema, model.provider)
+    return parsed.success && apiKeyByProvider.has(parsed.output)
   })
 
   if (!fallback) {
     return null
   }
 
-  const parsed = apiKeyProviderSchema.safeParse(fallback.provider)
+  const parsed = v.safeParse(apiKeyProviderSchema, fallback.provider)
   if (!parsed.success) {
     return null
   }
 
-  return { provider: parsed.data, modelId: fallback.modelId }
+  return { provider: parsed.output, modelId: fallback.modelId }
 }
 
 async function seedProducts(
