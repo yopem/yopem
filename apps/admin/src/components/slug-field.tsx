@@ -24,6 +24,7 @@ export function SlugField({
   label = "Slug",
 }: SlugFieldProps) {
   const [querySlug, setQuerySlug] = useState(value)
+  const [touched, setTouched] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => setQuerySlug(value), 300)
@@ -37,7 +38,7 @@ export function SlugField({
         slug: querySlug,
         ...(excludeId ? { excludeId } : {}),
       },
-      enabled: querySlug !== "",
+      enabled: touched && querySlug !== "",
     }),
   )
 
@@ -48,26 +49,29 @@ export function SlugField({
       <FieldLabel>{label}</FieldLabel>
       <Input
         value={value}
+        onFocus={() => setTouched(true)}
         onChange={(e) => onChange(slugify(e.target.value))}
         placeholder="Auto-generated from name"
       />
-      <p
-        className={
-          value === "" || isFetching || available === undefined
-            ? "text-muted-foreground mt-1 text-xs"
-            : available
-              ? "mt-1 text-xs text-emerald-600"
-              : "text-destructive-foreground mt-1 text-xs"
-        }
-      >
-        {value === ""
-          ? "Leave empty to auto-generate from name"
-          : isFetching
-            ? "Checking availability…"
-            : available
-              ? "Available"
-              : "Already in use"}
-      </p>
+      {touched && (
+        <p
+          className={
+            value === "" || isFetching || available === undefined
+              ? "text-muted-foreground mt-1 text-xs"
+              : available
+                ? "mt-1 text-xs text-emerald-600"
+                : "text-destructive-foreground mt-1 text-xs"
+          }
+        >
+          {value === ""
+            ? "Leave empty to auto-generate from name"
+            : isFetching
+              ? "Checking availability…"
+              : available
+                ? "Available"
+                : "Already in use"}
+        </p>
+      )}
     </Field>
   )
 }
