@@ -54,7 +54,7 @@ const editorVariants = cva(
     "group/editor",
     "relative w-full cursor-text overflow-x-hidden wrap-break-word whitespace-break-spaces select-text",
     "ring-offset-background rounded-md focus-visible:outline-none",
-    "placeholder:text-muted-foreground/80 **:data-slate-placeholder:text-muted-foreground/80 **:data-slate-placeholder:top-1/2! **:data-slate-placeholder:-translate-y-1/2 **:data-slate-placeholder:opacity-100!",
+    "placeholder:text-muted-foreground/72 **:data-slate-placeholder:text-muted-foreground/72 **:data-slate-placeholder:opacity-100!",
     "[&_strong]:font-bold",
   ),
   {
@@ -92,6 +92,7 @@ export function Editor({
   className,
   disabled,
   focused,
+  placeholder = "Type something...",
   variant,
   ref,
   ...props
@@ -109,6 +110,7 @@ export function Editor({
       )}
       disabled={disabled}
       disableDefaultStyles
+      placeholder={placeholder}
       {...props}
     />
   )
