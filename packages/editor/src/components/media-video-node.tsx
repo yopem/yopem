@@ -28,6 +28,7 @@ export const VideoElement = withHOC(
     const {
       align = "center",
       embed,
+      isTweet,
       isVideo,
       isUpload,
       isYoutube,
@@ -42,8 +43,6 @@ export const VideoElement = withHOC(
     const shouldRenderEmbedPlayer =
       isEditorMounted && !isUpload && !isYoutube && isVideo
     const shouldRenderFileVideo = isEditorMounted && (isUpload ?? !isVideo)
-
-    const isTweet = true
 
     const { isDragging, handleRef } = useDraggable({
       element: props.element,
