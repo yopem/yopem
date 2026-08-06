@@ -19,7 +19,7 @@ import {
   useRemoveNodeButton,
   useSelected,
 } from "platejs/react"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { Button, buttonVariants } from "ui/button"
 import { Popover, PopoverContent } from "ui/popover"
@@ -136,12 +136,17 @@ export function MediaToolbar({
 
   const element = useElement()
   const { props: buttonProps } = useRemoveNodeButton({ element })
+  const anchorRef = useRef<HTMLDivElement>(null)
 
   return (
     <Popover open={open} modal={false}>
-      {children}
+      <div ref={anchorRef} className="relative">
+        {children}
+      </div>
 
       <PopoverContent
+        align={isEditing ? "start" : "center"}
+        anchor={anchorRef}
         className="w-auto p-0"
         initialFocus={false}
         data-media-toolbar
