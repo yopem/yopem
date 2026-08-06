@@ -20,6 +20,7 @@ import {
 import { BaseIndentPlugin } from "@platejs/indent"
 import { BaseLinkPlugin } from "@platejs/link"
 import { BaseListPlugin } from "@platejs/list"
+import { BaseMediaEmbedPlugin } from "@platejs/media"
 import { BaseParagraphPlugin } from "platejs"
 
 export const SerializeKit = [
@@ -44,4 +45,5 @@ export const SerializeKit = [
   BaseLinkPlugin,
   BaseIndentPlugin,
   BaseListPlugin,
+  BaseMediaEmbedPlugin,
 ]

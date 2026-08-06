@@ -11,6 +11,7 @@ import { PlateElement, useEditorMounted, withHOC } from "platejs/react"
 import LiteYouTubeEmbed from "react-lite-youtube-embed"
 import ReactPlayer from "react-player"
 
+import { parseFacebookUrl } from "editor/media-embed-node"
 import { cn } from "ui/utils"
 
 import { Caption, CaptionTextarea } from "./caption"
@@ -35,7 +36,7 @@ export const VideoElement = withHOC(
       readOnly,
       unsafeUrl,
     } = useMediaState({
-      urlParsers: [parseTwitterUrl, parseVideoUrl],
+      urlParsers: [parseFacebookUrl, parseTwitterUrl, parseVideoUrl],
     })
     const width = useResizableValue("width")
 

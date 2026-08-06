@@ -48,13 +48,13 @@ export function MediaToolbar({
     [],
   )
   const isImagePreviewOpen = useImagePreviewValue("isOpen", editor.id)
+  const isEditing = useFloatingMediaValue("isEditing")
   const open =
-    isFocusedLast &&
+    (isFocusedLast || isEditing) &&
     !readOnly &&
     selected &&
     selectionCollapsed &&
     !isImagePreviewOpen
-  const isEditing = useFloatingMediaValue("isEditing")
 
   useEffect(() => {
     if (!open && isEditing) {

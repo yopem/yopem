@@ -1,5 +1,6 @@
 "use client"
 
+import type { EmbedUrlData } from "@platejs/media"
 import type { TMediaEmbedElement } from "platejs"
 import type { PlateElementProps } from "platejs/react"
 
@@ -7,9 +8,11 @@ import { parseTwitterUrl, parseVideoUrl } from "@platejs/media"
 import { MediaEmbedPlugin, useMediaState } from "@platejs/media/react"
 import { ResizableProvider, useResizableValue } from "@platejs/resizable"
 import { PlateElement, withHOC } from "platejs/react"
+import { useState } from "react"
 import LiteYouTubeEmbed from "react-lite-youtube-embed"
 import { Tweet } from "react-tweet"
 
+import { FacebookIcon } from "editor/brand-icons"
 import { cn } from "ui/utils"
 
 import { Caption, CaptionTextarea } from "./caption"
@@ -19,6 +22,61 @@ import {
   Resizable,
   ResizeHandle,
 } from "./resize-handle"
+
+const FACEBOOK_PATH_REGEX =
+  /^https?:\/\/(?:[\w-]+\.)*facebook\.com\/(?:(?:[\w.-]+)\/)*(?:posts|videos|reel|watch|photo|permalink|story|video)(?:\.php)?(?:\/|\?|$)/i
+
+const FACEBOOK_VIDEO_REGEX = /\/(?:videos|reel|watch)\b|\?v=/i
+
+function isFacebookVideoUrl(url: string) {
+  return FACEBOOK_VIDEO_REGEX.test(url)
+}
+
+export function parseFacebookUrl(url: string): EmbedUrlData | undefined {
+  const normalized = url.trim().replace(/\/+$/, "")
+
+  if (!FACEBOOK_PATH_REGEX.test(normalized)) return
+
+  return {
+    provider: "facebook",
+    sourceKind: "url",
+    url: normalized,
+  }
+}
+
+function facebookEmbedUrl(url: string) {
+  const plugin = isFacebookVideoUrl(url) ? "video.php" : "post.php"
+
+  return `https://www.facebook.com/plugins/${plugin}?href=${encodeURIComponent(url)}&show_text=true`
+}
+
+function LiteFacebookEmbed({ url }: { url: string }) {
+  const [loaded, setLoaded] = useState(false)
+
+  if (loaded) {
+    return (
+      <iframe
+        className="size-full min-h-72 border-0"
+        title="facebook"
+        src={facebookEmbedUrl(url)}
+        loading="lazy"
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setLoaded(true)}
+      className="bg-muted/40 text-muted-foreground hover:bg-muted/60 flex min-h-72 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-sm border transition-colors"
+    >
+      <FacebookIcon className="size-8" />
+      <span className="text-sm font-medium">Load Facebook post</span>
+    </button>
+  )
+}
 
 export const MediaEmbedElement = withHOC(
   ResizableProvider,
@@ -33,10 +91,11 @@ export const MediaEmbedElement = withHOC(
       readOnly,
       selected,
     } = useMediaState({
-      urlParsers: [parseTwitterUrl, parseVideoUrl],
+      urlParsers: [parseFacebookUrl, parseTwitterUrl, parseVideoUrl],
     })
     const width = useResizableValue("width")
     const provider = embed?.provider
+    const isFacebook = embed?.provider === "facebook"
 
     return (
       <MediaToolbar plugin={MediaEmbedPlugin}>
@@ -117,6 +176,12 @@ export const MediaEmbedElement = withHOC(
                   )}
                 >
                   <Tweet id={embed?.id ?? ""} />
+                </div>
+              )}
+
+              {isFacebook && embed?.url && (
+                <div className="min-h-72 w-full overflow-hidden rounded-sm">
+                  <LiteFacebookEmbed url={embed.url} />
                 </div>
               )}
 

@@ -22,6 +22,7 @@ function normalizeSlateNode(node: unknown): TElement {
     : [{ text: "" }]
 
   return {
+    ...element,
     type:
       typeof element.type === "string" && element.type.length > 0
         ? element.type
