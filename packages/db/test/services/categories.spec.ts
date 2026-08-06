@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 
 import {
   createCategory,
+  deleteCategories,
   deleteCategory,
   getCategory,
   listCategories,
@@ -59,6 +60,23 @@ describe("categories service", () => {
   test("deleteAsset resolves", async () => {
     mockDb.setReturn([[]])
     await expect(deleteCategory("c1")).resolves.toBeUndefined()
+  })
+
+  test("deleteCategories with empty ids skips the query", async () => {
+    const result = await deleteCategories([])
+    expect(result).toEqual({ success: true, count: 0 })
+  })
+
+  test("deleteCategories returns count of deleted rows", async () => {
+    mockDb.setReturn([[{ id: "c1" }, { id: "c2" }]])
+    const result = await deleteCategories(["c1", "c2"])
+    expect(result).toEqual({ success: true, count: 2 })
+  })
+
+  test("deleteCategories with no matching ids returns count 0", async () => {
+    mockDb.setReturn([[]])
+    const result = await deleteCategories(["missing"])
+    expect(result).toEqual({ success: true, count: 0 })
   })
 
   test("validateCategoryIds returns true when all ids exist", async () => {

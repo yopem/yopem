@@ -179,6 +179,19 @@ export const deleteCategory = async (id: string): Promise<void> => {
   await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
 }
 
+export const deleteCategories = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  const deleted = await db
+    .delete(categoriesTable)
+    .where(inArray(categoriesTable.id, ids))
+    .returning()
+  return { success: true, count: deleted.length }
+}
+
 export const validateCategoryIds = async (ids: string[]): Promise<boolean> => {
   if (ids.length === 0) return true
   const found = await db

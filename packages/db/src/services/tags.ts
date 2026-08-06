@@ -78,6 +78,19 @@ export const deleteTag = async (id: string): Promise<void> => {
   await db.delete(tagsTable).where(eq(tagsTable.id, id))
 }
 
+export const deleteTags = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  const deleted = await db
+    .delete(tagsTable)
+    .where(inArray(tagsTable.id, ids))
+    .returning()
+  return { success: true, count: deleted.length }
+}
+
 export const validateTagIds = async (ids: string[]): Promise<boolean> => {
   if (ids.length === 0) return true
   const found = await db

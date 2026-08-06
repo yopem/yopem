@@ -5,6 +5,7 @@ import { listTagSchema, tagSchema } from "db/schema/tags"
 import {
   createTag,
   deleteTag,
+  deleteTags,
   getTag,
   listTags,
   updateTag,
@@ -94,5 +95,13 @@ export const tagsRouter = {
         await deleteTag(input.id)
         return { success: true }
       }),
+
+    bulkDelete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(v.object({ ids: v.array(v.string()) }))
+      .output(v.object({ success: v.boolean(), count: v.number() }))
+      .handler(({ input }) => deleteTags(input.ids)),
   },
 }

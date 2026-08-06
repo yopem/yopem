@@ -7,6 +7,7 @@ import { useState } from "react"
 import { Shimmer } from "shimmer-from-structure"
 
 import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
 
 import { DeleteDialog } from "@/components/delete-dialog"
 
@@ -23,6 +24,9 @@ interface Category {
 interface CategoryListProps {
   categories: Category[] | undefined
   isLoading: boolean
+  selectedIds: string[]
+  onToggleAll: (visibleIds: string[]) => void
+  onToggleItem: (id: string) => void
   onEdit: (category: Category) => void
   onDelete: (id: string) => void
   deleteMutation: Pick<
@@ -31,19 +35,40 @@ interface CategoryListProps {
   >
 }
 
+const COLLAPSED_LIMIT = 10
+
 export function CategoryList({
   categories,
   isLoading,
+  selectedIds,
+  onToggleAll,
+  onToggleItem,
   onEdit,
   onDelete,
   deleteMutation,
 }: CategoryListProps) {
+  const [expanded, setExpanded] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
   const [pendingDeleteWithChildren, setPendingDeleteWithChildren] = useState<
     string | null
   >(null)
 
   const tree = flattenCategoryTree(categories ?? [])
+  const visibleTree = expanded ? tree : tree.slice(0, COLLAPSED_LIMIT)
+  const hasMore = tree.length > COLLAPSED_LIMIT
+  const selectedSet = new Set(selectedIds)
+
+  const handleToggleAll = () => {
+    const visibleIds = visibleTree.map(({ node }) => node.id)
+    if (
+      visibleIds.length > 0 &&
+      visibleIds.every((id) => selectedSet.has(id))
+    ) {
+      onToggleAll([])
+    } else {
+      onToggleAll(visibleIds)
+    }
+  }
 
   const handleDelete = (id: string) => {
     const descendants = getCategoryDescendantIds(categories ?? [], id)
@@ -74,15 +99,29 @@ export function CategoryList({
   return (
     <div className="border-border rounded-lg border">
       <div className="divide-border divide-y">
+        <div className="flex items-center gap-2 border-b p-4">
+          <Checkbox
+            checked={
+              visibleTree.length > 0 &&
+              visibleTree.every(({ node }) => selectedSet.has(node.id))
+            }
+            onCheckedChange={handleToggleAll}
+          />
+          <span className="text-muted-foreground text-sm">Select all</span>
+        </div>
+
         <Shimmer loading={isLoading}>
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between p-4">
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-medium">Loading...</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Loading description...
-                  </p>
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={false} disabled />
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-medium">Loading...</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Loading description...
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm">
@@ -95,19 +134,25 @@ export function CategoryList({
               </div>
             ))
           ) : tree.length > 0 ? (
-            tree.map(({ node, depth }) => (
+            visibleTree.map(({ node, depth }) => (
               <div
                 key={node.id}
                 className="flex items-center justify-between p-4"
                 style={{ paddingLeft: `${depth * 1.5 + 1}rem` }}
               >
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-medium">{node.name}</h3>
-                  {node.description && (
-                    <p className="text-muted-foreground text-sm">
-                      {node.description}
-                    </p>
-                  )}
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedSet.has(node.id)}
+                    onCheckedChange={() => onToggleItem(node.id)}
+                  />
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-medium">{node.name}</h3>
+                    {node.description && (
+                      <p className="text-muted-foreground text-sm">
+                        {node.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -134,6 +179,19 @@ export function CategoryList({
           )}
         </Shimmer>
       </div>
+
+      {hasMore && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full rounded-none border-t"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded
+            ? "Show Less"
+            : `Show All (${tree.length - COLLAPSED_LIMIT})`}
+        </Button>
+      )}
 
       <DeleteDialog
         open={pendingDelete !== null}

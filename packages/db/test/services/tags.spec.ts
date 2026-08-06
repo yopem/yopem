@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import {
   createTag,
   deleteTag,
+  deleteTags,
   getTag,
   listTags,
   updateTag,
@@ -57,6 +58,23 @@ describe("tags service", () => {
   test("deleteTag resolves", async () => {
     mockDb.setReturn([[]])
     await expect(deleteTag("t1")).resolves.toBeUndefined()
+  })
+
+  test("deleteTags with empty ids skips the query", async () => {
+    const result = await deleteTags([])
+    expect(result).toEqual({ success: true, count: 0 })
+  })
+
+  test("deleteTags returns count of deleted rows", async () => {
+    mockDb.setReturn([[{ id: "t1" }, { id: "t2" }, { id: "t3" }]])
+    const result = await deleteTags(["t1", "t2", "t3"])
+    expect(result).toEqual({ success: true, count: 3 })
+  })
+
+  test("deleteTags with no matching ids returns count 0", async () => {
+    mockDb.setReturn([[]])
+    const result = await deleteTags(["missing"])
+    expect(result).toEqual({ success: true, count: 0 })
   })
 
   test("validateTagIds returns true when all ids exist", async () => {

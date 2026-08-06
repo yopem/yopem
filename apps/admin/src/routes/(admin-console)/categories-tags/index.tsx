@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useEffect, useReducer, useRef } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
 import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
@@ -12,6 +12,7 @@ import { CategoryDialog } from "@/components/categories-tags/category-dialog"
 import { CategoryList } from "@/components/categories-tags/category-list"
 import { TagDialog } from "@/components/categories-tags/tag-dialog"
 import { TagList } from "@/components/categories-tags/tag-list"
+import { DeleteDialog } from "@/components/delete-dialog"
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
 
@@ -101,6 +102,12 @@ function CategoriesTagsRouteComponent() {
   }
 
   const [state, dispatch] = useReducer(reducer, initialState)
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [pendingBulkDelete, setPendingBulkDelete] = useState<
+    "category" | "tag" | null
+  >(null)
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -303,6 +310,54 @@ function CategoriesTagsRouteComponent() {
     }),
   )
 
+  const bulkDeleteCategoryMutation = useMutation(
+    queryApi.categories.bulkDelete.mutationOptions({
+      onSuccess: (data) => {
+        toastManager.add({
+          title: "Categories deleted",
+          description: `${data.count} categor${data.count === 1 ? "y" : "ies"} deleted.`,
+          type: "success",
+        })
+        setSelectedCategoryIds([])
+        setPendingBulkDelete(null)
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.categories.list.queryKey(),
+        })
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Error deleting categories",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
+  const bulkDeleteTagMutation = useMutation(
+    queryApi.tags.bulkDelete.mutationOptions({
+      onSuccess: (data) => {
+        toastManager.add({
+          title: "Tags deleted",
+          description: `${data.count} tag${data.count === 1 ? "" : "s"} deleted.`,
+          type: "success",
+        })
+        setSelectedTagIds([])
+        setPendingBulkDelete(null)
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.tags.list.queryKey(),
+        })
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Error deleting tags",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
   const handleCategorySubmit = (values: {
     name: string
     slug?: string
@@ -330,6 +385,38 @@ function CategoriesTagsRouteComponent() {
     }
   }
 
+  const handleToggleAllCategories = (visibleIds: string[]) => {
+    setSelectedCategoryIds(visibleIds)
+  }
+
+  const handleToggleAllTags = (visibleIds: string[]) => {
+    setSelectedTagIds(visibleIds)
+  }
+
+  const handleToggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id],
+    )
+  }
+
+  const handleToggleTag = (id: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id],
+    )
+  }
+
+  const handleConfirmBulkDelete = () => {
+    if (pendingBulkDelete === "category") {
+      bulkDeleteCategoryMutation.mutate({ ids: selectedCategoryIds })
+    } else if (pendingBulkDelete === "tag") {
+      bulkDeleteTagMutation.mutate({ ids: selectedTagIds })
+    }
+  }
+
   const breadcrumbItems = [
     { label: "Home", href: "/" },
     { label: "Categories & Tags" },
@@ -347,17 +434,32 @@ function CategoriesTagsRouteComponent() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Categories</h2>
-            <Button
-              size="sm"
-              onClick={() => dispatch({ type: "OPEN_CATEGORY_DIALOG" })}
-            >
-              <PlusIcon className="size-4" />
-              Add Category
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedCategoryIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPendingBulkDelete("category")}
+                  disabled={bulkDeleteCategoryMutation.isPending}
+                >
+                  Delete Selected ({selectedCategoryIds.length})
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => dispatch({ type: "OPEN_CATEGORY_DIALOG" })}
+              >
+                <PlusIcon className="size-4" />
+                Add Category
+              </Button>
+            </div>
           </div>
           <CategoryList
             categories={categories}
             isLoading={isLoadingCategories}
+            selectedIds={selectedCategoryIds}
+            onToggleAll={handleToggleAllCategories}
+            onToggleItem={handleToggleCategory}
             onEdit={(category) =>
               dispatch({
                 type: "OPEN_CATEGORY_DIALOG",
@@ -372,17 +474,32 @@ function CategoriesTagsRouteComponent() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Tags</h2>
-            <Button
-              size="sm"
-              onClick={() => dispatch({ type: "OPEN_TAG_DIALOG" })}
-            >
-              <PlusIcon className="size-4" />
-              Add Tag
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedTagIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPendingBulkDelete("tag")}
+                  disabled={bulkDeleteTagMutation.isPending}
+                >
+                  Delete Selected ({selectedTagIds.length})
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => dispatch({ type: "OPEN_TAG_DIALOG" })}
+              >
+                <PlusIcon className="size-4" />
+                Add Tag
+              </Button>
+            </div>
           </div>
           <TagList
             tags={tags}
             isLoading={isLoadingTags}
+            selectedIds={selectedTagIds}
+            onToggleAll={handleToggleAllTags}
+            onToggleItem={handleToggleTag}
             onEdit={(tag) =>
               dispatch({
                 type: "OPEN_TAG_DIALOG",
@@ -394,6 +511,28 @@ function CategoriesTagsRouteComponent() {
           />
         </div>
       </div>
+
+      <DeleteDialog
+        open={pendingBulkDelete === "category"}
+        onOpenChange={(open) => {
+          if (!open) setPendingBulkDelete(null)
+        }}
+        title={`Delete ${selectedCategoryIds.length} categor${selectedCategoryIds.length === 1 ? "y" : "ies"}?`}
+        description={`Are you sure you want to delete ${selectedCategoryIds.length} selected categor${selectedCategoryIds.length === 1 ? "y" : "ies"}? This action cannot be undone.`}
+        onConfirm={handleConfirmBulkDelete}
+        isPending={bulkDeleteCategoryMutation.isPending}
+      />
+
+      <DeleteDialog
+        open={pendingBulkDelete === "tag"}
+        onOpenChange={(open) => {
+          if (!open) setPendingBulkDelete(null)
+        }}
+        title={`Delete ${selectedTagIds.length} tag${selectedTagIds.length === 1 ? "" : "s"}?`}
+        description={`Are you sure you want to delete ${selectedTagIds.length} selected tag${selectedTagIds.length === 1 ? "" : "s"}? This action cannot be undone.`}
+        onConfirm={handleConfirmBulkDelete}
+        isPending={bulkDeleteTagMutation.isPending}
+      />
 
       <CategoryDialog
         open={state.categoryDialog.open}

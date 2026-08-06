@@ -4,6 +4,7 @@ import * as v from "valibot"
 import { categorySchema, listCategorySchema } from "db/schema/categories"
 import {
   createCategory,
+  deleteCategories,
   deleteCategory,
   getCategory,
   listCategories,
@@ -98,5 +99,13 @@ export const categoriesRouter = {
         await deleteCategory(input.id)
         return { success: true }
       }),
+
+    bulkDelete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(v.object({ ids: v.array(v.string()) }))
+      .output(v.object({ success: v.boolean(), count: v.number() }))
+      .handler(({ input }) => deleteCategories(input.ids)),
   },
 }
