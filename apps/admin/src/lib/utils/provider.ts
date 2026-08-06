@@ -8,9 +8,13 @@ export const providerNames: Record<string, string> = {
 
 export function findModelProvider(
   modelId: string,
+  provider: string,
   models: { modelId: string; provider: string }[],
 ): { modelId: string; provider: string } | undefined {
-  return models.find((m) => m.modelId === modelId)
+  return (
+    models.find((m) => m.modelId === modelId && m.provider === provider) ??
+    models.find((m) => m.modelId === modelId)
+  )
 }
 
 export function getProviderMismatchMessage(
@@ -25,7 +29,7 @@ export function validateModelProviderMatch(
   modelId: string,
   models: { modelId: string; provider: string }[],
 ): { valid: boolean; message?: string } {
-  const modelEntry = findModelProvider(modelId, models)
+  const modelEntry = findModelProvider(modelId, provider, models)
 
   if (modelEntry && modelEntry.provider !== provider) {
     return {
