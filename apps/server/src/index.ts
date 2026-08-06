@@ -90,7 +90,7 @@ const proxyRequestBody = (original: Request): Request => {
   }
 
   return new Proxy(original, {
-    get(target, prop, receiver) {
+    get(target, prop) {
       if (prop === "json") {
         return async () => {
           const body = await cloneBody()
@@ -134,7 +134,7 @@ const proxyRequestBody = (original: Request): Request => {
       if (prop === "bodyUsed") {
         return false
       }
-      return Reflect.get(target, prop, receiver)
+      return Reflect.get(target, prop, target)
     },
   })
 }

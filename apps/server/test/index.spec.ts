@@ -15,6 +15,24 @@ describe("server index", () => {
     expect(body).toEqual({ status: "ok" })
   })
 
+  test("unmatched rpc path returns 404 (url getter on native Request)", async () => {
+    const res = await app.fetch(new Request("http://localhost/rpc/nope"))
+    expect(res.status).toBe(404)
+  })
+
+  test("rpc multipart upload parses FormData through proxy body", async () => {
+    const form = new FormData()
+    form.set("data", JSON.stringify({ json: null }))
+    form.set("0", new File(["x"], "test.txt", { type: "text/plain" }))
+    const res = await app.fetch(
+      new Request("http://localhost/rpc/assets/upload", {
+        method: "POST",
+        body: form,
+      }),
+    )
+    expect(res.status).toBe(401)
+  })
+
   test("orpcCodeForStatus maps ApiError statuses to oRPC codes", () => {
     expect(orpcCodeForStatus(400)).toBe("BAD_REQUEST")
     expect(orpcCodeForStatus(401)).toBe("UNAUTHORIZED")
