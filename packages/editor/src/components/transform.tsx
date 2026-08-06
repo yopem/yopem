@@ -2,7 +2,7 @@
 
 import type { PlateEditor } from "platejs/react"
 
-import { triggerFloatingLink } from "@platejs/link/react"
+import { LinkPlugin } from "@platejs/link/react"
 import {
   insertAudioPlaceholder,
   insertFilePlaceholder,
@@ -13,6 +13,7 @@ import {
   type NodeEntry,
   type Path,
   type TElement,
+  getEditorPlugin,
   KEYS,
   PathApi,
 } from "platejs"
@@ -67,7 +68,13 @@ const insertInlineMap: Record<
   string,
   (editor: PlateEditor, type: string) => void
 > = {
-  [KEYS.link]: (editor) => triggerFloatingLink(editor, { focused: true }),
+  [KEYS.link]: (editor) => {
+    const { api, setOption } = getEditorPlugin(editor, LinkPlugin)
+
+    setOption("mode", "insert")
+    setOption("text", editor.api.string(editor.selection))
+    api.floatingLink.show("insert", editor.id)
+  },
 }
 
 interface InsertBlockOptions {
