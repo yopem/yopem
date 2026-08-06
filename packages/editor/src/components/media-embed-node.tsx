@@ -95,7 +95,9 @@ export const MediaEmbedElement = withHOC(
     })
     const width = useResizableValue("width")
     const provider = embed?.provider
-    const isFacebook = embed?.provider === "facebook"
+    const isFacebook =
+      embed?.provider === "facebook" ||
+      parseFacebookUrl(embed?.url ?? "")?.provider === "facebook"
 
     return (
       <MediaToolbar plugin={MediaEmbedPlugin}>

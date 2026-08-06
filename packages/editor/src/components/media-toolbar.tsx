@@ -29,7 +29,7 @@ import { cva } from "ui/utils"
 import { CaptionButton } from "./caption"
 
 const inputVariants = cva(
-  "placeholder:text-muted-foreground flex h-7 w-full rounded-md border-none bg-transparent px-1.5 py-1 text-base focus-visible:ring-transparent focus-visible:outline-none md:text-sm",
+  "placeholder:text-muted-foreground flex h-9 w-full rounded-md border-none bg-transparent px-2 py-1.5 text-base focus-visible:ring-transparent focus-visible:outline-none md:text-sm",
 )
 
 function useFocusUrlInput(isOpen: boolean) {
@@ -65,6 +65,43 @@ function useFocusUrlInput(isOpen: boolean) {
   }, [isOpen])
 }
 
+function MediaUrlInput({
+  plugin,
+  isNew,
+}: {
+  plugin: WithRequiredKey
+  isNew: boolean
+}) {
+  useFocusUrlInput(true)
+
+  return (
+    <div className="flex w-88 flex-col gap-2 p-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">
+          {isNew ? "Add embed link" : "Edit embed link"}
+        </span>
+      </div>
+
+      <div className="flex items-center rounded-md border px-2">
+        <div className="text-muted-foreground flex items-center pr-2">
+          <LinkIcon className="size-4" />
+        </div>
+
+        <FloatingMediaPrimitive.UrlInput
+          className={inputVariants()}
+          placeholder="Paste the embed link..."
+          data-media-focus
+          options={{ plugin }}
+        />
+      </div>
+
+      <p className="text-muted-foreground text-xs">
+        Paste a YouTube, Twitter/X, or Facebook link, then press Enter
+      </p>
+    </div>
+  )
+}
+
 export function MediaToolbar({
   children,
   plugin,
@@ -82,6 +119,7 @@ export function MediaToolbar({
   )
   const isImagePreviewOpen = useImagePreviewValue("isOpen", editor.id)
   const isEditing = useFloatingMediaValue("isEditing")
+  const url = useFloatingMediaValue("url")
   const open =
     (isFocusedLast || isEditing) &&
     !readOnly &&
@@ -96,8 +134,6 @@ export function MediaToolbar({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  useFocusUrlInput(open && isEditing)
-
   const element = useElement()
   const { props: buttonProps } = useRemoveNodeButton({ element })
 
@@ -106,29 +142,12 @@ export function MediaToolbar({
       {children}
 
       <PopoverContent
-        className="w-auto p-1"
+        className="w-auto p-0"
         initialFocus={false}
         data-media-toolbar
       >
         {isEditing ? (
-          <div className="flex w-82.5 flex-col">
-            <div className="flex items-center">
-              <div className="text-muted-foreground flex items-center pr-1 pl-2">
-                <LinkIcon className="size-4" />
-              </div>
-
-              <FloatingMediaPrimitive.UrlInput
-                className={inputVariants()}
-                placeholder="Paste the embed link..."
-                data-media-focus
-                options={{ plugin }}
-              />
-            </div>
-
-            <p className="text-muted-foreground px-2 py-1 text-xs">
-              Paste a link and press Enter
-            </p>
-          </div>
+          <MediaUrlInput plugin={plugin} isNew={!url} />
         ) : (
           <div className="box-content flex items-center">
             <FloatingMediaPrimitive.EditButton
