@@ -2,7 +2,12 @@
 
 import type { TLinkElement } from "platejs"
 
-import { type UseVirtualFloatingOptions, flip, offset } from "@platejs/floating"
+import {
+  type UseVirtualFloatingOptions,
+  flip,
+  getRangeBoundingClientRect,
+  offset,
+} from "@platejs/floating"
 import { getLinkAttributes } from "@platejs/link"
 import {
   type LinkFloatingToolbarState,
@@ -20,6 +25,7 @@ import {
 } from "lucide-react"
 import { KEYS } from "platejs"
 import { useEditorRef, useFormInputProps, usePluginOption } from "platejs/react"
+import { useEffect } from "react"
 
 import { buttonVariants } from "ui/button"
 import { Separator } from "ui/separator"
@@ -32,6 +38,30 @@ const popoverVariants = cva(
 const inputVariants = cva(
   "placeholder:text-muted-foreground flex h-7 w-full rounded-md border-none bg-transparent px-1.5 py-1 text-base focus-visible:ring-transparent focus-visible:outline-none md:text-sm",
 )
+
+function useFocusUrlInput(isOpen: boolean) {
+  useEffect(() => {
+    if (!isOpen) return
+
+    let attempts = 0
+    let timeout = 0
+
+    function focusUrlInput() {
+      const input =
+        document.querySelector<HTMLInputElement>("[data-plate-focus]")
+      if (input && document.activeElement !== input) {
+        input.focus()
+      }
+      if (attempts++ < 20) {
+        timeout = window.setTimeout(focusUrlInput, 15)
+      }
+    }
+
+    focusUrlInput()
+
+    return () => window.clearTimeout(timeout)
+  }, [isOpen])
+}
 
 export function LinkFloatingToolbar({
   state,
@@ -56,13 +86,18 @@ export function LinkFloatingToolbar({
       activeSuggestionId || activeCommentId ? "top-start" : "bottom-start",
   }
 
+  const editor = useEditorRef()
+
   const insertState = useFloatingLinkInsertState({
     ...state,
     floatingOptions: {
+      getBoundingClientRect: () =>
+        getRangeBoundingClientRect(editor, editor.selection),
       ...floatingOptions,
       ...state?.floatingOptions,
     },
   })
+  useFocusUrlInput(insertState.isOpen)
   const {
     hidden,
     props: insertProps,
