@@ -37,7 +37,7 @@
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "dotenv-cli": "catalog:",
-    "oxlint-tailwindcss": "^1.6.0",
+    "oxlint-tailwindcss": "^1.7.0",
     "playwright": "^1.62.1",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
