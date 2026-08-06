@@ -88,6 +88,7 @@ interface InlineComboboxContextValue {
   filter: FilterFn | false
   inputProps: UseComboboxInputResult["props"]
   inputRef: RefObject<HTMLInputElement | null>
+  listboxRef: RefObject<HTMLDivElement | null>
   open: boolean
   removeInput: UseComboboxInputResult["removeInput"]
   setActiveValue: (value: string | null) => void
@@ -107,8 +108,6 @@ interface InlineComboboxContextValue {
 const InlineComboboxContext = createContext<InlineComboboxContextValue | null>(
   null,
 )
-
-const listboxRef: RefObject<HTMLDivElement | null> = { current: null }
 
 function scrollActiveIntoView(
   listbox: HTMLDivElement | null,
@@ -167,6 +166,7 @@ export function InlineCombobox({
 }: InlineComboboxProps) {
   const editor = useEditorRef()
   const inputRef = useRef<HTMLInputElement>(null)
+  const listboxRef = useRef<HTMLDivElement>(null)
   const cursorState = useHTMLInputCursorState(inputRef)
 
   const [valueState, setValueState] = useState("")
@@ -307,6 +307,7 @@ export function InlineCombobox({
       filter,
       inputProps: { ...inputProps, onKeyDown: handleKeyDown },
       inputRef,
+      listboxRef,
       open,
       register,
       removeInput,
@@ -324,6 +325,7 @@ export function InlineCombobox({
       handleKeyDown,
       inputProps,
       inputRef,
+      listboxRef,
       open,
       register,
       removeInput,
@@ -403,21 +405,76 @@ export function InlineComboboxContent({
   if (!context)
     throw new Error("InlineComboboxContent must be inside InlineCombobox")
 
-  const { inputRef, open } = context
+  const { inputRef, listboxRef, open, visibleValues } = context
   const [style, setStyle] = useState<React.CSSProperties>({})
 
-  useLayoutEffect(() => {
+  const updatePosition = useCallback(() => {
     const input = inputRef.current
     if (!input || !open) return
 
     const rect = input.getBoundingClientRect()
+    if (rect.width === 0 && rect.height === 0) return
+
+    const viewportHeight = window.innerHeight
+    const viewportWidth = window.innerWidth
+
+    const listbox = listboxRef.current
+    const listboxHeight = listbox?.offsetHeight ?? 320
+    const listboxWidth = listbox?.offsetWidth ?? 320
+
+    const margin = 8
+    const spaceBelow = viewportHeight - rect.bottom - margin
+    const spaceAbove = rect.top - margin
+
+    const showAbove =
+      spaceBelow < Math.min(listboxHeight, 200) && spaceAbove > spaceBelow
+
+    let top: number | undefined
+    let bottom: number | undefined
+    let maxHeight: number
+
+    if (showAbove) {
+      bottom = viewportHeight - rect.top + 4
+      maxHeight = Math.max(80, Math.min(320, spaceAbove - 4))
+    } else {
+      top = rect.bottom + 4
+      maxHeight = Math.max(80, Math.min(320, spaceBelow - 4))
+    }
+
+    let left = rect.left
+    if (left + listboxWidth > viewportWidth - margin) {
+      left = Math.max(margin, viewportWidth - listboxWidth - margin)
+    }
+    left = Math.max(margin, left)
+
     setStyle({
       position: "fixed",
-      top: rect.bottom,
-      left: rect.left,
+      top: top ?? "auto",
+      bottom: bottom ?? "auto",
+      left,
+      maxHeight,
       zIndex: 500,
     })
-  }, [inputRef, open])
+  }, [inputRef, listboxRef, open])
+
+  useLayoutEffect(() => {
+    if (!open) return
+
+    updatePosition()
+
+    window.addEventListener("scroll", updatePosition, true)
+    window.addEventListener("resize", updatePosition)
+
+    const rafId = requestAnimationFrame(() => {
+      updatePosition()
+    })
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true)
+      window.removeEventListener("resize", updatePosition)
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, updatePosition, visibleValues])
 
   if (typeof document === "undefined") return null
 
@@ -427,7 +484,7 @@ export function InlineComboboxContent({
       role="listbox"
       aria-label="Suggestions"
       className={cn(
-        "bg-popover text-popover-foreground max-h-80 w-80 overflow-y-auto rounded-xl border p-1 shadow-lg/5",
+        "bg-popover text-popover-foreground w-80 overflow-y-auto rounded-xl border p-1 shadow-lg/5",
         !open && "hidden",
         className,
       )}
