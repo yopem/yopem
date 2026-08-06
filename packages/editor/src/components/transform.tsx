@@ -18,6 +18,8 @@ import {
   PathApi,
 } from "platejs"
 
+import { EmbedInsertStore } from "editor/floating-embed-toolbar"
+
 function insertList(editor: PlateEditor, type: string) {
   editor.tf.insertNodes(
     editor.api.create.block({
@@ -74,6 +76,9 @@ const insertInlineMap: Record<
     setOption("mode", "insert")
     setOption("text", editor.api.string(editor.selection))
     api.floatingLink.show("insert", editor.id)
+  },
+  [KEYS.mediaEmbed]: () => {
+    EmbedInsertStore.set(true)
   },
 }
 

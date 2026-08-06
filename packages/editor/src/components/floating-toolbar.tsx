@@ -17,6 +17,7 @@ import {
   usePluginOption,
 } from "platejs/react"
 
+import { useEmbedInsertOpen } from "editor/floating-embed-toolbar"
 import { Toolbar } from "ui/toolbar"
 import { cn } from "ui/utils"
 
@@ -31,11 +32,12 @@ export function FloatingToolbar({
   const editorId = useEditorId()
   const focusedEditorId = useEventEditorValue("focus")
   const isFloatingLinkOpen = !!usePluginOption({ key: KEYS.link }, "mode")
+  const isEmbedInsertOpen = useEmbedInsertOpen()
 
   const floatingToolbarState = useFloatingToolbarState({
     editorId,
     focusedEditorId,
-    hideToolbar: isFloatingLinkOpen,
+    hideToolbar: isFloatingLinkOpen || isEmbedInsertOpen,
     ...state,
     floatingOptions: {
       middleware: [

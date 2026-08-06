@@ -7,7 +7,9 @@ import {
   MediaEmbedPlugin,
   VideoPlugin,
 } from "@platejs/media/react"
+import { createPlatePlugin } from "platejs/react"
 
+import { FloatingEmbedInsertToolbar } from "editor/floating-embed-toolbar"
 import { AudioElement } from "editor/media-audio-node"
 import { MediaEmbedElement } from "editor/media-embed-node"
 import { FileElement } from "editor/media-file-node"
@@ -41,6 +43,12 @@ export const MediaKit = [
   MediaEmbedPlugin.configure({
     node: {
       component: MediaEmbedElement,
+    },
+  }),
+  createPlatePlugin({
+    key: "floating-embed-toolbar",
+    render: {
+      afterEditable: () => <FloatingEmbedInsertToolbar />,
     },
   }),
 ]

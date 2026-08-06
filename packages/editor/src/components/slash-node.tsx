@@ -3,9 +3,8 @@
 import type { PlateEditor, PlateElementProps } from "platejs/react"
 import type { ReactNode } from "react"
 
-import { insertMediaEmbed } from "@platejs/media"
-import { FloatingMediaStore } from "@platejs/media/react"
 import {
+  CodeIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -18,7 +17,6 @@ import {
 import { type TComboboxInputElement, KEYS } from "platejs"
 import { PlateElement } from "platejs/react"
 
-import { FacebookIcon, TwitterIcon, YoutubeIcon } from "editor/brand-icons"
 import { insertBlock, insertInlineElement } from "editor/transform"
 
 import {
@@ -107,46 +105,26 @@ const groups: Group[] = [
         label: "Link",
         value: KEYS.link,
       },
+      {
+        focusEditor: true,
+        icon: <CodeIcon />,
+        keywords: [
+          "youtube",
+          "twitter",
+          "tweet",
+          "x",
+          "facebook",
+          "post",
+          "video",
+          "embed",
+        ],
+        label: "Embed",
+        value: KEYS.mediaEmbed,
+      },
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
         insertInlineElement(editor, value)
-      },
-    })),
-  },
-  {
-    group: "Media",
-    items: [
-      {
-        focusEditor: true,
-        icon: <YoutubeIcon />,
-        keywords: ["youtube"],
-        label: "YouTube",
-        value: "media-embed-youtube",
-      },
-      {
-        focusEditor: true,
-        icon: <TwitterIcon />,
-        keywords: ["tweet", "twitter", "x"],
-        label: "Twitter",
-        value: "media-embed-twitter",
-      },
-      {
-        focusEditor: true,
-        icon: <FacebookIcon />,
-        keywords: ["facebook", "post"],
-        label: "Facebook",
-        value: "media-embed-facebook",
-      },
-    ].map((item) => ({
-      ...item,
-      onSelect: (editor) => {
-        if (!editor.selection) {
-          editor.tf.focus()
-        }
-        FloatingMediaStore.set("url", "")
-        insertMediaEmbed(editor, {}, { select: true })
-        FloatingMediaStore.set("isEditing", true)
       },
     })),
   },
