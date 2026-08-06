@@ -1,7 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { tagsTable } from "db/schema"
+import { productTagsTable, tagsTable } from "db/schema"
 import type { SelectTag } from "db/schema/tags"
 
 import { assertSlugAvailable, generateUniqueTagSlug } from "./slug"
@@ -75,6 +75,7 @@ export const updateTag = async (input: {
 }
 
 export const deleteTag = async (id: string): Promise<void> => {
+  await db.delete(productTagsTable).where(eq(productTagsTable.tagId, id))
   await db.delete(tagsTable).where(eq(tagsTable.id, id))
 }
 
@@ -84,6 +85,7 @@ export const deleteTags = async (
   if (ids.length === 0) {
     return { success: true, count: 0 }
   }
+  await db.delete(productTagsTable).where(inArray(productTagsTable.tagId, ids))
   const deleted = await db
     .delete(tagsTable)
     .where(inArray(tagsTable.id, ids))

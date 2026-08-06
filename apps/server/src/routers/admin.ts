@@ -164,6 +164,7 @@ export const adminRouter = {
 
         void redisCache.invalidatePattern("models:*")
         void redisCache.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+        void redisCache.deleteCache("admin:metrics:api_key_stats")
 
         return { success: true, id: newKey.id }
       }),
@@ -258,6 +259,7 @@ export const adminRouter = {
 
         void redisCache.invalidatePattern("models:*")
         void redisCache.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+        void redisCache.deleteCache("admin:metrics:api_key_stats")
 
         return { success: true }
       }),
@@ -300,6 +302,7 @@ export const adminRouter = {
 
         void redisCache.invalidatePattern("models:*")
         void redisCache.deleteCache(`settings:${API_KEYS_SETTING_KEY}`)
+        void redisCache.deleteCache("admin:metrics:api_key_stats")
 
         return { success: true }
       }),

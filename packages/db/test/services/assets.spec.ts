@@ -48,7 +48,7 @@ describe("assets service", () => {
   })
 
   test("deleteAsset resolves", async () => {
-    mockDb.setReturn([[]])
+    mockDb.setReturn([[], []])
     await expect(deleteAsset("a1")).resolves.toBeUndefined()
   })
 

@@ -89,7 +89,7 @@ describe("products service", () => {
   })
 
   test("deleteProduct returns true when deleted", async () => {
-    mockDb.setReturn([[{ id: "p1" }]])
+    mockDb.setReturn([[], [], [], [], [{ id: "p1" }]])
     const result = await deleteProduct("p1")
     expect(result).toBe(true)
   })

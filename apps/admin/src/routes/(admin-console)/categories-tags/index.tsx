@@ -385,12 +385,25 @@ function CategoriesTagsRouteComponent() {
     }
   }
 
-  const handleToggleAllCategories = (visibleIds: string[]) => {
-    setSelectedCategoryIds(visibleIds)
+  const handleToggleAllCategories = (
+    visibleIds: string[],
+    allSelected: boolean,
+  ) => {
+    setSelectedCategoryIds((prev) => {
+      if (allSelected) {
+        return prev.filter((id) => !visibleIds.includes(id))
+      }
+      return Array.from(new Set([...prev, ...visibleIds]))
+    })
   }
 
-  const handleToggleAllTags = (visibleIds: string[]) => {
-    setSelectedTagIds(visibleIds)
+  const handleToggleAllTags = (visibleIds: string[], allSelected: boolean) => {
+    setSelectedTagIds((prev) => {
+      if (allSelected) {
+        return prev.filter((id) => !visibleIds.includes(id))
+      }
+      return Array.from(new Set([...prev, ...visibleIds]))
+    })
   }
 
   const handleToggleCategory = (id: string) => {

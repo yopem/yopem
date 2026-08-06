@@ -496,6 +496,16 @@ export const updateProduct = async (
 }
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
+  await Promise.all([
+    db
+      .delete(productCategoriesTable)
+      .where(eq(productCategoriesTable.productId, id)),
+    db.delete(productTagsTable).where(eq(productTagsTable.productId, id)),
+    db.delete(productRunsTable).where(eq(productRunsTable.productId, id)),
+    db
+      .delete(productVersionsTable)
+      .where(eq(productVersionsTable.productId, id)),
+  ])
   const [result] = await db
     .delete(productsTable)
     .where(eq(productsTable.id, id))

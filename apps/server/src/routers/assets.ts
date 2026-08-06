@@ -13,7 +13,6 @@ import {
   listAssets,
 } from "db/services/assets"
 import { generateUniqueAssetFilename } from "db/services/slug"
-import { r2Domain } from "env"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
@@ -164,7 +163,7 @@ export const assetsRouter = {
         }
 
         const r2 = getR2Storage()
-        const key = asset.url.replace(r2Domain, "").replace(/^\//, "")
+        const key = new URL(asset.url).pathname.replace(/^\//, "")
 
         try {
           await r2.deleteFile(key)

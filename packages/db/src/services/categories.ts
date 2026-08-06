@@ -1,7 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { categoriesTable } from "db/schema"
+import { categoriesTable, productCategoriesTable } from "db/schema"
 import type { SelectCategory } from "db/schema/categories"
 
 import { generateUniqueCategorySlug, assertSlugAvailable } from "./slug"
@@ -176,6 +176,9 @@ export const updateCategory = async (input: {
 }
 
 export const deleteCategory = async (id: string): Promise<void> => {
+  await db
+    .delete(productCategoriesTable)
+    .where(eq(productCategoriesTable.categoryId, id))
   await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
 }
 
@@ -185,6 +188,9 @@ export const deleteCategories = async (
   if (ids.length === 0) {
     return { success: true, count: 0 }
   }
+  await db
+    .delete(productCategoriesTable)
+    .where(inArray(productCategoriesTable.categoryId, ids))
   const deleted = await db
     .delete(categoriesTable)
     .where(inArray(categoriesTable.id, ids))

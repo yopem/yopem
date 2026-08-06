@@ -45,12 +45,18 @@ function useFocusUrlInput(isOpen: boolean) {
 
     let attempts = 0
     let timeout = 0
+    let cancelled = false
 
     function focusUrlInput() {
-      const input =
-        document.querySelector<HTMLInputElement>("[data-plate-focus]")
-      if (input && document.activeElement !== input) {
-        input.focus()
+      if (cancelled) return
+      const input = document.querySelector<HTMLInputElement>(
+        "[data-link-toolbar] [data-plate-focus]",
+      )
+      if (input) {
+        if (document.activeElement !== input) {
+          input.focus()
+        }
+        if (document.activeElement === input) return
       }
       if (attempts++ < 20) {
         timeout = window.setTimeout(focusUrlInput, 15)
@@ -59,7 +65,10 @@ function useFocusUrlInput(isOpen: boolean) {
 
     focusUrlInput()
 
-    return () => window.clearTimeout(timeout)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+    }
   }, [isOpen])
 }
 
@@ -185,7 +194,12 @@ export function LinkFloatingToolbar({
 
   return (
     <>
-      <div ref={insertRef} className={popoverVariants()} {...insertProps}>
+      <div
+        ref={insertRef}
+        data-link-toolbar
+        className={popoverVariants()}
+        {...insertProps}
+      >
         {input}
       </div>
 

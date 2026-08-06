@@ -13,6 +13,27 @@ import {
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
+const isSlugConflict = (message: string) =>
+  message.startsWith('Slug "') && message.endsWith('" is already in use')
+
+function mapTagError(error: unknown): never {
+  if (error instanceof Error) {
+    if (error.message === "Update returned no rows") {
+      throw new ORPCError("NOT_FOUND", {
+        status: 404,
+        message: "Tag not found",
+      })
+    }
+    if (isSlugConflict(error.message)) {
+      throw new ORPCError("CONFLICT", {
+        status: 409,
+        message: error.message,
+      })
+    }
+  }
+  throw error
+}
+
 export const tagsRouter = {
   tags: {
     list: os
@@ -50,7 +71,13 @@ export const tagsRouter = {
         }),
       )
       .output(tagSchema)
-      .handler(({ input }) => createTag(input)),
+      .handler(async ({ input }) => {
+        try {
+          return await createTag(input)
+        } catch (error) {
+          return mapTagError(error)
+        }
+      }),
 
     update: os
       .route({ method: "POST" })
@@ -72,16 +99,7 @@ export const tagsRouter = {
         try {
           return await updateTag(input)
         } catch (error) {
-          if (
-            error instanceof Error &&
-            error.message === "Update returned no rows"
-          ) {
-            throw new ORPCError("NOT_FOUND", {
-              status: 404,
-              message: "Tag not found",
-            })
-          }
-          throw error
+          return mapTagError(error)
         }
       }),
 

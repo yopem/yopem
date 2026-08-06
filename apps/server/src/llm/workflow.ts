@@ -196,14 +196,28 @@ async function resolveKeyAndModel(
   return { apiKey: decryptedKey, provider, modelEngine }
 }
 
+function substituteVariableReferences(expression: string): string {
+  return expression.replace(
+    /(['"])\{\{([^}]+)\}\}\1|\{\{([^}]+)\}\}/g,
+    (
+      _,
+      _quote: string | undefined,
+      quotedKey: string | undefined,
+      bareKey: string | undefined,
+    ) => `vars[${JSON.stringify((quotedKey ?? bareKey ?? "").trim())}]`,
+  )
+}
+
 function evaluateCondition(
   expression: string,
   variables: Record<string, unknown>,
 ): boolean {
-  const replaced = replaceVariables(expression, variables)
   try {
     // oxlint-disable-next-line typescript/no-implied-eval -- deliberate sandboxed expression evaluation for workflow conditions
-    const fn = new Function("vars", `with(vars) { return !!(${replaced}); }`)
+    const fn = new Function(
+      "vars",
+      `with(vars) { return !!(${substituteVariableReferences(expression)}); }`,
+    )
     return fn({ ...variables }) as boolean
   } catch {
     return false
@@ -214,10 +228,12 @@ function evaluateLoopItems(
   itemsExpression: string,
   variables: Record<string, unknown>,
 ): unknown[] {
-  const replaced = replaceVariables(itemsExpression, variables)
   try {
     // oxlint-disable-next-line typescript/no-implied-eval -- deliberate sandboxed expression evaluation for workflow loops
-    const fn = new Function("vars", `with(vars) { return ${replaced}; }`)
+    const fn = new Function(
+      "vars",
+      `with(vars) { return ${substituteVariableReferences(itemsExpression)}; }`,
+    )
     const result = fn({ ...variables })
     if (Array.isArray(result)) return result
     return []
@@ -265,9 +281,19 @@ export async function executeWorkflow(
 
   const sortedIds = topologicalSort(workflow.nodes, workflow.edges)
   const activeIds = new Set(sortedIds)
+  const deadIds = new Set<string>()
 
   for (const nodeId of sortedIds) {
     if (!activeIds.has(nodeId)) continue
+
+    const incomingEdges = workflow.edges.filter((e) => e.target === nodeId)
+    const allUpstreamDead =
+      incomingEdges.length > 0 &&
+      incomingEdges.every((e) => deadIds.has(e.source))
+    if (allUpstreamDead) {
+      deadIds.add(nodeId)
+      continue
+    }
 
     const node = getNodeById(workflow.nodes, nodeId)
     if (!node) continue
@@ -321,6 +347,7 @@ export async function executeWorkflow(
                 : matched
         if (!branchMatches) {
           activeIds.delete(edge.target)
+          deadIds.add(edge.target)
         }
       }
       continue

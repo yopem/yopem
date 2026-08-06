@@ -13,6 +13,39 @@ import {
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
 
+const PARENT_ERROR_MESSAGES = [
+  "Parent category not found",
+  "A category cannot be its own parent",
+  "Cannot assign a descendant as parent",
+]
+
+const isSlugConflict = (message: string) =>
+  message.startsWith('Slug "') && message.endsWith('" is already in use')
+
+function mapCategoryError(error: unknown): never {
+  if (error instanceof Error) {
+    if (error.message === "Update returned no rows") {
+      throw new ORPCError("NOT_FOUND", {
+        status: 404,
+        message: "Category not found",
+      })
+    }
+    if (PARENT_ERROR_MESSAGES.includes(error.message)) {
+      throw new ORPCError("BAD_REQUEST", {
+        status: 400,
+        message: error.message,
+      })
+    }
+    if (isSlugConflict(error.message)) {
+      throw new ORPCError("CONFLICT", {
+        status: 409,
+        message: error.message,
+      })
+    }
+  }
+  throw error
+}
+
 export const categoriesRouter = {
   categories: {
     list: os
@@ -52,7 +85,13 @@ export const categoriesRouter = {
         }),
       )
       .output(categorySchema)
-      .handler(({ input }) => createCategory(input)),
+      .handler(async ({ input }) => {
+        try {
+          return await createCategory(input)
+        } catch (error) {
+          return mapCategoryError(error)
+        }
+      }),
 
     update: os
       .route({ method: "POST" })
@@ -76,16 +115,7 @@ export const categoriesRouter = {
         try {
           return await updateCategory(input)
         } catch (error) {
-          if (
-            error instanceof Error &&
-            error.message === "Update returned no rows"
-          ) {
-            throw new ORPCError("NOT_FOUND", {
-              status: 404,
-              message: "Category not found",
-            })
-          }
-          throw error
+          return mapCategoryError(error)
         }
       }),
 

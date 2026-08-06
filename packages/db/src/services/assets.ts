@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm"
 
 import { db } from "db"
-import { adminSettingsTable, assetsTable } from "db/schema"
+import { adminSettingsTable, assetsTable, productsTable } from "db/schema"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
 import type { SelectAsset } from "db/schema/assets"
 
@@ -58,6 +58,10 @@ export const insertAsset = async (data: {
 }
 
 export const deleteAsset = async (id: string): Promise<void> => {
+  await db
+    .update(productsTable)
+    .set({ thumbnailId: null })
+    .where(eq(productsTable.thumbnailId, id))
   await db.delete(assetsTable).where(eq(assetsTable.id, id))
 }
 

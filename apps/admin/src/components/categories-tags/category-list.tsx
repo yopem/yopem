@@ -25,7 +25,7 @@ interface CategoryListProps {
   categories: Category[] | undefined
   isLoading: boolean
   selectedIds: string[]
-  onToggleAll: (visibleIds: string[]) => void
+  onToggleAll: (visibleIds: string[], allSelected: boolean) => void
   onToggleItem: (id: string) => void
   onEdit: (category: Category) => void
   onDelete: (id: string) => void
@@ -60,14 +60,9 @@ export function CategoryList({
 
   const handleToggleAll = () => {
     const visibleIds = visibleTree.map(({ node }) => node.id)
-    if (
-      visibleIds.length > 0 &&
-      visibleIds.every((id) => selectedSet.has(id))
-    ) {
-      onToggleAll([])
-    } else {
-      onToggleAll(visibleIds)
-    }
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedSet.has(id))
+    onToggleAll(visibleIds, allSelected)
   }
 
   const handleDelete = (id: string) => {

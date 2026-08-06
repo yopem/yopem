@@ -295,14 +295,21 @@ export function useProductForm({
 
   useEffect(() => {
     const workflow = form.getFieldValue("workflow")
-    const currentModel = getDefaultModelFromWorkflow(workflow)
-    if (availableModels.length > 0 && !currentModel) {
-      const firstAiNode = workflow.nodes.find((n) => n.type === "ai")
-      if (firstAiNode?.type === "ai") {
-        firstAiNode.data.modelEngine = availableModels[0]
-        form.setFieldValue("workflow", { ...workflow })
-      }
+    if (availableModels.length === 0 || getDefaultModelFromWorkflow(workflow)) {
+      return
     }
+    const aiIndex = workflow.nodes.findIndex((n) => n.type === "ai")
+    if (aiIndex === -1) return
+    const aiNode = workflow.nodes[aiIndex]
+    if (aiNode.type !== "ai" || aiNode.data.modelEngine) return
+    form.setFieldValue("workflow", {
+      ...workflow,
+      nodes: workflow.nodes.map((n, index) =>
+        index === aiIndex && n.type === "ai"
+          ? { ...n, data: { ...n.data, modelEngine: availableModels[0] } }
+          : n,
+      ),
+    })
   }, [availableModels, form])
 
   const onInitialDataLoaded = useEffectEvent(() => {
@@ -313,7 +320,7 @@ export function useProductForm({
       form.setFieldValue("excerpt", initialData.excerpt ?? "")
 
       if (initialData.workflow && typeof initialData.workflow === "object") {
-        form.setFieldValue("workflow", initialData.workflow)
+        form.setFieldValue("workflow", structuredClone(initialData.workflow))
       }
 
       if (initialData.outputFormat) {
@@ -430,7 +437,7 @@ function getInitialDescriptionContent(initialData?: SelectProduct): TElement[] {
             typeof node.text === "string" &&
             node.text.trim() !== "")),
     )
-  if (hasContent) return existingContent as TElement[]
+  if (hasContent) return structuredClone(existingContent) as TElement[]
   if (initialData.description) {
     return deserializeHtmlToSlate(initialData.description)
   }

@@ -20,7 +20,7 @@ interface TagListProps {
   tags: Tag[] | undefined
   isLoading: boolean
   selectedIds: string[]
-  onToggleAll: (visibleIds: string[]) => void
+  onToggleAll: (visibleIds: string[], allSelected: boolean) => void
   onToggleItem: (id: string) => void
   onEdit: (tag: Tag) => void
   onDelete: (id: string) => void
@@ -53,14 +53,9 @@ export function TagList({
 
   const handleToggleAll = () => {
     const visibleIds = visibleTags.map((tag) => tag.id)
-    if (
-      visibleIds.length > 0 &&
-      visibleIds.every((id) => selectedSet.has(id))
-    ) {
-      onToggleAll([])
-    } else {
-      onToggleAll(visibleIds)
-    }
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedSet.has(id))
+    onToggleAll(visibleIds, allSelected)
   }
 
   const handleConfirm = () => {
