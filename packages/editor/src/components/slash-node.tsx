@@ -144,6 +144,7 @@ const groups: Group[] = [
         if (!editor.selection) {
           editor.tf.focus()
         }
+        FloatingMediaStore.set("url", "")
         insertMediaEmbed(editor, {}, { select: true })
         FloatingMediaStore.set("isEditing", true)
       },
