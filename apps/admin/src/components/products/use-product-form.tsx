@@ -159,12 +159,17 @@ export function useProductForm({
 
   const defaultWorkflow = useMemo(() => createDefaultWorkflow("", "plain"), [])
 
+  const initialDescriptionContent = useMemo(
+    () => getInitialDescriptionContent(initialData),
+    [initialData],
+  )
+
   const form = useForm({
     defaultValues: {
       name: "",
       slug: "",
       description: "",
-      descriptionContent: [] as TElement[],
+      descriptionContent: initialDescriptionContent,
       excerpt: "",
       workflow: defaultWorkflow,
       outputFormat: "plain" as "plain" | "json" | "image" | "video",
@@ -305,31 +310,6 @@ export function useProductForm({
       form.setFieldValue("name", initialData.name)
       form.setFieldValue("slug", initialData.slug ?? "")
       form.setFieldValue("description", initialData.description ?? "")
-      const existingContent = (
-        initialData as { descriptionContent?: TElement[] }
-      ).descriptionContent
-      const hasContent =
-        existingContent &&
-        Array.isArray(existingContent) &&
-        existingContent.some(
-          (node) =>
-            node &&
-            typeof node === "object" &&
-            (("children" in node &&
-              Array.isArray(node.children) &&
-              node.children.length > 0) ||
-              ("text" in node &&
-                typeof node.text === "string" &&
-                node.text.trim() !== "")),
-        )
-      if (hasContent) {
-        form.setFieldValue("descriptionContent", existingContent)
-      } else if (initialData.description) {
-        form.setFieldValue(
-          "descriptionContent",
-          deserializeHtmlToSlate(initialData.description),
-        )
-      }
       form.setFieldValue("excerpt", initialData.excerpt ?? "")
 
       if (initialData.workflow && typeof initialData.workflow === "object") {
@@ -432,6 +412,29 @@ export function useProductForm({
     createTagMutation,
     handleWorkflowChange,
   }
+}
+
+function getInitialDescriptionContent(initialData?: SelectProduct): TElement[] {
+  if (!initialData) return []
+  const existingContent = initialData.descriptionContent
+  const hasContent =
+    Array.isArray(existingContent) &&
+    existingContent.some(
+      (node) =>
+        node &&
+        typeof node === "object" &&
+        (("children" in node &&
+          Array.isArray(node.children) &&
+          node.children.length > 0) ||
+          ("text" in node &&
+            typeof node.text === "string" &&
+            node.text.trim() !== "")),
+    )
+  if (hasContent) return existingContent as TElement[]
+  if (initialData.description) {
+    return deserializeHtmlToSlate(initialData.description)
+  }
+  return []
 }
 
 function getDefaultModelFromWorkflow(workflow: ProductWorkflow): string {
