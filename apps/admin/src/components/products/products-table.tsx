@@ -23,7 +23,7 @@ interface ProductsTableProps {
   products: Product[]
   isLoading: boolean
   selectedProductIds: string[]
-  onToggleAll: () => void
+  onToggleAll: (checked: boolean) => void
   onToggleProduct: (productId: string) => void
   onDelete: (product: { id: string; name: string }) => void
   duplicateMutation: UseMutationResult<
@@ -53,6 +53,10 @@ export function ProductsTable({
               checked={
                 products.length > 0 &&
                 selectedProductIds.length === products.length
+              }
+              indeterminate={
+                selectedProductIds.length > 0 &&
+                selectedProductIds.length !== products.length
               }
               onCheckedChange={onToggleAll}
             />

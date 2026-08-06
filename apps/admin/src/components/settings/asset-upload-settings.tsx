@@ -1,6 +1,7 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
+import { useEffect } from "react"
 import * as v from "valibot"
 
 import { Button } from "ui/button"
@@ -33,6 +34,10 @@ export function AssetUploadSettings({
       onSave(value.maxUploadSize)
     },
   })
+
+  useEffect(() => {
+    form.setFieldValue("maxUploadSize", defaultMaxUploadSize)
+  }, [defaultMaxUploadSize, form])
 
   return (
     <div className="mt-8">

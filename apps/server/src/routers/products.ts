@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { executeWorkflow } from "server/llm/workflow"
+import { enforceRateLimit } from "server/rate-limit"
 import * as v from "valibot"
 
 import { redisCache } from "cache"
@@ -235,6 +236,7 @@ export const productsRouter = {
       .input(productExecuteInputSchema)
       .handler(async ({ context, input }) => {
         const session = context.session
+        await enforceRateLimit(redisCache.getRedisClient, session.id, "execute")
         const { id: productId, inputs } = input
 
         const product = await getProductById(productId)

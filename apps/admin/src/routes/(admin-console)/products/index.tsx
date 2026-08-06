@@ -158,13 +158,18 @@ function ProductsRouteComponent() {
     }
   }, [selectedProduct, deleteProductMutation])
 
-  const handleToggleAll = useCallback(() => {
-    if (selectedProductIds.length === products.length) {
-      setSelectedProductIds([])
-    } else {
-      setSelectedProductIds(products.map((t) => t.id))
-    }
-  }, [selectedProductIds.length, products])
+  const handleToggleAll = useCallback(
+    (checked: boolean) => {
+      setSelectedProductIds((prev) => {
+        const visibleIds = products.map((t) => t.id)
+        if (checked) {
+          return Array.from(new Set([...prev, ...visibleIds]))
+        }
+        return prev.filter((id) => !visibleIds.includes(id))
+      })
+    },
+    [products],
+  )
 
   const handleToggleProduct = useCallback((productId: string) => {
     setSelectedProductIds((prev) =>

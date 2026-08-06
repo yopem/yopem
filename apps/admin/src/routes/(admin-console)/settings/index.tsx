@@ -84,6 +84,9 @@ function SettingsRouteComponent() {
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.apiKeyList.queryKey(),
         })
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.admin.apiKeyStats.queryKey(),
+        })
       },
       onError: (e: Error) => {
         toastManager.add({

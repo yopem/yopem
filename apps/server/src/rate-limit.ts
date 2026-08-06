@@ -73,19 +73,25 @@ export const RATE_LIMITS = {
     maxRequests: 5,
     windowMs: 60000,
   },
+  PRODUCT_EXECUTE: {
+    maxRequests: 30,
+    windowMs: 60000,
+  },
 } as const
 
 export async function enforceRateLimit(
   getRedisClient: () => Promise<RedisClient | null>,
   sessionId: string,
-  action: "add" | "update" | "delete",
+  action: "add" | "update" | "delete" | "execute",
 ): Promise<void> {
   const limits =
     action === "add"
       ? RATE_LIMITS.API_KEY_ADD
       : action === "update"
         ? RATE_LIMITS.API_KEY_UPDATE
-        : RATE_LIMITS.API_KEY_DELETE
+        : action === "delete"
+          ? RATE_LIMITS.API_KEY_DELETE
+          : RATE_LIMITS.PRODUCT_EXECUTE
 
   const result = await checkRateLimit(
     getRedisClient,

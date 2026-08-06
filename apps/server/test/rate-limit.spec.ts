@@ -33,6 +33,7 @@ describe("checkRateLimit", () => {
 
   test("exports rate limit presets", () => {
     expect(RATE_LIMITS.API_KEY_ADD.maxRequests).toBe(5)
+    expect(RATE_LIMITS.PRODUCT_EXECUTE.maxRequests).toBe(30)
   })
 })
 
@@ -48,7 +49,7 @@ describe("enforceRateLimit", () => {
   })
 
   test("does not throw for each action when redis is unavailable", () => {
-    for (const action of ["add", "update", "delete"] as const) {
+    for (const action of ["add", "update", "delete", "execute"] as const) {
       expect(
         enforceRateLimit(() => Promise.resolve(null), "session-1", action),
       ).resolves.toBeUndefined()
