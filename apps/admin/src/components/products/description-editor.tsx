@@ -1,13 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { TElement } from "editor"
 import { Editor, EditorContainer, Plate, usePlateEditor } from "editor"
 import { EditorKit } from "editor/editor-kit"
 import { FloatingToolbar } from "editor/floating-toolbar"
 import { FloatingToolbarButtons } from "editor/floating-toolbar-buttons"
-import { serializeSlateToHtml } from "editor/serialize"
+import { serializeSlateToHtml, slateToPlainText } from "editor/serialize"
 
 interface DescriptionEditorProps {
   initialValue: TElement[]
@@ -28,6 +28,8 @@ export function DescriptionEditor({
     [],
   )
 
+  const [isEmpty, setIsEmpty] = useState(() => isEditorEmpty(initialValue))
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onChangeRef = useRef(onChange)
   const onBlurRef = useRef(onBlur)
@@ -47,6 +49,7 @@ export function DescriptionEditor({
   }, [])
 
   const handleChange = useCallback(({ value }: { value: TElement[] }) => {
+    setIsEmpty(isEditorEmpty(value))
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       void serializeSlateToHtml(value)
@@ -81,8 +84,13 @@ export function DescriptionEditor({
       <EditorContainer
         variant="default"
         onBlurCapture={handleBlur}
-        className="border-input bg-background focus-within:border-ring focus-within:ring-ring/24 min-h-80 rounded-lg border shadow-xs/5 transition-shadow focus-within:ring-[3px] [&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
+        className="border-input bg-background dark:bg-input/32 focus-within:border-ring focus-within:ring-ring/24 min-h-80 resize-y overflow-y-auto rounded-lg border shadow-xs/5 transition-shadow focus-within:ring-[3px] [&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
       >
+        {isEmpty && (
+          <div className="text-muted-foreground pointer-events-none absolute top-4 left-4 text-base select-none">
+            Write a product description...
+          </div>
+        )}
         <Editor variant="default" className="px-4 pt-4 pb-20 sm:px-4 sm:pl-4" />
         <FloatingToolbar>
           <FloatingToolbarButtons />
@@ -90,4 +98,8 @@ export function DescriptionEditor({
       </EditorContainer>
     </Plate>
   )
+}
+
+function isEditorEmpty(value: TElement[]): boolean {
+  return slateToPlainText(value).trim().length === 0
 }
