@@ -118,6 +118,25 @@ export function FloatingEmbedInsertToolbar() {
   useEffect(() => {
     if (!openInsert) return
 
+    function handleMouseDown(event: MouseEvent) {
+      const container = containerRef.current
+
+      if (!container) return
+      if (container.contains(event.target as Node)) return
+
+      close()
+    }
+
+    document.addEventListener("mousedown", handleMouseDown)
+
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown)
+    }
+  }, [openInsert, close])
+
+  useEffect(() => {
+    if (!openInsert) return
+
     let attempts = 0
     let timeout = 0
     let cancelled = false
@@ -130,17 +149,16 @@ export function FloatingEmbedInsertToolbar() {
       )
 
       if (input) {
-        if (document.activeElement !== input) {
-          input.focus()
-        }
+        input.focus()
+
         if (document.activeElement === input) return
       }
-      if (attempts++ < 20) {
-        timeout = window.setTimeout(focusInput, 15)
+      if (attempts++ < 30) {
+        timeout = window.setTimeout(focusInput, 16)
       }
     }
 
-    focusInput()
+    timeout = window.setTimeout(focusInput, 50)
 
     return () => {
       cancelled = true
