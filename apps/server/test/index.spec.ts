@@ -1,9 +1,9 @@
-import app from "server"
+import { describe, expect, test } from "bun:test"
+import { app } from "server"
 import { orpcCodeForStatus } from "server/errors"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("server index", () => {
-  test("exports the Hono app as default", () => {
+  test("exports the Hono app", () => {
     expect(app).toBeDefined()
     expect(typeof app.fetch).toBe("function")
   })

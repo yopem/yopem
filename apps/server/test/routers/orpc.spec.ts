@@ -1,12 +1,12 @@
 import type { SessionUser } from "server/auth"
 
 import { call, ORPCError } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import {
   os,
   requireAdminMiddleware,
   requireAuthMiddleware,
 } from "server/routers/orpc"
-import { describe, expect, test } from "vite-plus/test"
 
 const anonContext = { session: null }
 const userContext = (
@@ -29,14 +29,14 @@ describe("orpc procedure infrastructure", () => {
     expect(result).toBeNull()
   })
 
-  test("requireAuthMiddleware throws UNAUTHORIZED when session is null", async () => {
+  test("requireAuthMiddleware throws UNAUTHORIZED when session is null", () => {
     const probe = os
       .use(requireAuthMiddleware)
       .handler(({ context }) => context.session)
-    await expect(
-      call(probe, undefined, { context: anonContext }),
-    ).rejects.toThrow(ORPCError)
-    await expect(
+    expect(call(probe, undefined, { context: anonContext })).rejects.toThrow(
+      ORPCError,
+    )
+    expect(
       call(probe, undefined, { context: anonContext }),
     ).rejects.toMatchObject({
       code: "UNAUTHORIZED",
@@ -51,11 +51,11 @@ describe("orpc procedure infrastructure", () => {
     expect(result?.id).toBe("u_1")
   })
 
-  test("requireAdminMiddleware throws FORBIDDEN for non-admin", async () => {
+  test("requireAdminMiddleware throws FORBIDDEN for non-admin", () => {
     const probe = os
       .use(requireAdminMiddleware)
       .handler(({ context }) => context.session)
-    await expect(
+    expect(
       call(probe, undefined, { context: userContext("user") }),
     ).rejects.toMatchObject({
       code: "FORBIDDEN",

@@ -1,4 +1,8 @@
-import { describe, expect, test } from "vite-plus/test"
+import { describe, expect, test, vi } from "vite-plus/test"
+
+vi.mock("bun", () => ({
+  SQL: class SQLMock {},
+}))
 
 import { db } from "db"
 

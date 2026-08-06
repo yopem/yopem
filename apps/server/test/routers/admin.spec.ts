@@ -1,8 +1,8 @@
 import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import { adminRouter } from "server/routers/admin"
-import { describe, expect, test } from "vite-plus/test"
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -56,24 +56,24 @@ describe("admin router", () => {
     }
   })
 
-  test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("admin procedures reject null sessions with UNAUTHORIZED", () => {
+    expect(
       call(adminRouter.admin.apiKeyList, undefined, {
         context: { session: null },
       }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
-    await expect(
+  test("admin procedures reject non-admin sessions with FORBIDDEN", () => {
+    expect(
       call(adminRouter.admin.apiKeyList, undefined, {
         context: userContext("user"),
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 
-  test("modelCreate rejects an invalid provider with BAD_REQUEST", async () => {
-    await expect(
+  test("modelCreate rejects an invalid provider with BAD_REQUEST", () => {
+    expect(
       call(
         adminRouter.admin.modelCreate,
         {

@@ -1,11 +1,10 @@
-import { serve } from "@hono/node-server"
 import { ORPCError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
-import { adminOrigin, isDev, isProd, serverPort, webOrigin } from "env"
+import { adminOrigin, isDev, serverPort, webOrigin } from "env"
 
 import type { AppContext } from "./context"
 
@@ -166,16 +165,12 @@ app.onError((err, c) => {
   return c.json({ error: "Internal Server Error" }, 500)
 })
 
-export default app
+export { app }
 
-if (isProd) {
-  serve(
-    {
-      fetch: app.fetch,
-      port,
-    },
-    () => {
-      console.info(`Hono server listening on port ${port}`)
-    },
-  )
+if (import.meta.main) {
+  Bun.serve({
+    port,
+    fetch: app.fetch,
+  })
+  console.info(`Hono server listening on port ${port}`)
 }

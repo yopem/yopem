@@ -22,9 +22,9 @@
     }
   },
   "scripts": {
-    "db:generate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs generate",
-    "db:migrate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs migrate",
-    "db:studio": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs studio",
+    "db:generate": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs studio",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
@@ -33,14 +33,12 @@
     "drizzle-orm": "catalog:",
     "drizzle-valibot": "catalog:",
     "env": "workspace:*",
-    "pg": "catalog:",
     "transliteration": "catalog:",
     "utils": "workspace:*",
     "valibot": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/pg": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:"

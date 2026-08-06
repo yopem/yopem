@@ -13,7 +13,6 @@ export default defineConfig({
       "packages/cache",
       "packages/rpc",
       "packages/db",
-      "apps/server",
       "apps/admin",
       "packages/editor",
       "packages/ui",

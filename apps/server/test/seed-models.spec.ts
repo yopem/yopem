@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { aiModels, planModelSeed } from "server/seed"
-import { describe, expect, test } from "vite-plus/test"
 
 import type { ApiKeyProvider } from "utils/api-input"
 

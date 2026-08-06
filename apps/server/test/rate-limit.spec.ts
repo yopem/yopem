@@ -1,10 +1,10 @@
 import { ORPCError } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import {
   RATE_LIMITS,
   checkRateLimit,
   enforceRateLimit,
 } from "server/rate-limit"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("checkRateLimit", () => {
   test("allows requests when redis is unavailable", async () => {
@@ -41,28 +41,26 @@ describe("enforceRateLimit", () => {
     expect(typeof enforceRateLimit).toBe("function")
   })
 
-  test("fails open when redis is unavailable", async () => {
-    await expect(
+  test("fails open when redis is unavailable", () => {
+    expect(
       enforceRateLimit(() => Promise.resolve(null), "session-1", "add"),
     ).resolves.toBeUndefined()
   })
 
-  test("does not throw for each action when redis is unavailable", async () => {
+  test("does not throw for each action when redis is unavailable", () => {
     for (const action of ["add", "update", "delete"] as const) {
-      await expect(
+      expect(
         enforceRateLimit(() => Promise.resolve(null), "session-1", action),
       ).resolves.toBeUndefined()
     }
   })
 
-  test("throws FORBIDDEN when redis reports limited", async () => {
+  test("throws FORBIDDEN when redis reports limited", () => {
     const fakeRedis = {
-      zremrangebyscore: () => Promise.resolve(0),
-      zcard: () => Promise.resolve(100),
-      zadd: () => Promise.resolve(1),
-      pexpire: () => Promise.resolve(1),
+      send: (command: string) =>
+        command === "ZCARD" ? Promise.resolve(100) : Promise.resolve(1),
     }
-    await expect(
+    expect(
       enforceRateLimit(
         () => Promise.resolve(fakeRedis as never),
         "session-1",

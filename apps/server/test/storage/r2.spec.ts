@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { StorageValidationError } from "server/storage/r2"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("R2Storage validation", () => {
   test("StorageValidationError has correct name", () => {

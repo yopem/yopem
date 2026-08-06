@@ -23,8 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "env": "workspace:*",
-    "ioredis": "catalog:"
+    "env": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

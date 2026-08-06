@@ -1,6 +1,6 @@
 import type { AppContext } from "server/context"
 
-import { describe, expect, test } from "vite-plus/test"
+import { describe, expect, test } from "bun:test"
 
 describe("AppContext type", () => {
   test("accepts a context with null session", () => {

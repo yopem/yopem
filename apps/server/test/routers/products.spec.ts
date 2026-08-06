@@ -1,17 +1,14 @@
 import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
+import { describe, expect, test, vi } from "bun:test"
 import { productsRouter, validateModelForKey } from "server/routers/products"
-import { describe, expect, test, vi } from "vite-plus/test"
 
 import type { ApiKeyConfig } from "utils/api-input"
 
-const listProductsSpy = vi.hoisted(() => vi.fn().mockResolvedValue([]))
+const listProductsSpy = vi.fn().mockResolvedValue([])
 
-vi.mock("db/services/products", async (importOriginal) => {
-  const original = await importOriginal<Record<string, unknown>>()
-  return { ...original, listProducts: listProductsSpy }
-})
+void vi.mock("db/services/products", () => ({ listProducts: listProductsSpy }))
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -93,43 +90,43 @@ describe("products router", () => {
     }
   })
 
-  test("validateModelForKey passes when model exists and is enabled", async () => {
+  test("validateModelForKey passes when model exists and is enabled", () => {
     const findModel = () => Promise.resolve({ id: "m_1", isEnabled: true })
 
-    await expect(
+    expect(
       validateModelForKey(sampleKey, "openai/gpt-4o-mini", findModel),
     ).resolves.toBeUndefined()
   })
 
-  test("validateModelForKey rejects disabled models", async () => {
+  test("validateModelForKey rejects disabled models", () => {
     const findModel = () => Promise.resolve({ id: "m_1", isEnabled: false })
 
-    await expect(
+    expect(
       validateModelForKey(sampleKey, "openai/gpt-4o-mini", findModel),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" })
   })
 
-  test("validateModelForKey rejects missing models", async () => {
+  test("validateModelForKey rejects missing models", () => {
     const findModel = () => Promise.resolve(null)
 
-    await expect(
+    expect(
       validateModelForKey(sampleKey, "missing-model", findModel),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" })
   })
 
-  test("validateModelForKey rejects invalid key providers", async () => {
+  test("validateModelForKey rejects invalid key providers", () => {
     const findModel = () => Promise.resolve({ id: "m_1", isEnabled: true })
     const badKey = { ...sampleKey, provider: "not-a-provider" as "openai" }
 
-    await expect(
+    expect(
       validateModelForKey(badKey, "openai/gpt-4o-mini", findModel),
     ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" })
   })
 })
 
 describe("products router", () => {
-  test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("admin procedures reject null sessions with UNAUTHORIZED", () => {
+    expect(
       call(
         productsRouter.products.create,
         { name: "x", workflow: minimalWorkflow },
@@ -138,8 +135,8 @@ describe("products router", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
-    await expect(
+  test("admin procedures reject non-admin sessions with FORBIDDEN", () => {
+    expect(
       call(
         productsRouter.products.create,
         { name: "x", workflow: minimalWorkflow },
@@ -172,7 +169,7 @@ describe("products.list status clamping", () => {
       { status: "all" },
       { context: { session: null } },
     )
-    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy).toHaveBeenCalledTimes(1)
     expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "active" })
   })
 
@@ -183,7 +180,7 @@ describe("products.list status clamping", () => {
       { status: "draft" },
       { context: userContext("user") },
     )
-    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy).toHaveBeenCalledTimes(1)
     expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "active" })
   })
 
@@ -194,7 +191,7 @@ describe("products.list status clamping", () => {
       { status: "all" },
       { context: userContext("admin") },
     )
-    expect(listProductsSpy).toHaveBeenCalledOnce()
+    expect(listProductsSpy).toHaveBeenCalledTimes(1)
     expect(listProductsSpy.mock.calls[0][0]).toMatchObject({ status: "all" })
   })
 })

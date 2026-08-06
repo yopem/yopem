@@ -1,46 +1,25 @@
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+import { SQL } from "bun"
+import { drizzle } from "drizzle-orm/bun-sql"
 
 import { databaseUrl, isDev } from "env"
 
 import * as schema from "./schema"
 
-const pool = new Pool({
-  connectionString: databaseUrl,
+const sql = new SQL({
+  url: databaseUrl,
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  idleTimeout: 30,
+  connectionTimeout: 5,
+  onconnect: () => {
+    if (isDev) {
+      console.info("New database connection established")
+    }
+  },
+  onclose: (error) => {
+    console.error(
+      `Database connection closed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  },
 })
 
-pool.on("error", (error: Error) => {
-  console.error(
-    `Unexpected error on idle database connection: ${error.message}`,
-  )
-  logPoolMetrics()
-})
-
-pool.on("connect", () => {
-  if (isDev) {
-    console.info("New database connection established")
-  }
-})
-
-export const db = drizzle(pool, {
-  schema,
-})
-
-function getPoolMetrics() {
-  return {
-    total: pool.totalCount,
-    idle: pool.idleCount,
-    waiting: pool.waitingCount,
-    active: pool.totalCount - pool.idleCount,
-  }
-}
-
-function logPoolMetrics() {
-  const metrics = getPoolMetrics()
-  console.info(
-    `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,
-  )
-}
+export const db = drizzle(sql, { schema })

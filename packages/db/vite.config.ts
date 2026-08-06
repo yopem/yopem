@@ -7,6 +7,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   test: {
     name: "db",
+    server: {
+      deps: {
+        inline: ["drizzle-orm/bun-sql", "drizzle-orm"],
+      },
+    },
   },
   resolve: {
     alias: {

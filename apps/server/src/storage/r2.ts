@@ -1,11 +1,5 @@
-import {
-  DeleteObjectCommand,
-  PutObjectCommand,
-  S3Client,
-  type S3ClientConfig,
-} from "@aws-sdk/client-s3"
+import { S3Client } from "bun"
 import { nanoid } from "nanoid"
-import sharp from "sharp"
 import { transliterate as tr } from "transliteration"
 
 import { cfAccountId, r2AccessKey, r2Bucket, r2Domain, r2SecretKey } from "env"
@@ -66,21 +60,15 @@ const VALID_VIDEO_SIGNATURES = [
 
 class R2Storage {
   private client: S3Client
-  private bucketName: string
   private publicUrl: string
 
   constructor(config: R2Config) {
-    const clientConfig: S3ClientConfig = {
-      region: "auto",
+    this.client = new S3Client({
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      bucket: config.bucketName,
       endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-    }
-
-    this.client = new S3Client(clientConfig)
-    this.bucketName = config.bucketName
+    })
     this.publicUrl = config.publicUrl
   }
 
@@ -166,10 +154,10 @@ class R2Storage {
 
   private async processImage(buffer: Buffer): Promise<Buffer> {
     try {
-      return await sharp(buffer)
-        .resize({ width: 1920, withoutEnlargement: true })
+      return await new Bun.Image(buffer)
+        .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 80 })
-        .toBuffer()
+        .buffer()
     } catch (e) {
       throw new StorageUploadError(
         `Failed to process image: ${e instanceof Error ? e.message : "Unknown error"}`,
@@ -184,13 +172,7 @@ class R2Storage {
     contentType: string,
   ): Promise<void> {
     try {
-      const command = new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-        Body: buffer,
-        ContentType: contentType,
-      })
-      await this.client.send(command)
+      await this.client.file(key).write(buffer, { type: contentType })
     } catch (e) {
       throw new StorageUploadError(
         `Failed to upload to R2: ${e instanceof Error ? e.message : "Unknown error"}`,
@@ -319,11 +301,7 @@ class R2Storage {
 
   async deleteFile(key: string): Promise<void> {
     try {
-      const command = new DeleteObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-      })
-      await this.client.send(command)
+      await this.client.file(key).delete()
     } catch (e) {
       throw new StorageDeleteError(
         `Failed to delete from R2: ${e instanceof Error ? e.message : "Unknown error"}`,

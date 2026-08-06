@@ -1,8 +1,8 @@
 import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import { assetsRouter } from "server/routers/assets"
-import { describe, expect, test } from "vite-plus/test"
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -33,8 +33,8 @@ describe("assets router", () => {
     expect(assetsRouter.assets.uploadSettings).toBeDefined()
   })
 
-  test("assets.list rejects null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("assets.list rejects null sessions with UNAUTHORIZED", () => {
+    expect(
       call(
         assetsRouter.assets.list,
         {},
@@ -45,8 +45,8 @@ describe("assets router", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("assets.upload rejects null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("assets.upload rejects null sessions with UNAUTHORIZED", () => {
+    expect(
       call(
         assetsRouter.assets.upload,
         new File(["x"], "test.txt", { type: "text/plain" }),
@@ -55,8 +55,8 @@ describe("assets router", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("assets.upload rejects non-admin sessions with FORBIDDEN", async () => {
-    await expect(
+  test("assets.upload rejects non-admin sessions with FORBIDDEN", () => {
+    expect(
       call(
         assetsRouter.assets.upload,
         new File(["x"], "test.txt", { type: "text/plain" }),
@@ -65,8 +65,8 @@ describe("assets router", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 
-  test("assets.delete rejects non-admin sessions with FORBIDDEN", async () => {
-    await expect(
+  test("assets.delete rejects non-admin sessions with FORBIDDEN", () => {
+    expect(
       call(
         assetsRouter.assets.delete,
         { id: "ast_1" },

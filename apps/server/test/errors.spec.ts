@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { ApiError, RateLimitError } from "server/errors"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("errors", () => {
   test("RateLimitError captures operation and cause", () => {

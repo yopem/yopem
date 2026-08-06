@@ -1,8 +1,8 @@
 import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import { sessionRouter } from "server/routers/session"
-import { describe, expect, test } from "vite-plus/test"
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -29,8 +29,8 @@ describe("session router", () => {
     expect(result).toEqual(userContext().session)
   })
 
-  test("session.me rejects null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("session.me rejects null sessions with UNAUTHORIZED", () => {
+    expect(
       call(sessionRouter.session.me, undefined, {
         context: { session: null },
       }),

@@ -8,20 +8,16 @@ import {
 } from "vite-plus/test"
 
 const mockRedis = {
-  setex: vi.fn(),
+  send: vi.fn(),
   get: vi.fn(),
   del: vi.fn(),
   exists: vi.fn(),
   expire: vi.fn(),
-  scanStream: vi.fn(),
-  pipeline: vi.fn(() => ({ exec: vi.fn() })),
-  quit: vi.fn(),
-  disconnect: vi.fn(),
-  on: vi.fn(),
+  close: vi.fn(),
 }
 
-vi.mock("ioredis", () => ({
-  default: class MockRedis {
+vi.mock("bun", () => ({
+  RedisClient: class MockRedis {
     constructor() {
       return mockRedis as never
     }
@@ -54,11 +50,11 @@ describe("createRedisCache", () => {
     const { createRedisCache } = await import("cache/client")
     const cache = createRedisCache()
     await cache.setCache("key", { name: "value" }, 60)
-    expect(mockRedis.setex).toHaveBeenCalledWith(
-      "key",
-      60,
+    expect(mockRedis.send).toHaveBeenCalledWith("SETEX", [
+      "test:key",
+      "60",
       JSON.stringify({ name: "value" }),
-    )
+    ])
   })
 
   test("setCache serializes dates", async () => {
@@ -66,13 +62,13 @@ describe("createRedisCache", () => {
     const cache = createRedisCache()
     const date = new Date("2024-01-15T00:00:00.000Z")
     await cache.setCache("key", { createdAt: date }, 60)
-    expect(mockRedis.setex).toHaveBeenCalledWith(
-      "key",
-      60,
+    expect(mockRedis.send).toHaveBeenCalledWith("SETEX", [
+      "test:key",
+      "60",
       JSON.stringify({
         createdAt: { __type: "Date", value: date.toISOString() },
       }),
-    )
+    ])
   })
 
   test("getCache returns parsed value", async () => {
@@ -81,6 +77,7 @@ describe("createRedisCache", () => {
     const cache = createRedisCache()
     const value = await cache.getCache("key")
     expect(value).toEqual({ name: "value" })
+    expect(mockRedis.get).toHaveBeenCalledWith("test:key")
   })
 
   test("getCache restores serialized dates", async () => {
@@ -107,21 +104,21 @@ describe("createRedisCache", () => {
     const { createRedisCache } = await import("cache/client")
     const cache = createRedisCache()
     await cache.deleteCache("key")
-    expect(mockRedis.del).toHaveBeenCalledWith("key")
+    expect(mockRedis.del).toHaveBeenCalledWith("test:key")
   })
 
   test("hasCache returns true when key exists", async () => {
-    mockRedis.exists.mockResolvedValueOnce(1)
+    mockRedis.exists.mockResolvedValueOnce(true)
     const { createRedisCache } = await import("cache/client")
     const cache = createRedisCache()
     expect(await cache.hasCache("key")).toBe(true)
   })
 
   test("expireCache updates ttl", async () => {
-    mockRedis.expire.mockResolvedValueOnce(1)
+    mockRedis.expire.mockResolvedValueOnce(true)
     const { createRedisCache } = await import("cache/client")
     const cache = createRedisCache()
     expect(await cache.expireCache("key", 120)).toBe(true)
-    expect(mockRedis.expire).toHaveBeenCalledWith("key", 120)
+    expect(mockRedis.expire).toHaveBeenCalledWith("test:key", 120)
   })
 })

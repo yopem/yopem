@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { executeWorkflow } from "server/llm/workflow"
-import { describe, expect, test } from "vite-plus/test"
 
 import type { ProductWorkflow } from "db/schema"
 

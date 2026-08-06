@@ -1,8 +1,8 @@
 import type { SessionUser } from "server/auth"
 
 import { call } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import { userRouter } from "server/routers/user"
-import { describe, expect, test } from "vite-plus/test"
 
 const userContext = (
   role: SessionUser["role"] = "user",
@@ -41,8 +41,8 @@ describe("user router", () => {
     }
   })
 
-  test("protected procedures reject null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("protected procedures reject null sessions with UNAUTHORIZED", () => {
+    expect(
       call(userRouter.user.me, undefined, { context: { session: null } }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
@@ -60,16 +60,16 @@ describe("user router", () => {
     })
   })
 
-  test("admin procedures reject null sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("admin procedures reject null sessions with UNAUTHORIZED", () => {
+    expect(
       call(userRouter.user.apiKeyList, undefined, {
         context: { session: null },
       }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
-    await expect(
+  test("admin procedures reject non-admin sessions with FORBIDDEN", () => {
+    expect(
       call(userRouter.user.apiKeyList, undefined, {
         context: userContext("user"),
       }),

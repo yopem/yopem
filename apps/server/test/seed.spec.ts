@@ -1,3 +1,4 @@
+import { describe, expect, test } from "bun:test"
 import {
   aiModels,
   categories,
@@ -6,7 +7,6 @@ import {
   VALID_OUTPUT_FORMATS,
   VALID_PROVIDERS,
 } from "server/seed"
-import { describe, expect, test } from "vite-plus/test"
 
 const PROVIDER_SET = new Set(VALID_PROVIDERS)
 const OUTPUT_FORMAT_SET = new Set(VALID_OUTPUT_FORMATS)

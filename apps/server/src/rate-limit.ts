@@ -1,11 +1,11 @@
-import type { Redis } from "ioredis"
+import type { RedisClient } from "bun"
 
 import { ORPCError } from "@orpc/server"
 
 import { RateLimitError } from "./errors"
 
 export async function checkRateLimit(
-  getRedisClient: () => Promise<Redis | null>,
+  getRedisClient: () => Promise<RedisClient | null>,
   key: string,
   maxRequests: number,
   windowMs: number,
@@ -29,8 +29,8 @@ export async function checkRateLimit(
   const redisKey = `ratelimit:${key}`
 
   try {
-    await redis.zremrangebyscore(redisKey, 0, windowStart)
-    const count = await redis.zcard(redisKey)
+    await redis.send("ZREMRANGEBYSCORE", [redisKey, "0", String(windowStart)])
+    const count = Number(await redis.send("ZCARD", [redisKey]))
 
     if (count >= maxRequests) {
       return {
@@ -42,8 +42,8 @@ export async function checkRateLimit(
       }
     }
 
-    await redis.zadd(redisKey, now, `${now}-${Math.random()}`)
-    await redis.pexpire(redisKey, windowMs)
+    await redis.send("ZADD", [redisKey, String(now), `${now}-${Math.random()}`])
+    await redis.send("PEXPIRE", [redisKey, String(windowMs)])
 
     return {
       ok: true,
@@ -76,7 +76,7 @@ export const RATE_LIMITS = {
 } as const
 
 export async function enforceRateLimit(
-  getRedisClient: () => Promise<Redis | null>,
+  getRedisClient: () => Promise<RedisClient | null>,
   sessionId: string,
   action: "add" | "update" | "delete",
 ): Promise<void> {

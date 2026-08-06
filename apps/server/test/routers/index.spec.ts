@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { router } from "server/routers"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("router composition", () => {
   test("exports a router object", () => {

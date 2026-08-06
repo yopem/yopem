@@ -1,6 +1,6 @@
 import { call } from "@orpc/server"
+import { describe, expect, test } from "bun:test"
 import { tagsRouter } from "server/routers/tags"
-import { describe, expect, test } from "vite-plus/test"
 
 describe("tags router", () => {
   test("exports five procedures nested under tags", () => {
@@ -14,8 +14,8 @@ describe("tags router", () => {
     }
   })
 
-  test("admin procedures reject unauthenticated sessions with UNAUTHORIZED", async () => {
-    await expect(
+  test("admin procedures reject unauthenticated sessions with UNAUTHORIZED", () => {
+    expect(
       call(
         tagsRouter.tags.create,
         { name: "x" },
@@ -24,7 +24,7 @@ describe("tags router", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" })
   })
 
-  test("admin procedures reject non-admin sessions with FORBIDDEN", async () => {
+  test("admin procedures reject non-admin sessions with FORBIDDEN", () => {
     const nonAdminSession = {
       id: "user-1",
       email: "user@example.com",
@@ -33,7 +33,7 @@ describe("tags router", () => {
       image: null,
       role: "user" as const,
     }
-    await expect(
+    expect(
       call(
         tagsRouter.tags.create,
         { name: "x" },

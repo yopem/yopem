@@ -1,5 +1,5 @@
+import { describe, expect, test } from "bun:test"
 import { hasActiveKeyForProvider } from "server/routers/admin"
-import { describe, expect, test } from "vite-plus/test"
 
 import type { ApiKeyConfig } from "utils/api-input"
 
