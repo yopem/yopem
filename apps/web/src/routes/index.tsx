@@ -12,8 +12,8 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Card, CardPanel, CardTitle } from "ui/card"
 
-import { ProductCard } from "@/components/product-card"
 import { SiteLayout } from "@/components/site-layout"
+import { ProductCard } from "@/features/storefront/product-card"
 
 export const Route = createFileRoute("/")({
   loader: async ({ context: { queryClient } }) => {

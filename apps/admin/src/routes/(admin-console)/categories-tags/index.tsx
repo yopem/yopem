@@ -8,13 +8,13 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { toastManager } from "ui/toast"
 
-import { CategoryDialog } from "@/components/categories-tags/category-dialog"
-import { CategoryList } from "@/components/categories-tags/category-list"
-import { TagDialog } from "@/components/categories-tags/tag-dialog"
-import { TagList } from "@/components/categories-tags/tag-list"
 import { DeleteDialog } from "@/components/delete-dialog"
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
+import { CategoryDialog } from "@/features/categories-tags/category-dialog"
+import { CategoryList } from "@/features/categories-tags/category-list"
+import { TagDialog } from "@/features/categories-tags/tag-dialog"
+import { TagList } from "@/features/categories-tags/tag-list"
 
 const categoriesTagsSearchSchema = v.object({
   categoryId: v.optional(v.string()),

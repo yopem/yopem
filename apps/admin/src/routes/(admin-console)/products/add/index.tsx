@@ -7,13 +7,13 @@ import { queryApi } from "rpc/query"
 import type { ProductInputVariable } from "ui/product-input-field"
 import { toastManager } from "ui/toast"
 
-import { FeatureBuilderHeader } from "@/components/products/feature-builder-header"
+import { FeatureBuilderHeader } from "@/features/products/feature-builder-header"
 import {
   ProductForm,
   type ProductFormData,
   type ProductFormRef,
-} from "@/components/products/product-form"
-import { ProductPreviewSheet } from "@/components/products/product-preview-sheet"
+} from "@/features/products/product-form"
+import { ProductPreviewSheet } from "@/features/products/product-preview-sheet"
 
 export const Route = createFileRoute("/(admin-console)/products/add/")({
   component: ProductAddRouteComponent,

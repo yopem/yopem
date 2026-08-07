@@ -12,12 +12,12 @@ import { formatDateTime } from "utils/format-date"
 
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
-import { AddProviderDialog } from "@/components/settings/add-provider-dialog"
-import { AIModelsSettings } from "@/components/settings/ai-model-settings"
-import { AssetUploadSettings } from "@/components/settings/asset-upload-settings"
-import { DeleteProviderDialog } from "@/components/settings/delete-provider-dialog"
-import { EditProviderDialog } from "@/components/settings/edit-provider-dialog"
-import { ProviderCard } from "@/components/settings/provider-card"
+import { AddProviderDialog } from "@/features/settings/add-provider-dialog"
+import { AIModelsSettings } from "@/features/settings/ai-model-settings"
+import { AssetUploadSettings } from "@/features/settings/asset-upload-settings"
+import { DeleteProviderDialog } from "@/features/settings/delete-provider-dialog"
+import { EditProviderDialog } from "@/features/settings/edit-provider-dialog"
+import { ProviderCard } from "@/features/settings/provider-card"
 
 export const Route = createFileRoute("/(admin-console)/settings/")({
   component: SettingsRouteComponent,

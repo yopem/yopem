@@ -14,7 +14,7 @@ import { Button } from "ui/button"
 
 import { GlobalBreadcrumb } from "@/components/layout/global-breadcrumb"
 import { GlobalPageHeader } from "@/components/layout/global-page-header"
-import { QuickStartCard } from "@/components/onboarding/quick-start-card"
+import { QuickStartCard } from "@/features/onboarding/quick-start-card"
 
 export const Route = createFileRoute("/(admin-console)/")({
   component: AdminConsoleComponent,

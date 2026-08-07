@@ -34,9 +34,9 @@ import {
 import { Label } from "ui/label"
 import { ProductInputField } from "ui/product-input-field"
 
-import { ProductCard } from "@/components/product-card"
-import { RichTextView } from "@/components/rich-text-view"
 import { SiteLayout } from "@/components/site-layout"
+import { ProductCard } from "@/features/storefront/product-card"
+import { RichTextView } from "@/features/storefront/rich-text-view"
 import { loginFn } from "@/lib/auth"
 
 export const Route = createFileRoute("/products/$productSlug")({

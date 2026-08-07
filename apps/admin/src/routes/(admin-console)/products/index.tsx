@@ -9,10 +9,10 @@ import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { toastManager } from "ui/toast"
 
-import type { Product } from "@/components/products/product-actions"
+import type { Product } from "@/features/products/product-actions"
 
 import { DeleteDialog } from "@/components/delete-dialog"
-import { ProductsTable } from "@/components/products/products-table"
+import { ProductsTable } from "@/features/products/products-table"
 
 const productsSearchSchema = v.object({
   page: v.optional(

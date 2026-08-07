@@ -17,8 +17,8 @@ import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Input } from "ui/input"
 
-import { ProductCard } from "@/components/product-card"
 import { SiteLayout } from "@/components/site-layout"
+import { ProductCard } from "@/features/storefront/product-card"
 
 const PAGE_SIZE = 12
 
