@@ -16,9 +16,11 @@ const sql = new SQL({
     }
   },
   onclose: (error) => {
-    console.error(
-      `Database connection closed: ${error instanceof Error ? error.message : String(error)}`,
-    )
+    if (!error) return
+    const message = error instanceof Error ? error.message : String(error)
+    if (!message.includes("Idle timeout")) {
+      console.error(`Database connection closed: ${message}`)
+    }
   },
 })
 

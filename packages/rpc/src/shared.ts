@@ -48,9 +48,7 @@ export const createORPCLink = (
           error instanceof Error &&
           (error.name === "AbortError" ||
             error.message === "signal is aborted without reason")
-        if (isAbortError) {
-          console.info("Fetch aborted as expected")
-        } else {
+        if (!isAbortError) {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
           console.error(errorMessage)
