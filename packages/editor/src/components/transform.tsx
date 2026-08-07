@@ -21,6 +21,7 @@ import {
 
 import { EmbedInsertStore } from "editor/floating-embed-toolbar"
 import { ImagePickerPlugin } from "editor/image-picker-kit"
+import { isRemoteImageSrc } from "editor/lib/is-remote-image-src"
 
 function insertList(editor: PlateEditor, type: string) {
   editor.tf.insertNodes(
@@ -102,7 +103,10 @@ export async function insertImageAsset(editor: PlateEditor) {
 
   const url = await picker()
 
-  if (!url) return
+  if (!url || !isRemoteImageSrc(url)) {
+    console.warn("Image picker returned an invalid remote URL")
+    return
+  }
 
   insertImage(editor, url, { nextBlock: false, select: true })
 }

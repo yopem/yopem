@@ -10,6 +10,7 @@ import {
   useImagePreviewValue,
 } from "@platejs/media/react"
 import { LinkIcon, TrashIcon } from "lucide-react"
+import { KEYS } from "platejs"
 import {
   useEditorRef,
   useEditorSelector,
@@ -73,12 +74,19 @@ function MediaUrlInput({
   isNew: boolean
 }) {
   useFocusUrlInput(true)
+  const isImage = plugin.key === KEYS.img
 
   return (
     <div className="flex w-88 flex-col gap-2 p-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
-          {isNew ? "Add embed link" : "Edit embed link"}
+          {isNew
+            ? isImage
+              ? "Add image link"
+              : "Add embed link"
+            : isImage
+              ? "Edit image link"
+              : "Edit embed link"}
         </span>
       </div>
 
@@ -89,14 +97,18 @@ function MediaUrlInput({
 
         <FloatingMediaPrimitive.UrlInput
           className={inputVariants()}
-          placeholder="Paste the embed link..."
+          placeholder={
+            isImage ? "Paste the image link..." : "Paste the embed link..."
+          }
           data-media-focus
           options={{ plugin }}
         />
       </div>
 
       <p className="text-muted-foreground text-xs">
-        Paste a YouTube, Twitter/X, or Facebook link, then press Enter
+        {isImage
+          ? "Paste an image URL, then press Enter"
+          : "Paste a YouTube, Twitter/X, or Facebook link, then press Enter"}
       </p>
     </div>
   )
@@ -145,7 +157,8 @@ export function MediaToolbar({
       </div>
 
       <PopoverContent
-        align={isEditing ? "start" : "center"}
+        align="center"
+        side="top"
         anchor={anchorRef}
         className="w-auto p-0"
         initialFocus={false}
@@ -158,7 +171,7 @@ export function MediaToolbar({
             <FloatingMediaPrimitive.EditButton
               className={buttonVariants({ size: "sm", variant: "ghost" })}
             >
-              Edit link
+              {plugin.key === KEYS.img ? "Edit image link" : "Edit link"}
             </FloatingMediaPrimitive.EditButton>
 
             <CaptionButton size="sm" variant="ghost">

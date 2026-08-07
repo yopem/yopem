@@ -43,6 +43,25 @@ describe("editor/transform", () => {
     )
   })
 
+  test("insertImageAsset does nothing when picker returns a non-remote URL", async () => {
+    const picker = vi.fn().mockResolvedValue("file:///tmp/pi-clipboard.png")
+    const editor = createSlateEditor({
+      plugins: [
+        BaseImagePlugin,
+        ImagePickerPlugin.configure({
+          options: { imagePicker: picker },
+        }),
+      ],
+    })
+
+    editor.tf.setValue([{ type: KEYS.p, children: [{ text: "" }] }])
+
+    await mod.insertImageAsset(editor)
+
+    expect(picker).toHaveBeenCalled()
+    expect(editor.children.every((node) => node.type !== KEYS.img)).toBe(true)
+  })
+
   test("insertImageAsset does nothing when picker is not configured", async () => {
     const editor = createSlateEditor({
       plugins: [BaseImagePlugin],
