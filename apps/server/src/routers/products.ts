@@ -17,6 +17,7 @@ import { listCategories, validateCategoryIds } from "db/services/categories"
 import {
   createProduct,
   deleteProduct,
+  deleteProducts,
   duplicateProduct,
   getPopularProducts,
   getProductById,
@@ -554,5 +555,13 @@ export const productsRouter = {
       .use(requireAdminMiddleware)
       .input(productBulkStatusInputSchema)
       .handler(({ input }) => updateProductStatus(input.ids, input.status)),
+
+    bulkDelete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(v.object({ ids: v.pipe(v.array(v.string()), v.minLength(1)) }))
+      .output(v.object({ success: v.boolean(), count: v.number() }))
+      .handler(({ input }) => deleteProducts(input.ids)),
   },
 }

@@ -35,6 +35,7 @@ function ProductsRouteComponent() {
     name: string
   } | null>(null)
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [duplicateRedirect, setDuplicateRedirect] = useState<{
     productId: string
   } | null>(null)
@@ -143,6 +144,28 @@ function ProductsRouteComponent() {
     }),
   )
 
+  const bulkDeleteProductsMutation = useMutation(
+    queryApi.products.bulkDelete.mutationOptions({
+      onSuccess: (data) => {
+        toastManager.add({
+          title: "Products deleted",
+          description: `${data.count} product${data.count === 1 ? "" : "s"} deleted.`,
+          type: "success",
+        })
+        setSelectedProductIds([])
+        setBulkDeleteDialogOpen(false)
+        void refetch()
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Error deleting products",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
   const handleDeleteClick = useCallback(
     (product: { id: string; name: string }) => {
       setSelectedProduct(product)
@@ -206,17 +229,43 @@ function ProductsRouteComponent() {
               <>
                 <Button
                   variant="outline"
+                  onClick={() => handleBulkUpdateStatus("draft")}
+                  disabled={
+                    bulkUpdateStatusMutation.isPending ||
+                    bulkDeleteProductsMutation.isPending
+                  }
+                >
+                  Mark Draft ({selectedProductIds.length})
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => handleBulkUpdateStatus("active")}
-                  disabled={bulkUpdateStatusMutation.isPending}
+                  disabled={
+                    bulkUpdateStatusMutation.isPending ||
+                    bulkDeleteProductsMutation.isPending
+                  }
                 >
                   Mark Active ({selectedProductIds.length})
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleBulkUpdateStatus("archived")}
-                  disabled={bulkUpdateStatusMutation.isPending}
+                  disabled={
+                    bulkUpdateStatusMutation.isPending ||
+                    bulkDeleteProductsMutation.isPending
+                  }
                 >
                   Archive ({selectedProductIds.length})
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  disabled={
+                    bulkUpdateStatusMutation.isPending ||
+                    bulkDeleteProductsMutation.isPending
+                  }
+                >
+                  Delete Selected ({selectedProductIds.length})
                 </Button>
               </>
             )}
@@ -274,6 +323,17 @@ function ProductsRouteComponent() {
           name={selectedProduct?.name}
           onConfirm={handleConfirmDelete}
           isPending={deleteProductMutation.isPending}
+        />
+
+        <DeleteDialog
+          open={bulkDeleteDialogOpen}
+          onOpenChange={setBulkDeleteDialogOpen}
+          title={`Delete ${selectedProductIds.length} product${selectedProductIds.length === 1 ? "" : "s"}?`}
+          description={`Are you sure you want to delete ${selectedProductIds.length} selected product${selectedProductIds.length === 1 ? "" : "s"}? This action cannot be undone.`}
+          onConfirm={() =>
+            bulkDeleteProductsMutation.mutate({ ids: selectedProductIds })
+          }
+          isPending={bulkDeleteProductsMutation.isPending}
         />
       </div>
     </>

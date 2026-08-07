@@ -514,6 +514,30 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   return !!result
 }
 
+export const deleteProducts = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  await Promise.all([
+    db
+      .delete(productCategoriesTable)
+      .where(inArray(productCategoriesTable.productId, ids)),
+    db.delete(productTagsTable).where(inArray(productTagsTable.productId, ids)),
+    db.delete(productRunsTable).where(inArray(productRunsTable.productId, ids)),
+    db
+      .delete(productVersionsTable)
+      .where(inArray(productVersionsTable.productId, ids)),
+  ])
+  const deleted = await db
+    .delete(productsTable)
+    .where(inArray(productsTable.id, ids))
+    .returning()
+
+  return { success: true, count: deleted.length }
+}
+
 export const duplicateProduct = async (
   sourceId: string,
   createdBy: string,

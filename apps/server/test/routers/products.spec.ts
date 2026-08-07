@@ -61,11 +61,12 @@ const minimalWorkflow = {
 }
 
 describe("products router", () => {
-  test("exports fifteen procedures nested under products", () => {
+  test("exports sixteen procedures nested under products", () => {
     const keys = Object.keys(productsRouter.products).sort()
     expect(keys).toEqual(
       [
         "adminById",
+        "bulkDelete",
         "bulkStatusUpdate",
         "bySlug",
         "categories",

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import {
   createProduct,
   deleteProduct,
+  deleteProducts,
   duplicateProduct,
   getProductById,
   getProductBySlug,
@@ -92,6 +93,12 @@ describe("products service", () => {
     mockDb.setReturn([[], [], [], [], [{ id: "p1" }]])
     const result = await deleteProduct("p1")
     expect(result).toBe(true)
+  })
+
+  test("deleteProducts returns count when deleted", async () => {
+    mockDb.setReturn([[], [], [], [], [{ id: "p1" }, { id: "p2" }]])
+    const result = await deleteProducts(["p1", "p2"])
+    expect(result.count).toBe(2)
   })
 
   test("duplicateProduct returns new id", async () => {
