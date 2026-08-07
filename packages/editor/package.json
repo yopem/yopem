@@ -9,6 +9,10 @@
       "default": "./src/index.ts"
     },
     "./style.css": "./src/style.css",
+    "./lib/*": {
+      "types": "./src/lib/*.ts",
+      "default": "./src/lib/*.ts"
+    },
     "./*": {
       "types": "./src/components/*.tsx",
       "default": "./src/components/*.tsx"

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import * as mod from "@/routes/(admin-console)/products/index"
+import { Route } from "@/routes/(admin-console)/products/index"
 
-describe("apps/admin/routes/(admin-console)/products/index", () => {
-  test("exports module members", () => {
-    expect(mod).toBeDefined()
-    expect(mod.Route).toBeDefined()
+describe("products index route", () => {
+  test("exports a configured Route with a component", () => {
+    expect(Route).toBeDefined()
+    expect(typeof Route.options.component).toBe("function")
   })
 })

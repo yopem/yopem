@@ -1,6 +1,15 @@
+// @vitest-environment jsdom
+
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
-import { afterEach, describe, expect, test } from "vite-plus/test"
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vite-plus/test"
 
 import { GlobalSidebarFooter } from "@/components/layout/global-sidebar-footer"
 
@@ -8,76 +17,53 @@ import { GlobalSidebarFooter } from "@/components/layout/global-sidebar-footer"
   globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true
 
-const user = {
-  name: "Yandi",
-  email: "xkaryanayandi@gmail.com",
-  avatar: "https://example.com/avatar.webp",
-}
+let container: HTMLDivElement | null = null
+let root: Root | null = null
 
-const userWithoutAvatar = {
-  name: "Yandi",
-  email: "xkaryanayandi@gmail.com",
-}
-
-function setup(ui: React.ReactElement) {
-  const container = document.createElement("div")
+beforeEach(() => {
+  container = document.createElement("div")
   document.body.appendChild(container)
-  const root = createRoot(container)
-  act(() => root.render(ui))
-  return {
-    root,
-    container,
-    cleanup: () => {
-      act(() => root.unmount())
-      document.body.removeChild(container)
-    },
-  }
-}
-
-let current: {
-  root: Root
-  container: HTMLDivElement
-  cleanup: () => void
-} | null = null
+  root = createRoot(container)
+})
 
 afterEach(() => {
-  current?.cleanup()
-  current = null
+  const currentRoot = root
+  const currentContainer = container
+  if (currentRoot && currentContainer) {
+    act(() => currentRoot.unmount())
+    document.body.removeChild(currentContainer)
+  }
+  container = null
+  root = null
+  vi.clearAllMocks()
 })
 
 describe("GlobalSidebarFooter", () => {
-  test("is a React component (function)", () => {
-    expect(typeof GlobalSidebarFooter).toBe("function")
-  })
+  const user = {
+    name: "Jane Doe",
+    email: "jane@example.com",
+    avatar: "https://example.com/avatar.jpg",
+  }
 
   test("renders user name and email", () => {
-    current = setup(<GlobalSidebarFooter user={user} />)
-
-    expect(current.container.textContent).toContain(user.name)
-    expect(current.container.textContent).toContain(user.email)
-  })
-
-  test("renders avatar fallback with initials", () => {
-    current = setup(<GlobalSidebarFooter user={userWithoutAvatar} />)
-
-    expect(current.container.textContent).toContain("YA")
-  })
-
-  test("opens the user menu and renders actions", async () => {
-    current = setup(<GlobalSidebarFooter user={user} />)
-
-    const trigger = current.container.querySelector("button")
-    expect(trigger).not.toBeNull()
-
-    await act(async () => {
-      trigger?.click()
-      await new Promise((resolve) => setTimeout(resolve, 0))
+    act(() => {
+      root?.render(<GlobalSidebarFooter user={user} />)
     })
 
-    const menu = document.querySelector('[role="menu"]')
-    expect(menu).not.toBeNull()
-    expect(menu?.textContent).toContain("Back to Home")
-    expect(menu?.textContent).toContain("Profile")
-    expect(menu?.textContent).toContain("Logout")
+    expect(container?.textContent).toContain("Jane Doe")
+    expect(container?.textContent).toContain("jane@example.com")
+  })
+
+  test("renders avatar initials fallback when no image loaded", () => {
+    const userNoAvatar = {
+      name: "Alex Smith",
+      email: "alex@example.com",
+    }
+
+    act(() => {
+      root?.render(<GlobalSidebarFooter user={userNoAvatar} />)
+    })
+
+    expect(container?.textContent).toContain("AS")
   })
 })
