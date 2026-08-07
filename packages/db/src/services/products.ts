@@ -740,7 +740,10 @@ export const searchProducts = async (
     .where(
       and(
         eq(productsTable.status, "active"),
-        sql`(${ilike(productsTable.name, `%${query}%`).getSQL()} OR ${ilike(productsTable.description, `%${query}%`).getSQL()})`,
+        or(
+          ilike(productsTable.name, `%${query}%`),
+          ilike(productsTable.description, `%${query}%`),
+        ),
       ),
     )
     .orderBy(desc(productsTable.createdAt))

@@ -10,7 +10,10 @@ export default defineConfig({
     environment: "jsdom",
   },
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
+      "ui/components": resolve(__dirname, "./src/components"),
+      "ui/hooks": resolve(__dirname, "./src/hooks"),
       ui: resolve(__dirname, "./src"),
     },
   },

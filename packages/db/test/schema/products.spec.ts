@@ -1,6 +1,7 @@
 import * as v from "valibot"
-import { describe, expect, test } from "vite-plus/test"
+import { describe, expect, test, vi } from "vite-plus/test"
 
+vi.mock("bun", () => ({ SQL: class SQLMock {} }))
 import {
   productsTable,
   insertProductSchema,
@@ -10,12 +11,10 @@ import {
   productStatusEnum,
   productOutputFormatEnum,
 } from "db/schema/products"
-
 describe("products schema", () => {
   test("exports the table", () => {
     expect(productsTable).toBeDefined()
   })
-
   test("insert schema validates a valid row", () => {
     const result = v.safeParse(insertProductSchema, {
       name: "Prod",
@@ -23,7 +22,6 @@ describe("products schema", () => {
     })
     expect(result.success).toBe(true)
   })
-
   test("update schema validates a partial row", () => {
     const result = v.safeParse(updateProductSchema, {
       name: "Prod",
@@ -31,17 +29,14 @@ describe("products schema", () => {
     })
     expect(result.success).toBe(true)
   })
-
   test("exports productStatusEnum", () => {
     expect(productStatusEnum).toBeDefined()
     expect(productStatusEnum.length).toBeGreaterThan(0)
   })
-
   test("exports productOutputFormatEnum", () => {
     expect(productOutputFormatEnum).toBeDefined()
     expect(productOutputFormatEnum.length).toBeGreaterThan(0)
   })
-
   test("productSchema omits nothing (full select schema)", () => {
     const keys = Object.keys(productSchema.entries)
     for (const field of [
@@ -55,7 +50,6 @@ describe("products schema", () => {
       expect(keys).toContain(field)
     }
   })
-
   test("publicProductSchema omits sensitive fields", () => {
     const keys = Object.keys(publicProductSchema.entries)
     for (const sensitive of [

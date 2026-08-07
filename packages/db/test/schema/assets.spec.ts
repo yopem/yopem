@@ -1,6 +1,7 @@
 import * as v from "valibot"
-import { describe, expect, test } from "vite-plus/test"
+import { describe, expect, test, vi } from "vite-plus/test"
 
+vi.mock("bun", () => ({ SQL: class SQLMock {} }))
 import {
   assetSchema,
   assetsTable,
@@ -8,12 +9,10 @@ import {
   insertAssetSchema,
   updateAssetSchema,
 } from "db/schema/assets"
-
 describe("assets schema", () => {
   test("exports the table", () => {
     expect(assetsTable).toBeDefined()
   })
-
   test("insert schema validates a valid row", () => {
     const result = v.safeParse(insertAssetSchema, {
       filename: "a.webp",
@@ -24,7 +23,6 @@ describe("assets schema", () => {
     })
     expect(result.success).toBe(true)
   })
-
   test("update schema validates a partial row", () => {
     const result = v.safeParse(updateAssetSchema, {
       filename: "a.webp",
@@ -35,7 +33,6 @@ describe("assets schema", () => {
     })
     expect(result.success).toBe(true)
   })
-
   test("assetSchema validates a full select row", () => {
     const result = v.safeParse(assetSchema, {
       id: "ast_1",
@@ -49,7 +46,6 @@ describe("assets schema", () => {
     })
     expect(result.success).toBe(true)
   })
-
   test("exports assetTypeEnum", () => {
     expect(assetTypeEnum).toBeDefined()
     expect(assetTypeEnum.length).toBeGreaterThan(0)
