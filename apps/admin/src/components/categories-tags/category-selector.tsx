@@ -3,7 +3,7 @@
 import { XIcon } from "lucide-react"
 import { useState } from "react"
 
-import type { SelectCategory } from "db/schema"
+import type { SelectCategory } from "db/schema/categories"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"

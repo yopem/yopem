@@ -2,7 +2,7 @@
 
 import { useImperativeHandle, useState, type Ref } from "react"
 
-import type { SelectProduct } from "db/schema"
+import type { SelectProduct } from "db/schema/products"
 import { slateToPlainText } from "editor/serialize"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"

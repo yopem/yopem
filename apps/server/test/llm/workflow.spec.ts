@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { executeWorkflow } from "server/llm/workflow"
 
-import type { ProductWorkflow } from "db/schema"
+import type { ProductWorkflow } from "db/schema/product-workflow"
 
 const workflow: ProductWorkflow = {
   nodes: [

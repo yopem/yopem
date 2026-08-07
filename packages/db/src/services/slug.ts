@@ -1,13 +1,11 @@
 import { and, eq, ne } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  assetsTable,
-  categoriesTable,
-  productsTable,
-  tagsTable,
-} from "db/schema"
+import { assetsTable } from "db/schema/assets"
 import type { AssetType } from "db/schema/assets"
+import { categoriesTable } from "db/schema/categories"
+import { productsTable } from "db/schema/products"
+import { tagsTable } from "db/schema/tags"
 import { slugify, type SlugEntity } from "utils/slug"
 
 const slugEntityTable = {

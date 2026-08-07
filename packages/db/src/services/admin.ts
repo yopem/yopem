@@ -1,19 +1,17 @@
 import { and, asc, eq, gte, sql } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  adminSettingsTable,
-  aiModelsTable,
-  assetsTable,
-  categoriesTable,
-  productCategoriesTable,
-  productRunsTable,
-  productTagsTable,
-  productVersionsTable,
-  productsTable,
-  tagsTable,
-} from "db/schema"
+import { adminSettingsTable } from "db/schema/admin-settings"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
+import { aiModelsTable } from "db/schema/ai-models"
+import { assetsTable } from "db/schema/assets"
+import { categoriesTable } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
+import { productRunsTable } from "db/schema/product-runs"
+import { productTagsTable } from "db/schema/product-tags"
+import { productVersionsTable } from "db/schema/product-versions"
+import { productsTable } from "db/schema/products"
+import { tagsTable } from "db/schema/tags"
 
 export const getSetting = async (
   key: string,

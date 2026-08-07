@@ -1,8 +1,10 @@
 import { desc, eq, sql } from "drizzle-orm"
 
 import { db } from "db"
-import type { SelectUserSettings } from "db/schema"
-import { productRunsTable, productsTable, userSettingsTable } from "db/schema"
+import { productRunsTable } from "db/schema/product-runs"
+import { productsTable } from "db/schema/products"
+import type { SelectUserSettings } from "db/schema/user-settings"
+import { userSettingsTable } from "db/schema/user-settings"
 import type { InsertUserSettings } from "db/schema/user-settings"
 import { createCustomId } from "utils/custom-id"
 

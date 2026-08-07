@@ -3,7 +3,31 @@ import { drizzle } from "drizzle-orm/bun-sql"
 
 import { databaseUrl, isDev } from "env"
 
-import * as schema from "./schema"
+import { adminSettingsTable } from "./schema/admin-settings"
+import { aiModelsTable } from "./schema/ai-models"
+import { assetsTable } from "./schema/assets"
+import { categoriesTable } from "./schema/categories"
+import { productCategoriesTable } from "./schema/product-categories"
+import { productRunsTable } from "./schema/product-runs"
+import { productTagsTable } from "./schema/product-tags"
+import { productVersionsTable } from "./schema/product-versions"
+import { productsTable } from "./schema/products"
+import { tagsTable } from "./schema/tags"
+import { userSettingsTable } from "./schema/user-settings"
+
+const schema = {
+  adminSettingsTable,
+  aiModelsTable,
+  assetsTable,
+  categoriesTable,
+  productCategoriesTable,
+  productRunsTable,
+  productTagsTable,
+  productVersionsTable,
+  productsTable,
+  tagsTable,
+  userSettingsTable,
+}
 
 const sql = new SQL({
   url: databaseUrl,

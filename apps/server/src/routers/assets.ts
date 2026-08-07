@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { getR2Storage } from "server/storage"
+import { getR2Storage } from "server/storage/r2"
 import * as v from "valibot"
 
 import { redisCache } from "cache"

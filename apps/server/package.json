@@ -16,9 +16,9 @@
       "types": "./src/routers/index.ts",
       "default": "./src/routers/index.ts"
     },
-    "./storage": {
-      "types": "./src/storage/index.ts",
-      "default": "./src/storage/index.ts"
+    "./storage/r2": {
+      "types": "./src/storage/r2.ts",
+      "default": "./src/storage/r2.ts"
     }
   },
   "scripts": {

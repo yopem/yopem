@@ -30,7 +30,7 @@ import {
 } from "lucide-react"
 import { useCallback, useMemo, useRef, useState } from "react"
 
-import type { ProductWorkflow, WorkflowNode } from "db/schema"
+import type { ProductWorkflow, WorkflowNode } from "db/schema/product-workflow"
 import { badgeVariants } from "ui/badge"
 import { Button } from "ui/button"
 import { Card, CardPanel } from "ui/card"

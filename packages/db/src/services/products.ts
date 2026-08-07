@@ -1,18 +1,16 @@
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  assetsTable,
-  categoriesTable,
-  tagsTable,
-  productCategoriesTable,
-  productRunsTable,
-  productTagsTable,
-  productVersionsTable,
-  productsTable,
-} from "db/schema"
+import { assetsTable } from "db/schema/assets"
+import { categoriesTable } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
+import { productRunsTable } from "db/schema/product-runs"
+import { productTagsTable } from "db/schema/product-tags"
+import { productVersionsTable } from "db/schema/product-versions"
 import type { InsertProductVersion } from "db/schema/product-versions"
+import { productsTable } from "db/schema/products"
 import type { InsertProduct, SelectProduct } from "db/schema/products"
+import { tagsTable } from "db/schema/tags"
 import { createCustomId } from "utils/custom-id"
 
 import { assertSlugAvailable, generateUniqueProductSlug } from "./slug"

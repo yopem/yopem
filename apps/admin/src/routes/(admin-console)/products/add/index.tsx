@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
 
-import { getInputFieldsFromWorkflow } from "db/schema"
+import { getInputFieldsFromWorkflow } from "db/schema/product-workflow-utils"
 import { queryApi } from "rpc/query"
 import type { ProductInputVariable } from "ui/product-input-field"
 import { toastManager } from "ui/toast"

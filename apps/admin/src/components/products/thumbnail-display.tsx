@@ -3,7 +3,7 @@
 import { Image } from "@unpic/react"
 import { Image as ImageIcon, XIcon } from "lucide-react"
 
-import type { SelectAsset } from "db/schema"
+import type { SelectAsset } from "db/schema/assets"
 import { Button } from "ui/button"
 
 interface ThumbnailDisplayProps {

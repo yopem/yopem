@@ -11,7 +11,7 @@ import {
   vi,
 } from "vite-plus/test"
 
-import type { ProductWorkflow } from "db/schema"
+import type { ProductWorkflow } from "db/schema/product-workflow"
 
 import { WorkflowEditor } from "@/components/products/workflow-editor"
 

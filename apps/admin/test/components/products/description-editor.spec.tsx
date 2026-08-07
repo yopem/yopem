@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import type { TElement } from "platejs"
+
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import {
@@ -10,8 +12,6 @@ import {
   test,
   vi,
 } from "vite-plus/test"
-
-import type { TElement } from "editor"
 
 import { DescriptionEditor } from "@/components/products/description-editor"
 

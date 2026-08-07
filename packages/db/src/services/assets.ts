@@ -1,9 +1,11 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
 
 import { db } from "db"
-import { adminSettingsTable, assetsTable, productsTable } from "db/schema"
+import { adminSettingsTable } from "db/schema/admin-settings"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
+import { assetsTable } from "db/schema/assets"
 import type { SelectAsset } from "db/schema/assets"
+import { productsTable } from "db/schema/products"
 
 export const listAssets = async (input: {
   limit: number

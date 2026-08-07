@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 
-import type { SelectAsset } from "db/schema"
+import type { SelectAsset } from "db/schema/assets"
 import { queryApi } from "rpc/query"
 import { CollapsibleCard } from "ui/collapsible-card"
 

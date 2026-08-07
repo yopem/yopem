@@ -1,19 +1,21 @@
 "use client"
 
+import type { TElement } from "platejs"
+
 import { useForm, useSelector } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useEffectEvent, useMemo, useState } from "react"
 import * as v from "valibot"
 
 import {
-  insertProductSchema,
-  type SelectProduct,
-  createDefaultWorkflow,
-  getInputFieldsFromWorkflow,
   productWorkflowSchema,
   type ProductWorkflow,
-} from "db/schema"
-import type { TElement } from "editor"
+} from "db/schema/product-workflow"
+import {
+  createDefaultWorkflow,
+  getInputFieldsFromWorkflow,
+} from "db/schema/product-workflow-utils"
+import { insertProductSchema, type SelectProduct } from "db/schema/products"
 import { deserializeHtmlToSlate } from "editor/serialize"
 import { queryApi } from "rpc/query"
 import { toastManager } from "ui/toast"

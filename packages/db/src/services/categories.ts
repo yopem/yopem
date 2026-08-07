@@ -1,8 +1,9 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { categoriesTable, productCategoriesTable } from "db/schema"
+import { categoriesTable } from "db/schema/categories"
 import type { SelectCategory } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
 
 import { generateUniqueCategorySlug, assertSlugAvailable } from "./slug"
 

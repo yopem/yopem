@@ -1,7 +1,8 @@
 import { asc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { productTagsTable, tagsTable } from "db/schema"
+import { productTagsTable } from "db/schema/product-tags"
+import { tagsTable } from "db/schema/tags"
 import type { SelectTag } from "db/schema/tags"
 
 import { assertSlugAvailable, generateUniqueTagSlug } from "./slug"

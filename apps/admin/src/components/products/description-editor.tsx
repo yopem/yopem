@@ -1,9 +1,11 @@
 "use client"
 
+import type { TElement } from "platejs"
+
+import { Plate, usePlateEditor } from "platejs/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import type { TElement } from "editor"
-import { Editor, EditorContainer, Plate, usePlateEditor } from "editor"
+import { Editor, EditorContainer } from "editor/editor"
 import { EditorKit } from "editor/editor-kit"
 import { FloatingToolbar } from "editor/floating-toolbar"
 import { FloatingToolbarButtons } from "editor/floating-toolbar-buttons"

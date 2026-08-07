@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useReducer } from "react"
 
-import type { SelectAsset } from "db/schema"
+import type { SelectAsset } from "db/schema/assets"
 import { queryApi } from "rpc/query"
 import { Dialog, DialogPopup } from "ui/dialog"
 import { toastManager } from "ui/toast"

@@ -1,4 +1,4 @@
-import { getR2Storage } from "server/storage"
+import { getR2Storage } from "server/storage/r2"
 
 import type { AIProvider, ExecutionResponse } from "./providers/base"
 import type { ApiKeyProvider } from "./providers/base"

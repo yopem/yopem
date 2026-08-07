@@ -7,10 +7,9 @@ import { redisCache } from "cache"
 import { getOrCompute } from "cache/with-cache"
 import {
   productWorkflowSchema,
-  insertProductSchema,
-  updateProductSchema,
   type ProductWorkflow,
-} from "db/schema"
+} from "db/schema/product-workflow"
+import { insertProductSchema, updateProductSchema } from "db/schema/products"
 import { findAIModelByProviderAndModelId, getSetting } from "db/services/admin"
 import { getAssetById } from "db/services/assets"
 import { listCategories, validateCategoryIds } from "db/services/categories"
