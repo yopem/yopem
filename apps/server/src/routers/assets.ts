@@ -7,8 +7,10 @@ import { getOrCompute } from "cache/services/with-cache"
 import { assetSchema, assetTypeEnum } from "db/schema/assets"
 import {
   deleteAsset,
+  deleteAssets,
   getAdminUploadSizeSetting,
   getAssetById,
+  getAssetsByIds,
   insertAsset,
   listAssets,
 } from "db/services/assets"
@@ -177,6 +179,26 @@ export const assetsRouter = {
         await deleteAsset(input.id)
 
         return { success: true }
+      }),
+
+    bulkDelete: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(v.object({ ids: v.pipe(v.array(v.string()), v.minLength(1)) }))
+      .output(v.object({ success: v.boolean(), count: v.number() }))
+      .handler(async ({ input }) => {
+        const assets = await getAssetsByIds(input.ids)
+        const r2 = getR2Storage()
+        for (const asset of assets) {
+          try {
+            const key = new URL(asset.url).pathname.replace(/^\//, "")
+            await r2.deleteFile(key)
+          } catch {
+            // best-effort R2 deletion for bulk
+          }
+        }
+        return deleteAssets(input.ids)
       }),
   },
 }

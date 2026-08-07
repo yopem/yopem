@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import { lazy, useCallback, useState } from "react"
 
 import { queryApi } from "rpc/query"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
 import { Spinner } from "ui/spinner"
 import { toastManager } from "ui/toast"
 
@@ -30,6 +32,8 @@ function AssetsRouteComponent() {
   const [selectedType, setSelectedType] = useState<AssetType | "all">("all")
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null)
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
 
   const { data: settings } = useQuery(
     queryApi.assets.uploadSettings.queryOptions(),
@@ -93,6 +97,45 @@ function AssetsRouteComponent() {
     }),
   )
 
+  const bulkDeleteAssetsMutation = useMutation(
+    queryApi.assets.bulkDelete.mutationOptions({
+      onSuccess: (data) => {
+        toastManager.add({
+          title: "Assets deleted",
+          description: `${data.count} asset${data.count === 1 ? "" : "s"} deleted.`,
+          type: "success",
+        })
+        setSelectedAssetIds([])
+        setBulkDeleteDialogOpen(false)
+        void refetch()
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Delete failed",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedAssetIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    )
+  }, [])
+
+  const handleToggleAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedAssetIds(assets.map((a) => a.id))
+      } else {
+        setSelectedAssetIds([])
+      }
+    },
+    [assets],
+  )
+
   const handleUpload = useCallback(
     (file: File) => {
       const cleanName = file.name.replace(/^.*[/\\]/, "")
@@ -145,10 +188,42 @@ function AssetsRouteComponent() {
 
       <UploadProgress isUploading={uploadMutation.isPending} />
 
-      <AssetTypeFilter
-        selectedType={selectedType}
-        onTypeChange={setSelectedType}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <AssetTypeFilter
+          selectedType={selectedType}
+          onTypeChange={(type) => {
+            setSelectedType(type)
+            setSelectedAssetIds([])
+          }}
+        />
+        {assets.length > 0 && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={
+                  assets.length > 0 && selectedAssetIds.length === assets.length
+                }
+                indeterminate={
+                  selectedAssetIds.length > 0 &&
+                  selectedAssetIds.length !== assets.length
+                }
+                onCheckedChange={handleToggleAll}
+              />
+              <span className="text-muted-foreground text-sm">Select all</span>
+            </div>
+            {selectedAssetIds.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkDeleteDialogOpen(true)}
+                disabled={bulkDeleteAssetsMutation.isPending}
+              >
+                Delete Selected ({selectedAssetIds.length})
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="flex h-64 w-full items-center justify-center p-8">
@@ -167,6 +242,8 @@ function AssetsRouteComponent() {
             <AssetCard
               key={asset.id}
               asset={asset}
+              isSelected={selectedAssetIds.includes(asset.id)}
+              onToggleSelect={handleToggleSelect}
               onPreview={setPreviewAsset}
               onDelete={setDeleteAsset}
             />
@@ -192,6 +269,17 @@ function AssetsRouteComponent() {
           deleteAsset && deleteMutation.mutate({ id: deleteAsset.id })
         }
         isPending={deleteMutation.isPending}
+      />
+
+      <DeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        title={`Delete ${selectedAssetIds.length} asset${selectedAssetIds.length === 1 ? "" : "s"}?`}
+        description={`Are you sure you want to delete ${selectedAssetIds.length} selected asset${selectedAssetIds.length === 1 ? "" : "s"}? This action cannot be undone.`}
+        onConfirm={() =>
+          bulkDeleteAssetsMutation.mutate({ ids: selectedAssetIds })
+        }
+        isPending={bulkDeleteAssetsMutation.isPending}
       />
     </div>
   )

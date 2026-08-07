@@ -18,9 +18,11 @@ const userContext = (
 })
 
 describe("assets router", () => {
-  test("exports four procedures nested under assets", () => {
+  test("exports five procedures nested under assets", () => {
     const keys = Object.keys(assetsRouter.assets).sort()
-    expect(keys).toEqual(["delete", "list", "upload", "uploadSettings"].sort())
+    expect(keys).toEqual(
+      ["bulkDelete", "delete", "list", "upload", "uploadSettings"].sort(),
+    )
   })
 
   test("every procedure is defined", () => {

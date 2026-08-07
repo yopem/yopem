@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 
 import {
   deleteAsset,
+  deleteAssets,
   getAdminUploadSizeSetting,
   getAssetById,
+  getAssetsByIds,
   insertAsset,
   listAssets,
 } from "db/services/assets"
@@ -50,6 +52,18 @@ describe("assets service", () => {
   test("deleteAsset resolves", async () => {
     mockDb.setReturn([[], []])
     await expect(deleteAsset("a1")).resolves.toBeUndefined()
+  })
+
+  test("getAssetsByIds returns list of assets", async () => {
+    mockDb.setReturn([[{ id: "a1" }, { id: "a2" }]])
+    const result = await getAssetsByIds(["a1", "a2"])
+    expect(result).toHaveLength(2)
+  })
+
+  test("deleteAssets returns count when deleted", async () => {
+    mockDb.setReturn([[], [{ id: "a1" }, { id: "a2" }]])
+    const result = await deleteAssets(["a1", "a2"])
+    expect(result.count).toBe(2)
   })
 
   test("getAdminUploadSizeSetting returns setting", async () => {

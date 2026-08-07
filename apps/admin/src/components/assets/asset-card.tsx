@@ -6,7 +6,8 @@ import { memo } from "react"
 
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
-import { Card, CardPanel, CardHeader } from "ui/card"
+import { Card, CardHeader, CardPanel } from "ui/card"
+import { Checkbox } from "ui/checkbox"
 import { formatDateOnly } from "utils/format-date"
 import { formatFileSize } from "utils/format-file-size"
 
@@ -26,20 +27,41 @@ export interface Asset {
 
 interface AssetCardProps {
   asset: Asset
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
   onPreview: (asset: Asset) => void
   onDelete: (asset: Asset) => void
 }
 
 export const AssetCard = memo(
-  ({ asset, onPreview, onDelete }: AssetCardProps) => {
+  ({
+    asset,
+    isSelected,
+    onToggleSelect,
+    onPreview,
+    onDelete,
+  }: AssetCardProps) => {
     const isImage = asset.type === "images"
 
     return (
       <Card
-        className="group cursor-pointer overflow-hidden"
+        className={`group cursor-pointer overflow-hidden ${
+          isSelected ? "ring-primary ring-2" : ""
+        }`}
         onClick={() => onPreview(asset)}
       >
         <CardPanel className="relative aspect-square p-0">
+          <div
+            className={`absolute top-2 left-2 z-10 transition-opacity ${
+              isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect?.(asset.id)}
+            />
+          </div>
           {isImage ? (
             <Image
               src={asset.url}
