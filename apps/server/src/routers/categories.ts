@@ -9,6 +9,7 @@ import {
   getCategory,
   listCategories,
   updateCategory,
+  updateCategoryStatus,
 } from "db/services/categories"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
@@ -137,5 +138,17 @@ export const categoriesRouter = {
       .input(v.object({ ids: v.array(v.string()) }))
       .output(v.object({ success: v.boolean(), count: v.number() }))
       .handler(({ input }) => deleteCategories(input.ids)),
+
+    bulkStatusUpdate: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(
+        v.object({
+          ids: v.pipe(v.array(v.string()), v.minLength(1)),
+          status: v.picklist(["draft", "active", "archived"]),
+        }),
+      )
+      .handler(({ input }) => updateCategoryStatus(input.ids, input.status)),
   },
 }

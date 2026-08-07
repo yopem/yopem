@@ -9,6 +9,7 @@ import {
   getTag,
   listTags,
   updateTag,
+  updateTagStatus,
 } from "db/services/tags"
 
 import { os, requireAdminMiddleware, requireAuthMiddleware } from "./orpc"
@@ -121,5 +122,17 @@ export const tagsRouter = {
       .input(v.object({ ids: v.array(v.string()) }))
       .output(v.object({ success: v.boolean(), count: v.number() }))
       .handler(({ input }) => deleteTags(input.ids)),
+
+    bulkStatusUpdate: os
+      .route({ method: "POST" })
+      .use(requireAuthMiddleware)
+      .use(requireAdminMiddleware)
+      .input(
+        v.object({
+          ids: v.pipe(v.array(v.string()), v.minLength(1)),
+          status: v.picklist(["draft", "active", "archived"]),
+        }),
+      )
+      .handler(({ input }) => updateTagStatus(input.ids, input.status)),
   },
 }

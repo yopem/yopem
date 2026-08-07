@@ -14,6 +14,7 @@ export const listCategories = (): Promise<
     description: string | null
     parentId: string | null
     sortOrder: number | null
+    status: "draft" | "active" | "archived"
   }[]
 > => {
   return db
@@ -24,6 +25,7 @@ export const listCategories = (): Promise<
       description: categoriesTable.description,
       parentId: categoriesTable.parentId,
       sortOrder: categoriesTable.sortOrder,
+      status: categoriesTable.status,
     })
     .from(categoriesTable)
     .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
@@ -196,6 +198,23 @@ export const deleteCategories = async (
     .where(inArray(categoriesTable.id, ids))
     .returning()
   return { success: true, count: deleted.length }
+}
+
+export const updateCategoryStatus = async (
+  ids: string[],
+  status: "draft" | "active" | "archived",
+): Promise<{ success: boolean; count: number } | null> => {
+  const result = await db
+    .update(categoriesTable)
+    .set({ status })
+    .where(inArray(categoriesTable.id, ids))
+    .returning()
+
+  if (!result || result.length === 0) {
+    return null
+  }
+
+  return { success: true, count: result.length }
 }
 
 export const validateCategoryIds = async (ids: string[]): Promise<boolean> => {

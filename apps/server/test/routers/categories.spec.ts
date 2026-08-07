@@ -3,10 +3,18 @@ import { describe, expect, test } from "bun:test"
 import { categoriesRouter } from "server/routers/categories"
 
 describe("categories router", () => {
-  test("exports six procedures nested under categories", () => {
+  test("exports seven procedures nested under categories", () => {
     const keys = Object.keys(categoriesRouter.categories).sort()
     expect(keys).toEqual(
-      ["bulkDelete", "byId", "create", "delete", "list", "update"].sort(),
+      [
+        "bulkDelete",
+        "bulkStatusUpdate",
+        "byId",
+        "create",
+        "delete",
+        "list",
+        "update",
+      ].sort(),
     )
   })
 

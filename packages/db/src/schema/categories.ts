@@ -10,6 +10,9 @@ import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
 
+export const categoryStatusEnum = ["draft", "active", "archived"] as const
+export type CategoryStatus = (typeof categoryStatusEnum)[number]
+
 export const categoriesTable = pgTable(
   "categories",
   {
@@ -25,6 +28,9 @@ export const categoriesTable = pgTable(
       { onDelete: "set null" },
     ),
     sortOrder: integer("sort_order").default(0),
+    status: text("status", { enum: categoryStatusEnum })
+      .notNull()
+      .default("active"),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => {
@@ -44,6 +50,7 @@ export const listCategorySchema = v.pick(categorySchema, [
   "description",
   "parentId",
   "sortOrder",
+  "status",
 ])
 
 export type SelectCategory = typeof categoriesTable.$inferSelect

@@ -11,6 +11,7 @@ export const listTags = (): Promise<
     id: string
     name: string
     slug: string
+    status: "draft" | "active" | "archived"
   }[]
 > => {
   return db
@@ -18,6 +19,7 @@ export const listTags = (): Promise<
       id: tagsTable.id,
       name: tagsTable.name,
       slug: tagsTable.slug,
+      status: tagsTable.status,
     })
     .from(tagsTable)
     .orderBy(asc(tagsTable.name))
@@ -91,6 +93,23 @@ export const deleteTags = async (
     .where(inArray(tagsTable.id, ids))
     .returning()
   return { success: true, count: deleted.length }
+}
+
+export const updateTagStatus = async (
+  ids: string[],
+  status: "draft" | "active" | "archived",
+): Promise<{ success: boolean; count: number } | null> => {
+  const result = await db
+    .update(tagsTable)
+    .set({ status })
+    .where(inArray(tagsTable.id, ids))
+    .returning()
+
+  if (!result || result.length === 0) {
+    return null
+  }
+
+  return { success: true, count: result.length }
 }
 
 export const validateTagIds = async (ids: string[]): Promise<boolean> => {

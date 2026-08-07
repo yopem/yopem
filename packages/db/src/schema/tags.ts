@@ -8,19 +8,23 @@ import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
 
+export const tagStatusEnum = ["draft", "active", "archived"] as const
+export type TagStatus = (typeof tagStatusEnum)[number]
+
 export const tagsTable = pgTable("tags", {
   id: text()
     .primaryKey()
     .$defaultFn(() => createCustomId()),
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
+  status: text("status", { enum: tagStatusEnum }).notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow(),
 })
 
 export const insertTagSchema = createInsertSchema(tagsTable)
 export const updateTagSchema = createUpdateSchema(tagsTable)
 export const tagSchema = createSelectSchema(tagsTable)
-export const listTagSchema = v.pick(tagSchema, ["id", "name", "slug"])
+export const listTagSchema = v.pick(tagSchema, ["id", "name", "slug", "status"])
 
 export type SelectTag = typeof tagsTable.$inferSelect
 export type InsertTag = typeof tagsTable.$inferInsert

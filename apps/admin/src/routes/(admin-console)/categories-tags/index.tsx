@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
-import { useEffect, useReducer, useRef, useState } from "react"
+import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
@@ -358,6 +358,74 @@ function CategoriesTagsRouteComponent() {
     }),
   )
 
+  const bulkUpdateCategoryStatusMutation = useMutation(
+    queryApi.categories.bulkStatusUpdate.mutationOptions({
+      onSuccess: (data, variables) => {
+        if (!data) return
+        toastManager.add({
+          title: "Categories updated",
+          description: `${data.count} categor${data.count === 1 ? "y" : "ies"} marked as ${variables.status}.`,
+          type: "success",
+        })
+        setSelectedCategoryIds([])
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.categories.list.queryKey(),
+        })
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Error updating categories",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
+  const bulkUpdateTagStatusMutation = useMutation(
+    queryApi.tags.bulkStatusUpdate.mutationOptions({
+      onSuccess: (data, variables) => {
+        if (!data) return
+        toastManager.add({
+          title: "Tags updated",
+          description: `${data.count} tag${data.count === 1 ? "" : "s"} marked as ${variables.status}.`,
+          type: "success",
+        })
+        setSelectedTagIds([])
+        void queryClient.invalidateQueries({
+          queryKey: queryApi.tags.list.queryKey(),
+        })
+      },
+      onError: (error: Error) => {
+        toastManager.add({
+          title: "Error updating tags",
+          description: error.message,
+          type: "error",
+        })
+      },
+    }),
+  )
+
+  const handleBulkUpdateCategoryStatus = useCallback(
+    (status: "draft" | "active" | "archived") => {
+      bulkUpdateCategoryStatusMutation.mutate({
+        ids: selectedCategoryIds,
+        status,
+      })
+    },
+    [bulkUpdateCategoryStatusMutation, selectedCategoryIds],
+  )
+
+  const handleBulkUpdateTagStatus = useCallback(
+    (status: "draft" | "active" | "archived") => {
+      bulkUpdateTagStatusMutation.mutate({
+        ids: selectedTagIds,
+        status,
+      })
+    },
+    [bulkUpdateTagStatusMutation, selectedTagIds],
+  )
+
   const handleCategorySubmit = (values: {
     name: string
     slug?: string
@@ -449,14 +517,52 @@ function CategoriesTagsRouteComponent() {
             <h2 className="text-xl font-semibold">Categories</h2>
             <div className="flex items-center gap-2">
               {selectedCategoryIds.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPendingBulkDelete("category")}
-                  disabled={bulkDeleteCategoryMutation.isPending}
-                >
-                  Delete Selected ({selectedCategoryIds.length})
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateCategoryStatus("draft")}
+                    disabled={
+                      bulkUpdateCategoryStatusMutation.isPending ||
+                      bulkDeleteCategoryMutation.isPending
+                    }
+                  >
+                    Mark Draft ({selectedCategoryIds.length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateCategoryStatus("active")}
+                    disabled={
+                      bulkUpdateCategoryStatusMutation.isPending ||
+                      bulkDeleteCategoryMutation.isPending
+                    }
+                  >
+                    Mark Active ({selectedCategoryIds.length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateCategoryStatus("archived")}
+                    disabled={
+                      bulkUpdateCategoryStatusMutation.isPending ||
+                      bulkDeleteCategoryMutation.isPending
+                    }
+                  >
+                    Archive ({selectedCategoryIds.length})
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setPendingBulkDelete("category")}
+                    disabled={
+                      bulkUpdateCategoryStatusMutation.isPending ||
+                      bulkDeleteCategoryMutation.isPending
+                    }
+                  >
+                    Delete Selected ({selectedCategoryIds.length})
+                  </Button>
+                </>
               )}
               <Button
                 size="sm"
@@ -489,14 +595,52 @@ function CategoriesTagsRouteComponent() {
             <h2 className="text-xl font-semibold">Tags</h2>
             <div className="flex items-center gap-2">
               {selectedTagIds.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPendingBulkDelete("tag")}
-                  disabled={bulkDeleteTagMutation.isPending}
-                >
-                  Delete Selected ({selectedTagIds.length})
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateTagStatus("draft")}
+                    disabled={
+                      bulkUpdateTagStatusMutation.isPending ||
+                      bulkDeleteTagMutation.isPending
+                    }
+                  >
+                    Mark Draft ({selectedTagIds.length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateTagStatus("active")}
+                    disabled={
+                      bulkUpdateTagStatusMutation.isPending ||
+                      bulkDeleteTagMutation.isPending
+                    }
+                  >
+                    Mark Active ({selectedTagIds.length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkUpdateTagStatus("archived")}
+                    disabled={
+                      bulkUpdateTagStatusMutation.isPending ||
+                      bulkDeleteTagMutation.isPending
+                    }
+                  >
+                    Archive ({selectedTagIds.length})
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setPendingBulkDelete("tag")}
+                    disabled={
+                      bulkUpdateTagStatusMutation.isPending ||
+                      bulkDeleteTagMutation.isPending
+                    }
+                  >
+                    Delete Selected ({selectedTagIds.length})
+                  </Button>
+                </>
               )}
               <Button
                 size="sm"

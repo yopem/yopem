@@ -3,10 +3,18 @@ import { describe, expect, test } from "bun:test"
 import { tagsRouter } from "server/routers/tags"
 
 describe("tags router", () => {
-  test("exports six procedures nested under tags", () => {
+  test("exports seven procedures nested under tags", () => {
     const keys = Object.keys(tagsRouter.tags).sort()
     expect(keys).toEqual(
-      ["bulkDelete", "byId", "create", "delete", "list", "update"].sort(),
+      [
+        "bulkDelete",
+        "bulkStatusUpdate",
+        "byId",
+        "create",
+        "delete",
+        "list",
+        "update",
+      ].sort(),
     )
   })
 
