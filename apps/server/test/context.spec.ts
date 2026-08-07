@@ -1,4 +1,4 @@
-import type { AppContext } from "server/context"
+import type { AppContext } from "server/lib/context"
 
 import { describe, expect, test } from "bun:test"
 

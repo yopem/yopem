@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { executeWorkflow } from "server/llm/workflow"
-import { enforceRateLimit } from "server/rate-limit"
+import { enforceRateLimit } from "server/middleware/rate-limit"
 import * as v from "valibot"
 
 import { redisCache } from "cache"

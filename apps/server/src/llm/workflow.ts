@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { decryptApiKey } from "server/utils/crypto"
+import { decryptApiKey } from "server/lib/crypto"
 import * as v from "valibot"
 
 import type { ProductWorkflow, WorkflowNode } from "db/schema/product-workflow"

@@ -1,4 +1,4 @@
-import type { SessionUser } from "server/auth"
+import type { SessionUser } from "server/middleware/auth"
 
 import { os as osBase, ORPCError } from "@orpc/server"
 

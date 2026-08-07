@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "server"
-import { orpcCodeForStatus } from "server/errors"
+import { orpcCodeForStatus } from "server/lib/errors"
 
 describe("server index", () => {
   test("exports the Hono app", () => {

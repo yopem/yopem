@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { aiModels, planModelSeed } from "server/seed"
+import { aiModels, planModelSeed } from "server/scripts/seed"
 
 import type { ApiKeyProvider } from "utils/api-input"
 

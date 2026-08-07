@@ -6,7 +6,7 @@ import {
   tags,
   VALID_OUTPUT_FORMATS,
   VALID_PROVIDERS,
-} from "server/seed"
+} from "server/scripts/seed"
 
 const PROVIDER_SET = new Set(VALID_PROVIDERS)
 const OUTPUT_FORMAT_SET = new Set(VALID_OUTPUT_FORMATS)

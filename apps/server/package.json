@@ -19,14 +19,10 @@
     "./storage": {
       "types": "./src/storage/index.ts",
       "default": "./src/storage/index.ts"
-    },
-    "./rate-limit": {
-      "types": "./src/rate-limit.ts",
-      "default": "./src/rate-limit.ts"
     }
   },
   "scripts": {
-    "seed": "bun --env-file=../../.env src/seed.ts",
+    "seed": "bun --env-file=../../.env src/scripts/seed.ts",
     "dev": "bun --env-file=../../.env --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun --env-file=../../.env dist/index.js",

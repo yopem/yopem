@@ -4,7 +4,7 @@ import {
   RATE_LIMITS,
   checkRateLimit,
   enforceRateLimit,
-} from "server/rate-limit"
+} from "server/middleware/rate-limit"
 
 describe("checkRateLimit", () => {
   test("allows requests when redis is unavailable", async () => {

@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
+import { decryptApiKey, encryptApiKey, maskApiKey } from "server/lib/crypto"
 import { testApiKey } from "server/llm/test-key"
-import { enforceRateLimit } from "server/rate-limit"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "server/utils/crypto"
+import { enforceRateLimit } from "server/middleware/rate-limit"
 import * as v from "valibot"
 
 import { redisCache } from "cache"

@@ -1,4 +1,5 @@
 import type { Context, MiddlewareHandler } from "hono"
+import type { AppContext } from "server/lib/context"
 
 import { getCookie, setCookie } from "hono/cookie"
 
@@ -6,8 +7,6 @@ import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
 import type { SessionUser } from "auth/types"
 import { cookieDomain, isProd } from "env"
-
-import type { AppContext } from "./context"
 
 export type { SessionUser }
 

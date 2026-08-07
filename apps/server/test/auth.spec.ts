@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { authMiddleware } from "server/auth"
+import { authMiddleware } from "server/middleware/auth"
 
 describe("authMiddleware", () => {
   test("is exported", () => {

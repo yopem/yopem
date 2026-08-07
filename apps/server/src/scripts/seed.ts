@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm"
 import readline from "node:readline"
 import { pathToFileURL } from "node:url"
-import { encryptApiKey } from "server/utils/crypto"
+import { encryptApiKey } from "server/lib/crypto"
 import * as v from "valibot"
 
 import { db } from "db"

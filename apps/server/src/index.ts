@@ -6,11 +6,11 @@ import { HTTPException } from "hono/http-exception"
 
 import { adminOrigin, isDev, serverPort, webOrigin } from "env"
 
-import type { AppContext } from "./context"
+import type { AppContext } from "./lib/context"
 
-import { authMiddleware } from "./auth"
-import { ApiError, orpcCodeForStatus } from "./errors"
 import { authCallbackRoute } from "./handlers/auth-callback"
+import { ApiError, orpcCodeForStatus } from "./lib/errors"
+import { authMiddleware } from "./middleware/auth"
 import { router } from "./routers"
 
 const app = new Hono<AppContext>()

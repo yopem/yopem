@@ -1,4 +1,4 @@
-import type { SessionUser } from "server/auth"
+import type { SessionUser } from "server/middleware/auth"
 
 import { call, ORPCError } from "@orpc/server"
 import { describe, expect, test } from "bun:test"

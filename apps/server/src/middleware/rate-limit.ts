@@ -1,8 +1,7 @@
 import type { RedisClient } from "bun"
 
 import { ORPCError } from "@orpc/server"
-
-import { RateLimitError } from "./errors"
+import { RateLimitError } from "server/lib/errors"
 
 export async function checkRateLimit(
   getRedisClient: () => Promise<RedisClient | null>,
