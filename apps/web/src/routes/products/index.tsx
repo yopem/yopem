@@ -207,12 +207,13 @@ function CatalogComponent() {
         <div className="space-y-4">
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
+              <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 type="search"
                 placeholder="Search tools by name or keywords..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full"
+                className="w-full pl-9"
               />
             </div>
             <Button
@@ -240,6 +241,7 @@ function CatalogComponent() {
                     <Badge
                       key={cat.id}
                       variant={isSelected ? "default" : "outline"}
+                      size="sm"
                       className="cursor-pointer text-xs transition-colors"
                       onClick={() => handleCategoryToggle(cat.id)}
                     >
@@ -263,7 +265,8 @@ function CatalogComponent() {
                   return (
                     <Badge
                       key={tag.id}
-                      variant={isSelected ? "secondary" : "outline"}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
                       className="cursor-pointer text-xs transition-colors"
                       onClick={() => handleTagToggle(tag.id)}
                     >
@@ -328,9 +331,9 @@ function CatalogComponent() {
             <span className="text-muted-foreground text-xs">
               Page {page} of {totalPages} ({listData.total} total tools)
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => updateSearch({ page: page - 1 })}
@@ -340,7 +343,7 @@ function CatalogComponent() {
                 <span>Previous</span>
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => updateSearch({ page: page + 1 })}

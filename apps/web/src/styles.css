@@ -1,5 +1,16 @@
 @import "ui/style.css";
 
+/* Monochrome lock: keep decorative secondary colors neutral on the public site */
+:root {
+  --secondary: var(--muted);
+  --secondary-foreground: var(--muted-foreground);
+}
+
+.dark {
+  --secondary: var(--muted);
+  --secondary-foreground: var(--muted-foreground);
+}
+
 @supports (view-transition-name: none) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -47,5 +58,13 @@
   ::view-transition-old(main-content),
   ::view-transition-new(main-content) {
     animation-duration: 0.01ms !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -36,6 +36,8 @@ export function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.thumbnail.url}
             alt={product.name}
+            width={640}
+            height={360}
             className="size-full object-cover transition-transform duration-300 group-hover:scale-102"
             loading="lazy"
           />
@@ -49,7 +51,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.categories.slice(0, 2).map((cat) => (
               <Badge
                 key={cat.id}
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 className="bg-background/90 text-foreground border-border/40 text-[10px] font-medium shadow-2xs"
               >

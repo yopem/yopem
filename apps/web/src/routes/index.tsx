@@ -9,8 +9,8 @@ import {
 
 import { siteDescription, siteTitle, siteUrl } from "env"
 import { queryApi } from "rpc/query"
-import { Badge } from "ui/badge"
 import { Button } from "ui/button"
+import { Card, CardPanel, CardTitle } from "ui/card"
 
 import { ProductCard } from "@/components/product-card"
 import { SiteLayout } from "@/components/site-layout"
@@ -45,22 +45,33 @@ export const Route = createFileRoute("/")({
   component: LandingComponent,
 })
 
+const values = [
+  {
+    icon: ZapIcon,
+    title: "Fast Execution",
+    description: "Instant cloud inference workflows",
+  },
+  {
+    icon: LayersIcon,
+    title: "Curated Tools",
+    description: "Purpose-built AI micro-utilities",
+  },
+  {
+    icon: ShieldCheckIcon,
+    title: "Reliable",
+    description: "Automated state preservation",
+  },
+]
+
 function LandingComponent() {
   const { popular, categories } = useLoaderData({ from: "/" })
 
   return (
     <SiteLayout>
-      {/* Hero Section - Clean cal.com minimal style */}
+      {/* Hero */}
       <section className="border-border bg-background border-b py-16 sm:py-24">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6">
-          <Badge
-            variant="outline"
-            className="text-muted-foreground border-border px-3 py-1 text-xs font-medium"
-          >
-            <span>Next-Generation AI Platform</span>
-          </Badge>
-
-          <h1 className="font-heading text-foreground text-4xl leading-[1.15] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+        <div className="mx-auto max-w-4xl space-y-5 px-4 text-center sm:px-6">
+          <h1 className="font-heading text-foreground text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
             Supercharge your workflow with AI micro-tools
           </h1>
 
@@ -69,7 +80,7 @@ function LandingComponent() {
             seconds, and seamlessly automate complex tasks.
           </p>
 
-          <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
+          <div className="pt-1">
             <Button
               size="lg"
               className="w-full gap-2 px-6 text-sm font-semibold sm:w-auto"
@@ -78,63 +89,34 @@ function LandingComponent() {
               <CompassIcon className="size-4" />
               <span>Explore All Tools</span>
             </Button>
-            {categories.length > 0 && (
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full gap-2 px-6 text-sm sm:w-auto"
-                render={
-                  <Link
-                    to="/c/$categorySlug"
-                    params={{ categorySlug: categories[0].slug }}
-                  />
-                }
-              >
-                <span>View Categories</span>
-                <ArrowRightIcon className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          {/* Key Value Highlights */}
-          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 pt-12 text-left sm:grid-cols-3">
-            <div className="border-border bg-card flex items-start gap-3 rounded-lg border p-3.5 shadow-2xs">
-              <ZapIcon className="text-foreground mt-0.5 size-4 shrink-0" />
-              <div>
-                <h4 className="font-heading text-xs font-semibold">
-                  Fast Execution
-                </h4>
-                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                  Instant cloud inference workflows
-                </p>
-              </div>
-            </div>
-            <div className="border-border bg-card flex items-start gap-3 rounded-lg border p-3.5 shadow-2xs">
-              <LayersIcon className="text-foreground mt-0.5 size-4 shrink-0" />
-              <div>
-                <h4 className="font-heading text-xs font-semibold">
-                  Curated Tools
-                </h4>
-                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                  Purpose-built AI micro-utilities
-                </p>
-              </div>
-            </div>
-            <div className="border-border bg-card flex items-start gap-3 rounded-lg border p-3.5 shadow-2xs">
-              <ShieldCheckIcon className="text-foreground mt-0.5 size-4 shrink-0" />
-              <div>
-                <h4 className="font-heading text-xs font-semibold">Reliable</h4>
-                <p className="text-muted-foreground mt-0.5 text-[11px]">
-                  Automated state preservation
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
+      {/* Value bar */}
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {values.map(({ icon: Icon, title, description }) => (
+            <Card
+              key={title}
+              className="border-border bg-card flex items-start gap-3 p-4 shadow-2xs"
+            >
+              <Icon className="text-foreground mt-0.5 size-4 shrink-0" />
+              <CardPanel className="flex-1 p-0">
+                <CardTitle className="font-heading text-xs font-semibold">
+                  {title}
+                </CardTitle>
+                <p className="text-muted-foreground mt-0.5 text-[11px]">
+                  {description}
+                </p>
+              </CardPanel>
+            </Card>
+          ))}
+        </div>
+      </section>
+
       {/* Popular Products Grid */}
-      <section className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
+      <section className="mx-auto max-w-6xl space-y-5 px-4 py-12 sm:px-6">
         <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
           <div>
             <h2 className="font-heading text-2xl font-bold tracking-tight">
@@ -169,7 +151,7 @@ function LandingComponent() {
       {/* Category Entry Links */}
       {categories.length > 0 && (
         <section className="border-border bg-muted/20 border-t py-12">
-          <div className="mx-auto max-w-6xl space-y-6 px-4 sm:px-6">
+          <div className="mx-auto max-w-6xl space-y-5 px-4 sm:px-6">
             <div>
               <h2 className="font-heading text-xl font-bold tracking-tight">
                 Explore by Category

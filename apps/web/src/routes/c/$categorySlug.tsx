@@ -26,6 +26,7 @@ const PAGE_SIZE = 12
 
 export interface CategorySearch {
   search?: string
+  tagIds?: string[]
   page?: number
 }
 
@@ -33,6 +34,11 @@ export const Route = createFileRoute("/c/$categorySlug")({
   validateSearch: (search: Record<string, unknown>): CategorySearch => {
     return {
       search: typeof search.search === "string" ? search.search : undefined,
+      tagIds: Array.isArray(search.tagIds)
+        ? search.tagIds.filter((id): id is string => typeof id === "string")
+        : typeof search.tagIds === "string"
+          ? [search.tagIds]
+          : undefined,
       page:
         typeof search.page === "number" && search.page > 0
           ? search.page
@@ -46,11 +52,12 @@ export const Route = createFileRoute("/c/$categorySlug")({
     const page = deps.page ?? 1
     const offset = (page - 1) * PAGE_SIZE
 
-    const categories = await queryClient.ensureQueryData(
-      queryApi.products.categories.queryOptions(),
-    )
-    const category = categories.find((c) => c.slug === params.categorySlug)
+    const [categories, tags] = await Promise.all([
+      queryClient.ensureQueryData(queryApi.products.categories.queryOptions()),
+      queryClient.ensureQueryData(queryApi.products.tags.queryOptions()),
+    ])
 
+    const category = categories.find((c) => c.slug === params.categorySlug)
     if (!category) {
       throw notFound()
     }
@@ -62,18 +69,21 @@ export const Route = createFileRoute("/c/$categorySlug")({
           offset,
           search: deps.search,
           categoryIds: [category.id],
+          tagIds: deps.tagIds,
         },
       }),
     )
 
-    return { category, listData, searchState: deps }
+    return { category, categories, tags, listData, searchState: deps }
   },
   head: ({ loaderData }) => {
     if (!loaderData?.category) return {}
 
     const { category, searchState } = loaderData
     const isFilteredOrPaginated = Boolean(
-      (searchState.search ?? "") !== "" || (searchState.page ?? 1) > 1,
+      (searchState.search ?? "") !== "" ||
+      (searchState.tagIds?.length ?? 0) > 0 ||
+      (searchState.page ?? 1) > 1,
     )
 
     const categoryUrl = `${siteUrl ?? "http://localhost:3000"}/c/${category.slug}`
@@ -120,7 +130,7 @@ export const Route = createFileRoute("/c/$categorySlug")({
 })
 
 function CategoryComponent() {
-  const { category, listData, searchState } = useLoaderData({
+  const { category, categories, tags, listData, searchState } = useLoaderData({
     from: "/c/$categorySlug",
   })
   const navigate = useNavigate({ from: "/c/$categorySlug" })
@@ -142,11 +152,21 @@ function CategoryComponent() {
           page: newParams.page ?? 1,
         }
         if (!next.search) delete next.search
+        if (!next.tagIds || (next.tagIds as string[]).length === 0)
+          delete next.tagIds
         if (next.page === 1) delete next.page
         return next
       },
       replace: true,
     })
+  }
+
+  const handleTagToggle = (id: string) => {
+    const current = searchState.tagIds ?? []
+    const updated = current.includes(id)
+      ? current.filter((t: string) => t !== id)
+      : [...current, id]
+    updateSearch({ tagIds: updated, page: 1 })
   }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -155,20 +175,22 @@ function CategoryComponent() {
     updateSearch({ search: trimmed !== "" ? trimmed : undefined, page: 1 })
   }
 
-  const clearSearch = () => {
+  const clearFilters = () => {
     setSearchInput("")
-    updateSearch({ search: undefined, page: 1 })
+    void navigate({ search: {}, replace: true })
   }
 
   const page = searchState.page ?? 1
   const totalPages = Math.ceil(listData.total / PAGE_SIZE)
+  const hasActiveFilters =
+    Boolean(searchState.search) || (searchState.tagIds?.length ?? 0) > 0
 
   return (
     <SiteLayout>
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
         {/* Page Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/products"
               className="text-muted-foreground hover:text-foreground text-xs transition-colors"
@@ -191,30 +213,102 @@ function CategoryComponent() {
           )}
         </div>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="flex max-w-md gap-2">
-          <Input
-            type="search"
-            placeholder={`Search ${category.name} tools...`}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full"
-          />
-          <Button type="submit" size="default" className="gap-1 font-medium">
-            <SearchIcon className="size-4" />
-            <span>Search</span>
-          </Button>
-          {searchState.search && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={clearSearch}
-            >
-              <XIcon className="size-4" />
+        {/* Search Bar & Filter Controls */}
+        <div className="space-y-4">
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+            <div className="relative flex-1">
+              <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                type="search"
+                placeholder={`Search ${category.name} tools...`}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-9"
+              />
+            </div>
+            <Button type="submit" size="default" className="gap-1 font-medium">
+              <SearchIcon className="size-4" />
+              <span>Search</span>
             </Button>
+          </form>
+
+          {/* Categories Filter Badges */}
+          {categories.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                Categories
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((cat) => {
+                  const isCurrent = cat.id === category.id
+                  return (
+                    <Badge
+                      key={cat.id}
+                      variant={isCurrent ? "default" : "outline"}
+                      size="sm"
+                      className="cursor-pointer text-xs transition-colors"
+                      onClick={() => {
+                        if (isCurrent) {
+                          void navigate({ to: "/products", search: {} })
+                        } else {
+                          void navigate({
+                            to: "/c/$categorySlug",
+                            params: { categorySlug: cat.slug },
+                          })
+                        }
+                      }}
+                    >
+                      {cat.name}
+                    </Badge>
+                  )
+                })}
+              </div>
+            </div>
           )}
-        </form>
+
+          {/* Tags Filter Badges */}
+          {tags.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                Tags
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map((tag) => {
+                  const isSelected = (searchState.tagIds ?? []).includes(tag.id)
+                  return (
+                    <Badge
+                      key={tag.id}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      className="cursor-pointer text-xs transition-colors"
+                      onClick={() => handleTagToggle(tag.id)}
+                    >
+                      #{tag.name}
+                    </Badge>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Active Filter Clear Bar */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-muted-foreground text-xs">
+                Active filters
+              </span>
+              <Button
+                variant="ghost"
+                size="xs"
+                className="gap-1 text-xs"
+                onClick={clearFilters}
+              >
+                <XIcon className="size-3" />
+                <span>Clear All</span>
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Product Grid */}
         {listData.products.length > 0 ? (
@@ -233,7 +327,7 @@ function CategoryComponent() {
                 variant="outline"
                 size="sm"
                 className="mt-4"
-                onClick={clearSearch}
+                onClick={clearFilters}
               >
                 Clear Search
               </Button>
@@ -247,9 +341,9 @@ function CategoryComponent() {
             <span className="text-muted-foreground text-xs">
               Page {page} of {totalPages} ({listData.total} tools)
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => updateSearch({ page: page - 1 })}
@@ -259,7 +353,7 @@ function CategoryComponent() {
                 <span>Previous</span>
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => updateSearch({ page: page + 1 })}

@@ -18,7 +18,7 @@ import {
   SparklesIcon,
   TagIcon,
 } from "lucide-react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { siteTitle, siteUrl } from "env"
 import { queryApi } from "rpc/query"
@@ -31,6 +31,7 @@ import {
   CardPanel,
   CardTitle,
 } from "ui/card"
+import { Label } from "ui/label"
 import { ProductInputField } from "ui/product-input-field"
 
 import { ProductCard } from "@/components/product-card"
@@ -77,6 +78,18 @@ export const Route = createFileRoute("/products/$productSlug")({
       product.description ??
       `Run ${product.name} AI tool on Yopem.`
 
+    const links: { rel: string; href: string; as?: string; type?: string }[] = [
+      { rel: "canonical", href: productUrl },
+    ]
+    if (product.thumbnail?.url) {
+      links.push({
+        rel: "preload",
+        href: product.thumbnail.url,
+        as: "image",
+        type: "image/webp",
+      })
+    }
+
     return {
       meta: [
         { title: `${product.name} - ${siteTitle ?? "Yopem"}` },
@@ -89,7 +102,7 @@ export const Route = createFileRoute("/products/$productSlug")({
           ? [{ property: "og:image", content: product.thumbnail.url }]
           : []),
       ],
-      links: [{ rel: "canonical", href: productUrl }],
+      links,
       scripts: [
         {
           type: "application/ld+json",
@@ -115,6 +128,28 @@ export const Route = createFileRoute("/products/$productSlug")({
   component: ProductDetailComponent,
 })
 
+function useContentExceedsViewport(
+  ref: React.RefObject<HTMLElement | null>,
+  threshold = 0.5,
+) {
+  const [exceeds, setExceeds] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const update = () => {
+      setExceeds(el.scrollHeight > window.innerHeight * threshold)
+    }
+
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [ref, threshold])
+
+  return exceeds
+}
+
 function ProductDetailComponent() {
   const {
     product,
@@ -126,6 +161,10 @@ function ProductDetailComponent() {
   const fileReaderRef = useRef<FileReader | null>(null)
   const [executionResult, setExecutionResult] = useState<unknown>(null)
   const [executionError, setExecutionError] = useState<string | null>(null)
+
+  const descriptionRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+  const descriptionIsLong = useContentExceedsViewport(descriptionRef, 0.5)
 
   // Related products query with fallback to popular
   const relatedQuery = useQuery(
@@ -206,9 +245,13 @@ function ProductDetailComponent() {
     }
   }
 
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
     <SiteLayout>
-      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         {/* Header / Product Title Info */}
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -218,7 +261,7 @@ function ProductDetailComponent() {
                 to="/c/$categorySlug"
                 params={{ categorySlug: cat.slug }}
               >
-                <Badge variant="secondary" className="gap-1 text-xs">
+                <Badge variant="outline" className="gap-1 text-xs">
                   <FolderIcon className="size-3" />
                   {cat.name}
                 </Badge>
@@ -244,7 +287,7 @@ function ProductDetailComponent() {
             )}
           </div>
 
-          <div className="text-muted-foreground flex items-center gap-4 pt-1 text-xs font-medium">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-3 pt-1 text-xs font-medium">
             <div className="border-border bg-muted/20 flex items-center gap-1.5 rounded-md border px-2.5 py-1">
               <CoinsIcon className="text-muted-foreground size-3.5" />
               <span>
@@ -260,136 +303,24 @@ function ProductDetailComponent() {
           </div>
         </div>
 
-        {/* Main Work Area: Input Form & Output Panel */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Tool Inputs Column */}
-          <div className="space-y-6 lg:col-span-6">
-            <Card className="border-border bg-card">
-              <CardHeader className="border-border border-b pb-3">
-                <CardTitle className="font-heading flex items-center gap-2 text-lg font-bold">
-                  <PlayIcon className="text-foreground size-4" />
-                  <span>Run Tool</span>
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Provide inputs to execute this workflow.
-                </CardDescription>
-              </CardHeader>
-              <CardPanel className="p-5">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    void form.handleSubmit()
-                  }}
-                  className="space-y-4"
-                >
-                  {inputFields.length > 0 ? (
-                    inputFields.map((field) => (
-                      <form.Field
-                        key={field.variableName}
-                        name={field.variableName}
-                        validators={{
-                          onBlur: ({ value }) => {
-                            if (
-                              !field.isOptional &&
-                              (!value ||
-                                (typeof value === "string" && !value.trim()))
-                            ) {
-                              return "This field is required"
-                            }
-                            return undefined
-                          },
-                          onSubmit: ({ value }) => {
-                            if (
-                              !field.isOptional &&
-                              (!value ||
-                                (typeof value === "string" && !value.trim()))
-                            ) {
-                              return "This field is required"
-                            }
-                            return undefined
-                          },
-                        }}
-                      >
-                        {(fieldApi) => (
-                          <div className="space-y-1.5">
-                            <label className="text-foreground flex items-center justify-between text-xs font-semibold">
-                              <span>
-                                {field.description || field.variableName}
-                              </span>
-                              {!field.isOptional && (
-                                <span className="text-destructive text-[10px] font-normal">
-                                  *Required
-                                </span>
-                              )}
-                            </label>
-                            <ProductInputField
-                              field={field}
-                              value={fieldApi.state.value}
-                              error={fieldApi.state.meta.errors[0]}
-                              fileReaderRef={fileReaderRef}
-                              onChange={(_name, val) =>
-                                fieldApi.handleChange(val)
-                              }
-                              onClearError={() => fieldApi.validate("blur")}
-                            />
-                            {fieldApi.state.meta.errors.length > 0 && (
-                              <p className="text-destructive text-xs font-medium">
-                                {fieldApi.state.meta.errors[0]}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </form.Field>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-xs italic">
-                      No parameters required for this tool. Click run to
-                      execute.
-                    </p>
-                  )}
+        {/* LCP thumbnail */}
+        {product.thumbnail?.url && (
+          <div className="border-border relative aspect-video w-full overflow-hidden rounded-xl border">
+            <img
+              src={product.thumbnail.url}
+              alt={product.name}
+              width={1200}
+              height={675}
+              fetchPriority="high"
+              className="size-full object-cover"
+            />
+          </div>
+        )}
 
-                  {executionError && (
-                    <div className="border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-2 rounded-md border p-3 text-xs">
-                      <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
-                      <span>{executionError}</span>
-                    </div>
-                  )}
-
-                  {session ? (
-                    <Button
-                      type="submit"
-                      size="default"
-                      className="w-full gap-2 font-medium"
-                      disabled={executeMutation.isPending}
-                    >
-                      {executeMutation.isPending ? (
-                        <>
-                          <Loader2Icon className="size-4 animate-spin" />
-                          <span>Generating Output...</span>
-                        </>
-                      ) : (
-                        <>
-                          <PlayIcon className="size-4 fill-current" />
-                          <span>Execute Tool</span>
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      size="default"
-                      className="w-full gap-2 font-medium"
-                      onClick={handleRunLoginRedirect}
-                    >
-                      <LogInIcon className="size-4" />
-                      <span>Sign in to Run Tool</span>
-                    </Button>
-                  )}
-                </form>
-              </CardPanel>
-            </Card>
-
+        {/* Main Work Area */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Left column: description + form */}
+          <div ref={descriptionRef} className="space-y-6">
             {/* Product Full Description */}
             <Card className="border-border bg-card">
               <CardHeader className="border-border border-b pb-3">
@@ -404,10 +335,159 @@ function ProductDetailComponent() {
                 />
               </CardPanel>
             </Card>
+
+            {/* Persistent jump-to-form CTA for long descriptions */}
+            {descriptionIsLong && (
+              <Card className="border-border bg-card">
+                <CardPanel className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="font-heading text-sm font-semibold">
+                      Ready to run {product.name}?
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Provide inputs and execute the workflow.
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" className="gap-1.5" onClick={scrollToForm}>
+                    <PlayIcon className="size-3.5 fill-current" />
+                    <span>Jump to Run Tool</span>
+                  </Button>
+                </CardPanel>
+              </Card>
+            )}
+
+            {/* Tool Form */}
+            <div ref={formRef}>
+              <Card className="border-border bg-card">
+                <CardHeader className="border-border border-b pb-3">
+                  <CardTitle className="font-heading flex items-center gap-2 text-lg font-bold">
+                    <PlayIcon className="text-foreground size-4" />
+                    <span>Run Tool</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Provide inputs to execute this workflow.
+                  </CardDescription>
+                </CardHeader>
+                <CardPanel className="p-5">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      void form.handleSubmit()
+                    }}
+                    className="space-y-4"
+                  >
+                    {inputFields.length > 0 ? (
+                      inputFields.map((field) => (
+                        <form.Field
+                          key={field.variableName}
+                          name={field.variableName}
+                          validators={{
+                            onBlur: ({ value }) => {
+                              if (
+                                !field.isOptional &&
+                                (!value ||
+                                  (typeof value === "string" && !value.trim()))
+                              ) {
+                                return "This field is required"
+                              }
+                              return undefined
+                            },
+                            onSubmit: ({ value }) => {
+                              if (
+                                !field.isOptional &&
+                                (!value ||
+                                  (typeof value === "string" && !value.trim()))
+                              ) {
+                                return "This field is required"
+                              }
+                              return undefined
+                            },
+                          }}
+                        >
+                          {(fieldApi) => (
+                            <div className="space-y-1.5">
+                              <Label className="text-foreground flex items-center justify-between text-xs font-semibold">
+                                <span>
+                                  {field.description || field.variableName}
+                                </span>
+                                {!field.isOptional && (
+                                  <span className="text-destructive text-[10px] font-normal">
+                                    *Required
+                                  </span>
+                                )}
+                              </Label>
+                              <ProductInputField
+                                field={field}
+                                value={fieldApi.state.value}
+                                error={fieldApi.state.meta.errors[0]}
+                                fileReaderRef={fileReaderRef}
+                                onChange={(_name, val) =>
+                                  fieldApi.handleChange(val)
+                                }
+                                onClearError={() => fieldApi.validate("blur")}
+                              />
+                              {fieldApi.state.meta.errors.length > 0 && (
+                                <p className="text-destructive text-xs font-medium">
+                                  {fieldApi.state.meta.errors[0]}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </form.Field>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-xs italic">
+                        No parameters required for this tool. Click run to
+                        execute.
+                      </p>
+                    )}
+
+                    {executionError && (
+                      <div className="border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-2 rounded-md border p-3 text-xs">
+                        <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
+                        <span>{executionError}</span>
+                      </div>
+                    )}
+
+                    {session ? (
+                      <Button
+                        type="submit"
+                        size="default"
+                        className="w-full gap-2 font-medium"
+                        disabled={executeMutation.isPending}
+                      >
+                        {executeMutation.isPending ? (
+                          <>
+                            <Loader2Icon className="size-4 animate-spin" />
+                            <span>Generating Output...</span>
+                          </>
+                        ) : (
+                          <>
+                            <PlayIcon className="size-4 fill-current" />
+                            <span>Execute Tool</span>
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="default"
+                        className="w-full gap-2 font-medium"
+                        onClick={handleRunLoginRedirect}
+                      >
+                        <LogInIcon className="size-4" />
+                        <span>Sign in to Run Tool</span>
+                      </Button>
+                    )}
+                  </form>
+                </CardPanel>
+              </Card>
+            </div>
           </div>
 
-          {/* Execution Result Column */}
-          <div className="space-y-6 lg:col-span-6">
+          {/* Right column: sticky output */}
+          <div className="lg:sticky lg:top-20 lg:self-start">
             <Card className="border-border bg-card flex min-h-[400px] flex-col justify-between">
               <CardHeader className="border-border border-b pb-3">
                 <CardTitle className="font-heading flex items-center justify-between text-base font-semibold">
