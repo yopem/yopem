@@ -19,13 +19,13 @@ export function parseImageHtmlElement(
   const captionText =
     element.querySelector("figcaption")?.textContent ??
     img.getAttribute("data-caption") ??
-    img.getAttribute("alt") ??
     ""
 
   return {
     type,
     url,
     width: img.getAttribute("width") ?? undefined,
+    alt: img.getAttribute("alt") ?? undefined,
     caption: captionText ? [{ text: captionText }] : undefined,
   }
 }

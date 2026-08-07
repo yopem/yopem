@@ -1,5 +1,6 @@
 "use client"
 
+import type { TImageElement } from "platejs"
 import type { WithRequiredKey } from "platejs"
 import type { ReactNode } from "react"
 
@@ -20,12 +21,12 @@ import {
   useRemoveNodeButton,
   useSelected,
 } from "platejs/react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button, buttonVariants } from "ui/button"
 import { Popover, PopoverContent } from "ui/popover"
 import { Separator } from "ui/separator"
-import { cva } from "ui/utils"
+import { cn, cva } from "ui/utils"
 
 import { CaptionButton } from "./caption"
 
@@ -114,6 +115,40 @@ function MediaUrlInput({
   )
 }
 
+function AltInput({ onClose }: { onClose: () => void }) {
+  const editor = useEditorRef()
+  const element = useElement()
+  const [value, setValue] = useState(
+    (element as TImageElement & { alt?: string }).alt ?? "",
+  )
+
+  function commit() {
+    const path = editor.api.findPath(element)
+    if (path) {
+      editor.tf.setNodes({ alt: value.trim() }, { at: path })
+    }
+    onClose()
+  }
+
+  return (
+    <div className="flex w-88 flex-col gap-2 p-2">
+      <span className="text-sm font-medium">Alt text</span>
+      <input
+        className={cn(inputVariants(), "rounded-md border")}
+        placeholder="Describe the image for accessibility"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit()
+          if (e.key === "Escape") onClose()
+        }}
+        autoFocus
+      />
+      <p className="text-muted-foreground text-xs">Press Enter to save</p>
+    </div>
+  )
+}
+
 export function MediaToolbar({
   children,
   plugin,
@@ -132,8 +167,10 @@ export function MediaToolbar({
   const isImagePreviewOpen = useImagePreviewValue("isOpen", editor.id)
   const isEditing = useFloatingMediaValue("isEditing")
   const url = useFloatingMediaValue("url")
+  const isImage = plugin.key === KEYS.img
+  const [isAltEditing, setIsAltEditing] = useState(false)
   const open =
-    (isFocusedLast || isEditing) &&
+    (isFocusedLast || isAltEditing || isEditing) &&
     !readOnly &&
     selected &&
     selectionCollapsed &&
@@ -164,7 +201,9 @@ export function MediaToolbar({
         initialFocus={false}
         data-media-toolbar
       >
-        {isEditing ? (
+        {isAltEditing ? (
+          <AltInput onClose={() => setIsAltEditing(false)} />
+        ) : isEditing ? (
           <MediaUrlInput plugin={plugin} isNew={!url} />
         ) : (
           <div className="box-content flex items-center">
@@ -177,6 +216,16 @@ export function MediaToolbar({
             <CaptionButton size="sm" variant="ghost">
               Caption
             </CaptionButton>
+
+            {isImage && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsAltEditing(true)}
+              >
+                Alt text
+              </Button>
+            )}
 
             <Separator orientation="vertical" className="mx-1 h-6" />
 

@@ -36,14 +36,19 @@ function getCaptionText(element: TImageElement): string {
     : ""
 }
 
+function getAltText(element: TImageElement): string {
+  return (element as TImageElement & { alt?: string }).alt ?? ""
+}
+
 function ImageStaticElement({ element }: { element: TImageElement }) {
   const caption = getCaptionText(element)
+  const alt = getAltText(element) || caption
 
   return createElement(
     "figure",
     null,
     createElement("img", {
-      alt: caption,
+      alt,
       "data-caption": caption || undefined,
       src: element.url,
       width: element.width,

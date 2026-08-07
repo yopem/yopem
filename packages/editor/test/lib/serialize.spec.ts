@@ -101,5 +101,33 @@ describe("serialize", () => {
       })
       expect(reloaded[0]).toHaveProperty("caption")
     })
+
+    test("serializes a distinct alt attribute separate from the caption", async () => {
+      const node = {
+        ...imageNode,
+        alt: "A photo of the skyline",
+      }
+
+      const html = await serializeSlateToHtml([node] as never[])
+
+      expect(html).toContain('alt="A photo of the skyline"')
+      expect(html).toContain("A caption")
+    })
+
+    test("round-trips an explicit alt attribute", async () => {
+      const node = {
+        ...imageNode,
+        alt: "A photo of the skyline",
+      }
+
+      const html = await serializeSlateToHtml([node] as never[])
+      const reloaded = deserializeHtmlToSlate(html)
+
+      expect(reloaded[0]).toMatchObject({
+        type: KEYS.img,
+        url: "https://example.com/photo.webp",
+        alt: "A photo of the skyline",
+      })
+    })
   })
 })
