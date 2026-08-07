@@ -87,6 +87,7 @@ export function AssetLibrary({
             <button
               key={asset.id}
               type="button"
+              aria-label={`Select ${asset.originalName}`}
               className={`relative aspect-square cursor-pointer overflow-hidden rounded-md border-2 transition-colors ${
                 selectedAssetId === asset.id
                   ? "border-primary"

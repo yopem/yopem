@@ -1,3 +1,5 @@
+import type { TImageElement } from "platejs"
+
 import {
   BaseBlockquotePlugin,
   BaseBoldPlugin,
@@ -20,8 +22,21 @@ import {
 import { BaseIndentPlugin } from "@platejs/indent"
 import { BaseLinkPlugin } from "@platejs/link"
 import { BaseListPlugin } from "@platejs/list"
-import { BaseMediaEmbedPlugin } from "@platejs/media"
+import { BaseImagePlugin, BaseMediaEmbedPlugin } from "@platejs/media"
 import { BaseParagraphPlugin } from "platejs"
+import { createElement } from "react"
+
+function ImageStaticElement({ element }: { element: TImageElement }) {
+  const caption = Array.isArray(element.caption)
+    ? element.caption.map((node) => ("text" in node ? node.text : "")).join("")
+    : ""
+
+  return createElement("img", {
+    alt: caption,
+    src: element.url,
+    width: element.width,
+  })
+}
 
 export const SerializeKit = [
   BaseParagraphPlugin,
@@ -45,5 +60,10 @@ export const SerializeKit = [
   BaseLinkPlugin,
   BaseIndentPlugin,
   BaseListPlugin,
+  BaseImagePlugin.configure({
+    node: {
+      component: ImageStaticElement,
+    },
+  }),
   BaseMediaEmbedPlugin,
 ]

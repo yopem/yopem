@@ -52,4 +52,42 @@ describe("serialize", () => {
       })
     })
   })
+
+  describe("image", () => {
+    const imageNode = {
+      type: KEYS.img,
+      url: "https://example.com/photo.webp",
+      width: 320,
+      caption: [{ text: "A caption" }],
+      children: [{ text: "" }],
+    }
+
+    test("serializes an image node to img markup", async () => {
+      const html = await serializeSlateToHtml([imageNode] as never[])
+
+      expect(html).toContain("photo.webp")
+      expect(html).toContain("img")
+    })
+
+    test("deserializes an img element back into an image node", () => {
+      const value = deserializeHtmlToSlate(
+        '<img src="https://example.com/photo.webp" width="320" alt="A caption" />',
+      )
+
+      expect(value[0]).toMatchObject({
+        type: KEYS.img,
+        url: "https://example.com/photo.webp",
+      })
+    })
+
+    test("an image node survives the save/reload slate round-trip", async () => {
+      const html = await serializeSlateToHtml([imageNode] as never[])
+      const reloaded = deserializeHtmlToSlate(html)
+
+      expect(reloaded[0]).toMatchObject({
+        type: KEYS.img,
+        url: "https://example.com/photo.webp",
+      })
+    })
+  })
 })

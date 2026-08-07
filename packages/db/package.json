@@ -41,6 +41,7 @@
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "drizzle-kit": "catalog:",
+    "pg": "^8.22.0",
     "typescript": "catalog:"
   }
 }

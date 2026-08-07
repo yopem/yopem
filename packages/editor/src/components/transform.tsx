@@ -6,6 +6,7 @@ import { LinkPlugin } from "@platejs/link/react"
 import {
   insertAudioPlaceholder,
   insertFilePlaceholder,
+  insertImage,
   insertMedia,
   insertVideoPlaceholder,
 } from "@platejs/media"
@@ -19,6 +20,7 @@ import {
 } from "platejs"
 
 import { EmbedInsertStore } from "editor/floating-embed-toolbar"
+import { ImagePickerPlugin } from "editor/image-picker-kit"
 
 function insertList(editor: PlateEditor, type: string) {
   editor.tf.insertNodes(
@@ -80,6 +82,29 @@ const insertInlineMap: Record<
   [KEYS.mediaEmbed]: () => {
     EmbedInsertStore.set(true)
   },
+}
+
+export function getImagePicker(editor: PlateEditor) {
+  const plugin = (
+    editor.plugins as unknown as Record<
+      string,
+      { options?: { imagePicker?: () => Promise<string | undefined> } }
+    >
+  )[ImagePickerPlugin.key]
+
+  return plugin?.options?.imagePicker
+}
+
+export async function insertImageAsset(editor: PlateEditor) {
+  const picker = getImagePicker(editor)
+
+  if (!picker) return
+
+  const url = await picker()
+
+  if (!url) return
+
+  insertImage(editor, url, { nextBlock: false, select: true })
 }
 
 interface InsertBlockOptions {

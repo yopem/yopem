@@ -1,13 +1,19 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { TElement } from "editor"
 import { Editor, EditorContainer, Plate, usePlateEditor } from "editor"
 import { EditorKit } from "editor/editor-kit"
 import { FloatingToolbar } from "editor/floating-toolbar"
 import { FloatingToolbarButtons } from "editor/floating-toolbar-buttons"
+import { ImagePickerPlugin } from "editor/image-picker-kit"
 import { serializeSlateToHtml } from "editor/serialize"
+
+import {
+  ImageAssetPicker,
+  type ImageAsset,
+} from "@/components/assets/image-asset-picker"
 
 interface DescriptionEditorProps {
   initialValue: TElement[]
@@ -20,12 +26,51 @@ export function DescriptionEditor({
   onChange,
   onBlur,
 }: DescriptionEditorProps) {
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pendingResolve, setPendingResolve] = useState<
+    ((url: string | undefined) => void) | null
+  >(null)
+
+  const imagePicker = useCallback(
+    () =>
+      new Promise<string | undefined>((resolve) => {
+        setPendingResolve(() => resolve)
+        setPickerOpen(true)
+      }),
+    [],
+  )
+
+  const handleSelectAsset = useCallback(
+    (asset: ImageAsset) => {
+      pendingResolve?.(asset.url)
+      setPendingResolve(null)
+      setPickerOpen(false)
+    },
+    [pendingResolve],
+  )
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setPickerOpen(open)
+      if (!open && pendingResolve) {
+        pendingResolve(undefined)
+        setPendingResolve(null)
+      }
+    },
+    [pendingResolve],
+  )
+
   const editor = usePlateEditor(
     {
-      plugins: EditorKit,
+      plugins: [
+        ...EditorKit,
+        ImagePickerPlugin.configure({
+          options: { imagePicker },
+        }),
+      ],
       value: initialValue,
     },
-    [],
+    [imagePicker],
   )
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -77,21 +122,30 @@ export function DescriptionEditor({
   if (!editor) return null
 
   return (
-    <Plate editor={editor} onChange={handleChange}>
-      <EditorContainer
-        variant="default"
-        onBlurCapture={handleBlur}
-        className="border-input bg-background dark:bg-input/32 focus-within:border-ring focus-within:ring-ring/24 min-h-80 resize-y overflow-y-auto rounded-lg border shadow-xs/5 transition-shadow focus-within:ring-[3px] [&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
-      >
-        <Editor
+    <>
+      <Plate editor={editor} onChange={handleChange}>
+        <EditorContainer
           variant="default"
-          placeholder="Type something..."
-          className="px-4 pt-4 pb-20 sm:px-4 sm:pl-4"
-        />
-        <FloatingToolbar>
-          <FloatingToolbarButtons />
-        </FloatingToolbar>
-      </EditorContainer>
-    </Plate>
+          onBlurCapture={handleBlur}
+          className="border-input bg-background dark:bg-input/32 focus-within:border-ring focus-within:ring-ring/24 min-h-80 resize-y overflow-y-auto rounded-lg border shadow-xs/5 transition-shadow focus-within:ring-[3px] [&_.slate-selection-area]:border-none [&_.slate-selection-area]:bg-transparent"
+        >
+          <Editor
+            variant="default"
+            placeholder="Type something..."
+            className="px-4 pt-4 pb-20 sm:px-4 sm:pl-4"
+          />
+          <FloatingToolbar>
+            <FloatingToolbarButtons />
+          </FloatingToolbar>
+        </EditorContainer>
+      </Plate>
+      <ImageAssetPicker
+        open={pickerOpen}
+        onOpenChange={handleOpenChange}
+        onSelect={handleSelectAsset}
+        title="Insert Image"
+        description="Choose an image from your library or upload a new one"
+      />
+    </>
   )
 }
