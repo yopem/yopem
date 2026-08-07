@@ -28,21 +28,27 @@ export const getSitemapXml = createServerFn({ method: "GET" }).handler(
       fetchAllProductSlugs(),
     ])
 
-    const urls = [
-      `${baseUrl}/`,
-      `${baseUrl}/products`,
-      ...categories.map((category) => `${baseUrl}/c/${category.slug}`),
-      ...productSlugs.map((slug) => `${baseUrl}/products/${slug}`),
+    const pages = [
+      { path: "/", priority: "1.0" },
+      { path: "/products", priority: "0.8" },
+      ...categories.map((category) => ({
+        path: `/c/${category.slug}`,
+        priority: "0.8",
+      })),
+      ...productSlugs.map((slug) => ({
+        path: `/products/${slug}`,
+        priority: "0.8",
+      })),
     ]
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls
+${pages
   .map(
-    (url) => `  <url>
-    <loc>${url}</loc>
+    ({ path, priority }) => `  <url>
+    <loc>${baseUrl}${path}</loc>
     <changefreq>daily</changefreq>
-    <priority>${url === `${baseUrl}/` ? "1.0" : "0.8"}</priority>
+    <priority>${priority}</priority>
   </url>`,
   )
   .join("\n")}
