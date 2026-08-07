@@ -4,7 +4,7 @@ import { testApiKey } from "server/llm/test-key"
 import * as v from "valibot"
 
 import { redisCache } from "cache"
-import { getOrCompute } from "cache/services/with-cache"
+import { getOrCompute } from "cache/with-cache"
 import { aiModelSchema } from "db/schema/ai-models"
 import {
   createAIModel,

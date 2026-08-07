@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vite-plus/test"
 
-import { getOrCompute } from "cache/services/with-cache"
+import { getOrCompute } from "cache/with-cache"
 
 describe("getOrCompute", () => {
   test("returns cached value without calling compute", async () => {

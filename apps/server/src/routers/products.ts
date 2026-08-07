@@ -4,7 +4,7 @@ import { enforceRateLimit } from "server/middleware/rate-limit"
 import * as v from "valibot"
 
 import { redisCache } from "cache"
-import { getOrCompute } from "cache/services/with-cache"
+import { getOrCompute } from "cache/with-cache"
 import {
   productWorkflowSchema,
   insertProductSchema,

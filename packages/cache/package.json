@@ -12,9 +12,9 @@
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
-    "./services/*": {
-      "types": "./src/services/*.ts",
-      "default": "./src/services/*.ts"
+    "./*": {
+      "types": "./src/*.ts",
+      "default": "./src/*.ts"
     }
   },
   "scripts": {

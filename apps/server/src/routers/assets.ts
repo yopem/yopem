@@ -3,7 +3,7 @@ import { getR2Storage } from "server/storage"
 import * as v from "valibot"
 
 import { redisCache } from "cache"
-import { getOrCompute } from "cache/services/with-cache"
+import { getOrCompute } from "cache/with-cache"
 import { assetSchema, assetTypeEnum } from "db/schema/assets"
 import {
   deleteAsset,
