@@ -93,6 +93,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 
 ## Testing
 
+- **Every change must keep tests green:** when modifying a source file, update its matching spec to cover the change and make sure the tests pass before finishing. Never leave a change that breaks existing tests or ships without touching the affected spec.
 - **Server tests** run with **`bun test`** via `vp run --filter server test` (`apps/server`, `bun:test` imports, config in `apps/server/bunfig.toml` with `test/preload` → `test/setup.ts`). `vp test` never covers the server.
 - **All other packages** (utils, env, auth, cache, rpc, db, editor, ui, admin) use `vp test` (runs Vitest via Vite+). Never run `npx vitest` or `vitest` directly — `vp test` is the only entry point.
 - **Run a single vp project:** `vp test -- --project <name>` (e.g. `--project db`, `--project cache`, `--project ui`).
