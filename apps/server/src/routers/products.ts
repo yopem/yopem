@@ -21,8 +21,10 @@ import {
   duplicateProduct,
   getPopularProducts,
   getProductById,
+  getProductBySlugId,
   getPublicProductById,
   getPublicProductBySlug,
+  getRelatedProducts,
   insertProductRun,
   listProducts,
   searchProducts,
@@ -134,6 +136,11 @@ const productSearchInputSchema = v.object({
   limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(20)), 8),
 })
 
+const productRelatedInputSchema = v.object({
+  slug: v.pipe(v.string(), v.minLength(1)),
+  limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(20)), 8),
+})
+
 const productExecuteInputSchema = v.object({
   id: v.string(),
   inputs: v.record(v.string(), v.unknown()),
@@ -229,6 +236,23 @@ export const productsRouter = {
         )
 
         return { results }
+      }),
+
+    related: os
+      .route({ method: "GET" })
+      .input(productRelatedInputSchema)
+      .handler(async ({ input }) => {
+        const prod = await getProductBySlugId(input.slug)
+        if (!prod) {
+          return []
+        }
+        const cacheKey = `related:${prod.id}:${input.limit ?? 8}`
+        return getOrCompute(
+          redisCache,
+          cacheKey,
+          () => getRelatedProducts(prod.id, input.limit ?? 8),
+          60,
+        )
       }),
 
     execute: os

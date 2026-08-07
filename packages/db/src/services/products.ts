@@ -760,3 +760,161 @@ export const searchProducts = async (
     return { ...productData, thumbnail }
   })
 }
+
+export const getRelatedProducts = async (
+  productId: string,
+  limit = 8,
+): Promise<
+  {
+    id: string
+    slug: string
+    name: string
+    excerpt: string | null
+    creditsPerRun: number | null
+    thumbnail: { id: string; url: string } | null
+    categories: { id: string; name: string; slug: string }[]
+  }[]
+> => {
+  const [productCats, productTags] = await Promise.all([
+    db
+      .select({ categoryId: productCategoriesTable.categoryId })
+      .from(productCategoriesTable)
+      .where(eq(productCategoriesTable.productId, productId)),
+    db
+      .select({ tagId: productTagsTable.tagId })
+      .from(productTagsTable)
+      .where(eq(productTagsTable.productId, productId)),
+  ])
+
+  const catIds = productCats.map((c) => c.categoryId)
+  const tagIds = productTags.map((t) => t.tagId)
+
+  const activeProducts = await db
+    .select({
+      id: productsTable.id,
+      slug: productsTable.slug,
+      name: productsTable.name,
+      excerpt: productsTable.excerpt,
+      creditsPerRun: productsTable.creditsPerRun,
+      createdAt: productsTable.createdAt,
+      thumbnailUrl: assetsTable.url,
+      thumbnailAssetId: assetsTable.id,
+    })
+    .from(productsTable)
+    .leftJoin(assetsTable, eq(productsTable.thumbnailId, assetsTable.id))
+    .where(
+      and(
+        eq(productsTable.status, "active"),
+        sql`${productsTable.id} != ${productId}`,
+      ),
+    )
+
+  if (activeProducts.length === 0) {
+    return []
+  }
+
+  const activeIds = activeProducts.map((p) => p.id)
+
+  const [allCatRows, allTagRows] = await Promise.all([
+    catIds.length > 0
+      ? db
+          .select({
+            productId: productCategoriesTable.productId,
+            categoryId: productCategoriesTable.categoryId,
+          })
+          .from(productCategoriesTable)
+          .where(inArray(productCategoriesTable.productId, activeIds))
+      : Promise.resolve([]),
+    tagIds.length > 0
+      ? db
+          .select({
+            productId: productTagsTable.productId,
+            tagId: productTagsTable.tagId,
+          })
+          .from(productTagsTable)
+          .where(inArray(productTagsTable.productId, activeIds))
+      : Promise.resolve([]),
+  ])
+
+  const catSet = new Set(catIds)
+  const tagSet = new Set(tagIds)
+
+  const catScores = new Map<string, number>()
+  for (const row of allCatRows) {
+    if (catSet.has(row.categoryId)) {
+      catScores.set(row.productId, (catScores.get(row.productId) ?? 0) + 1)
+    }
+  }
+
+  const tagScores = new Map<string, number>()
+  for (const row of allTagRows) {
+    if (tagSet.has(row.tagId)) {
+      tagScores.set(row.productId, (tagScores.get(row.productId) ?? 0) + 1)
+    }
+  }
+
+  const scoredProducts = activeProducts.map((p) => {
+    const sharedCategories = catScores.get(p.id) ?? 0
+    const sharedTags = tagScores.get(p.id) ?? 0
+    const score = sharedCategories * 2 + sharedTags
+    return { ...p, score }
+  })
+
+  scoredProducts.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score
+    }
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+    return bTime - aTime
+  })
+
+  const topProducts = scoredProducts.slice(0, limit)
+  const topIds = topProducts.map((p) => p.id)
+
+  const categoriesMap = new Map<
+    string,
+    { id: string; name: string; slug: string }[]
+  >()
+  if (topIds.length > 0) {
+    const productCategories = await db
+      .select({
+        productId: productCategoriesTable.productId,
+        id: categoriesTable.id,
+        name: categoriesTable.name,
+        slug: categoriesTable.slug,
+      })
+      .from(productCategoriesTable)
+      .innerJoin(
+        categoriesTable,
+        eq(productCategoriesTable.categoryId, categoriesTable.id),
+      )
+      .where(inArray(productCategoriesTable.productId, topIds))
+
+    for (const row of productCategories) {
+      if (!categoriesMap.has(row.productId)) {
+        categoriesMap.set(row.productId, [])
+      }
+      categoriesMap
+        .get(row.productId)!
+        .push({ id: row.id, name: row.name, slug: row.slug })
+    }
+  }
+
+  return topProducts.map((p) => {
+    const thumbnail =
+      p.thumbnailAssetId && p.thumbnailUrl
+        ? { id: p.thumbnailAssetId, url: p.thumbnailUrl }
+        : null
+
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      excerpt: p.excerpt,
+      creditsPerRun: p.creditsPerRun,
+      thumbnail,
+      categories: categoriesMap.get(p.id) ?? [],
+    }
+  })
+}

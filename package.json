@@ -66,6 +66,7 @@
     "build": "vp run -r build",
     "build:admin": "vp run --filter admin build",
     "build:server": "vp run --filter server build",
+    "build:web": "vp run --filter web build",
     "check": "vp check",
     "db:generate": "vp run --filter db db:generate",
     "db:migrate": "vp run --filter db db:migrate",
@@ -73,6 +74,7 @@
     "dev": "vp run -r --parallel dev",
     "dev:admin": "vp run --filter admin dev",
     "dev:server": "vp run --filter server dev",
+    "dev:web": "vp run --filter web dev",
     "fix": "vp lint --fix && vp fmt --write .",
     "format:check": "vp fmt --check .",
     "format:write": "vp fmt --write .",
@@ -81,6 +83,7 @@
     "start": "vp run -r start",
     "start:admin": "vp run --filter admin start",
     "start:server": "vp run --filter server start",
+    "start:web": "vp run --filter web start",
     "typecheck": "vp run -r typecheck",
     "ui-add": "cd packages/ui && vpx shadcn@latest add"
   },

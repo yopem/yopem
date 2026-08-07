@@ -61,7 +61,7 @@ const minimalWorkflow = {
 }
 
 describe("products router", () => {
-  test("exports sixteen procedures nested under products", () => {
+  test("exports seventeen procedures nested under products", () => {
     const keys = Object.keys(productsRouter.products).sort()
     expect(keys).toEqual(
       [
@@ -78,6 +78,7 @@ describe("products router", () => {
         "list",
         "popular",
         "preview",
+        "related",
         "search",
         "tags",
         "update",
@@ -155,6 +156,7 @@ describe("products router", () => {
       "categories",
       "tags",
       "search",
+      "related",
     ] as const
     for (const key of publicKeys) {
       expect(productsRouter.products[key]).toBeDefined()
