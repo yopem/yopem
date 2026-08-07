@@ -47,17 +47,39 @@ packages/
   ui/        — coss ui components from shadcn/ui registry (Base UI), theme, style.css
   utils/     — crypto, custom-id, date formatting, validation schemas
   env/       — typed env helpers (server + client)
+  cache/     — Redis client + `with-cache.ts` at package root
 ```
+
+Both web and admin follow the same feature-first layout: domain code lives in `src/features/<domain>/` (components, hooks, queries), generic/shared code stays in `src/components/` (shell, providers, error pages). Example: `apps/admin/src/features/products/`, `apps/web/src/features/storefront/`.
 
 ### Server app structure (`apps/server/src`)
 
 - `index.ts` — Hono app: CORS (WEB_ORIGIN + ADMIN_ORIGIN), `authMiddleware`, mounts `/auth` callback route, oRPC handler under `/rpc`, generic `onError`.
-- `routers/` — oRPC procedures (flat RPC-style, e.g. `/category/list`), one file per domain (admin, assets, categories, products, session, tags, user) mirroring `db/services/`, composed in `routers/index.ts`.
+- `middleware/` — request pipeline pieces: `auth.ts`, `rate-limit.ts`.
+- `lib/` — shared types/errors/helpers: `errors.ts`, `context.ts`, `crypto.ts`.
+- `routers/` — oRPC procedures (flat RPC-style, e.g. `/category/list`), one file per domain (admin, assets, categories, products, session, tags, user) mirroring `db/services/`, composed in `routers/index.ts`. Routers stay thin: auth + validation + orchestration only.
 - `routers/orpc.ts` — `os` builder bound to `{ session }` context, `requireAuth` / `requireAdmin` middlewares.
 - oRPC mounted under `/rpc` via `OpenAPIHandler` + Proxy body-parsing bridge in `index.ts`. Docs at `/rpc/doc`, spec at `/rpc/spec.json`.
 - `handlers/` — `auth-callback.ts` (OAuth code exchange + redirect validation).
-- `storage/` — `R2Storage` (singleton) using `Bun.Image` for image→webp and magic-byte validation.
+- `storage/` — `r2.ts` (`R2Storage` singleton) using `Bun.Image` for image→webp and magic-byte validation. Import as `server/storage/r2`.
 - `llm/` — `executeAITool`, providers (`openai`, `openrouter`), media uploaded to R2.
+- `scripts/` — `seed.ts` (not part of the runtime app).
+
+## Dependency rule (layered architecture)
+
+Import direction is strictly one-way: `apps/web|admin → packages/rpc → apps/server routers → packages/db services → drizzle schema`. Apps never import SQL or touch the DB directly — all data access goes through `packages/db/src/services/`.
+
+Lint-enforced boundaries (in `vite.config.ts`, `eslint/no-restricted-imports`):
+
+- `drizzle-orm` imports are banned outside `packages/db`.
+- `@orpc/server` imports are banned outside `apps/server` (type-only imports allowed anywhere via `allowTypeImports`; the typed client lives in `packages/rpc`).
+- `import/no-relative-parent-imports` (always on) keeps intra-package imports flat — use package subpath imports (`server/lib/errors`) instead of `../`.
+
+When adding a new package to the monorepo, add it to the restricted-imports overrides in `vite.config.ts` so it inherits the same boundaries.
+
+## No barrel files
+
+Pure re-export `index.ts` files are banned. Imports always point at the concrete module: `db/schema/products`, `editor/editor`, `server/storage/r2`, `cache/with-cache` — never at a re-export index. `index.ts` files that contain real logic (db client init, cache singleton, env parsing, server app assembly, router composition) are entrypoints and stay.
 
 ## Commands
 
@@ -131,8 +153,7 @@ vp run -r typecheck                 # tsc --noEmit across all packages
 - **TanStack React Form** — all forms must be built with `@tanstack/react-form` `useForm` and validated with Valibot `validators`. Required/not-empty fields use `onBlur` + `onSubmit` validators (never `onChange`/`onMount`) so empty-pristine fields show no error until the user leaves the field or submits.
 - **Import order:** type-imports → external → workspace types → workspace values → internal → parent/sibling/index.
 - **`no-explicit-any: error`**, **`no-unused-vars`** (prefix with `_` to ignore), **`require-await: error`**, **`prefer-const: error`**.
-- **No comments or JSDoc** — code must be self-documenting through clear naming and structure.
-- **Components and functions** must be reusable, maintainable, modular, and easy to understand.
+- **No comments or JSDoc** — code must be self-documenting through clear naming and structure.- **Components and functions** must be reusable, maintainable, modular, and easy to understand.
 - **Omit file extensions in imports:** never add `.ts`, `.tsx`, `.js`, `.jsx` extensions when importing from other files — let the bundler/resolver handle them.
 - **Icons:** use `lucide-react` only. Imports use the `Icon` suffix convention (e.g. `BoldIcon`, `LinkIcon`, `TrashIcon`, `GripVerticalIcon`, not `Bold`, `Link`, `Trash`, `GripVertical`). Tabler/icons-react and any other icon library are not used.
 - **Commit granularity:** one commit per feature, change, or context switch.

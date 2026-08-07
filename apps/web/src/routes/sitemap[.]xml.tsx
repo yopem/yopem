@@ -1,24 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 
-import { listCategories } from "db/services/categories"
-import { listProducts } from "db/services/products"
 import { siteUrl } from "env"
+import { serverApi } from "rpc/server"
+
+const PRODUCT_PAGE_SIZE = 100
+
+const fetchAllProductSlugs = async (): Promise<string[]> => {
+  const slugs: string[] = []
+  for (let offset = 0; ; offset += PRODUCT_PAGE_SIZE) {
+    const page = await serverApi.products.list({
+      limit: PRODUCT_PAGE_SIZE,
+      offset,
+    })
+    slugs.push(...page.products.map((product) => product.slug))
+    if (!page.hasMore) break
+  }
+  return slugs
+}
 
 export const getSitemapXml = createServerFn({ method: "GET" }).handler(
   async () => {
     const baseUrl = siteUrl || "http://localhost:3000"
 
-    const [categories, { products }] = await Promise.all([
-      listCategories(),
-      listProducts({ limit: 500, status: "active" }),
+    const [categories, productSlugs] = await Promise.all([
+      serverApi.categories.list(),
+      fetchAllProductSlugs(),
     ])
 
     const urls = [
       `${baseUrl}/`,
       `${baseUrl}/products`,
-      ...categories.map((c) => `${baseUrl}/c/${c.slug}`),
-      ...products.map((p) => `${baseUrl}/products/${p.slug}`),
+      ...categories.map((category) => `${baseUrl}/c/${category.slug}`),
+      ...productSlugs.map((slug) => `${baseUrl}/products/${slug}`),
     ]
 
     return `<?xml version="1.0" encoding="UTF-8"?>
