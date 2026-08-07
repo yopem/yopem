@@ -61,7 +61,7 @@ describe("LoginButton", () => {
     expect(button?.hasAttribute("disabled")).toBe(false)
   })
 
-  test("handles successful login click", () => {
+  test("handles successful login click", async () => {
     vi.mocked(loginFn).mockResolvedValue({
       redirectTo: "https://auth.example.com",
     })
@@ -75,11 +75,12 @@ describe("LoginButton", () => {
     act(() => {
       button?.click()
     })
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(loginFn).toHaveBeenCalledTimes(1)
   })
 
-  test("shows toast on login error", () => {
+  test("shows toast on login error", async () => {
     vi.mocked(loginFn).mockRejectedValue(new Error("Network connection failed"))
 
     act(() => {
@@ -91,6 +92,7 @@ describe("LoginButton", () => {
     act(() => {
       button?.click()
     })
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(toastManager.add).toHaveBeenCalledWith({
       title: "Login failed",

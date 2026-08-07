@@ -68,7 +68,7 @@ describe("DeleteProviderDialog", () => {
       )
     })
 
-    expect(document.body.textContent).toContain("Delete API Provider")
+    expect(document.body.textContent).toContain("Delete Provider")
     expect(document.body.textContent).toContain("Production OpenAI Key")
 
     const deleteBtn = Array.from(document.body.querySelectorAll("button")).find(
