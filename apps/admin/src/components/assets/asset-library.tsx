@@ -4,6 +4,7 @@ import { Image } from "@unpic/react"
 import { Image as ImageIcon, Upload as UploadIcon } from "lucide-react"
 
 import { Button } from "ui/button"
+import { Spinner } from "ui/spinner"
 
 interface Asset {
   id: string
@@ -36,7 +37,7 @@ export function AssetLibrary({
       <>
         <div className="min-h-0 shrink">
           <div className="flex h-60 items-center justify-center">
-            <p className="text-muted-foreground">Loading assets...</p>
+            <Spinner className="text-muted-foreground size-8" />
           </div>
         </div>
         <div className="flex shrink-0 justify-end gap-2">

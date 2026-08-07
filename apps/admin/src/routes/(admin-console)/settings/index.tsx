@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useCallback, useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Separator } from "ui/separator"
+import { Spinner } from "ui/spinner"
 import { toastManager } from "ui/toast"
 import type { ApiKeyConfig } from "utils/api-input"
 import { formatDateTime } from "utils/format-date"
@@ -183,7 +183,11 @@ function SettingsRouteComponent() {
             <Button onClick={() => setAddDialogOpen(true)}>Add Provider</Button>
           </div>
 
-          <Shimmer loading={apiKeysLoading}>
+          {apiKeysLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Spinner className="text-muted-foreground size-8" />
+            </div>
+          ) : (
             <div className="space-y-4">
               {apiKeys?.map((key) => (
                 <ProviderCard
@@ -202,7 +206,7 @@ function SettingsRouteComponent() {
                 </p>
               )}
             </div>
-          </Shimmer>
+          )}
         </section>
 
         <Separator />

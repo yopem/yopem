@@ -5,6 +5,7 @@ import type { UseMutationResult } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
 import { Checkbox } from "ui/checkbox"
+import { Spinner } from "ui/spinner"
 import {
   Table,
   TableBody,
@@ -70,26 +71,13 @@ export function ProductsTable({
       </TableHeader>
       <TableBody>
         {isLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={`skeleton-${i}`}>
-              <TableCell>
-                <Checkbox checked={false} disabled />
-              </TableCell>
-              <TableCell>
-                <span className="text-muted-foreground">Loading...</span>
-              </TableCell>
-              <TableCell>
-                <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                  Loading
-                </span>
-              </TableCell>
-              <TableCell className="text-muted-foreground">-</TableCell>
-              <TableCell className="text-muted-foreground text-right">
-                -
-              </TableCell>
-              <TableCell>-</TableCell>
-            </TableRow>
-          ))
+          <TableRow>
+            <TableCell colSpan={6} className="h-48 text-center">
+              <div className="flex items-center justify-center py-8">
+                <Spinner className="text-muted-foreground size-8" />
+              </div>
+            </TableCell>
+          </TableRow>
         ) : products.length === 0 ? (
           <TableRow>
             <TableCell colSpan={6} className="p-0">

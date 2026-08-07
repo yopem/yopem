@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useCallback, useRef, useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
 
 import { getInputFieldsFromWorkflow } from "db/schema"
 import { queryApi } from "rpc/query"
 import type { ProductInputVariable } from "ui/product-input-field"
+import { Spinner } from "ui/spinner"
 import { toastManager } from "ui/toast"
 
 import { FeatureBuilderHeader } from "@/components/products/feature-builder-header"
@@ -204,36 +204,31 @@ function ProductEditRouteComponent() {
         isLoading={isLoading}
       />
 
-      <Shimmer loading={isLoading}>
-        {isLoading ? (
-          <div className="p-8">
-            <div className="space-y-8">
-              <div className="bg-muted h-12 w-1/3 rounded-sm" />
-              <div className="bg-muted h-96 w-full rounded-sm" />
-            </div>
-          </div>
-        ) : error ? (
-          <div className="text-destructive p-8">
-            Error loading product: {error.message}
-          </div>
-        ) : (
-          <>
-            {product && (
-              <ProductForm
-                ref={formRef}
-                mode="edit"
-                initialData={product}
-                onSubmit={(data) =>
-                  updateProductMutation.mutate({ id: productId, ...data })
-                }
-                isSaving={updateProductMutation.isPending}
-                showSlug={true}
-                apiKeys={apiKeys ?? []}
-              />
-            )}
-          </>
-        )}
-      </Shimmer>
+      {isLoading ? (
+        <div className="flex h-96 items-center justify-center p-8">
+          <Spinner className="text-muted-foreground size-8" />
+        </div>
+      ) : error ? (
+        <div className="text-destructive p-8">
+          Error loading product: {error.message}
+        </div>
+      ) : (
+        <>
+          {product && (
+            <ProductForm
+              ref={formRef}
+              mode="edit"
+              initialData={product}
+              onSubmit={(data) =>
+                updateProductMutation.mutate({ id: productId, ...data })
+              }
+              isSaving={updateProductMutation.isPending}
+              showSlug={true}
+              apiKeys={apiKeys ?? []}
+            />
+          )}
+        </>
+      )}
 
       <ProductPreviewSheet
         open={previewSheetOpen}

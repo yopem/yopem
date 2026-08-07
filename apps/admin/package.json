@@ -29,7 +29,6 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "rpc": "workspace:*",
-    "shimmer-from-structure": "catalog:",
     "tailwindcss": "catalog:",
     "ui": "workspace:*",
     "utils": "workspace:*",

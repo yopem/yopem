@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { lazy, useCallback, useState } from "react"
 
 import { queryApi } from "rpc/query"
+import { Spinner } from "ui/spinner"
 import { toastManager } from "ui/toast"
 
 import { AssetCard, type Asset } from "@/components/assets/asset-card"
@@ -16,12 +17,6 @@ import { GlobalPageHeader } from "@/components/layout/global-page-header"
 const AssetPreviewDialog = lazy(() =>
   import("@/components/assets/asset-preview-dialog").then((mod) => ({
     default: mod.AssetPreviewDialog,
-  })),
-)
-
-const AssetSkeleton = lazy(() =>
-  import("@/components/assets/asset-skeleton").then((mod) => ({
-    default: mod.AssetSkeleton,
   })),
 )
 
@@ -156,7 +151,9 @@ function AssetsRouteComponent() {
       />
 
       {isLoading ? (
-        <AssetSkeleton />
+        <div className="flex h-64 w-full items-center justify-center p-8">
+          <Spinner className="text-muted-foreground size-8" />
+        </div>
       ) : assets.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-16">
           <p className="text-muted-foreground text-lg">No assets yet</p>

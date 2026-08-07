@@ -1,34 +1,9 @@
-import { KeyIcon } from "lucide-react"
-
-import { Card, CardPanel, CardHeader } from "ui/card"
-import { Input } from "ui/input"
-import { Label } from "ui/label"
+import { Spinner } from "ui/spinner"
 
 export function ProviderCardSkeleton() {
   return (
-    <Card>
-      <CardHeader className="bg-card/50 flex-row items-center justify-between border-b p-6">
-        <div className="flex items-center gap-4">
-          <div className="bg-foreground flex size-10 items-center justify-center rounded-md">
-            <KeyIcon className="text-background size-6" />
-          </div>
-          <div>
-            <h3 className="text-foreground font-medium">Loading...</h3>
-            <p className="text-muted-foreground text-xs">Loading provider...</p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardPanel className="p-6">
-        <div className="space-y-2">
-          <Label>Secret Key</Label>
-          <Input
-            type="password"
-            value="loading..."
-            readOnly
-            className="font-mono text-sm"
-          />
-        </div>
-      </CardPanel>
-    </Card>
+    <div className="flex h-40 w-full items-center justify-center rounded-lg border p-8">
+      <Spinner className="text-muted-foreground size-8" />
+    </div>
   )
 }

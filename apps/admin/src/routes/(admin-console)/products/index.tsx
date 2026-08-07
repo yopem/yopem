@@ -3,7 +3,6 @@ import { Navigate, createFileRoute } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
 import * as v from "valibot"
 
 import { queryApi } from "rpc/query"
@@ -231,17 +230,15 @@ function ProductsRouteComponent() {
         </div>
 
         <div className="rounded-xl border">
-          <Shimmer loading={isLoading}>
-            <ProductsTable
-              products={products}
-              isLoading={isLoading}
-              selectedProductIds={selectedProductIds}
-              onToggleAll={handleToggleAll}
-              onToggleProduct={handleToggleProduct}
-              onDelete={handleDeleteClick}
-              duplicateMutation={duplicateProductMutation}
-            />
-          </Shimmer>
+          <ProductsTable
+            products={products}
+            isLoading={isLoading}
+            selectedProductIds={selectedProductIds}
+            onToggleAll={handleToggleAll}
+            onToggleProduct={handleToggleProduct}
+            onDelete={handleDeleteClick}
+            duplicateMutation={duplicateProductMutation}
+          />
         </div>
 
         <div className="flex items-center justify-end gap-2">

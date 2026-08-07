@@ -4,10 +4,10 @@ import type { UseMutationResult } from "@tanstack/react-query"
 
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { useState } from "react"
-import { Shimmer } from "shimmer-from-structure"
 
 import { Button } from "ui/button"
 import { Checkbox } from "ui/checkbox"
+import { Spinner } from "ui/spinner"
 
 import { DeleteDialog } from "@/components/delete-dialog"
 
@@ -105,74 +105,50 @@ export function CategoryList({
           <span className="text-muted-foreground text-sm">Select all</span>
         </div>
 
-        <Shimmer loading={isLoading}>
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox checked={false} disabled />
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-medium">Loading...</h3>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner className="text-muted-foreground size-8" />
+          </div>
+        ) : tree.length > 0 ? (
+          visibleTree.map(({ node, depth }) => (
+            <div
+              key={node.id}
+              className="flex items-center justify-between p-4"
+              style={{ paddingLeft: `${depth * 1.5 + 1}rem` }}
+            >
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={selectedSet.has(node.id)}
+                  onCheckedChange={() => onToggleItem(node.id)}
+                />
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-medium">{node.name}</h3>
+                  {node.description && (
                     <p className="text-muted-foreground text-sm">
-                      Loading description...
+                      {node.description}
                     </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
-                    <PencilIcon className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Trash2Icon className="size-4" />
-                  </Button>
+                  )}
                 </div>
               </div>
-            ))
-          ) : tree.length > 0 ? (
-            visibleTree.map(({ node, depth }) => (
-              <div
-                key={node.id}
-                className="flex items-center justify-between p-4"
-                style={{ paddingLeft: `${depth * 1.5 + 1}rem` }}
-              >
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={selectedSet.has(node.id)}
-                    onCheckedChange={() => onToggleItem(node.id)}
-                  />
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-medium">{node.name}</h3>
-                    {node.description && (
-                      <p className="text-muted-foreground text-sm">
-                        {node.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(node)}
-                  >
-                    <PencilIcon className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(node.id)}
-                  >
-                    <Trash2Icon className="size-4" />
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => onEdit(node)}>
+                  <PencilIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(node.id)}
+                >
+                  <Trash2Icon className="size-4" />
+                </Button>
               </div>
-            ))
-          ) : (
-            <div className="text-muted-foreground p-8 text-center">
-              No categories yet. Create your first category to get started.
             </div>
-          )}
-        </Shimmer>
+          ))
+        ) : (
+          <div className="text-muted-foreground p-8 text-center">
+            No categories yet. Create your first category to get started.
+          </div>
+        )}
       </div>
 
       {hasMore && (
