@@ -1,29 +1,17 @@
-import { eq, sql } from "drizzle-orm"
 import readline from "node:readline"
 import { pathToFileURL } from "node:url"
 import { encryptApiKey } from "server/lib/crypto"
 import * as v from "valibot"
 
-import { db } from "db"
-import {
-  adminSettingsTable,
-  aiModelsTable,
-  assetsTable,
-  categoriesTable,
-  productCategoriesTable,
-  productRunsTable,
-  productTagsTable,
-  productVersionsTable,
-  productsTable,
-  tagsTable,
-} from "db/schema"
 import {
   type InputField,
   type ProductWorkflow,
 } from "db/schema/product-workflow"
 import {
+  clearAllData,
   createAIModel,
   deleteAIModelById,
+  deleteSettingByKey,
   findAIModelByProviderAndModelId,
   getSetting,
   listAIModels,
@@ -2174,22 +2162,8 @@ function confirm(message: string): Promise<boolean> {
 }
 
 async function clearSeedData(): Promise<void> {
-  await db.execute(sql`
-    TRUNCATE TABLE
-      ${productRunsTable},
-      ${productVersionsTable},
-      ${productTagsTable},
-      ${productCategoriesTable},
-      ${productsTable},
-      ${tagsTable},
-      ${categoriesTable},
-      ${aiModelsTable},
-      ${assetsTable}
-    CASCADE
-  `)
-  await db
-    .delete(adminSettingsTable)
-    .where(eq(adminSettingsTable.settingKey, API_KEY_SETTING_KEY))
+  await clearAllData()
+  await deleteSettingByKey(API_KEY_SETTING_KEY)
 
   console.info("Cleared seed data")
 }

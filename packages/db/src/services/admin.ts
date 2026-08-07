@@ -1,7 +1,18 @@
 import { and, asc, eq, gte, sql } from "drizzle-orm"
 
 import { db } from "db"
-import { adminSettingsTable, aiModelsTable, productRunsTable } from "db/schema"
+import {
+  adminSettingsTable,
+  aiModelsTable,
+  assetsTable,
+  categoriesTable,
+  productCategoriesTable,
+  productRunsTable,
+  productTagsTable,
+  productVersionsTable,
+  productsTable,
+  tagsTable,
+} from "db/schema"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
 
 export const getSetting = async (
@@ -38,6 +49,28 @@ export const upsertSetting = async (
     .returning()
 
   return created
+}
+
+export const clearAllData = async (): Promise<void> => {
+  await db.execute(sql`
+    TRUNCATE TABLE
+      ${productRunsTable},
+      ${productVersionsTable},
+      ${productTagsTable},
+      ${productCategoriesTable},
+      ${productsTable},
+      ${tagsTable},
+      ${categoriesTable},
+      ${aiModelsTable},
+      ${assetsTable}
+    CASCADE
+  `)
+}
+
+export const deleteSettingByKey = async (key: string): Promise<void> => {
+  await db
+    .delete(adminSettingsTable)
+    .where(eq(adminSettingsTable.settingKey, key))
 }
 
 export const getAiRequestsHistory = (input: {

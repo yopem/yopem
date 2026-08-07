@@ -252,6 +252,70 @@ export default defineConfig({
     },
     overrides: [
       {
+        files: ["apps/web/**", "apps/admin/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "drizzle-orm",
+                  message:
+                    "drizzle-orm is packages/db-only; go through db services (db/services/*)",
+                },
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: ["packages/{auth,cache,editor,env,rpc,ui,utils}/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "drizzle-orm",
+                  message:
+                    "drizzle-orm is packages/db-only; go through db services (db/services/*)",
+                },
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: ["packages/db/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
         files: [
           "apps/admin/**",
           "apps/web/**",

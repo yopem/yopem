@@ -7,7 +7,9 @@ vi.mock("db", async () => {
 
 import { db } from "db"
 import {
+  clearAllData,
   deleteAIModelsByProvider,
+  deleteSettingByKey,
   findAIModelByProviderAndModelId,
 } from "db/services/admin"
 import type { MockDb } from "db/test-utils/mock-db"
@@ -50,6 +52,22 @@ describe("admin service", () => {
       await expect(
         deleteAIModelsByProvider("openrouter"),
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe("clearAllData", () => {
+    test("truncates all domain tables", async () => {
+      mockDb.setReturn([[]])
+
+      await expect(clearAllData()).resolves.toBeUndefined()
+    })
+  })
+
+  describe("deleteSettingByKey", () => {
+    test("deletes the setting row for the given key", async () => {
+      mockDb.setReturn([[]])
+
+      await expect(deleteSettingByKey("api_keys")).resolves.toBeUndefined()
     })
   })
 })
