@@ -1,6 +1,5 @@
 @import "ui/style.css";
 
-/* Monochrome lock: keep decorative secondary colors neutral on the public site */
 :root {
   --secondary: var(--muted);
   --secondary-foreground: var(--muted-foreground);

@@ -197,7 +197,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarFooter>
       </Sidebar>
 
-      <main className="flex flex-1 flex-col overflow-hidden">{children}</main>
+      <main
+        className="flex flex-1 flex-col overflow-hidden"
+        style={{ viewTransitionName: "main-content" }}
+      >
+        {children}
+      </main>
     </SidebarProvider>
   )
 }

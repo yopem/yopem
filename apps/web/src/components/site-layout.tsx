@@ -149,7 +149,9 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1" style={{ viewTransitionName: "main-content" }}>
+        {children}
+      </main>
 
       {/* Footer matching yopem-old */}
       <footer className="bg-background border-border w-full border-t py-12 text-sm">
