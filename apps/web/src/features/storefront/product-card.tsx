@@ -48,8 +48,16 @@ function ProductAvatar({
   )
 }
 
+function stripHtml(html?: string | null): string {
+  if (!html) return ""
+  return html.replace(/<[^>]*>?/gm, "").trim()
+}
+
 export function ProductCard({ product }: ProductCardProps) {
   const isFree = Number(product.creditsPerRun ?? 0) === 0
+  const cleanDescription =
+    product.excerpt ??
+    (stripHtml(product.description) || "No description available")
 
   return (
     <Link
@@ -73,7 +81,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <p className="text-muted-foreground line-clamp-2 flex-1 text-xs/relaxed">
-          {product.excerpt ?? product.description ?? "No description available"}
+          {cleanDescription}
         </p>
 
         <div className="mt-auto flex items-center justify-between">

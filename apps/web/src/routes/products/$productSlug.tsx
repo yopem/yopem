@@ -9,16 +9,18 @@ import {
 } from "@tanstack/react-router"
 import {
   AlertCircleIcon,
+  ArrowLeftIcon,
+  CalendarIcon,
   CheckCircle2Icon,
   CoinsIcon,
   FolderIcon,
   Loader2Icon,
   LogInIcon,
   PlayIcon,
-  SparklesIcon,
   TagIcon,
+  ZapIcon,
 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 import { siteTitle, siteUrl } from "env"
 import { queryApi } from "rpc/query"
@@ -33,40 +35,27 @@ import {
 } from "ui/card"
 import { Label } from "ui/label"
 import { ProductInputField } from "ui/product-input-field"
+import { Separator } from "ui/separator"
 
 import { SiteLayout } from "@/components/site-layout"
-import { ProductCard } from "@/features/storefront/product-card"
 import { RichTextView } from "@/features/storefront/rich-text-view"
 import { loginFn } from "@/lib/auth"
 
 export const Route = createFileRoute("/products/$productSlug")({
   loader: async ({ context: { queryClient }, params }) => {
     const product = await queryClient
-      .fetchQuery(
+      .ensureQueryData(
         queryApi.products.bySlug.queryOptions({
           input: { slug: params.productSlug },
         }),
       )
       .catch(() => null)
 
-    if (product?.status !== "active") {
+    if (!product) {
       throw notFound()
     }
 
-    const [related, popular] = await Promise.all([
-      queryClient
-        .fetchQuery(
-          queryApi.products.related.queryOptions({
-            input: { slug: params.productSlug, limit: 4 },
-          }),
-        )
-        .catch(() => []),
-      queryClient
-        .fetchQuery(queryApi.products.popular.queryOptions())
-        .catch(() => []),
-    ])
-
-    return { product, related, popular }
+    return { product }
   },
   head: ({ loaderData }) => {
     if (!loaderData?.product) return {}
@@ -78,18 +67,6 @@ export const Route = createFileRoute("/products/$productSlug")({
       product.description ??
       `Run ${product.name} AI tool on Yopem.`
 
-    const links: { rel: string; href: string; as?: string; type?: string }[] = [
-      { rel: "canonical", href: productUrl },
-    ]
-    if (product.thumbnail?.url) {
-      links.push({
-        rel: "preload",
-        href: product.thumbnail.url,
-        as: "image",
-        type: "image/webp",
-      })
-    }
-
     return {
       meta: [
         { title: `${product.name} - ${siteTitle ?? "Yopem"}` },
@@ -98,92 +75,29 @@ export const Route = createFileRoute("/products/$productSlug")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: productUrl },
-        ...(product.thumbnail?.url
-          ? [{ property: "og:image", content: product.thumbnail.url }]
-          : []),
       ],
-      links,
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            name: product.name,
-            description: description,
-            applicationCategory:
-              product.categories?.[0]?.name ?? "UtilitiesApplication",
-            operatingSystem: "All",
-            offers: {
-              "@type": "Offer",
-              price: "0",
-              priceCurrency: "USD",
-            },
-            url: productUrl,
-          }),
-        },
-      ],
+      links: [{ rel: "canonical", href: productUrl }],
     }
   },
   component: ProductDetailComponent,
 })
 
-function useContentExceedsViewport(
-  ref: React.RefObject<HTMLElement | null>,
-  threshold = 0.5,
-) {
-  const [exceeds, setExceeds] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    const update = () => {
-      setExceeds(el.scrollHeight > window.innerHeight * threshold)
-    }
-
-    update()
-    window.addEventListener("resize", update)
-    return () => window.removeEventListener("resize", update)
-  }, [ref, threshold])
-
-  return exceeds
-}
-
 function ProductDetailComponent() {
-  const {
-    product,
-    related: initialRelated,
-    popular: initialPopular,
-  } = useLoaderData({ from: "/products/$productSlug" })
+  const { product: initialProduct } = useLoaderData({
+    from: "/products/$productSlug",
+  })
   const { session } = useRouteContext({ from: "__root__" })
 
-  const fileReaderRef = useRef<FileReader | null>(null)
+  const productQuery = useQuery(
+    queryApi.products.bySlug.queryOptions({
+      input: { slug: initialProduct.slug },
+    }),
+  )
+  const product = productQuery.data ?? initialProduct
+
   const [executionResult, setExecutionResult] = useState<unknown>(null)
   const [executionError, setExecutionError] = useState<string | null>(null)
 
-  const descriptionRef = useRef<HTMLDivElement>(null)
-  const formRef = useRef<HTMLDivElement>(null)
-  const descriptionIsLong = useContentExceedsViewport(descriptionRef, 0.5)
-
-  // Related products query with fallback to popular
-  const relatedQuery = useQuery(
-    queryApi.products.related.queryOptions({
-      input: { slug: product.slug, limit: 4 },
-    }),
-  )
-  const popularQuery = useQuery(queryApi.products.popular.queryOptions())
-
-  const relatedProducts =
-    relatedQuery.data && relatedQuery.data.length > 0
-      ? relatedQuery.data
-      : initialRelated && initialRelated.length > 0
-        ? initialRelated
-        : (popularQuery.data ?? initialPopular)
-            .filter((p) => p.id !== product.id)
-            .slice(0, 4)
-
-  // Execute mutation
   const executeMutation = useMutation(
     queryApi.products.execute.mutationOptions({
       onSuccess: (data) => {
@@ -196,7 +110,6 @@ function ProductDetailComponent() {
     }),
   )
 
-  // Extract workflow input fields
   const workflowNodes =
     (
       product.workflow as {
@@ -245,363 +158,328 @@ function ProductDetailComponent() {
     }
   }
 
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
+  const fileReaderRef = useRef<FileReader | null>(null)
+
+  const cost = Number(product.creditsPerRun ?? 0)
+  const formattedDate = product.createdAt
+    ? new Date(product.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "N/A"
 
   return (
     <SiteLayout>
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Product Info Panel */}
-        <div className="border-border bg-card overflow-hidden rounded-xl border shadow-2xs">
-          {product.thumbnail?.url && (
-            <div className="relative aspect-video w-full overflow-hidden border-b">
-              <img
-                src={product.thumbnail.url}
-                alt={product.name}
-                width={1200}
-                height={675}
-                fetchPriority="high"
-                className="size-full object-cover"
-              />
-            </div>
-          )}
-          <div className="space-y-4 p-6">
-            <div className="flex flex-wrap items-center gap-2">
-              {product.categories?.map((cat) => (
-                <Link
-                  key={cat.id}
-                  to="/c/$categorySlug"
-                  params={{ categorySlug: cat.slug }}
-                >
-                  <Badge variant="outline" className="gap-1 text-xs">
-                    <FolderIcon className="size-3" />
-                    {cat.name}
-                  </Badge>
-                </Link>
-              ))}
-              {product.tags?.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-xs">
-                  <TagIcon className="mr-1 size-3" />
-                  {tag.name}
-                </Badge>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-                {product.name}
-              </h1>
-              {product.excerpt && (
-                <p className="text-muted-foreground max-w-3xl text-base leading-relaxed">
-                  {product.excerpt}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="border-border bg-muted/30 text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
-                <CoinsIcon className="size-3.5" />
-                <span>
-                  {product.creditsPerRun
-                    ? `${product.creditsPerRun} credits per run`
-                    : "Free execution"}
-                </span>
-              </div>
-              <div className="border-border bg-muted/30 text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
-                <SparklesIcon className="size-3.5" />
-                <span>Format: {product.outputFormat ?? "plain"}</span>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Back Link */}
+        <div className="mb-8">
+          <Link
+            to="/products"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center text-sm font-medium transition-colors"
+          >
+            <ArrowLeftIcon className="mr-2 size-4" />
+            Back to apps
+          </Link>
         </div>
 
-        {/* Main Work Area */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Left column: description + form */}
-          <div ref={descriptionRef} className="space-y-6">
-            {/* Product Full Description */}
-            <Card className="border-border bg-card">
-              <CardHeader className="border-border border-b pb-3">
-                <CardTitle className="font-heading text-base font-semibold">
-                  About {product.name}
-                </CardTitle>
-              </CardHeader>
-              <CardPanel className="p-5">
+        {/* Main Content Layout matching yopem-old */}
+        <div className="flex flex-col gap-y-10 lg:flex-row lg:gap-x-12">
+          {/* Left Column */}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-y-4 sm:flex-row sm:items-start sm:gap-x-6">
+              {product.thumbnail?.url ? (
+                <div className="bg-muted border-border flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border sm:size-20">
+                  <img
+                    src={product.thumbnail.url}
+                    alt={product.name}
+                    className="size-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="bg-muted border-border flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-20">
+                  <span className="text-foreground text-3xl font-semibold">
+                    {product.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex-1 space-y-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">
+                    {product.name}
+                  </h1>
+                  <Badge variant="secondary" className="rounded-md font-medium">
+                    {product.status}
+                  </Badge>
+                </div>
+
                 <RichTextView
                   content={product.descriptionContent}
                   fallbackDescription={product.description}
                 />
-              </CardPanel>
-            </Card>
 
-            {/* Persistent jump-to-form CTA for long descriptions */}
-            {descriptionIsLong && (
-              <Card className="border-border bg-card">
-                <CardPanel className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <CardTitle className="font-heading text-sm font-semibold">
-                      Ready to run {product.name}?
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Provide inputs and execute the workflow.
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" className="gap-1.5" onClick={scrollToForm}>
-                    <PlayIcon className="size-3.5 fill-current" />
-                    <span>Jump to Run Tool</span>
-                  </Button>
-                </CardPanel>
-              </Card>
-            )}
-
-            {/* Tool Form */}
-            <div ref={formRef}>
-              <Card className="border-border bg-card">
-                <CardHeader className="border-border border-b pb-3">
-                  <CardTitle className="font-heading flex items-center gap-2 text-lg font-bold">
-                    <PlayIcon className="text-foreground size-4" />
-                    <span>Run Tool</span>
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Provide inputs to execute this workflow.
-                  </CardDescription>
-                </CardHeader>
-                <CardPanel className="p-5">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      void form.handleSubmit()
-                    }}
-                    className="space-y-4"
-                  >
-                    {inputFields.length > 0 ? (
-                      inputFields.map((field) => (
-                        <form.Field
-                          key={field.variableName}
-                          name={field.variableName}
-                          validators={{
-                            onBlur: ({ value }) => {
-                              if (
-                                !field.isOptional &&
-                                (!value ||
-                                  (typeof value === "string" && !value.trim()))
-                              ) {
-                                return "This field is required"
-                              }
-                              return undefined
-                            },
-                            onSubmit: ({ value }) => {
-                              if (
-                                !field.isOptional &&
-                                (!value ||
-                                  (typeof value === "string" && !value.trim()))
-                              ) {
-                                return "This field is required"
-                              }
-                              return undefined
-                            },
-                          }}
-                        >
-                          {(fieldApi) => (
-                            <div className="space-y-1.5">
-                              <Label className="text-foreground flex items-center justify-between text-xs font-semibold">
-                                <span>
-                                  {field.description || field.variableName}
-                                </span>
-                                {!field.isOptional && (
-                                  <span className="text-destructive text-[10px] font-normal">
-                                    *Required
-                                  </span>
-                                )}
-                              </Label>
-                              <ProductInputField
-                                field={field}
-                                value={fieldApi.state.value}
-                                error={fieldApi.state.meta.errors[0]}
-                                fileReaderRef={fileReaderRef}
-                                onChange={(_name, val) =>
-                                  fieldApi.handleChange(val)
-                                }
-                                onClearError={() => fieldApi.validate("blur")}
-                              />
-                              {fieldApi.state.meta.errors.length > 0 && (
-                                <p className="text-destructive text-xs font-medium">
-                                  {fieldApi.state.meta.errors[0]}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </form.Field>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-xs italic">
-                        No parameters required for this tool. Click run to
-                        execute.
-                      </p>
-                    )}
-
-                    {executionError && (
-                      <div className="border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-2 rounded-md border p-3 text-xs">
-                        <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
-                        <span>{executionError}</span>
-                      </div>
-                    )}
-
-                    {session ? (
-                      <Button
-                        type="submit"
-                        size="default"
-                        className="w-full gap-2 font-medium"
-                        disabled={executeMutation.isPending}
+                {product.categories && product.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {product.categories.map((category) => (
+                      <Badge
+                        key={category.id}
+                        variant="outline"
+                        className="bg-background rounded-md font-normal"
                       >
-                        {executeMutation.isPending ? (
-                          <>
-                            <Loader2Icon className="size-4 animate-spin" />
-                            <span>Generating Output...</span>
-                          </>
-                        ) : (
-                          <>
-                            <PlayIcon className="size-4 fill-current" />
-                            <span>Execute Tool</span>
-                          </>
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="default"
-                        className="w-full gap-2 font-medium"
-                        onClick={handleRunLoginRedirect}
-                      >
-                        <LogInIcon className="size-4" />
-                        <span>Sign in to Run Tool</span>
-                      </Button>
-                    )}
-                  </form>
-                </CardPanel>
-              </Card>
-            </div>
-          </div>
-
-          {/* Right column: sticky output */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
-            <Card className="border-border bg-card flex min-h-[400px] flex-col justify-between">
-              <CardHeader className="border-border border-b pb-3">
-                <CardTitle className="font-heading flex items-center justify-between text-base font-semibold">
-                  <span>Output Result</span>
-                  {executionResult !== null && (
-                    <Badge
-                      variant="outline"
-                      className="border-success/30 bg-success/10 text-success gap-1 text-xs font-normal"
-                    >
-                      <CheckCircle2Icon className="size-3" />
-                      <span>Completed</span>
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardPanel className="flex flex-1 flex-col justify-center p-5">
-                {executeMutation.isPending ? (
-                  <div className="flex flex-col items-center justify-center space-y-3 py-16 text-center">
-                    <Loader2Icon className="text-foreground size-8 animate-spin" />
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold">
-                        Processing Workflow...
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        Running AI inference steps in the cloud.
-                      </p>
-                    </div>
-                  </div>
-                ) : executionResult !== null ? (
-                  <OutputRenderer
-                    format={product.outputFormat ?? "plain"}
-                    data={executionResult}
-                  />
-                ) : (
-                  <div className="text-muted-foreground flex flex-col items-center justify-center space-y-2 py-16 text-center">
-                    <SparklesIcon className="text-muted-foreground/30 size-8" />
-                    <p className="text-xs">
-                      Output will appear here after tool execution.
-                    </p>
+                        {category.name}
+                      </Badge>
+                    ))}
                   </div>
                 )}
-              </CardPanel>
-            </Card>
+              </div>
+            </div>
+
+            <Separator className="my-10" />
+
+            {/* Execute Section matching yopem-old */}
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-foreground text-xl font-semibold tracking-tight">
+                  Run this product
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Enter the required parameters to execute this product.
+                </p>
+              </div>
+
+              <Card className="border-border bg-card">
+                <CardPanel className="p-6">
+                  {!session ? (
+                    <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
+                      <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
+                        <LogInIcon className="size-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <CardTitle className="text-base font-semibold">
+                          Sign in to Run Tool
+                        </CardTitle>
+                        <CardDescription className="max-w-sm text-xs">
+                          You need to be logged in to execute this tool and
+                          generate outputs.
+                        </CardDescription>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => void handleRunLoginRedirect()}
+                      >
+                        <LogInIcon className="size-4" />
+                        <span>Sign In</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        void form.handleSubmit()
+                      }}
+                      className="space-y-5"
+                    >
+                      {inputFields.length === 0 ? (
+                        <p className="text-muted-foreground text-xs italic">
+                          No parameter inputs required. Click run to execute.
+                        </p>
+                      ) : (
+                        inputFields.map((field) => (
+                          <form.Field
+                            key={field.variableName}
+                            name={field.variableName}
+                          >
+                            {(fieldState) => (
+                              <div className="space-y-1.5">
+                                <Label
+                                  htmlFor={field.variableName}
+                                  className="text-xs font-medium"
+                                >
+                                  {field.description || field.variableName}
+                                  {!field.isOptional && (
+                                    <span className="text-destructive ml-1">
+                                      *
+                                    </span>
+                                  )}
+                                </Label>
+                                <ProductInputField
+                                  field={field}
+                                  value={fieldState.state.value}
+                                  error={undefined}
+                                  fileReaderRef={fileReaderRef}
+                                  onChange={(_, val) =>
+                                    fieldState.handleChange(val)
+                                  }
+                                  onClearError={(_varName) => {
+                                    // noop
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </form.Field>
+                        ))
+                      )}
+
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                          <CoinsIcon className="size-4" />
+                          <span>
+                            {product.creditsPerRun
+                              ? `${product.creditsPerRun} credits per run`
+                              : "Free run"}
+                          </span>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          size="default"
+                          className="gap-2 font-medium"
+                          disabled={executeMutation.isPending}
+                        >
+                          {executeMutation.isPending ? (
+                            <>
+                              <Loader2Icon className="size-4 animate-spin" />
+                              <span>Executing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <PlayIcon className="size-4 fill-current" />
+                              <span>Run Tool</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </CardPanel>
+              </Card>
+
+              {/* Error Display */}
+              {executionError && (
+                <Card className="border-destructive/50 bg-destructive/5">
+                  <CardPanel className="text-destructive flex items-start gap-3 p-4">
+                    <AlertCircleIcon className="size-5 shrink-0" />
+                    <div className="space-y-1 text-xs">
+                      <p className="font-semibold">Execution Failed</p>
+                      <p className="leading-relaxed">{executionError}</p>
+                    </div>
+                  </CardPanel>
+                </Card>
+              )}
+
+              {/* Output Display */}
+              {executionResult !== null && (
+                <Card className="border-border bg-card">
+                  <CardHeader className="border-border border-b pb-3">
+                    <CardTitle className="font-heading flex items-center gap-2 text-base font-semibold">
+                      <CheckCircle2Icon className="size-4 text-green-500" />
+                      Execution Output
+                    </CardTitle>
+                  </CardHeader>
+                  <CardPanel className="p-5">
+                    {product.outputFormat === "image" &&
+                    typeof executionResult === "string" ? (
+                      <div className="border-border overflow-hidden rounded-lg border">
+                        <img
+                          src={executionResult}
+                          alt="Generated output"
+                          className="w-full object-contain"
+                        />
+                      </div>
+                    ) : typeof executionResult === "string" ? (
+                      <div className="max-w-none text-sm leading-relaxed">
+                        <RichTextView content={executionResult} />
+                      </div>
+                    ) : (
+                      <pre className="bg-muted text-foreground overflow-x-auto rounded-lg p-4 font-mono text-xs">
+                        {JSON.stringify(executionResult, null, 2)}
+                      </pre>
+                    )}
+                  </CardPanel>
+                </Card>
+              )}
+            </section>
+          </div>
+
+          {/* Right Sidebar Column matching yopem-old */}
+          <div className="lg:w-[320px] lg:shrink-0">
+            <div className="space-y-6 lg:sticky lg:top-8">
+              <div className="border-border bg-card rounded-lg border p-5 shadow-2xs">
+                <h3 className="text-foreground mb-4 text-sm font-semibold tracking-tight">
+                  App Details
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="text-muted-foreground flex items-center gap-2">
+                      <ZapIcon className="size-4" />
+                      <span>Availability</span>
+                    </div>
+                    <Badge
+                      variant={cost > 0 ? "secondary" : "default"}
+                      className="text-xs"
+                    >
+                      {cost > 0 ? "Pro & Enterprise" : "All plans"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="text-muted-foreground flex items-center gap-2">
+                      <CalendarIcon className="size-4" />
+                      <span>Added</span>
+                    </div>
+                    <span className="text-foreground font-medium">
+                      {formattedDate}
+                    </span>
+                  </div>
+
+                  {product.categories && product.categories.length > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="text-muted-foreground flex items-center gap-2">
+                        <FolderIcon className="size-4" />
+                        <span>Category</span>
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {product.categories.slice(0, 1).map((category) => (
+                          <span
+                            key={category.id}
+                            className="text-foreground font-medium"
+                          >
+                            {category.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {product.tags && product.tags.length > 0 && (
+                  <div className="border-border/50 mt-5 space-y-3 border-t pt-5">
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                      <TagIcon className="size-4" />
+                      <span>Tags</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {product.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className="bg-muted text-muted-foreground hover:bg-muted/80 rounded-md font-normal"
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Related / Recommended Tools Section */}
-        {relatedProducts.length > 0 && (
-          <section className="border-border space-y-4 border-t pt-8">
-            <div>
-              <h2 className="font-heading text-xl font-bold tracking-tight">
-                Recommended Tools
-              </h2>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                Tools related to this category & workflow
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </SiteLayout>
-  )
-}
-
-function OutputRenderer({ format, data }: { format: string; data: unknown }) {
-  if (format === "image" && typeof data === "string") {
-    return (
-      <div className="flex flex-col items-center space-y-3">
-        <img
-          src={data}
-          alt="Generated Output"
-          className="border-border max-h-[450px] w-auto rounded-lg border object-contain"
-        />
-        <a
-          href={data}
-          download="output.webp"
-          target="_blank"
-          rel="noreferrer"
-          className="text-foreground text-xs font-medium underline underline-offset-4"
-        >
-          Open Original Image
-        </a>
-      </div>
-    )
-  }
-
-  if (format === "video" && typeof data === "string") {
-    return (
-      <div className="flex flex-col items-center space-y-3">
-        <video
-          src={data}
-          controls
-          className="border-border max-h-[450px] w-full rounded-lg border"
-        />
-      </div>
-    )
-  }
-
-  if (format === "json" || typeof data === "object") {
-    return (
-      <pre className="bg-muted/40 border-border text-foreground max-h-[450px] overflow-x-auto rounded-lg border p-4 font-mono text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    )
-  }
-
-  return (
-    <div className="bg-muted/20 border-border text-foreground max-h-[450px] overflow-y-auto rounded-lg border p-4 text-xs leading-relaxed whitespace-pre-wrap">
-      {typeof data === "string" ? data : JSON.stringify(data, null, 2)}
-    </div>
   )
 }
