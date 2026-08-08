@@ -13,12 +13,12 @@ import { useState } from "react"
 
 import { siteTitle, siteUrl } from "env"
 import { queryApi } from "rpc/query"
-import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Input } from "ui/input"
 
 import { SiteLayout } from "@/components/site-layout"
-import { ProductCard } from "@/features/storefront/product-card"
+import { MarketplaceGrid } from "@/features/storefront/marketplace-grid"
+import { MarketplaceSidebar } from "@/features/storefront/marketplace-sidebar"
 
 const PAGE_SIZE = 12
 
@@ -84,19 +84,19 @@ export const Route = createFileRoute("/products/")({
       (loaderData?.searchState.page ?? 1) > 1
 
     const meta = [
-      { title: `All AI Tools & Workflows - ${siteTitle ?? "Yopem"}` },
+      { title: `Browse Products - ${siteTitle ?? "Yopem"}` },
       {
         name: "description",
         content:
-          "Browse our catalog of AI-powered workflow tools. Filter by category or search for specific AI utilities.",
+          "Explore and use AI-powered products to automate your workflows. Find the right product for your specific needs.",
       },
       {
         property: "og:title",
-        content: `All AI Tools - ${siteTitle ?? "Yopem"}`,
+        content: `Browse Products - ${siteTitle ?? "Yopem"}`,
       },
       {
         property: "og:description",
-        content: "Explore all available AI tools.",
+        content: "Explore all available AI products.",
       },
       { property: "og:type", content: "website" },
       {
@@ -156,22 +156,6 @@ function CatalogComponent() {
     })
   }
 
-  const handleCategoryToggle = (id: string) => {
-    const current = searchState.categoryIds ?? []
-    const updated = current.includes(id)
-      ? current.filter((c: string) => c !== id)
-      : [...current, id]
-    updateSearch({ categoryIds: updated, page: 1 })
-  }
-
-  const handleTagToggle = (id: string) => {
-    const current = searchState.tagIds ?? []
-    const updated = current.includes(id)
-      ? current.filter((t: string) => t !== id)
-      : [...current, id]
-    updateSearch({ tagIds: updated, page: 1 })
-  }
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = searchInput.trim()
@@ -192,169 +176,87 @@ function CatalogComponent() {
 
   return (
     <SiteLayout>
-      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
-        {/* Page Header */}
-        <div className="space-y-1">
-          <h1 className="font-heading text-3xl font-bold tracking-tight">
-            Explore AI Tools
+      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+        <div className="mb-12 flex flex-col space-y-2">
+          <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+            Browse Products
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Browse our library of AI tools and automated workflows.
+          <p className="text-muted-foreground max-w-[600px] text-base/relaxed">
+            Explore and use AI-powered products to automate your workflows. Find
+            the right product for your specific needs.
           </p>
         </div>
 
-        {/* Search Bar & Filter Controls */}
-        <div className="space-y-4">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                type="search"
-                placeholder="Search tools by name or keywords..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-9"
-              />
-            </div>
-            <Button
-              type="submit"
-              size="default"
-              className="gap-1.5 font-medium"
-            >
-              <SearchIcon className="size-4" />
-              <span>Search</span>
-            </Button>
-          </form>
+        <div className="flex flex-col gap-8 lg:flex-row">
+          <MarketplaceSidebar categories={categories} tags={tags} />
 
-          {/* Categories Filter Badges */}
-          {categories.length > 0 && (
-            <div className="space-y-1.5">
-              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Categories
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {categories.map((cat) => {
-                  const isSelected = (searchState.categoryIds ?? []).includes(
-                    cat.id,
-                  )
-                  return (
-                    <Badge
-                      key={cat.id}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      className="cursor-pointer text-xs transition-colors"
-                      onClick={() => handleCategoryToggle(cat.id)}
-                    >
-                      {cat.name}
-                    </Badge>
-                  )
-                })}
+          <div className="min-w-0 flex-1 space-y-6">
+            <form onSubmit={handleSearchSubmit} className="flex gap-2">
+              <div className="relative flex-1">
+                <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  type="search"
+                  placeholder="Search products..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-9"
+                />
               </div>
-            </div>
-          )}
+              <Button
+                type="submit"
+                size="default"
+                className="gap-1.5 font-medium"
+              >
+                <SearchIcon className="size-4" />
+                <span>Search</span>
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="default"
+                  className="gap-1.5"
+                  onClick={clearFilters}
+                >
+                  <XIcon className="size-4" />
+                  <span>Clear</span>
+                </Button>
+              )}
+            </form>
 
-          {/* Tags Filter Badges */}
-          {tags.length > 0 && (
-            <div className="space-y-1.5">
-              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                Tags
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map((tag) => {
-                  const isSelected = (searchState.tagIds ?? []).includes(tag.id)
-                  return (
-                    <Badge
-                      key={tag.id}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      className="cursor-pointer text-xs transition-colors"
-                      onClick={() => handleTagToggle(tag.id)}
-                    >
-                      #{tag.name}
-                    </Badge>
-                  )
-                })}
+            <MarketplaceGrid products={listData.products} />
+
+            {totalPages > 1 && (
+              <div className="border-border flex items-center justify-between border-t pt-6">
+                <span className="text-muted-foreground text-xs">
+                  Page {page} of {totalPages} ({listData.total} total tools)
+                </span>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => updateSearch({ page: page - 1 })}
+                    className="gap-1 text-xs"
+                  >
+                    <ChevronLeftIcon className="size-3.5" />
+                    <span>Previous</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => updateSearch({ page: page + 1 })}
+                    className="gap-1 text-xs"
+                  >
+                    <span>Next</span>
+                    <ChevronRightIcon className="size-3.5" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Active Filter Clear Bar */}
-          {hasActiveFilters && (
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-muted-foreground text-xs">
-                Active filters
-              </span>
-              <Button
-                variant="ghost"
-                size="xs"
-                className="gap-1 text-xs"
-                onClick={clearFilters}
-              >
-                <XIcon className="size-3" />
-                <span>Clear All</span>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Product Grid */}
-        {listData.products.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {listData.products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="border-border text-muted-foreground flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-            <p className="text-sm font-medium">
-              No tools found matching your criteria
-            </p>
-            <p className="mt-1 text-xs">
-              Try searching for a different keyword or clear active filters.
-            </p>
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={clearFilters}
-              >
-                Reset Filters
-              </Button>
             )}
           </div>
-        )}
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="border-border flex items-center justify-between border-t pt-6">
-            <span className="text-muted-foreground text-xs">
-              Page {page} of {totalPages} ({listData.total} total tools)
-            </span>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => updateSearch({ page: page - 1 })}
-                className="gap-1 text-xs"
-              >
-                <ChevronLeftIcon className="size-3.5" />
-                <span>Previous</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => updateSearch({ page: page + 1 })}
-                className="gap-1 text-xs"
-              >
-                <span>Next</span>
-                <ChevronRightIcon className="size-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </SiteLayout>
   )

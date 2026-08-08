@@ -1,8 +1,9 @@
-import { Link } from "@tanstack/react-router"
-import { ArrowRightIcon, CoinsIcon, SparklesIcon } from "lucide-react"
+"use client"
 
-import { Badge } from "ui/badge"
-import { Card, CardFooter, CardHeader, CardPanel, CardTitle } from "ui/card"
+import { Link } from "@tanstack/react-router"
+import { useState } from "react"
+
+import { Card } from "ui/card"
 
 export interface ProductCardProps {
   product: {
@@ -17,82 +18,76 @@ export interface ProductCardProps {
   }
 }
 
-function stripHtml(html?: string | null): string {
-  if (!html) return ""
-  return html.replace(/<[^>]*>?/gm, "").trim()
+function ProductAvatar({
+  name,
+  thumbnail,
+}: {
+  name: string
+  thumbnail?: { id: string; url: string } | null
+}) {
+  const [imageError, setImageError] = useState(false)
+
+  if (thumbnail?.url && !imageError) {
+    return (
+      <img
+        src={thumbnail.url}
+        alt={`${name} icon`}
+        width={40}
+        height={40}
+        className="size-10 rounded-lg object-cover"
+        onError={() => setImageError(true)}
+        loading="lazy"
+      />
+    )
+  }
+
+  return (
+    <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const rawDescription = stripHtml(product.description)
-  const descriptionText =
-    product.excerpt ??
-    (rawDescription !== "" ? rawDescription : null) ??
-    "Powerful AI workflow tool."
+  const isFree = Number(product.creditsPerRun ?? 0) === 0
 
   return (
-    <Card className="group border-border bg-card hover:border-foreground/20 relative flex flex-col justify-between overflow-hidden transition-colors">
-      <div className="bg-muted/30 border-border/40 relative aspect-video w-full overflow-hidden border-b">
-        {product.thumbnail?.url ? (
-          <img
-            src={product.thumbnail.url}
-            alt={product.name}
-            width={640}
-            height={360}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-102"
-            loading="lazy"
-          />
-        ) : (
-          <div className="bg-muted/20 flex size-full items-center justify-center">
-            <SparklesIcon className="text-muted-foreground/30 size-7" />
+    <Link
+      to="/products/$productSlug"
+      params={{ productSlug: product.slug }}
+      className="group block h-full outline-none"
+    >
+      <Card className="border-border bg-card flex h-full flex-col gap-3 rounded-xl border p-4 shadow-none transition-all duration-150 hover:border-gray-300 hover:shadow-2xs dark:hover:border-gray-700">
+        <div className="flex items-start gap-3">
+          <ProductAvatar name={product.name} thumbnail={product.thumbnail} />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-foreground group-hover:text-primary line-clamp-3 text-sm font-semibold transition-colors">
+              {product.name}
+            </h3>
+            {product.categories && product.categories.length > 0 && (
+              <span className="text-muted-foreground text-xs">
+                {product.categories[0].name}
+              </span>
+            )}
           </div>
-        )}
-        {product.categories && product.categories.length > 0 && (
-          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
-            {product.categories.slice(0, 2).map((cat) => (
-              <Badge
-                key={cat.id}
-                variant="outline"
-                size="sm"
-                className="bg-background/90 text-foreground border-border/40 text-[10px] font-medium shadow-2xs"
-              >
-                {cat.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="font-heading group-hover:text-foreground line-clamp-1 text-base font-semibold tracking-tight transition-colors">
-          {product.name}
-        </CardTitle>
-      </CardHeader>
-
-      <CardPanel className="flex-1 p-4 pt-0">
-        <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
-          {descriptionText}
-        </p>
-      </CardPanel>
-
-      <CardFooter className="border-border/40 flex items-center justify-between border-t p-4 pt-3">
-        <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-          <CoinsIcon className="text-muted-foreground size-3.5" />
-          <span>
-            {product.creditsPerRun
-              ? `${product.creditsPerRun} credits`
-              : "Free"}
-          </span>
         </div>
 
-        <Link
-          to="/products/$productSlug"
-          params={{ productSlug: product.slug }}
-          className="text-foreground hover:text-foreground/80 inline-flex items-center gap-1 text-xs font-medium transition-colors"
-        >
-          <span>Try Tool</span>
-          <ArrowRightIcon className="size-3" />
-        </Link>
-      </CardFooter>
-    </Card>
+        <p className="text-muted-foreground line-clamp-2 flex-1 text-xs/relaxed">
+          {product.excerpt ?? product.description ?? "No description available"}
+        </p>
+
+        <div className="mt-auto flex items-center justify-between">
+          <span
+            className={`text-xs font-medium ${
+              isFree
+                ? "text-green-600 dark:text-green-400"
+                : "text-muted-foreground"
+            }`}
+          >
+            {isFree ? "Free" : `${product.creditsPerRun} credits/run`}
+          </span>
+        </div>
+      </Card>
+    </Link>
   )
 }

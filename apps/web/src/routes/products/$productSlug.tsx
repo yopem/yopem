@@ -252,70 +252,69 @@ function ProductDetailComponent() {
   return (
     <SiteLayout>
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Header / Product Title Info */}
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {product.categories?.map((cat) => (
-              <Link
-                key={cat.id}
-                to="/c/$categorySlug"
-                params={{ categorySlug: cat.slug }}
-              >
-                <Badge variant="outline" className="gap-1 text-xs">
-                  <FolderIcon className="size-3" />
-                  {cat.name}
-                </Badge>
-              </Link>
-            ))}
-            {product.tags?.map((tag) => (
-              <Badge key={tag.id} variant="outline" className="text-xs">
-                <TagIcon className="mr-1 size-3" />
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-              {product.name}
-            </h1>
-
-            {product.excerpt && (
-              <p className="text-muted-foreground max-w-3xl text-base leading-relaxed">
-                {product.excerpt}
-              </p>
-            )}
-          </div>
-
-          <div className="text-muted-foreground flex flex-wrap items-center gap-3 pt-1 text-xs font-medium">
-            <div className="border-border bg-muted/20 flex items-center gap-1.5 rounded-md border px-2.5 py-1">
-              <CoinsIcon className="text-muted-foreground size-3.5" />
-              <span>
-                {product.creditsPerRun
-                  ? `${product.creditsPerRun} credits per run`
-                  : "Free execution"}
-              </span>
+        {/* Product Info Panel */}
+        <div className="border-border bg-card overflow-hidden rounded-xl border shadow-2xs">
+          {product.thumbnail?.url && (
+            <div className="relative aspect-video w-full overflow-hidden border-b">
+              <img
+                src={product.thumbnail.url}
+                alt={product.name}
+                width={1200}
+                height={675}
+                fetchPriority="high"
+                className="size-full object-cover"
+              />
             </div>
-            <div className="border-border bg-muted/20 flex items-center gap-1.5 rounded-md border px-2.5 py-1">
-              <SparklesIcon className="text-muted-foreground size-3.5" />
-              <span>Format: {product.outputFormat ?? "plain"}</span>
+          )}
+          <div className="space-y-4 p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              {product.categories?.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to="/c/$categorySlug"
+                  params={{ categorySlug: cat.slug }}
+                >
+                  <Badge variant="outline" className="gap-1 text-xs">
+                    <FolderIcon className="size-3" />
+                    {cat.name}
+                  </Badge>
+                </Link>
+              ))}
+              {product.tags?.map((tag) => (
+                <Badge key={tag.id} variant="outline" className="text-xs">
+                  <TagIcon className="mr-1 size-3" />
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                {product.name}
+              </h1>
+              {product.excerpt && (
+                <p className="text-muted-foreground max-w-3xl text-base leading-relaxed">
+                  {product.excerpt}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="border-border bg-muted/30 text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+                <CoinsIcon className="size-3.5" />
+                <span>
+                  {product.creditsPerRun
+                    ? `${product.creditsPerRun} credits per run`
+                    : "Free execution"}
+                </span>
+              </div>
+              <div className="border-border bg-muted/30 text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+                <SparklesIcon className="size-3.5" />
+                <span>Format: {product.outputFormat ?? "plain"}</span>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* LCP thumbnail */}
-        {product.thumbnail?.url && (
-          <div className="border-border relative aspect-video w-full overflow-hidden rounded-xl border">
-            <img
-              src={product.thumbnail.url}
-              alt={product.name}
-              width={1200}
-              height={675}
-              fetchPriority="high"
-              className="size-full object-cover"
-            />
-          </div>
-        )}
 
         {/* Main Work Area */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
