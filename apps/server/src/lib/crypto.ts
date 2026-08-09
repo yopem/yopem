@@ -1,6 +1,7 @@
 import crypto from "crypto"
 
 import { apiKeyEncryptionSecret } from "env"
+import type { ApiKeyConfig } from "utils/api-input"
 
 export class EncryptionError extends Error {
   override cause?: unknown
@@ -72,4 +73,12 @@ export function maskApiKey(apiKey: string, visibleChars = 7): string {
   const visible = apiKey.substring(0, visibleChars)
   const masked = "*".repeat(Math.min(20, apiKey.length - visibleChars))
   return `${visible}${masked}`
+}
+
+export function maskApiKeyConfig(key: ApiKeyConfig): ApiKeyConfig {
+  const decrypted = decryptApiKey(key.apiKey)
+  return {
+    ...key,
+    apiKey: decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt",
+  }
 }

@@ -165,6 +165,37 @@ const productBulkStatusInputSchema = v.object({
   status: v.picklist(["draft", "active", "archived"]),
 })
 
+const VALID_PREVIEW_ERRORS = new Set([
+  "ContextLengthError",
+  "InvalidKeyError",
+  "RateLimitError",
+])
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
+
+type OutputFormat = "plain" | "json" | "image" | "video"
+
+const runWorkflow = (args: {
+  workflow: ProductWorkflow
+  inputs: Record<string, unknown>
+  modelEngine: string
+  outputFormat: OutputFormat
+  productApiKeyId: string | null
+}) =>
+  getApiKeys().then((apiKeys) =>
+    executeWorkflow({
+      workflow: args.workflow,
+      inputs: args.inputs,
+      productConfig: {
+        modelEngine: args.modelEngine,
+        outputFormat: args.outputFormat,
+      },
+      productApiKeyId: args.productApiKeyId,
+      apiKeys,
+    }),
+  )
+
 export const productsRouter = {
   products: {
     list: os
@@ -292,8 +323,6 @@ export const productsRouter = {
           product.workflow,
         )
 
-        const apiKeys = await getApiKeys()
-
         const productConfig = product.config as { modelEngine: string } | null
         if (productConfig === null) {
           throw new ORPCError("BAD_REQUEST", {
@@ -306,15 +335,12 @@ export const productsRouter = {
         const cost = Number(product.creditsPerRun ?? 0)
 
         try {
-          const result = await executeWorkflow({
+          const result = await runWorkflow({
             workflow: product.workflow,
             inputs,
-            productConfig: {
-              modelEngine: productConfig.modelEngine,
-              outputFormat: product.outputFormat ?? "plain",
-            },
+            modelEngine: productConfig.modelEngine,
+            outputFormat: product.outputFormat ?? "plain",
             productApiKeyId: product.apiKeyId,
-            apiKeys,
           })
 
           await insertProductRun({
@@ -343,21 +369,19 @@ export const productsRouter = {
             cost,
           }
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
           await insertProductRun({
             id: runId,
             productId,
             userId: session.id,
             inputs,
-            outputs: { error: errorMessage },
+            outputs: { error: errorMessage(error) },
             status: "failed",
             cost: String(cost),
             completedAt: new Date(),
           })
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
             status: 500,
-            message: `Workflow execution failed: ${errorMessage}`,
+            message: `Workflow execution failed: ${errorMessage(error)}`,
             cause: error,
           })
         }
@@ -372,18 +396,13 @@ export const productsRouter = {
         validateWorkflow(input.workflow)
         validateWorkflowInputs(input.inputs, input.workflow)
 
-        const apiKeys = await getApiKeys()
-
         try {
-          const result = await executeWorkflow({
+          const result = await runWorkflow({
             workflow: input.workflow,
             inputs: input.inputs,
-            productConfig: {
-              modelEngine: input.config.modelEngine,
-              outputFormat: input.outputFormat,
-            },
+            modelEngine: input.config.modelEngine,
+            outputFormat: input.outputFormat,
             productApiKeyId: input.apiKeyId,
-            apiKeys,
           })
 
           return {
@@ -392,24 +411,18 @@ export const productsRouter = {
             cost: 0,
           }
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error)
+          const message = `Workflow execution failed: ${errorMessage(error)}`
 
-          if (
-            error instanceof Error &&
-            (error.name === "ContextLengthError" ||
-              error.name === "InvalidKeyError" ||
-              error.name === "RateLimitError")
-          ) {
+          if (error instanceof Error && VALID_PREVIEW_ERRORS.has(error.name)) {
             throw new ORPCError("BAD_REQUEST", {
               status: 400,
-              message: `Workflow execution failed: ${errorMessage}`,
+              message,
             })
           }
 
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
             status: 500,
-            message: `Workflow execution failed: ${errorMessage}`,
+            message,
             cause: error,
           })
         }

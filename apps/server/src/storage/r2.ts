@@ -69,7 +69,9 @@ class R2Storage {
       bucket: config.bucketName,
       endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
     })
-    this.publicUrl = config.publicUrl
+    this.publicUrl = config.publicUrl.startsWith("http")
+      ? config.publicUrl
+      : `https://${config.publicUrl}`
   }
 
   async uploadImage(buffer: Buffer, _contentType: string): Promise<string> {
@@ -260,43 +262,37 @@ class R2Storage {
 
     let uploadBuffer = buffer
     let uploadMimeType = mimeType
-    let extension = filename
-      ? (filename.split(".").pop() ?? "bin")
-      : (originalFilename.split(".").pop() ?? "bin")
 
     if (type === "images") {
       uploadBuffer = await this.processImage(buffer)
       uploadMimeType = "image/webp"
-      extension = "webp"
-
-      if (filename) {
-        filename = `${filename.replace(/\.[^/.]+$/, "")}.webp`
-      }
+      filename = filename
+        ? `${filename.replace(/\.[^/.]+$/, "")}.webp`
+        : this.generateAssetFilename(originalFilename, "webp")
     }
 
     const finalFilename =
-      filename ??
-      (() => {
-        const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
-        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
-        const uniqueId = nanoid(6)
-        return `${sanitizedBaseName}_${uniqueId}.${extension}`
-      })()
+      filename ?? this.generateAssetFilename(originalFilename, "bin")
 
     const key = `${type}/${finalFilename}`
 
     await this.uploadWithRetry(uploadBuffer, key, uploadMimeType)
 
-    const publicUrlWithProtocol = this.publicUrl.startsWith("http")
-      ? this.publicUrl
-      : `https://${this.publicUrl}`
-
     return {
-      url: `${publicUrlWithProtocol}/${key}`,
+      url: `${this.publicUrl}/${key}`,
       type,
       size: uploadBuffer.length,
       key,
     }
+  }
+
+  private generateAssetFilename(
+    originalFilename: string,
+    extension: string,
+  ): string {
+    const baseName = tr(originalFilename.replace(/\.[^/.]+$/, ""))
+    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, "_")
+    return `${sanitizedBaseName}_${nanoid(6)}.${extension}`
   }
 
   async deleteFile(key: string): Promise<void> {

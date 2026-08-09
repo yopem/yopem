@@ -98,38 +98,11 @@ function topologicalSort(
   return result
 }
 
-function getNodeById(
-  nodes: WorkflowNode[],
-  id: string,
-): WorkflowNode | undefined {
-  return nodes.find((n) => n.id === id)
-}
+const getNodesById = (nodes: WorkflowNode[]): Map<string, WorkflowNode> =>
+  new Map(nodes.map((node) => [node.id, node]))
 
 type AINode = Extract<WorkflowNode, { type: "ai" }>
-type InputNode = Extract<WorkflowNode, { type: "input" }>
 type OutputNode = Extract<WorkflowNode, { type: "output" }>
-type ConditionNode = Extract<WorkflowNode, { type: "condition" }>
-type LoopNode = Extract<WorkflowNode, { type: "loop" }>
-
-function isAINode(node: WorkflowNode): node is AINode {
-  return node.type === "ai"
-}
-
-function isInputNode(node: WorkflowNode): node is InputNode {
-  return node.type === "input"
-}
-
-function isOutputNode(node: WorkflowNode): node is OutputNode {
-  return node.type === "output"
-}
-
-function isConditionNode(node: WorkflowNode): node is ConditionNode {
-  return node.type === "condition"
-}
-
-function isLoopNode(node: WorkflowNode): node is LoopNode {
-  return node.type === "loop"
-}
 
 async function resolveKeyAndModel(
   node: AINode,
@@ -208,38 +181,35 @@ function substituteVariableReferences(expression: string): string {
   )
 }
 
-function evaluateCondition(
+function evaluateExpression(
   expression: string,
   variables: Record<string, unknown>,
-): boolean {
+): unknown {
   try {
     // oxlint-disable-next-line typescript/no-implied-eval -- deliberate sandboxed expression evaluation for workflow conditions
     const fn = new Function(
       "vars",
-      `with(vars) { return !!(${substituteVariableReferences(expression)}); }`,
+      `with(vars) { return ${substituteVariableReferences(expression)}; }`,
     )
-    return fn({ ...variables }) as boolean
+    return fn({ ...variables })
   } catch {
-    return false
+    return undefined
   }
+}
+
+function evaluateCondition(
+  expression: string,
+  variables: Record<string, unknown>,
+): boolean {
+  return Boolean(evaluateExpression(expression, variables))
 }
 
 function evaluateLoopItems(
   itemsExpression: string,
   variables: Record<string, unknown>,
 ): unknown[] {
-  try {
-    // oxlint-disable-next-line typescript/no-implied-eval -- deliberate sandboxed expression evaluation for workflow loops
-    const fn = new Function(
-      "vars",
-      `with(vars) { return ${substituteVariableReferences(itemsExpression)}; }`,
-    )
-    const result = fn({ ...variables })
-    if (Array.isArray(result)) return result
-    return []
-  } catch {
-    return []
-  }
+  const result = evaluateExpression(itemsExpression, variables)
+  return Array.isArray(result) ? result : []
 }
 
 async function runAIStep(
@@ -262,7 +232,6 @@ async function runAIStep(
   const response = await executeAIProduct({
     systemRole,
     userInstructionTemplate: userInstruction,
-    inputs: variables,
     config: { modelEngine },
     outputFormat,
     apiKey,
@@ -280,6 +249,7 @@ export async function executeWorkflow(
   const steps: WorkflowStepOutput[] = []
 
   const sortedIds = topologicalSort(workflow.nodes, workflow.edges)
+  const nodesById = getNodesById(workflow.nodes)
   const activeIds = new Set(sortedIds)
   const deadIds = new Set<string>()
 
@@ -295,7 +265,7 @@ export async function executeWorkflow(
       continue
     }
 
-    const node = getNodeById(workflow.nodes, nodeId)
+    const node = nodesById.get(nodeId)
     if (!node) continue
 
     const baseStep = (name: string): WorkflowStepOutput => ({
@@ -305,98 +275,103 @@ export async function executeWorkflow(
       status: "running",
     })
 
-    if (isInputNode(node)) {
-      for (const field of node.data.fields) {
-        const value = variables[field.variableName]
-        outputs[field.variableName] = formatValue(value)
-      }
-      steps.push({ ...baseStep("inputs"), value: "", status: "completed" })
-      continue
-    }
-
-    if (isOutputNode(node)) {
-      const value = replaceVariables(node.data.template, variables)
-      outputs[node.data.outputName] = value
-      variables[node.data.outputName] = value
-      steps.push({
-        ...baseStep(node.data.outputName),
-        value,
-        status: "completed",
-      })
-      continue
-    }
-
-    if (isConditionNode(node)) {
-      const matched = evaluateCondition(node.data.expression, variables)
-      variables[`${node.id}_result`] = matched ? "true" : "false"
-      steps.push({
-        ...baseStep("condition"),
-        value: matched ? "true" : "false",
-        status: "completed",
-      })
-
-      const outgoing = workflow.edges.filter((e) => e.source === node.id)
-      for (const edge of outgoing) {
-        const branchMatches =
-          edge.sourceHandle === "true"
-            ? matched
-            : edge.sourceHandle === "false"
-              ? !matched
-              : edge.sourceHandle
-                ? evaluateCondition(edge.sourceHandle, variables)
-                : matched
-        if (!branchMatches) {
-          activeIds.delete(edge.target)
-          deadIds.add(edge.target)
+    switch (node.type) {
+      case "input": {
+        for (const field of node.data.fields) {
+          outputs[field.variableName] = formatValue(
+            variables[field.variableName],
+          )
         }
+        steps.push({ ...baseStep("inputs"), value: "", status: "completed" })
+        break
       }
-      continue
-    }
 
-    if (isLoopNode(node)) {
-      const items = evaluateLoopItems(
-        node.data.itemsExpression,
-        variables,
-      ).slice(0, node.data.maxIterations)
-      const results: string[] = []
+      case "output": {
+        const value = replaceVariables(node.data.template, variables)
+        outputs[node.data.outputName] = value
+        variables[node.data.outputName] = value
+        steps.push({
+          ...baseStep(node.data.outputName),
+          value,
+          status: "completed",
+        })
+        break
+      }
 
-      for (const item of items) {
-        variables[node.data.itemName] = item
+      case "condition": {
+        const matched = evaluateCondition(node.data.expression, variables)
+        variables[`${node.id}_result`] = matched ? "true" : "false"
+        steps.push({
+          ...baseStep("condition"),
+          value: matched ? "true" : "false",
+          status: "completed",
+        })
+
         const outgoing = workflow.edges.filter((e) => e.source === node.id)
         for (const edge of outgoing) {
-          const subNode = getNodeById(workflow.nodes, edge.target)
-          if (!subNode || !isAINode(subNode)) continue
-          const out = await runAIStep(subNode, variables, context)
-          results.push(out)
-          activeIds.delete(edge.target)
+          const branchMatches =
+            edge.sourceHandle === "true"
+              ? matched
+              : edge.sourceHandle === "false"
+                ? !matched
+                : edge.sourceHandle
+                  ? evaluateCondition(edge.sourceHandle, variables)
+                  : matched
+          if (!branchMatches) {
+            activeIds.delete(edge.target)
+            deadIds.add(edge.target)
+          }
         }
+        break
       }
 
-      const joined = results.join("\n\n")
-      outputs[`${node.id}_result`] = joined
-      variables[`${node.id}_result`] = joined
-      steps.push({
-        ...baseStep("loop"),
-        value: joined,
-        status: "completed",
-      })
-      continue
-    }
+      case "loop": {
+        const items = evaluateLoopItems(
+          node.data.itemsExpression,
+          variables,
+        ).slice(0, node.data.maxIterations)
+        const results: string[] = []
 
-    if (isAINode(node)) {
-      const out = await runAIStep(node, variables, context)
-      outputs[node.data.outputName] = out
-      variables[node.data.outputName] = out
-      steps.push({
-        ...baseStep(node.data.outputName),
-        value: out,
-        status: "completed",
-      })
-      continue
+        for (const item of items) {
+          variables[node.data.itemName] = item
+          const outgoing = workflow.edges.filter((e) => e.source === node.id)
+          for (const edge of outgoing) {
+            const subNode = nodesById.get(edge.target)
+            if (subNode?.type !== "ai") continue
+            const out = await runAIStep(subNode, variables, context)
+            results.push(out)
+            activeIds.delete(edge.target)
+          }
+        }
+
+        const joined = results.join("\n\n")
+        outputs[`${node.id}_result`] = joined
+        variables[`${node.id}_result`] = joined
+        steps.push({
+          ...baseStep("loop"),
+          value: joined,
+          status: "completed",
+        })
+        break
+      }
+
+      case "ai": {
+        const out = await runAIStep(node, variables, context)
+        outputs[node.data.outputName] = out
+        variables[node.data.outputName] = out
+        steps.push({
+          ...baseStep(node.data.outputName),
+          value: out,
+          status: "completed",
+        })
+        break
+      }
     }
   }
 
-  const outputNodes = workflow.nodes.filter((n) => isOutputNode(n))
+  const outputNodes = workflow.nodes.filter(
+    (n): n is OutputNode => n.type === "output",
+  )
   const finalNode = outputNodes[outputNodes.length - 1]
   if (!finalNode) {
     throw new ORPCError("BAD_REQUEST", {

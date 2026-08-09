@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "server/lib/crypto"
+import { encryptApiKey, maskApiKey, maskApiKeyConfig } from "server/lib/crypto"
 import { testApiKey } from "server/llm/test-key"
 import { enforceRateLimit } from "server/middleware/rate-limit"
 import * as v from "valibot"
@@ -56,6 +56,24 @@ const apiKeyDeleteOutputSchema = v.object({
   id: v.string(),
 })
 
+const getSessionApiKeys = async (
+  sessionId: string,
+): Promise<{ keys: ApiKeyConfig[]; exists: boolean }> => {
+  const settings = await getUserSettings(sessionId)
+
+  if (!settings?.apiKeys) {
+    return { keys: [], exists: false }
+  }
+
+  try {
+    const keys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
+    return { keys, exists: true }
+  } catch {
+    console.error("Error parsing API keys")
+    return { keys: [], exists: false }
+  }
+}
+
 export const userRouter = {
   user: {
     me: os
@@ -102,31 +120,8 @@ export const userRouter = {
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
       .handler(async ({ context }) => {
-        const settings = await getUserSettings(context.session.id)
-
-        if (!settings?.apiKeys) {
-          return []
-        }
-
-        let apiKeys: ApiKeyConfig[]
-        try {
-          apiKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
-        } catch {
-          console.error("Error parsing API keys")
-          return []
-        }
-
-        const processedKeys = apiKeys.map((key) => {
-          const decrypted = decryptApiKey(key.apiKey)
-          return {
-            ...key,
-            apiKey: decrypted
-              ? maskApiKey(decrypted)
-              : "Error: Failed to decrypt",
-          }
-        })
-
-        return processedKeys
+        const { keys } = await getSessionApiKeys(context.session.id)
+        return keys.map(maskApiKeyConfig)
       }),
 
     apiKeyCreate: os
@@ -140,8 +135,6 @@ export const userRouter = {
           context.session.id,
           "add",
         )
-
-        const settings = await getUserSettings(context.session.id)
 
         const encryptedKey = encryptApiKey(input.apiKey)
         if (!encryptedKey) {
@@ -173,19 +166,9 @@ export const userRouter = {
           updatedAt: new Date().toISOString(),
         }
 
-        let existingKeys: ApiKeyConfig[] = []
-
-        if (settings?.apiKeys) {
-          try {
-            existingKeys = v.parse(
-              v.array(apiKeyConfigSchema),
-              settings.apiKeys,
-            )
-          } catch {
-            console.error("Error parsing existing API keys")
-          }
-        }
-
+        const { keys: existingKeys } = await getSessionApiKeys(
+          context.session.id,
+        )
         const updatedKeys = [...existingKeys, newKey]
 
         await upsertUserSettings(context.session.id, {
@@ -212,23 +195,14 @@ export const userRouter = {
           "update",
         )
 
-        const settings = await getUserSettings(context.session.id)
+        const { keys: existingKeys, exists } = await getSessionApiKeys(
+          context.session.id,
+        )
 
-        if (!settings?.apiKeys) {
+        if (!exists) {
           throw new ORPCError("NOT_FOUND", {
             status: 404,
             message: "No API keys found",
-          })
-        }
-
-        let existingKeys: ApiKeyConfig[]
-        try {
-          existingKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
-        } catch (e) {
-          console.error("Error parsing existing API keys:", e)
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "Failed to parse existing API keys",
           })
         }
 
@@ -288,17 +262,7 @@ export const userRouter = {
           apiKeys: updatedKeys,
         })
 
-        const decryptedKey = decryptApiKey(
-          input.apiKey ?? existingKeys[keyIndex].apiKey,
-        )
-        const maskedKey = decryptedKey
-          ? maskApiKey(decryptedKey)
-          : "Error: Failed to decrypt"
-
-        return {
-          ...updatedKey,
-          apiKey: maskedKey,
-        }
+        return maskApiKeyConfig(updatedKey)
       }),
 
     apiKeyDelete: os
@@ -316,23 +280,14 @@ export const userRouter = {
           "delete",
         )
 
-        const settings = await getUserSettings(context.session.id)
+        const { keys: existingKeys, exists } = await getSessionApiKeys(
+          context.session.id,
+        )
 
-        if (!settings?.apiKeys) {
+        if (!exists) {
           throw new ORPCError("NOT_FOUND", {
             status: 404,
             message: "No API keys found",
-          })
-        }
-
-        let existingKeys: ApiKeyConfig[]
-        try {
-          existingKeys = v.parse(v.array(apiKeyConfigSchema), settings.apiKeys)
-        } catch (e) {
-          console.error("Error parsing API keys:", e)
-          throw new ORPCError("BAD_REQUEST", {
-            status: 400,
-            message: "Failed to parse API keys",
           })
         }
 
@@ -358,25 +313,10 @@ export const userRouter = {
       .use(requireAdminMiddleware)
       .output(apiKeyStatsOutputSchema)
       .handler(async ({ context }) => {
-        const settings = await getUserSettings(context.session.id)
-
-        let activeKeys = 0
-
-        if (settings?.apiKeys) {
-          try {
-            const parsedKeys = v.parse(
-              v.array(apiKeyConfigSchema),
-              settings.apiKeys,
-            )
-            activeKeys = parsedKeys.filter(
-              (key) => key.status === "active",
-            ).length
-          } catch {
-            console.error("Error parsing API keys")
-          }
+        const { keys } = await getSessionApiKeys(context.session.id)
+        return {
+          activeKeys: keys.filter((key) => key.status === "active").length,
         }
-
-        return { activeKeys }
       }),
   },
 }

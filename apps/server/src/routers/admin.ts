@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { decryptApiKey, encryptApiKey, maskApiKey } from "server/lib/crypto"
+import { encryptApiKey, maskApiKeyConfig } from "server/lib/crypto"
 import { testApiKey } from "server/llm/test-key"
 import * as v from "valibot"
 
@@ -35,14 +35,6 @@ const ASSETS_MAX_SIZE_KEY = "assets_max_upload_size_mb"
 const MODEL_CACHE_TTL = 300
 const SETTINGS_CACHE_TTL = 300
 
-const formatApiKey = (key: ApiKeyConfig) => ({
-  ...key,
-  apiKey: (() => {
-    const decrypted = decryptApiKey(key.apiKey)
-    return decrypted ? maskApiKey(decrypted) : "Error: Failed to decrypt"
-  })(),
-})
-
 const apiKeyCreateOutputSchema = v.object({
   success: v.boolean(),
   id: v.string(),
@@ -62,6 +54,13 @@ const assetSettingsOutputSchema = v.object({
   maxUploadSizeMB: v.number(),
 })
 
+const adminModelInputSchema = v.object({
+  provider: apiKeyProviderSchema,
+  modelId: v.pipe(v.string(), v.minLength(1)),
+  displayName: v.pipe(v.string(), v.minLength(1)),
+  isEnabled: v.optional(v.boolean(), true),
+})
+
 export const hasActiveKeyForProvider = (
   keys: ApiKeyConfig[],
   provider: ApiKeyProvider,
@@ -70,13 +69,6 @@ export const hasActiveKeyForProvider = (
 
 const updateAssetSettingsInputSchema = v.object({
   maxUploadSizeMB: v.pipe(v.number(), v.minValue(1), v.maxValue(500)),
-})
-
-const adminModelCreateInputSchema = v.object({
-  provider: apiKeyProviderSchema,
-  modelId: v.pipe(v.string(), v.minLength(1)),
-  displayName: v.pipe(v.string(), v.minLength(1)),
-  isEnabled: v.optional(v.boolean(), true),
 })
 
 const adminModelUpdateInputSchema = v.object({
@@ -108,7 +100,7 @@ export const adminRouter = {
           SETTINGS_CACHE_TTL,
         )
 
-        return apiKeys.map(formatApiKey)
+        return apiKeys.map(maskApiKeyConfig)
       }),
 
     apiKeyCreate: os
@@ -379,7 +371,7 @@ export const adminRouter = {
       .route({ method: "POST" })
       .use(requireAuthMiddleware)
       .use(requireAdminMiddleware)
-      .input(adminModelCreateInputSchema)
+      .input(adminModelInputSchema)
       .output(aiModelSchema)
       .handler(async ({ input }) => {
         const existing = await findAIModelByProviderAndModelId(

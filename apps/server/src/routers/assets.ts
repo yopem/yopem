@@ -53,6 +53,12 @@ const assetListOutputSchema = v.object({
 
 const assetDeleteInputSchema = v.object({ id: v.string() })
 
+const r2KeyFromUrl = (url: string): string =>
+  new URL(url).pathname.replace(/^\//, "")
+
+const storageErrorMessage = (action: string, error: unknown): string =>
+  `${action}: ${error instanceof Error ? error.message : String(error)}`
+
 export const assetsRouter = {
   assets: {
     uploadSettings: os
@@ -105,8 +111,7 @@ export const assetsRouter = {
           })
         }
 
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
+        const buffer = Buffer.from(await file.arrayBuffer())
         const r2 = getR2Storage()
         const type = r2.classifyFileType(
           file.type || "application/octet-stream",
@@ -114,15 +119,9 @@ export const assetsRouter = {
         )
         const filename = await generateUniqueAssetFilename(file.name, type)
 
-        let uploadResult: {
-          url: string
-          type: "images" | "videos" | "documents" | "archives" | "others"
-          size: number
-          key: string
-        }
-
+        let uploaded: Awaited<ReturnType<typeof r2.uploadAsset>>
         try {
-          uploadResult = await r2.uploadAsset(
+          uploaded = await r2.uploadAsset(
             buffer,
             file.name,
             file.type || "application/octet-stream",
@@ -131,21 +130,17 @@ export const assetsRouter = {
         } catch (error) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
-            message: `Failed to upload asset: ${error instanceof Error ? error.message : String(error)}`,
+            message: storageErrorMessage("Failed to upload asset", error),
           })
         }
 
-        const { url, size, key } = uploadResult
-
-        const asset = await insertAsset({
-          filename: key.split("/").pop()!,
+        return insertAsset({
+          filename: uploaded.key.split("/").pop()!,
           originalName: file.name,
           type,
-          size,
-          url,
+          size: uploaded.size,
+          url: uploaded.url,
         })
-
-        return asset
       }),
 
     delete: os
@@ -164,15 +159,15 @@ export const assetsRouter = {
           })
         }
 
-        const r2 = getR2Storage()
-        const key = new URL(asset.url).pathname.replace(/^\//, "")
-
         try {
-          await r2.deleteFile(key)
+          await getR2Storage().deleteFile(r2KeyFromUrl(asset.url))
         } catch (error) {
           throw new ORPCError("BAD_REQUEST", {
             status: 400,
-            message: `Failed to delete asset from storage: ${error instanceof Error ? error.message : String(error)}`,
+            message: storageErrorMessage(
+              "Failed to delete asset from storage",
+              error,
+            ),
           })
         }
 
@@ -192,8 +187,7 @@ export const assetsRouter = {
         const r2 = getR2Storage()
         for (const asset of assets) {
           try {
-            const key = new URL(asset.url).pathname.replace(/^\//, "")
-            await r2.deleteFile(key)
+            await r2.deleteFile(r2KeyFromUrl(asset.url))
           } catch {
             // best-effort R2 deletion for bulk
           }

@@ -1695,47 +1695,47 @@ async function deleteAIModelByProviderAndModelId(
   }
 }
 
-async function seedCategories(): Promise<{
-  ids: Map<string, string>
-  created: number
-}> {
-  const existing = await listCategories()
-  const ids = new Map(existing.map((category) => [category.name, category.id]))
+async function seedEntities<T extends { name: string }>(args: {
+  list: () => Promise<{ id: string; name: string }[]>
+  create: (entity: T) => Promise<{ id: string; name: string }>
+  seedData: T[]
+  label: string
+}): Promise<{ ids: Map<string, string>; created: number }> {
+  const existing = await args.list()
+  const ids = new Map(existing.map((entity) => [entity.name, entity.id]))
   const existingNames = new Set(ids.keys())
   let created = 0
 
-  for (const category of categories) {
-    if (existingNames.has(category.name)) continue
+  for (const entity of args.seedData) {
+    if (existingNames.has(entity.name)) continue
 
-    const result = await createCategory(category)
-    ids.set(category.name, result.id)
+    const result = await args.create(entity)
+    ids.set(entity.name, result.id)
     created++
-    console.info(`Created category: ${category.name}`)
+    console.info(`Created ${args.label}: ${entity.name}`)
   }
 
   return { ids, created }
 }
 
-async function seedTags(): Promise<{
+const seedCategories = (): Promise<{
   ids: Map<string, string>
   created: number
-}> {
-  const existing = await listTags()
-  const ids = new Map(existing.map((tag) => [tag.name, tag.id]))
-  const existingNames = new Set(ids.keys())
-  let created = 0
+}> =>
+  seedEntities({
+    list: listCategories,
+    create: createCategory,
+    seedData: categories,
+    label: "category",
+  })
 
-  for (const tag of tags) {
-    if (existingNames.has(tag.name)) continue
-
-    const result = await createTag(tag)
-    ids.set(tag.name, result.id)
-    created++
-    console.info(`Created tag: ${tag.name}`)
-  }
-
-  return { ids, created }
-}
+const seedTags = (): Promise<{ ids: Map<string, string>; created: number }> =>
+  seedEntities({
+    list: listTags,
+    create: createTag,
+    seedData: tags,
+    label: "tag",
+  })
 
 async function seedApiKeys(): Promise<Map<ApiKeyProvider, string>> {
   const setting = await getSetting(API_KEY_SETTING_KEY)

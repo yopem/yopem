@@ -1,15 +1,9 @@
 import { Hono } from "hono"
-import { getCookie, deleteCookie, setCookie } from "hono/cookie"
+import { getCookie } from "hono/cookie"
+import { clearLoginOriginCookie, setSessionCookies } from "server/lib/cookies"
 
 import { authClient } from "auth/client"
-import {
-  adminOrigin,
-  authCallbackUrl,
-  cookieDomain,
-  isDev,
-  isProd,
-  webOrigin,
-} from "env"
+import { adminOrigin, authCallbackUrl, isDev, webOrigin } from "env"
 
 const allowedOrigins = isDev
   ? [
@@ -28,18 +22,18 @@ const isValidRedirectPath = (path: string): boolean => {
   return true
 }
 
+const resolveRedirectPath = (query: string | undefined): string =>
+  query !== undefined && isValidRedirectPath(query) ? query : "/"
+
 export const authCallbackRoute = new Hono()
 
 authCallbackRoute.get("/callback", async (c) => {
   const code = c.req.query("code")
   const error = c.req.query("error")
   const errorDescription = c.req.query("error_description")
-  const redirectPath = isValidRedirectPath(c.req.query("redirect") ?? "/")
-    ? (c.req.query("redirect") ?? "/")
-    : "/"
+  const redirectPath = resolveRedirectPath(c.req.query("redirect"))
 
-  const fullUrl = c.req.url
-  console.info(`Auth callback received: URL=${fullUrl}`)
+  console.info(`Auth callback received: URL=${c.req.url}`)
 
   if (error) {
     console.error(`OAuth error: ${error} - ${errorDescription}`)
@@ -75,29 +69,9 @@ authCallbackRoute.get("/callback", async (c) => {
       ? loginOrigin
       : defaultOrigin
 
-  const isSecure = !!cookieDomain || isProd
-  deleteCookie(c, "login_origin", {
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  })
+  clearLoginOriginCookie(c)
 
-  const sameSite: "none" | "lax" = isDev ? "lax" : "none"
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite,
-    secure: isSecure,
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  }
-
-  setCookie(c, "access_token", exchanged.tokens.access, {
-    ...cookieOptions,
-    maxAge: 86400,
-  })
-  setCookie(c, "refresh_token", exchanged.tokens.refresh, {
-    ...cookieOptions,
-    maxAge: 604800,
-  })
+  setSessionCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
 
   return c.redirect(`${origin}${redirectPath}`, 302)
 })

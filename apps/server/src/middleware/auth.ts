@@ -1,48 +1,17 @@
-import type { Context, MiddlewareHandler } from "hono"
+import type { MiddlewareHandler } from "hono"
 import type { AppContext } from "server/lib/context"
 
-import { getCookie, setCookie } from "hono/cookie"
+import { getCookie } from "hono/cookie"
+import { setSessionCookies } from "server/lib/cookies"
 
 import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
 import type { SessionUser } from "auth/types"
-import { cookieDomain, isProd } from "env"
 
 export type { SessionUser }
 
-const ACCESS_TOKEN_MAX_AGE = 86400
-const REFRESH_TOKEN_MAX_AGE = 604800
-
-const isSecure = () => {
-  return !!cookieDomain || isProd
-}
-
-const getCookieOptions = () => {
-  const sameSite: "none" | "lax" = isProd ? "none" : "lax"
-  return {
-    sameSite,
-    secure: isSecure(),
-    httpOnly: true,
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  }
-}
-
-const setTokenCookies = (
-  c: Context<AppContext>,
-  access: string,
-  refresh: string,
-) => {
-  const options = getCookieOptions()
-  setCookie(c, "access_token", access, {
-    ...options,
-    maxAge: ACCESS_TOKEN_MAX_AGE,
-  })
-  setCookie(c, "refresh_token", refresh, {
-    ...options,
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  })
-}
+const tokenPresence = (token: string | undefined) =>
+  token ? "present" : "missing"
 
 export const authMiddleware: MiddlewareHandler<AppContext> = async (
   c,
@@ -52,7 +21,7 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (
   const refreshToken = getCookie(c, "refresh_token")
 
   console.info(
-    `Auth middleware: access_token=${accessToken ? "present" : "missing"}, refresh_token=${refreshToken ? "present" : "missing"}`,
+    `Auth middleware: access_token=${tokenPresence(accessToken)}, refresh_token=${tokenPresence(refreshToken)}`,
   )
 
   if (!accessToken) {
@@ -72,7 +41,7 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (
       )
     } else {
       if (verified.tokens) {
-        setTokenCookies(c, verified.tokens.access, verified.tokens.refresh)
+        setSessionCookies(c, verified.tokens.access, verified.tokens.refresh)
       }
       session = verified.subject.properties
     }
@@ -85,5 +54,3 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (
   c.set("session", session)
   return next()
 }
-
-export { authClient, setTokenCookies, subjects }

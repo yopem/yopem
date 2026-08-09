@@ -3,6 +3,40 @@ import type { RedisClient } from "bun"
 import { ORPCError } from "@orpc/server"
 import { RateLimitError } from "server/lib/errors"
 
+export const RATE_LIMITS = {
+  API_KEY_ADD: {
+    maxRequests: 5,
+    windowMs: 60000,
+  },
+  API_KEY_UPDATE: {
+    maxRequests: 10,
+    windowMs: 60000,
+  },
+  API_KEY_DELETE: {
+    maxRequests: 5,
+    windowMs: 60000,
+  },
+  PRODUCT_EXECUTE: {
+    maxRequests: 30,
+    windowMs: 60000,
+  },
+} as const
+
+const limitsForAction = (
+  action: "add" | "update" | "delete" | "execute",
+): (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS] => {
+  switch (action) {
+    case "add":
+      return RATE_LIMITS.API_KEY_ADD
+    case "update":
+      return RATE_LIMITS.API_KEY_UPDATE
+    case "delete":
+      return RATE_LIMITS.API_KEY_DELETE
+    case "execute":
+      return RATE_LIMITS.PRODUCT_EXECUTE
+  }
+}
+
 export async function checkRateLimit(
   getRedisClient: () => Promise<RedisClient | null>,
   key: string,
@@ -17,10 +51,13 @@ export async function checkRateLimit(
   const redis = await getRedisClient()
 
   if (!redis) {
-    if (options?.failClosed) {
-      return { ok: true, value: { isLimited: true, remaining: 0 } }
+    return {
+      ok: true,
+      value: {
+        isLimited: options?.failClosed ?? false,
+        remaining: options?.failClosed ? 0 : maxRequests,
+      },
     }
-    return { ok: true, value: { isLimited: false, remaining: maxRequests } }
   }
 
   const now = Date.now()
@@ -59,38 +96,12 @@ export async function checkRateLimit(
   }
 }
 
-export const RATE_LIMITS = {
-  API_KEY_ADD: {
-    maxRequests: 5,
-    windowMs: 60000,
-  },
-  API_KEY_UPDATE: {
-    maxRequests: 10,
-    windowMs: 60000,
-  },
-  API_KEY_DELETE: {
-    maxRequests: 5,
-    windowMs: 60000,
-  },
-  PRODUCT_EXECUTE: {
-    maxRequests: 30,
-    windowMs: 60000,
-  },
-} as const
-
 export async function enforceRateLimit(
   getRedisClient: () => Promise<RedisClient | null>,
   sessionId: string,
   action: "add" | "update" | "delete" | "execute",
 ): Promise<void> {
-  const limits =
-    action === "add"
-      ? RATE_LIMITS.API_KEY_ADD
-      : action === "update"
-        ? RATE_LIMITS.API_KEY_UPDATE
-        : action === "delete"
-          ? RATE_LIMITS.API_KEY_DELETE
-          : RATE_LIMITS.PRODUCT_EXECUTE
+  const limits = limitsForAction(action)
 
   const result = await checkRateLimit(
     getRedisClient,
@@ -99,11 +110,9 @@ export async function enforceRateLimit(
     limits.windowMs,
   )
 
-  const check = result.ok
-    ? result.value
-    : { isLimited: false, remaining: limits.maxRequests }
+  const isLimited = result.ok ? result.value?.isLimited : false
 
-  if (check?.isLimited) {
+  if (isLimited) {
     throw new ORPCError("FORBIDDEN", {
       status: 403,
       message: `Rate limit exceeded. Try again in ${Math.ceil(limits.windowMs / 60000)} minutes.`,
