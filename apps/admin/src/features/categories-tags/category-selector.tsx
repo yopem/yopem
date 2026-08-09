@@ -11,9 +11,11 @@ import { CollapsibleCard } from "ui/collapsible-card"
 import { Input } from "ui/input"
 import { ScrollArea } from "ui/scroll-area"
 
+import { toggleId } from "@/lib/utils/toggle-id"
+
 import { flattenCategoryTree } from "./category-tree"
 
-export type CategorySelectorType = Pick<
+type CategorySelectorType = Pick<
   SelectCategory,
   "id" | "name" | "slug" | "description" | "parentId" | "sortOrder"
 >
@@ -34,11 +36,7 @@ export function CategorySelector({
   const [searchQuery, setSearchQuery] = useState("")
 
   const toggleCategory = (categoryId: string) => {
-    if (selectedIds.includes(categoryId)) {
-      onChange(selectedIds.filter((id) => id !== categoryId))
-    } else {
-      onChange([...selectedIds, categoryId])
-    }
+    onChange(toggleId(selectedIds, categoryId))
   }
 
   const selectedSet = new Set(selectedIds)

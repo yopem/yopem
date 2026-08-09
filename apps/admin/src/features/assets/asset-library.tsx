@@ -34,27 +34,23 @@ export function AssetLibrary({
 }: AssetLibraryProps) {
   if (loading) {
     return (
-      <>
+      <LibraryBody
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        selectedAssetId={selectedAssetId}
+      >
         <div className="min-h-0 shrink">
           <div className="flex h-60 items-center justify-center">
             <Spinner className="text-muted-foreground size-8" />
           </div>
         </div>
-        <div className="flex shrink-0 justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={onConfirm} disabled={!selectedAssetId}>
-            Select
-          </Button>
-        </div>
-      </>
+      </LibraryBody>
     )
   }
 
   if (assets.length === 0) {
     return (
-      <>
+      <LibraryBody onCancel={onCancel}>
         <div className="min-h-0 shrink">
           <div className="flex h-60 flex-col items-center justify-center gap-2">
             <ImageIcon className="text-muted-foreground size-12" />
@@ -70,17 +66,16 @@ export function AssetLibrary({
             </Button>
           </div>
         </div>
-        <div className="flex shrink-0 justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-        </div>
-      </>
+      </LibraryBody>
     )
   }
 
   return (
-    <>
+    <LibraryBody
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+      selectedAssetId={selectedAssetId}
+    >
       <div className="min-h-0 shrink">
         <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {assets.map((asset) => (
@@ -105,14 +100,33 @@ export function AssetLibrary({
           ))}
         </div>
       </div>
+    </LibraryBody>
+  )
+}
 
+function LibraryBody({
+  children,
+  onCancel,
+  onConfirm,
+  selectedAssetId,
+}: {
+  children: React.ReactNode
+  onCancel: () => void
+  onConfirm?: () => void
+  selectedAssetId?: string | null
+}) {
+  return (
+    <>
+      {children}
       <div className="flex shrink-0 justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="button" onClick={onConfirm} disabled={!selectedAssetId}>
-          Select
-        </Button>
+        {onConfirm && (
+          <Button type="button" onClick={onConfirm} disabled={!selectedAssetId}>
+            Select
+          </Button>
+        )}
       </div>
     </>
   )

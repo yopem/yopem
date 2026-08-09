@@ -53,17 +53,21 @@ function SettingsRouteComponent() {
 
   const defaultMaxUploadSize = assetSettings?.maxUploadSizeMB ?? 50
 
+  const invalidateApiKeys = () => {
+    void queryClient.invalidateQueries({
+      queryKey: queryApi.admin.apiKeyList.queryKey(),
+    })
+    void queryClient.invalidateQueries({
+      queryKey: queryApi.admin.apiKeyStats.queryKey(),
+    })
+  }
+
   const addKeyMutation = useMutation(
     queryApi.admin.apiKeyCreate.mutationOptions({
       onSuccess: () => {
         toastManager.add({ title: "Provider added", type: "success" })
         setAddDialogOpen(false)
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyList.queryKey(),
-        })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyStats.queryKey(),
-        })
+        invalidateApiKeys()
       },
       onError: (e: Error) => {
         toastManager.add({
@@ -81,12 +85,7 @@ function SettingsRouteComponent() {
         toastManager.add({ title: "Provider updated", type: "success" })
         setEditDialogOpen(false)
         setEditingProvider(null)
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyList.queryKey(),
-        })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyStats.queryKey(),
-        })
+        invalidateApiKeys()
       },
       onError: (e: Error) => {
         toastManager.add({
@@ -104,12 +103,7 @@ function SettingsRouteComponent() {
         toastManager.add({ title: "Provider deleted", type: "success" })
         setDeleteDialogOpen(false)
         setDeletingProvider(null)
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyList.queryKey(),
-        })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.admin.apiKeyStats.queryKey(),
-        })
+        invalidateApiKeys()
         void queryClient.invalidateQueries({
           queryKey: queryApi.admin.modelList.queryKey(),
         })

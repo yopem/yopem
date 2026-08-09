@@ -15,6 +15,7 @@ import { CategoryDialog } from "@/features/categories-tags/category-dialog"
 import { CategoryList } from "@/features/categories-tags/category-list"
 import { TagDialog } from "@/features/categories-tags/tag-dialog"
 import { TagList } from "@/features/categories-tags/tag-list"
+import { toggleAllIds, toggleId } from "@/lib/utils/toggle-id"
 
 const categoriesTagsSearchSchema = v.object({
   categoryId: v.optional(v.string()),
@@ -112,6 +113,16 @@ function CategoriesTagsRouteComponent() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
+  const invalidateCategories = () =>
+    void queryClient.invalidateQueries({
+      queryKey: queryApi.categories.list.queryKey(),
+    })
+
+  const invalidateTags = () =>
+    void queryClient.invalidateQueries({
+      queryKey: queryApi.tags.list.queryKey(),
+    })
+
   const search = Route.useSearch()
 
   const openedCategoryFromSearch = useRef<string | null>(null)
@@ -182,9 +193,7 @@ function CategoriesTagsRouteComponent() {
           description: `${variables.name} has been created successfully.`,
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.categories.list.queryKey(),
-        })
+        invalidateCategories()
         dispatch({ type: "RESET_CATEGORY_FORM" })
       },
       onError: (error: Error) => {
@@ -205,9 +214,7 @@ function CategoriesTagsRouteComponent() {
           description: `${variables.name} has been updated successfully.`,
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.categories.list.queryKey(),
-        })
+        invalidateCategories()
         dispatch({ type: "RESET_CATEGORY_FORM" })
       },
       onError: (error: Error) => {
@@ -228,9 +235,7 @@ function CategoriesTagsRouteComponent() {
           description: "Category has been deleted successfully.",
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.categories.list.queryKey(),
-        })
+        invalidateCategories()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -250,9 +255,7 @@ function CategoriesTagsRouteComponent() {
           description: `${variables.name} has been created successfully.`,
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.tags.list.queryKey(),
-        })
+        invalidateTags()
         dispatch({ type: "RESET_TAG_FORM" })
       },
       onError: (error: Error) => {
@@ -273,9 +276,7 @@ function CategoriesTagsRouteComponent() {
           description: `${variables.name} has been updated successfully.`,
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.tags.list.queryKey(),
-        })
+        invalidateTags()
         dispatch({ type: "RESET_TAG_FORM" })
       },
       onError: (error: Error) => {
@@ -296,9 +297,7 @@ function CategoriesTagsRouteComponent() {
           description: "Tag has been deleted successfully.",
           type: "success",
         })
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.tags.list.queryKey(),
-        })
+        invalidateTags()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -320,9 +319,7 @@ function CategoriesTagsRouteComponent() {
         })
         setSelectedCategoryIds([])
         setPendingBulkDelete(null)
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.categories.list.queryKey(),
-        })
+        invalidateCategories()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -344,9 +341,7 @@ function CategoriesTagsRouteComponent() {
         })
         setSelectedTagIds([])
         setPendingBulkDelete(null)
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.tags.list.queryKey(),
-        })
+        invalidateTags()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -368,9 +363,7 @@ function CategoriesTagsRouteComponent() {
           type: "success",
         })
         setSelectedCategoryIds([])
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.categories.list.queryKey(),
-        })
+        invalidateCategories()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -392,9 +385,7 @@ function CategoriesTagsRouteComponent() {
           type: "success",
         })
         setSelectedTagIds([])
-        void queryClient.invalidateQueries({
-          queryKey: queryApi.tags.list.queryKey(),
-        })
+        invalidateTags()
       },
       onError: (error: Error) => {
         toastManager.add({
@@ -457,37 +448,21 @@ function CategoriesTagsRouteComponent() {
     visibleIds: string[],
     allSelected: boolean,
   ) => {
-    setSelectedCategoryIds((prev) => {
-      if (allSelected) {
-        return prev.filter((id) => !visibleIds.includes(id))
-      }
-      return Array.from(new Set([...prev, ...visibleIds]))
-    })
+    setSelectedCategoryIds((prev) =>
+      toggleAllIds(prev, visibleIds, allSelected),
+    )
   }
 
   const handleToggleAllTags = (visibleIds: string[], allSelected: boolean) => {
-    setSelectedTagIds((prev) => {
-      if (allSelected) {
-        return prev.filter((id) => !visibleIds.includes(id))
-      }
-      return Array.from(new Set([...prev, ...visibleIds]))
-    })
+    setSelectedTagIds((prev) => toggleAllIds(prev, visibleIds, allSelected))
   }
 
   const handleToggleCategory = (id: string) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id],
-    )
+    setSelectedCategoryIds((prev) => toggleId(prev, id))
   }
 
   const handleToggleTag = (id: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((selectedId) => selectedId !== id)
-        : [...prev, id],
-    )
+    setSelectedTagIds((prev) => toggleId(prev, id))
   }
 
   const handleConfirmBulkDelete = () => {

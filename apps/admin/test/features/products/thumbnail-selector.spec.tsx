@@ -15,8 +15,21 @@ import { ThumbnailSelector } from "@/features/products/thumbnail-selector"
 
 vi.mock("rpc/query", () => ({
   queryApi: {
-    assets: { list: { call: vi.fn().mockResolvedValue({ assets: [] }) } },
+    assets: {
+      list: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ["assets", "list"],
+          queryFn: vi.fn(),
+        })),
+      },
+    },
   },
+}))
+
+let queryResult: { data?: { assets: unknown[] } } = { data: undefined }
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: () => queryResult,
 }))
 
 ;(
@@ -42,6 +55,7 @@ afterEach(() => {
   container = null
   root = null
   vi.clearAllMocks()
+  queryResult = { data: undefined }
 })
 
 describe("ThumbnailSelector", () => {
@@ -54,5 +68,26 @@ describe("ThumbnailSelector", () => {
 
     expect(container?.textContent).toContain("Thumbnail")
     expect(container?.textContent).toContain("Select Thumbnail")
+  })
+
+  test("renders the matching asset as the current thumbnail when a value is set", () => {
+    const asset = {
+      id: "asset-1",
+      url: "https://example.com/image.webp",
+      originalName: "hero.webp",
+      type: "image",
+    }
+    queryResult = { data: { assets: [asset] } }
+
+    act(() => {
+      root?.render(
+        <ThumbnailSelector value="asset-1" onChange={() => undefined} />,
+      )
+    })
+
+    expect(container?.querySelector("img")?.getAttribute("alt")).toBe(
+      "hero.webp",
+    )
+    expect(container?.textContent).toContain("Change")
   })
 })

@@ -13,6 +13,7 @@ import type { Product } from "@/features/products/product-actions"
 
 import { DeleteDialog } from "@/components/delete-dialog"
 import { ProductsTable } from "@/features/products/products-table"
+import { toggleId } from "@/lib/utils/toggle-id"
 
 const productsSearchSchema = v.object({
   page: v.optional(
@@ -194,12 +195,11 @@ function ProductsRouteComponent() {
   )
 
   const handleToggleProduct = useCallback((productId: string) => {
-    setSelectedProductIds((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    )
+    setSelectedProductIds((prev) => toggleId(prev, productId))
   }, [])
+
+  const bulkActionDisabled =
+    bulkUpdateStatusMutation.isPending || bulkDeleteProductsMutation.isPending
 
   const handleBulkUpdateStatus = useCallback(
     (status: "draft" | "active" | "archived") => {
@@ -230,40 +230,28 @@ function ProductsRouteComponent() {
                 <Button
                   variant="outline"
                   onClick={() => handleBulkUpdateStatus("draft")}
-                  disabled={
-                    bulkUpdateStatusMutation.isPending ||
-                    bulkDeleteProductsMutation.isPending
-                  }
+                  disabled={bulkActionDisabled}
                 >
                   Mark Draft ({selectedProductIds.length})
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleBulkUpdateStatus("active")}
-                  disabled={
-                    bulkUpdateStatusMutation.isPending ||
-                    bulkDeleteProductsMutation.isPending
-                  }
+                  disabled={bulkActionDisabled}
                 >
                   Mark Active ({selectedProductIds.length})
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleBulkUpdateStatus("archived")}
-                  disabled={
-                    bulkUpdateStatusMutation.isPending ||
-                    bulkDeleteProductsMutation.isPending
-                  }
+                  disabled={bulkActionDisabled}
                 >
                   Archive ({selectedProductIds.length})
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={() => setBulkDeleteDialogOpen(true)}
-                  disabled={
-                    bulkUpdateStatusMutation.isPending ||
-                    bulkDeleteProductsMutation.isPending
-                  }
+                  disabled={bulkActionDisabled}
                 >
                   Delete Selected ({selectedProductIds.length})
                 </Button>

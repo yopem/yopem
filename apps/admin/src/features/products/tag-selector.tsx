@@ -11,7 +11,9 @@ import { CollapsibleCard } from "ui/collapsible-card"
 import { Input } from "ui/input"
 import { ScrollArea } from "ui/scroll-area"
 
-export type TagSelectorType = Pick<SelectTag, "id" | "name" | "slug">
+import { toggleId } from "@/lib/utils/toggle-id"
+
+type TagSelectorType = Pick<SelectTag, "id" | "name" | "slug">
 
 interface TagSelectorProps {
   tags: TagSelectorType[]
@@ -29,11 +31,7 @@ export function TagSelector({
   const [searchQuery, setSearchQuery] = useState("")
 
   const toggleTag = (tagId: string) => {
-    if (selectedIds.includes(tagId)) {
-      onChange(selectedIds.filter((id) => id !== tagId))
-    } else {
-      onChange([...selectedIds, tagId])
-    }
+    onChange(toggleId(selectedIds, tagId))
   }
 
   const selectedSet = new Set(selectedIds)

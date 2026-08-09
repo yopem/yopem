@@ -39,9 +39,20 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
+function UserAvatar({ user, size }: { user: User; size: string }) {
+  const initials = getInitials(user.name)
+  return (
+    <Avatar className={`${size} shrink-0`}>
+      {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+      <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
+        {initials}
+      </AvatarFallback>
+    </Avatar>
+  )
+}
+
 export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const initials = getInitials(user.name)
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -66,12 +77,7 @@ export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
             type="button"
             className="ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-colors focus-visible:ring-2"
           >
-            <Avatar className="size-8 shrink-0">
-              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} size="size-8" />
             <div className="flex min-w-0 flex-1 flex-col items-start group-data-[collapsible=icon]:hidden">
               <span className="text-sidebar-foreground truncate text-sm font-medium">
                 {user.name}
@@ -93,12 +99,7 @@ export function GlobalSidebarFooter({ user }: GlobalSidebarFooterProps) {
       >
         <MenuGroup>
           <div className="flex items-center gap-3 px-2 py-1.5">
-            <Avatar className="size-8 shrink-0">
-              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} size="size-8" />
             <div className="flex min-w-0 flex-col">
               <p className="truncate text-sm font-medium">{user.name}</p>
               <p className="text-muted-foreground truncate text-xs">

@@ -25,11 +25,8 @@ export function UploadDropzone({ onUpload, maxSizeMB }: UploadDropzoneProps) {
     setIsDragging(false)
   }, [])
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
-      const files = Array.from(e.dataTransfer.files)
+  const handleFiles = useCallback(
+    (files: File[]) => {
       files.forEach((file) => {
         if (file.size > maxSizeMB * 1024 * 1024) {
           toastManager.add({
@@ -45,23 +42,21 @@ export function UploadDropzone({ onUpload, maxSizeMB }: UploadDropzoneProps) {
     [onUpload, maxSizeMB],
   )
 
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      handleFiles(Array.from(e.dataTransfer.files))
+    },
+    [handleFiles],
+  )
+
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? [])
-      files.forEach((file) => {
-        if (file.size > maxSizeMB * 1024 * 1024) {
-          toastManager.add({
-            title: "File too large",
-            description: `File size exceeds ${maxSizeMB}MB limit`,
-            type: "error",
-          })
-          return
-        }
-        onUpload(file)
-      })
+      handleFiles(Array.from(e.target.files ?? []))
       e.target.value = ""
     },
-    [onUpload, maxSizeMB],
+    [handleFiles],
   )
 
   return (

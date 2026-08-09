@@ -21,6 +21,18 @@ interface ConfigValues {
   availableApiKeys: ApiKeyConfig[]
 }
 
+type OutputFormat = "plain" | "json" | "image" | "video"
+
+const outputFormats: readonly OutputFormat[] = [
+  "plain",
+  "json",
+  "image",
+  "video",
+]
+
+const isOutputFormat = (value: string | null): value is OutputFormat =>
+  value !== null && (outputFormats as readonly string[]).includes(value)
+
 interface ConfigHandlers {
   onOutputFormatChange: (value: "plain" | "json" | "image" | "video") => void
   onCreditsPerRunChange: (value: number) => void
@@ -76,12 +88,7 @@ export function ConfigurationPanel({
             <Select
               value={outputFormat}
               onValueChange={(value) => {
-                if (
-                  value === "plain" ||
-                  value === "json" ||
-                  value === "image" ||
-                  value === "video"
-                ) {
+                if (isOutputFormat(value)) {
                   onOutputFormatChange(value)
                 }
               }}

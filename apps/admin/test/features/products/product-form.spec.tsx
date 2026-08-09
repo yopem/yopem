@@ -49,7 +49,10 @@ vi.mock("rpc/query", () => ({
       },
     },
     assets: {
-      list: { call: vi.fn().mockResolvedValue({ assets: [] }) },
+      list: {
+        useQuery: () => ({ data: { assets: [] } }),
+        queryOptions: () => ({ queryKey: ["assets"], queryFn: vi.fn() }),
+      },
     },
   },
 }))

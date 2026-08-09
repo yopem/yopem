@@ -10,17 +10,11 @@ import { Button } from "ui/button"
 import { Dialog, DialogPopup } from "ui/dialog"
 import { Field, FieldLabel } from "ui/field"
 import { Input } from "ui/input"
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "ui/select"
 import { Textarea } from "ui/textarea"
 
 import { SlugField } from "@/components/slug-field"
 
+import { CategoryParentSelect } from "./category-parent-select"
 import {
   flattenCategoryTree,
   getCategoryDescendantIds,
@@ -175,39 +169,12 @@ export function CategoryDialog({
             )}
             <form.Field name="parentId">
               {(field) => (
-                <Field>
-                  <FieldLabel>Parent Category</FieldLabel>
-                  <Select
-                    value={field.state.value ?? ""}
-                    onValueChange={(value) =>
-                      field.handleChange(
-                        value && value !== "" ? value : undefined,
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="No parent">
-                        {field.state.value
-                          ? (categories.find((c) => c.id === field.state.value)
-                              ?.name ?? "No parent")
-                          : "No parent"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectPopup>
-                      <SelectItem value="">No parent</SelectItem>
-                      {tree.map(({ node, depth }) => (
-                        <SelectItem
-                          key={node.id}
-                          value={node.id}
-                          className="truncate"
-                          style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
-                        >
-                          {node.name}
-                        </SelectItem>
-                      ))}
-                    </SelectPopup>
-                  </Select>
-                </Field>
+                <CategoryParentSelect
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  categories={categories}
+                  tree={tree}
+                />
               )}
             </form.Field>
             <form.Field name="description">

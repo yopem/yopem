@@ -18,7 +18,7 @@ export interface ProductInputVariable {
   options?: { label: string; value: string }[]
 }
 
-export interface ProductInputFieldProps {
+interface ProductInputFieldProps {
   field: ProductInputVariable
   value: string
   error: string | undefined

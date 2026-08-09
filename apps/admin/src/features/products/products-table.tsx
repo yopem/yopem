@@ -135,5 +135,3 @@ export function ProductsTable({
     </Table>
   )
 }
-
-export default ProductsTable

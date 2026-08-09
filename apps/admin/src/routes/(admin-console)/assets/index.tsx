@@ -15,6 +15,7 @@ import { AssetCard, type Asset } from "@/features/assets/asset-card"
 import { AssetTypeFilter } from "@/features/assets/asset-type-filter"
 import { UploadDropzone } from "@/features/assets/upload-dropzone"
 import { UploadProgress } from "@/features/assets/upload-progress"
+import { toggleId } from "@/lib/utils/toggle-id"
 
 const AssetPreviewDialog = lazy(() =>
   import("@/features/assets/asset-preview-dialog").then((mod) => ({
@@ -120,9 +121,7 @@ function AssetsRouteComponent() {
   )
 
   const handleToggleSelect = useCallback((id: string) => {
-    setSelectedAssetIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    )
+    setSelectedAssetIds((prev) => toggleId(prev, id))
   }, [])
 
   const handleToggleAll = useCallback(

@@ -68,15 +68,12 @@ function pickerReducer(state: PickerState, action: PickerAction): PickerState {
   }
 }
 
-export interface UseImageAssetPickerOptions {
+interface UseImageAssetPickerOptions {
   open: boolean
   onSelect: (asset: ImageAsset) => void
 }
 
-export function useImageAssetPicker({
-  open,
-  onSelect,
-}: UseImageAssetPickerOptions) {
+function useImageAssetPicker({ open, onSelect }: UseImageAssetPickerOptions) {
   const [state, dispatch] = useReducer(pickerReducer, initialState)
 
   const loadAssets = useCallback(async () => {
@@ -163,7 +160,7 @@ export function useImageAssetPicker({
   }
 }
 
-export interface ImageAssetPickerProps extends UseImageAssetPickerOptions {
+interface ImageAssetPickerProps extends UseImageAssetPickerOptions {
   onOpenChange: (open: boolean) => void
   title?: string
   description?: string

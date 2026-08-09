@@ -12,7 +12,7 @@ interface GlobalBreadcrumbProps {
 export function GlobalBreadcrumb({ items }: GlobalBreadcrumbProps) {
   return (
     <div className="flex items-center gap-2 pt-2 text-sm">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <div key={item.label} className="flex items-center gap-2">
           {item.href ? (
             <Link
@@ -24,9 +24,7 @@ export function GlobalBreadcrumb({ items }: GlobalBreadcrumbProps) {
           ) : (
             <span className="text-foreground font-medium">{item.label}</span>
           )}
-          {items.indexOf(item) < items.length - 1 && (
-            <span className="text-border">/</span>
-          )}
+          {index < items.length - 1 && <span className="text-border">/</span>}
         </div>
       ))}
     </div>

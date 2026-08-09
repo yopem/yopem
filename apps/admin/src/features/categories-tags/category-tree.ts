@@ -6,18 +6,23 @@ export interface CategoryTreeNode {
   sortOrder: number | null
 }
 
+function groupByParent(
+  categories: CategoryTreeNode[],
+): Map<string | null, CategoryTreeNode[]> {
+  const byParent = new Map<string | null, CategoryTreeNode[]>()
+  for (const category of categories) {
+    const key = category.parentId ?? null
+    const group = byParent.get(key) ?? []
+    group.push(category)
+    byParent.set(key, group)
+  }
+  return byParent
+}
+
 export function flattenCategoryTree(
   categories: CategoryTreeNode[],
 ): { node: CategoryTreeNode; depth: number }[] {
-  const byParent = new Map<string | null, CategoryTreeNode[]>()
-
-  for (const category of categories) {
-    const key = category.parentId ?? null
-    if (!byParent.has(key)) {
-      byParent.set(key, [])
-    }
-    byParent.get(key)!.push(category)
-  }
+  const byParent = groupByParent(categories)
 
   const sortNodes = (nodes: CategoryTreeNode[]) =>
     nodes.sort((a, b) => {
@@ -49,16 +54,7 @@ export function getCategoryDescendantIds(
   categories: CategoryTreeNode[],
   id: string,
 ): string[] {
-  const byParent = new Map<string, CategoryTreeNode[]>()
-
-  for (const category of categories) {
-    const key = category.parentId ?? null
-    if (key === null) continue
-    if (!byParent.has(key)) {
-      byParent.set(key, [])
-    }
-    byParent.get(key)!.push(category)
-  }
+  const byParent = groupByParent(categories)
 
   const result: string[] = []
   const walk = (parentId: string) => {

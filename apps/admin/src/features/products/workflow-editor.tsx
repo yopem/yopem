@@ -80,7 +80,7 @@ const nodeTypeIcons: Record<WorkflowNode["type"], React.ElementType> = {
   loop: RepeatIcon,
 }
 
-export interface WorkflowEditorProps {
+interface WorkflowEditorProps {
   workflow: ProductWorkflow
   apiKeys: ApiKeyConfig[]
   availableModels: string[]
@@ -637,6 +637,7 @@ function NodeEditorPanel({
 }) {
   const type = node.type as WorkflowNode["type"]
   const data = node.data as WorkflowNode["data"]
+  const HeaderIcon = nodeTypeIcons[type]
   const availableVariables = useMemo(
     () => getUpstreamVariables(node.id, nodes, edges),
     [node.id, nodes, edges],
@@ -646,10 +647,7 @@ function NodeEditorPanel({
     <div className="flex h-full flex-col">
       <div className="border-border flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-2">
-          {(() => {
-            const Icon = nodeTypeIcons[type]
-            return <Icon className="size-4" />
-          })()}
+          <HeaderIcon className="size-4" />
           <span className="font-semibold">{nodeTypeLabels[type]} Settings</span>
         </div>
         <Button variant="ghost" size="icon-xs" onClick={onDelete}>
@@ -919,6 +917,43 @@ function SelectOptionsEditor({
   )
 }
 
+function OptionalOverrideSelect({
+  value,
+  onChange,
+  label,
+  options,
+}: {
+  value?: string
+  onChange: (value: string | undefined) => void
+  label: string
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      <Select
+        value={value ?? ""}
+        onValueChange={(next) => {
+          const v = Array.isArray(next) ? next[0] : next
+          onChange(v ?? undefined)
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Use product default" />
+        </SelectTrigger>
+        <SelectPopup>
+          <SelectItem value="">Use product default</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+    </Field>
+  )
+}
+
 function AINodeEditor({
   data,
   variables,
@@ -980,77 +1015,37 @@ function AINodeEditor({
         />
       </Field>
 
-      <Field>
-        <FieldLabel>Output Format (optional override)</FieldLabel>
-        <Select
-          value={data.outputFormat ?? ""}
-          onValueChange={(value) => {
-            const v = Array.isArray(value) ? value[0] : value
-            onChange({
-              outputFormat: v
-                ? (v as "plain" | "json" | "image" | "video")
-                : undefined,
-            })
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Use product default" />
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value="">Use product default</SelectItem>
-            <SelectItem value="plain">Plain</SelectItem>
-            <SelectItem value="json">JSON</SelectItem>
-            <SelectItem value="image">Image</SelectItem>
-            <SelectItem value="video">Video</SelectItem>
-          </SelectPopup>
-        </Select>
-      </Field>
+      <OptionalOverrideSelect
+        value={data.outputFormat}
+        onChange={(value) =>
+          onChange({
+            outputFormat: value
+              ? (value as "plain" | "json" | "image" | "video")
+              : undefined,
+          })
+        }
+        label="Output Format (optional override)"
+        options={[
+          { value: "plain", label: "Plain" },
+          { value: "json", label: "JSON" },
+          { value: "image", label: "Image" },
+          { value: "video", label: "Video" },
+        ]}
+      />
 
-      <Field>
-        <FieldLabel>Model Engine (optional override)</FieldLabel>
-        <Select
-          value={data.modelEngine ?? ""}
-          onValueChange={(value) => {
-            const v = Array.isArray(value) ? value[0] : value
-            onChange({ modelEngine: v ?? undefined })
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Use product default" />
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value="">Use product default</SelectItem>
-            {availableModels.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
-      </Field>
+      <OptionalOverrideSelect
+        value={data.modelEngine}
+        onChange={(value) => onChange({ modelEngine: value })}
+        label="Model Engine (optional override)"
+        options={availableModels.map((m) => ({ value: m, label: m }))}
+      />
 
-      <Field>
-        <FieldLabel>API Key (optional override)</FieldLabel>
-        <Select
-          value={data.apiKeyId ?? ""}
-          onValueChange={(value) => {
-            const v = Array.isArray(value) ? value[0] : value
-            onChange({ apiKeyId: v ?? undefined })
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Use product default" />
-          </SelectTrigger>
-          <SelectPopup>
-            <SelectItem value="">Use product default</SelectItem>
-            {apiKeys.map((k) => (
-              <SelectItem key={k.id} value={k.id}>
-                {k.name}
-              </SelectItem>
-            ))}
-          </SelectPopup>
-        </Select>
-      </Field>
+      <OptionalOverrideSelect
+        value={data.apiKeyId}
+        onChange={(value) => onChange({ apiKeyId: value })}
+        label="API Key (optional override)"
+        options={apiKeys.map((k) => ({ value: k.id, label: k.name }))}
+      />
     </div>
   )
 }

@@ -119,36 +119,31 @@ export function ProductPreviewSheet({
 
     for (const variable of inputVariables) {
       const value = previewInputs[variable.variableName]
+      if (!value) continue
 
       switch (variable.type) {
         case "number":
-          if (value && isNaN(Number(value))) {
+          if (isNaN(Number(value))) {
             errors[variable.variableName] = "Must be a valid number"
           }
-          break
-        case "boolean":
           break
         case "select":
           if (
             variable.options &&
-            value &&
             !variable.options.some((opt) => opt.value === value)
           ) {
             errors[variable.variableName] = "Please select a valid option"
           }
           break
         case "image":
-          if (value && !value.startsWith("data:image/")) {
+          if (!value.startsWith("data:image/")) {
             errors[variable.variableName] = "Invalid image format"
           }
           break
         case "video":
-          if (value && !value.startsWith("data:video/")) {
+          if (!value.startsWith("data:video/")) {
             errors[variable.variableName] = "Invalid video format"
           }
-          break
-        case "text":
-        case "long_text":
           break
       }
     }

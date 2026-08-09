@@ -33,6 +33,8 @@ export function ApiKeySelector({
       )
     : availableKeys.filter((key) => key.status === "active")
 
+  const selectedKey = filteredKeys.find((k) => k.id === value)
+
   return (
     <div className="space-y-2">
       <Label htmlFor="api-key-selector">
@@ -50,8 +52,8 @@ export function ApiKeySelector({
           className={error ? `border-red-500 focus:ring-red-500` : ""}
         >
           <SelectValue placeholder="Select an API key">
-            {value && filteredKeys.find((k) => k.id === value)
-              ? `${filteredKeys.find((k) => k.id === value)?.name} (${providerNames[filteredKeys.find((k) => k.id === value)?.provider ?? ""]})`
+            {selectedKey
+              ? `${selectedKey.name} (${providerNames[selectedKey.provider]})`
               : "Select an API key"}
           </SelectValue>
         </SelectTrigger>

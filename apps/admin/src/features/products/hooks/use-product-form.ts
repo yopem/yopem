@@ -11,10 +11,7 @@ import {
   productWorkflowSchema,
   type ProductWorkflow,
 } from "db/schema/product-workflow"
-import {
-  createDefaultWorkflow,
-  getInputFieldsFromWorkflow,
-} from "db/schema/product-workflow-utils"
+import { createDefaultWorkflow } from "db/schema/product-workflow-utils"
 import { insertProductSchema, type SelectProduct } from "db/schema/products"
 import { deserializeHtmlToSlate } from "editor/serialize"
 import { queryApi } from "rpc/query"
@@ -183,30 +180,7 @@ export function useProductForm({
       thumbnailId: undefined as string | undefined,
     },
     onSubmit: ({ value }) => {
-      const formData = {
-        name: value.name,
-        slug: value.slug || undefined,
-        description: value.description,
-        descriptionContent: value.descriptionContent,
-        excerpt: value.excerpt || undefined,
-        workflow: value.workflow,
-        outputFormat: value.outputFormat,
-        creditsPerRun: value.creditsPerRun,
-        config: {
-          modelEngine: getDefaultModelFromWorkflow(value.workflow),
-        },
-        status: "draft" as const,
-        apiKeyId: value.apiKeyId,
-        ...(value.categoryIds &&
-          value.categoryIds.length > 0 && {
-            categoryIds: value.categoryIds,
-          }),
-        ...(value.tagIds &&
-          value.tagIds.length > 0 && {
-            tagIds: value.tagIds,
-          }),
-        thumbnailId: value.thumbnailId,
-      }
+      const formData = buildFormData(value)
 
       const result = v.safeParse(productFormSchema, formData)
 
@@ -246,54 +220,10 @@ export function useProductForm({
     return filtered.map((model) => model.modelId)
   }, [availableModelsData, selectedApiKeyProvider])
 
-  const categories = useMemo(() => {
-    if (!categoriesData || categoriesData.length === 0) {
-      return []
-    }
-    return categoriesData
-  }, [categoriesData])
+  const categories = categoriesData ?? []
+  const tags = tagsData ?? []
 
-  const tags = useMemo(() => {
-    if (!tagsData || tagsData.length === 0) {
-      return []
-    }
-    return tagsData
-  }, [tagsData])
-
-  const inputFields = useMemo(
-    () => getInputFieldsFromWorkflow(formValues.workflow),
-    [formValues.workflow],
-  )
-
-  const getFormValues = (): ProductFormData => {
-    const formData = form.state.values
-    return {
-      name: formData.name,
-      slug: formData.slug || undefined,
-      description: formData.description,
-      descriptionContent: formData.descriptionContent,
-      excerpt: formData.excerpt || undefined,
-      workflow: formData.workflow,
-      outputFormat: formData.outputFormat,
-      creditsPerRun: formData.creditsPerRun,
-      config: {
-        modelEngine: getDefaultModelFromWorkflow(formData.workflow),
-      },
-      status: "draft" as const,
-      apiKeyId: formData.apiKeyId,
-      ...(formData.categoryIds &&
-        formData.categoryIds.length > 0 && {
-          categoryIds: formData.categoryIds,
-        }),
-      ...(formData.tagIds &&
-        formData.tagIds.length > 0 && {
-          tagIds: formData.tagIds,
-        }),
-      ...(formData.thumbnailId && {
-        thumbnailId: formData.thumbnailId,
-      }),
-    }
-  }
+  const getFormValues = (): ProductFormData => buildFormData(form.state.values)
 
   useEffect(() => {
     const workflow = form.getFieldValue("workflow")
@@ -412,7 +342,6 @@ export function useProductForm({
     availableModels,
     categories,
     tags,
-    inputFields,
     categoryDialogOpen,
     setCategoryDialogOpen,
     tagDialogOpen,
@@ -452,4 +381,49 @@ function getDefaultModelFromWorkflow(workflow: ProductWorkflow): string {
     return aiNode.data.modelEngine
   }
   return ""
+}
+
+interface ProductFormValues {
+  name: string
+  slug: string
+  description: string
+  descriptionContent: TElement[]
+  excerpt: string
+  workflow: ProductWorkflow
+  outputFormat: "plain" | "json" | "image" | "video"
+  creditsPerRun: number
+  apiKeyId: string
+  apiKeyError: string
+  categoryIds: string[]
+  tagIds: string[]
+  thumbnailId?: string
+}
+
+function buildFormData(values: ProductFormValues): ProductFormData {
+  return {
+    name: values.name,
+    slug: values.slug || undefined,
+    description: values.description,
+    descriptionContent: values.descriptionContent,
+    excerpt: values.excerpt || undefined,
+    workflow: values.workflow,
+    outputFormat: values.outputFormat,
+    creditsPerRun: values.creditsPerRun,
+    config: {
+      modelEngine: getDefaultModelFromWorkflow(values.workflow),
+    },
+    status: "draft" as const,
+    apiKeyId: values.apiKeyId,
+    ...(values.categoryIds &&
+      values.categoryIds.length > 0 && {
+        categoryIds: values.categoryIds,
+      }),
+    ...(values.tagIds &&
+      values.tagIds.length > 0 && {
+        tagIds: values.tagIds,
+      }),
+    ...(values.thumbnailId && {
+      thumbnailId: values.thumbnailId,
+    }),
+  }
 }
