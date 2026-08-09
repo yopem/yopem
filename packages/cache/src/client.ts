@@ -32,6 +32,9 @@ export function createRedisCache() {
     return client
   }
 
+  const toErrorMessage = (error: unknown): string =>
+    error instanceof Error ? error.message : String(error)
+
   function markDatesForSerialization(obj: unknown): unknown {
     if (obj instanceof Date) {
       return { __type: "Date", value: obj.toISOString() }
@@ -68,9 +71,10 @@ export function createRedisCache() {
         String(ttlSeconds),
         serialized,
       ])
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache set failed for key ${key}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache set failed for key ${key}: ${toErrorMessage(error)}`,
+      )
     }
   }
 
@@ -88,9 +92,10 @@ export function createRedisCache() {
         }
         return val
       }) as T
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache get failed for key ${key}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache get failed for key ${key}: ${toErrorMessage(error)}`,
+      )
     }
   }
 
@@ -100,9 +105,10 @@ export function createRedisCache() {
 
     try {
       await client.del(prefixed(key))
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache delete failed for key ${key}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache delete failed for key ${key}: ${toErrorMessage(error)}`,
+      )
     }
   }
 
@@ -112,9 +118,10 @@ export function createRedisCache() {
 
     try {
       return await client.exists(prefixed(key))
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache exists failed for key ${key}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache exists failed for key ${key}: ${toErrorMessage(error)}`,
+      )
     }
   }
 
@@ -127,9 +134,10 @@ export function createRedisCache() {
 
     try {
       return (await client.expire(prefixed(key), ttlSeconds)) > 0
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache expire failed for key ${key}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache expire failed for key ${key}: ${toErrorMessage(error)}`,
+      )
     }
   }
 
@@ -142,9 +150,10 @@ export function createRedisCache() {
       if (keys.length > 0) {
         await Promise.all(keys.map((key) => client.del(key)))
       }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      throw new Error(`Cache invalidate failed for pattern ${pattern}: ${msg}`)
+    } catch (error) {
+      throw new Error(
+        `Cache invalidate failed for pattern ${pattern}: ${toErrorMessage(error)}`,
+      )
     }
   }
 

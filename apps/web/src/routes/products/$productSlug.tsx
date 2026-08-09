@@ -34,10 +34,10 @@ import {
   CardTitle,
 } from "ui/card"
 import { Label } from "ui/label"
-import { ProductInputField } from "ui/product-input-field"
 import { Separator } from "ui/separator"
 
 import { SiteLayout } from "@/components/site-layout"
+import { ProductInputField } from "@/features/storefront/product-input-field"
 import { RichTextView } from "@/features/storefront/rich-text-view"
 import { loginFn } from "@/lib/auth"
 

@@ -5,7 +5,7 @@ import { productTagsTable } from "db/schema/product-tags"
 import { tagsTable } from "db/schema/tags"
 import type { SelectTag } from "db/schema/tags"
 
-import { assertSlugAvailable, generateUniqueTagSlug } from "./slug"
+import { assertSlugAvailable, generateUniqueSlug } from "./slug"
 
 export const listTags = (): Promise<
   {
@@ -41,7 +41,7 @@ export const createTag = async (input: {
 }): Promise<SelectTag> => {
   const slug = input.slug
     ? await assertSlugAvailable("tag", input.slug)
-    : await generateUniqueTagSlug(input.name)
+    : await generateUniqueSlug("tag", input.name)
 
   const [tag] = await db
     .insert(tagsTable)
@@ -62,7 +62,7 @@ export const updateTag = async (input: {
 }): Promise<SelectTag> => {
   const slug = input.slug
     ? await assertSlugAvailable("tag", input.slug, input.id)
-    : await generateUniqueTagSlug(input.name, input.id)
+    : await generateUniqueSlug("tag", input.name, input.id)
 
   const [tag] = await db
     .update(tagsTable)

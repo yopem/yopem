@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import {
   assertSlugAvailable,
   generateUniqueAssetFilename,
-  generateUniqueCategorySlug,
-  generateUniqueProductSlug,
-  generateUniqueTagSlug,
+  generateUniqueSlug,
   isSlugAvailable,
 } from "db/services/slug"
 import type { MockDb } from "db/test-utils/mock-db"
@@ -24,21 +22,21 @@ describe("slug service", () => {
     mockDb.setReturn([])
   })
 
-  test("generateUniqueProductSlug returns slug when available", async () => {
+  test("generateUniqueSlug returns slug when available", async () => {
     mockDb.setReturn([[]])
-    const result = await generateUniqueProductSlug("Hello World")
+    const result = await generateUniqueSlug("product", "Hello World")
     expect(result).toBe("hello-world")
   })
 
-  test("generateUniqueProductSlug appends suffix when slug exists", async () => {
+  test("generateUniqueSlug appends suffix when slug exists", async () => {
     mockDb.setReturn([[{ id: "p1" }], [{ id: "p2" }], []])
-    const result = await generateUniqueProductSlug("Hello World")
+    const result = await generateUniqueSlug("product", "Hello World")
     expect(result).toBe("hello-world-3")
   })
 
-  test("generateUniqueCategorySlug returns slug", async () => {
+  test("generateUniqueSlug for category returns slug", async () => {
     mockDb.setReturn([[]])
-    const result = await generateUniqueCategorySlug("Category")
+    const result = await generateUniqueSlug("category", "Category")
     expect(result).toBe("category")
   })
 
@@ -54,9 +52,9 @@ describe("slug service", () => {
     expect(result).toBe("report-3.pdf")
   })
 
-  test("generateUniqueTagSlug excludes id", async () => {
+  test("generateUniqueSlug for tag excludes id", async () => {
     mockDb.setReturn([[]])
-    const result = await generateUniqueTagSlug("Tag", "t1")
+    const result = await generateUniqueSlug("tag", "Tag", "t1")
     expect(result).toBe("tag")
   })
 

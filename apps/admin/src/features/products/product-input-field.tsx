@@ -1,15 +1,15 @@
 "use client"
 
-import { Checkbox } from "./checkbox"
-import { Input } from "./input"
+import { Checkbox } from "ui/checkbox"
+import { Input } from "ui/input"
 import {
   Select,
   SelectItem,
   SelectPopup,
   SelectTrigger,
   SelectValue,
-} from "./select"
-import { Textarea } from "./textarea"
+} from "ui/select"
+import { Textarea } from "ui/textarea"
 
 export interface ProductInputVariable {
   variableName: string
@@ -41,6 +41,37 @@ export function ProductInputField({
       onClearError(field.variableName)
     }
   }
+
+  const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (fileReaderRef.current) {
+      fileReaderRef.current.abort()
+    }
+    const reader = new FileReader()
+    fileReaderRef.current = reader
+    reader.onload = (loadEvent) => {
+      handleChange(loadEvent.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const renderFileField = (accept: string, label: string) => (
+    <div className="flex flex-col gap-2">
+      <Input
+        type="file"
+        accept={accept}
+        onChange={handleFileInput}
+        className="text-sm"
+      />
+      {value && (
+        <div className="text-muted-foreground text-xs">
+          {label} selected ({value.substring(0, 30)}...)
+        </div>
+      )}
+    </div>
+  )
 
   switch (field.type) {
     case "text":
@@ -122,72 +153,10 @@ export function ProductInputField({
       )
 
     case "image":
-      return (
-        <div className="flex flex-col gap-2">
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                if (fileReaderRef.current) {
-                  fileReaderRef.current.abort()
-                }
-                const reader = new FileReader()
-                fileReaderRef.current = reader
-                reader.onload = (event) => {
-                  const result = event.target?.result as string
-                  handleChange(result)
-                }
-                reader.onerror = () => {
-                  console.error("Failed to read image file")
-                }
-                reader.readAsDataURL(file)
-              }
-            }}
-            className="text-sm"
-          />
-          {value && (
-            <div className="text-muted-foreground text-xs">
-              Image selected ({value.substring(0, 30)}...)
-            </div>
-          )}
-        </div>
-      )
+      return renderFileField("image/*", "Image")
 
     case "video":
-      return (
-        <div className="flex flex-col gap-2">
-          <Input
-            type="file"
-            accept="video/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                if (fileReaderRef.current) {
-                  fileReaderRef.current.abort()
-                }
-                const reader = new FileReader()
-                fileReaderRef.current = reader
-                reader.onload = (event) => {
-                  const result = event.target?.result as string
-                  handleChange(result)
-                }
-                reader.onerror = () => {
-                  console.error("Failed to read video file")
-                }
-                reader.readAsDataURL(file)
-              }
-            }}
-            className="text-sm"
-          />
-          {value && (
-            <div className="text-muted-foreground text-xs">
-              Video selected ({value.substring(0, 30)}...)
-            </div>
-          )}
-        </div>
-      )
+      return renderFileField("video/*", "Video")
 
     default:
       return (

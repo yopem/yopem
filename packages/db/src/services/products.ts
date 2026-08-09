@@ -13,7 +13,7 @@ import type { InsertProduct, SelectProduct } from "db/schema/products"
 import { tagsTable } from "db/schema/tags"
 import { createCustomId } from "utils/custom-id"
 
-import { assertSlugAvailable, generateUniqueProductSlug } from "./slug"
+import { assertSlugAvailable, generateUniqueSlug } from "./slug"
 
 export const listProducts = async (input?: {
   limit?: number
@@ -132,47 +132,12 @@ export const listProducts = async (input?: {
 
   const productIds = products.map((t) => t.id)
 
-  const categoriesMap = new Map<
-    string,
-    { id: string; name: string; slug: string }[]
-  >()
-  if (productIds.length > 0) {
-    const productCategories = await db
-      .select({
-        productId: productCategoriesTable.productId,
-        id: categoriesTable.id,
-        name: categoriesTable.name,
-        slug: categoriesTable.slug,
-      })
-      .from(productCategoriesTable)
-      .innerJoin(
-        categoriesTable,
-        eq(productCategoriesTable.categoryId, categoriesTable.id),
-      )
-      .where(inArray(productCategoriesTable.productId, productIds))
-
-    for (const row of productCategories) {
-      if (!categoriesMap.has(row.productId)) {
-        categoriesMap.set(row.productId, [])
-      }
-      categoriesMap
-        .get(row.productId)!
-        .push({ id: row.id, name: row.name, slug: row.slug })
-    }
-  }
+  const categoriesMap = await getProductsCategoriesMap(productIds)
 
   const productsWithCategories = products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
-
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
-
     return {
-      ...productData,
+      ...withThumbnail(product),
       categories: categoriesMap.get(product.id) ?? [],
-      thumbnail,
     }
   })
 
@@ -188,18 +153,70 @@ export const listProducts = async (input?: {
   }
 }
 
-export const getProductById = async (
-  id: string,
-): Promise<SelectProduct | null> => {
-  const [product] = await db
-    .select()
-    .from(productsTable)
-    .where(eq(productsTable.id, id))
+interface ProductCategory {
+  id: string
+  name: string
+  slug: string
+}
+interface ProductTag {
+  id: string
+  name: string
+  slug: string
+}
+type ProductThumbnail = { id: string; url: string } | null
 
-  if (!product) {
-    return null
+const getProductsCategoriesMap = async (
+  productIds: string[],
+): Promise<Map<string, ProductCategory[]>> => {
+  const categoriesMap = new Map<string, ProductCategory[]>()
+  if (productIds.length === 0) return categoriesMap
+
+  const productCategories = await db
+    .select({
+      productId: productCategoriesTable.productId,
+      id: categoriesTable.id,
+      name: categoriesTable.name,
+      slug: categoriesTable.slug,
+    })
+    .from(productCategoriesTable)
+    .innerJoin(
+      categoriesTable,
+      eq(productCategoriesTable.categoryId, categoriesTable.id),
+    )
+    .where(inArray(productCategoriesTable.productId, productIds))
+
+  for (const row of productCategories) {
+    const list = categoriesMap.get(row.productId) ?? []
+    list.push({ id: row.id, name: row.name, slug: row.slug })
+    categoriesMap.set(row.productId, list)
   }
 
+  return categoriesMap
+}
+
+const withThumbnail = <
+  T extends { thumbnailUrl: string | null; thumbnailAssetId: string | null },
+>(
+  row: T,
+): Omit<T, "thumbnailUrl" | "thumbnailAssetId"> & {
+  thumbnail: ProductThumbnail
+} => {
+  const { thumbnailUrl, thumbnailAssetId, ...data } = row
+  const thumbnail =
+    thumbnailAssetId && thumbnailUrl
+      ? { id: thumbnailAssetId, url: thumbnailUrl }
+      : null
+  return { ...data, thumbnail }
+}
+
+const getProductRelations = async (
+  productId: string,
+  thumbnailId?: string | null,
+): Promise<{
+  categories: ProductCategory[]
+  tags: ProductTag[]
+  thumbnail: { id: string; url: string; originalName: string } | null
+}> => {
   const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
     db
       .select({
@@ -212,13 +229,13 @@ export const getProductById = async (
         categoriesTable,
         eq(productCategoriesTable.categoryId, categoriesTable.id),
       )
-      .where(eq(productCategoriesTable.productId, id)),
+      .where(eq(productCategoriesTable.productId, productId)),
     db
       .select({ id: tagsTable.id, name: tagsTable.name, slug: tagsTable.slug })
       .from(productTagsTable)
       .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
-      .where(eq(productTagsTable.productId, id)),
-    product.thumbnailId
+      .where(eq(productTagsTable.productId, productId)),
+    thumbnailId
       ? db
           .select({
             id: assetsTable.id,
@@ -226,16 +243,32 @@ export const getProductById = async (
             originalName: assetsTable.originalName,
           })
           .from(assetsTable)
-          .where(eq(assetsTable.id, product.thumbnailId))
+          .where(eq(assetsTable.id, thumbnailId))
       : Promise.resolve([]),
   ])
 
   return {
-    ...product,
     categories: categoriesResult,
     tags: tagsResult,
     thumbnail: thumbnailResult[0] ?? null,
   }
+}
+
+export const getProductById = async (
+  id: string,
+): Promise<SelectProduct | null> => {
+  const [product] = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.id, id))
+
+  if (!product) {
+    return null
+  }
+
+  const relations = await getProductRelations(id, product.thumbnailId)
+
+  return { ...product, ...relations }
 }
 
 export const getProductBySlug = async (
@@ -249,46 +282,9 @@ export const getProductBySlug = async (
     return null
   }
 
-  const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
-    db
-      .select({
-        id: categoriesTable.id,
-        name: categoriesTable.name,
-        slug: categoriesTable.slug,
-      })
-      .from(productCategoriesTable)
-      .innerJoin(
-        categoriesTable,
-        eq(productCategoriesTable.categoryId, categoriesTable.id),
-      )
-      .where(eq(productCategoriesTable.productId, product.id)),
-    db
-      .select({
-        id: tagsTable.id,
-        name: tagsTable.name,
-        slug: tagsTable.slug,
-      })
-      .from(productTagsTable)
-      .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
-      .where(eq(productTagsTable.productId, product.id)),
-    product.thumbnailId
-      ? db
-          .select({
-            id: assetsTable.id,
-            url: assetsTable.url,
-            originalName: assetsTable.originalName,
-          })
-          .from(assetsTable)
-          .where(eq(assetsTable.id, product.thumbnailId))
-      : Promise.resolve([]),
-  ])
+  const relations = await getProductRelations(product.id, product.thumbnailId)
 
-  return {
-    ...product,
-    categories: categoriesResult,
-    tags: tagsResult,
-    thumbnail: thumbnailResult[0] ?? null,
-  }
+  return { ...product, ...relations }
 }
 
 export type PublicProduct = Omit<
@@ -303,38 +299,7 @@ export type PublicProduct = Omit<
 const buildPublicProduct = async (
   product: typeof productsTable.$inferSelect,
 ): Promise<PublicProduct> => {
-  const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
-    db
-      .select({
-        id: categoriesTable.id,
-        name: categoriesTable.name,
-        slug: categoriesTable.slug,
-      })
-      .from(productCategoriesTable)
-      .innerJoin(
-        categoriesTable,
-        eq(productCategoriesTable.categoryId, categoriesTable.id),
-      )
-      .where(eq(productCategoriesTable.productId, product.id)),
-    db
-      .select({
-        id: tagsTable.id,
-        name: tagsTable.name,
-        slug: tagsTable.slug,
-      })
-      .from(productTagsTable)
-      .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
-      .where(eq(productTagsTable.productId, product.id)),
-    product.thumbnailId
-      ? db
-          .select({
-            id: assetsTable.id,
-            url: assetsTable.url,
-          })
-          .from(assetsTable)
-          .where(eq(assetsTable.id, product.thumbnailId))
-      : Promise.resolve([]),
-  ])
+  const relations = await getProductRelations(product.id, product.thumbnailId)
 
   return {
     id: product.id,
@@ -346,9 +311,9 @@ const buildPublicProduct = async (
     isPublic: product.isPublic,
     creditsPerRun: product.creditsPerRun,
     status: product.status,
-    categories: categoriesResult,
-    tags: tagsResult,
-    thumbnail: thumbnailResult[0] ?? null,
+    categories: relations.categories,
+    tags: relations.tags,
+    thumbnail: relations.thumbnail,
     outputFormat: product.outputFormat,
     workflow: product.workflow,
     createdAt: product.createdAt,
@@ -396,7 +361,7 @@ export const createProduct = async (
 ): Promise<{ id: string; slug: string } | null> => {
   const { categoryIds, tagIds, ...productData } = data
   const id = createCustomId()
-  const slug = await generateUniqueProductSlug(productData.name)
+  const slug = await generateUniqueSlug("product", productData.name)
 
   const [result] = await db
     .insert(productsTable)
@@ -445,7 +410,7 @@ export const updateProduct = async (
     }
 
     if (existingProduct.name !== productData.name) {
-      slug = await generateUniqueProductSlug(productData.name)
+      slug = await generateUniqueSlug("product", productData.name)
     }
   }
 
@@ -551,7 +516,7 @@ export const duplicateProduct = async (
 
   const newId = createCustomId()
   const duplicateName = `${product.name} (Copy)`
-  const slug = await generateUniqueProductSlug(duplicateName)
+  const slug = await generateUniqueSlug("product", duplicateName)
 
   const {
     id: _id,
@@ -657,16 +622,7 @@ export const getPopularProducts = async (
     .where(eq(productsTable.status, "active"))
     .limit(limit)
 
-  return products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
-
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
-
-    return { ...productData, thumbnail }
-  })
+  return products.map(withThumbnail)
 }
 
 export const getProductBySlugId = async (
@@ -747,16 +703,7 @@ export const searchProducts = async (
     .orderBy(desc(productsTable.createdAt))
     .limit(limit)
 
-  return products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
-
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
-
-    return { ...productData, thumbnail }
-  })
+  return products.map(withThumbnail)
 }
 
 export const getRelatedProducts = async (
@@ -870,48 +817,11 @@ export const getRelatedProducts = async (
   const topProducts = scoredProducts.slice(0, limit)
   const topIds = topProducts.map((p) => p.id)
 
-  const categoriesMap = new Map<
-    string,
-    { id: string; name: string; slug: string }[]
-  >()
-  if (topIds.length > 0) {
-    const productCategories = await db
-      .select({
-        productId: productCategoriesTable.productId,
-        id: categoriesTable.id,
-        name: categoriesTable.name,
-        slug: categoriesTable.slug,
-      })
-      .from(productCategoriesTable)
-      .innerJoin(
-        categoriesTable,
-        eq(productCategoriesTable.categoryId, categoriesTable.id),
-      )
-      .where(inArray(productCategoriesTable.productId, topIds))
-
-    for (const row of productCategories) {
-      if (!categoriesMap.has(row.productId)) {
-        categoriesMap.set(row.productId, [])
-      }
-      categoriesMap
-        .get(row.productId)!
-        .push({ id: row.id, name: row.name, slug: row.slug })
-    }
-  }
+  const categoriesMap = await getProductsCategoriesMap(topIds)
 
   return topProducts.map((p) => {
-    const thumbnail =
-      p.thumbnailAssetId && p.thumbnailUrl
-        ? { id: p.thumbnailAssetId, url: p.thumbnailUrl }
-        : null
-
     return {
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      excerpt: p.excerpt,
-      creditsPerRun: p.creditsPerRun,
-      thumbnail,
+      ...withThumbnail(p),
       categories: categoriesMap.get(p.id) ?? [],
     }
   })

@@ -4,9 +4,10 @@ import { useCallback, useRef, useState } from "react"
 
 import { getInputFieldsFromWorkflow } from "db/schema/product-workflow-utils"
 import { queryApi } from "rpc/query"
-import type { ProductInputVariable } from "ui/product-input-field"
 import { Spinner } from "ui/spinner"
 import { toastManager } from "ui/toast"
+
+import type { ProductInputVariable } from "@/features/products/product-input-field"
 
 import { FeatureBuilderHeader } from "@/features/products/feature-builder-header"
 import {

@@ -44,76 +44,24 @@ export const assertSlugAvailable = async (
   return slug
 }
 
-export const generateUniqueProductSlug = async (
-  text: string,
-): Promise<string> => {
-  const slug = slugify(text)
-  let uniqueSlug = slug
-  let suffix = 1
-
-  while (true) {
-    const existing = await db
-      .select({ id: productsTable.id })
-      .from(productsTable)
-      .where(eq(productsTable.slug, uniqueSlug))
-      .limit(1)
-
-    if (existing.length === 0) break
-
-    suffix++
-    uniqueSlug = `${slug}-${suffix}`
-  }
-
-  return uniqueSlug
-}
-
-export const generateUniqueCategorySlug = async (
+export const generateUniqueSlug = async (
+  entity: SlugEntity,
   text: string,
   excludeId?: string,
 ): Promise<string> => {
+  const table = slugEntityTable[entity]
   const slug = slugify(text)
   let uniqueSlug = slug
   let suffix = 1
 
   while (true) {
     const existing = await db
-      .select({ id: categoriesTable.id })
-      .from(categoriesTable)
+      .select({ id: table.id })
+      .from(table)
       .where(
         excludeId
-          ? and(
-              eq(categoriesTable.slug, uniqueSlug),
-              ne(categoriesTable.id, excludeId),
-            )
-          : eq(categoriesTable.slug, uniqueSlug),
-      )
-      .limit(1)
-
-    if (existing.length === 0) break
-
-    suffix++
-    uniqueSlug = `${slug}-${suffix}`
-  }
-
-  return uniqueSlug
-}
-
-export const generateUniqueTagSlug = async (
-  text: string,
-  excludeId?: string,
-): Promise<string> => {
-  const slug = slugify(text)
-  let uniqueSlug = slug
-  let suffix = 1
-
-  while (true) {
-    const existing = await db
-      .select({ id: tagsTable.id })
-      .from(tagsTable)
-      .where(
-        excludeId
-          ? and(eq(tagsTable.slug, uniqueSlug), ne(tagsTable.id, excludeId))
-          : eq(tagsTable.slug, uniqueSlug),
+          ? and(eq(table.slug, uniqueSlug), ne(table.id, excludeId))
+          : eq(table.slug, uniqueSlug),
       )
       .limit(1)
 

@@ -5,12 +5,13 @@ import { useEffect, useReducer, useRef, useState } from "react"
 
 import { Button } from "ui/button"
 import { Field, FieldLabel } from "ui/field"
+import { ScrollArea } from "ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "ui/tabs"
+
 import {
   ProductInputField,
   type ProductInputVariable,
-} from "ui/product-input-field"
-import { ScrollArea } from "ui/scroll-area"
-import { Tabs, TabsList, TabsTrigger } from "ui/tabs"
+} from "@/features/products/product-input-field"
 
 interface PreviewStep {
   nodeId: string
