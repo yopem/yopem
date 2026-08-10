@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "ui/table"
+import { formatDateTime } from "utils/format-date"
 
 const getStatusIcon = (status: string | null) => {
   switch (status) {
@@ -120,12 +121,7 @@ function RunsComponent() {
                       {run.productName ?? "Unknown Product"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {run.createdAt
-                        ? new Date(run.createdAt).toLocaleString("en-US", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })
-                        : "-"}
+                      {run.createdAt ? formatDateTime(run.createdAt) : "-"}
                     </TableCell>
                     <TableCell className="text-right text-sm">
                       {Number(run.cost ?? 0) > 0

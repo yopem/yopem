@@ -47,14 +47,16 @@ export function Forbidden() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button onClick={handleSignOut} disabled={isLoggingOut} size="lg">
-            {isLoggingOut ? (
+        <Button onClick={handleSignOut} disabled={isLoggingOut} size="lg">
+          {isLoggingOut ? (
+            <>
               <LoaderCircleIcon className="animate-spin" />
-            ) : null}
-            {isLoggingOut ? "Signing out..." : "Sign out"}
-          </Button>
-        </div>
+              Signing out...
+            </>
+          ) : (
+            "Sign out"
+          )}
+        </Button>
       </div>
     </div>
   )

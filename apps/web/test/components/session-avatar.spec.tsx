@@ -2,20 +2,9 @@
 
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  test,
-  vi,
-} from "vite-plus/test"
+import { afterEach, beforeEach, describe, expect, test } from "vite-plus/test"
 
-import { HeaderSearch } from "@/components/header-search"
-
-vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => vi.fn(),
-}))
+import { SessionAvatar } from "@/components/session-avatar"
 
 let container: HTMLDivElement | null = null
 let root: Root | null = null
@@ -37,15 +26,20 @@ afterEach(() => {
   root = null
 })
 
-describe("HeaderSearch", () => {
-  test("renders a search form with a search input", () => {
+describe("SessionAvatar", () => {
+  test("renders initials when no image is provided", () => {
     act(() => {
-      root?.render(<HeaderSearch />)
+      root?.render(<SessionAvatar name="Jane Smith" email="jane@example.com" />)
     })
 
-    expect(container?.querySelector("form")).not.toBeNull()
-    const input = container?.querySelector('input[type="search"]')
-    expect(input).not.toBeNull()
-    expect(input?.getAttribute("placeholder")).toBe("Search tools...")
+    expect(container?.textContent).toContain("JS")
+  })
+
+  test("renders initials from email when name is missing", () => {
+    act(() => {
+      root?.render(<SessionAvatar name={null} email="jane@example.com" />)
+    })
+
+    expect(container?.textContent).toContain("J")
   })
 })

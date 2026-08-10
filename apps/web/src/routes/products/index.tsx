@@ -3,15 +3,10 @@ import {
   useNavigate,
   useLoaderData,
 } from "@tanstack/react-router"
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  SearchIcon,
-  XIcon,
-} from "lucide-react"
-import { useState } from "react"
+import { SearchIcon, XIcon } from "lucide-react"
+import { useState, type FormEvent } from "react"
 
-import { siteTitle, siteUrl } from "env"
+import { siteTitle } from "env"
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Input } from "ui/input"
@@ -19,6 +14,8 @@ import { Input } from "ui/input"
 import { SiteLayout } from "@/components/site-layout"
 import { MarketplaceGrid } from "@/features/storefront/marketplace-grid"
 import { MarketplaceSidebar } from "@/features/storefront/marketplace-sidebar"
+import { Pagination } from "@/features/storefront/pagination"
+import { getSiteUrl } from "@/lib/site-url"
 
 const PAGE_SIZE = 12
 
@@ -101,7 +98,7 @@ export const Route = createFileRoute("/products/")({
       { property: "og:type", content: "website" },
       {
         property: "og:url",
-        content: `${siteUrl ?? "http://localhost:3000"}/products`,
+        content: `${getSiteUrl()}/products`,
       },
     ]
 
@@ -114,7 +111,7 @@ export const Route = createFileRoute("/products/")({
       links: [
         {
           rel: "canonical",
-          href: `${siteUrl ?? "http://localhost:3000"}/products`,
+          href: `${getSiteUrl()}/products`,
         },
       ],
     }
@@ -156,7 +153,7 @@ function CatalogComponent() {
     })
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = searchInput.trim()
     updateSearch({ search: trimmed !== "" ? trimmed : undefined, page: 1 })
@@ -226,35 +223,12 @@ function CatalogComponent() {
 
             <MarketplaceGrid products={listData.products} />
 
-            {totalPages > 1 && (
-              <div className="border-border flex items-center justify-between border-t pt-6">
-                <span className="text-muted-foreground text-xs">
-                  Page {page} of {totalPages} ({listData.total} total tools)
-                </span>
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => updateSearch({ page: page - 1 })}
-                    className="gap-1 text-xs"
-                  >
-                    <ChevronLeftIcon className="size-3.5" />
-                    <span>Previous</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => updateSearch({ page: page + 1 })}
-                    className="gap-1 text-xs"
-                  >
-                    <span>Next</span>
-                    <ChevronRightIcon className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalItems={listData.total}
+              onPageChange={(nextPage) => updateSearch({ page: nextPage })}
+            />
           </div>
         </div>
       </div>

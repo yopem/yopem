@@ -28,10 +28,7 @@ function LoginComponent() {
     try {
       const res = await loginFn({ data: { returnTo: search.returnTo ?? "/" } })
       if (res.redirectTo) {
-        if (
-          res.redirectTo.startsWith("http://") ||
-          res.redirectTo.startsWith("https://")
-        ) {
+        if (res.redirectTo.startsWith("http")) {
           window.location.href = res.redirectTo
         } else {
           void navigate({ to: res.redirectTo })

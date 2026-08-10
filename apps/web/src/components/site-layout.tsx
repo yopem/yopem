@@ -3,47 +3,29 @@
 import type { ReactNode } from "react"
 
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router"
-import { useState } from "react"
 
 import { adminUrl } from "env"
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import { Button } from "ui/button"
 import { Logo } from "ui/logo"
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 import { ThemeSwitcher } from "ui/theme-switcher"
 
 import { HeaderSearch } from "@/components/header-search"
-import { loginFn, logoutFn } from "@/lib/auth"
+import { SessionAvatar } from "@/components/session-avatar"
+import { logoutFn } from "@/lib/auth"
+import { loginAndRedirect } from "@/lib/login"
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   const { session } = useRouteContext({ from: "__root__" })
-  const [imageError, setImageError] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = async () => {
-    const res = await loginFn({ data: { returnTo: "/" } })
-    if (res.redirectTo) {
-      window.location.href = res.redirectTo
-    }
-  }
+  const handleLogin = () => loginAndRedirect("/")
 
   const handleLogout = async () => {
     const res = await logoutFn()
     if (res.redirectTo) {
       void navigate({ to: res.redirectTo })
     }
-  }
-
-  const getInitials = (name: string | null, email: string) => {
-    if (name) {
-      return name
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    }
-    return email[0].toUpperCase()
   }
 
   return (
@@ -81,18 +63,12 @@ export function SiteLayout({ children }: { children: ReactNode }) {
                         className="focus-visible:ring-ring group cursor-pointer rounded-full outline-none focus-visible:ring-2"
                       >
                         <div className="group-hover:bg-accent group-data-popup-open:bg-accent rounded-full p-0.5 transition-colors">
-                          <Avatar className="size-8">
-                            {session.image && !imageError && (
-                              <AvatarImage
-                                src={session.image}
-                                alt={session.name ?? session.email}
-                                onError={() => setImageError(true)}
-                              />
-                            )}
-                            <AvatarFallback>
-                              {getInitials(session.name, session.email)}
-                            </AvatarFallback>
-                          </Avatar>
+                          <SessionAvatar
+                            name={session.name}
+                            email={session.email}
+                            image={session.image}
+                            className="size-8"
+                          />
                         </div>
                       </button>
                     }

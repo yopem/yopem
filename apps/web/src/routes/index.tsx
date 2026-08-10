@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { siteDescription, siteTitle, siteUrl } from "env"
+import { siteDescription, siteTitle } from "env"
 
 import { SiteLayout } from "@/components/site-layout"
 import { CTA } from "@/features/landing/cta"
 import { Features } from "@/features/landing/features"
 import { Hero } from "@/features/landing/hero"
+import { getSiteUrl } from "@/lib/site-url"
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,9 +24,9 @@ export const Route = createFileRoute("/")({
         content: siteDescription || "Discover and run powerful AI tools.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: siteUrl || "http://localhost:3000" },
+      { property: "og:url", content: getSiteUrl() },
     ],
-    links: [{ rel: "canonical", href: siteUrl || "http://localhost:3000" }],
+    links: [{ rel: "canonical", href: getSiteUrl() }],
   }),
   component: LandingComponent,
 })

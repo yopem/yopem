@@ -13,6 +13,8 @@ import { Card, CardHeader, CardPanel, CardTitle } from "ui/card"
 import { Input } from "ui/input"
 import { Label } from "ui/label"
 
+import { getInitials } from "@/lib/get-initials"
+
 export const Route = createFileRoute("/dashboard/profile")({
   loader: async ({ context: { queryClient } }) => {
     const user = await queryClient.ensureQueryData(
@@ -22,6 +24,12 @@ export const Route = createFileRoute("/dashboard/profile")({
   },
   component: ProfileComponent,
 })
+
+const nameSchema = v.pipe(v.string(), v.minLength(1))
+
+function nameValidator({ value }: { value: string }): string | undefined {
+  return v.safeParse(nameSchema, value).success ? undefined : "Name is required"
+}
 
 function ProfileComponent() {
   const { user: initialUser } = useLoaderData({ from: "/dashboard/profile" })
@@ -36,12 +44,7 @@ function ProfileComponent() {
     }),
   )
 
-  const initials = (user.name ?? user.email)
-    .split(" ")
-    .map((s) => s[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
+  const initials = getInitials(user.name, user.email)
 
   const form = useForm({
     defaultValues: { name: user.name ?? "" },
@@ -97,14 +100,8 @@ function ProfileComponent() {
             <form.Field
               name="name"
               validators={{
-                onBlur: ({ value }) =>
-                  v.safeParse(v.pipe(v.string(), v.minLength(1)), value).success
-                    ? undefined
-                    : "Name is required",
-                onSubmit: ({ value }) =>
-                  v.safeParse(v.pipe(v.string(), v.minLength(1)), value).success
-                    ? undefined
-                    : "Name is required",
+                onBlur: nameValidator,
+                onSubmit: nameValidator,
               }}
             >
               {(field) => (

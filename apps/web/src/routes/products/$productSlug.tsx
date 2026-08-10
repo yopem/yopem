@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { useRef, useState } from "react"
 
-import { siteTitle, siteUrl } from "env"
+import { siteTitle } from "env"
 import { queryApi } from "rpc/query"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
@@ -35,11 +35,13 @@ import {
 } from "ui/card"
 import { Label } from "ui/label"
 import { Separator } from "ui/separator"
+import { formatDateOnly } from "utils/format-date"
 
 import { SiteLayout } from "@/components/site-layout"
 import { ProductInputField } from "@/features/storefront/product-input-field"
 import { RichTextView } from "@/features/storefront/rich-text-view"
-import { loginFn } from "@/lib/auth"
+import { loginAndRedirect } from "@/lib/login"
+import { getSiteUrl } from "@/lib/site-url"
 
 export const Route = createFileRoute("/products/$productSlug")({
   loader: async ({ context: { queryClient }, params }) => {
@@ -61,7 +63,7 @@ export const Route = createFileRoute("/products/$productSlug")({
     if (!loaderData?.product) return {}
 
     const { product } = loaderData
-    const productUrl = `${siteUrl ?? "http://localhost:3000"}/products/${product.slug}`
+    const productUrl = `${getSiteUrl()}/products/${product.slug}`
     const description =
       product.excerpt ??
       product.description ??
@@ -81,6 +83,19 @@ export const Route = createFileRoute("/products/$productSlug")({
   },
   component: ProductDetailComponent,
 })
+
+interface WorkflowField {
+  variableName: string
+  description: string
+  type: string
+  isOptional?: boolean
+  options?: { label: string; value: string }[]
+}
+
+interface WorkflowNode {
+  type?: string
+  data?: { fields?: unknown[] }
+}
 
 function ProductDetailComponent() {
   const { product: initialProduct } = useLoaderData({
@@ -111,33 +126,14 @@ function ProductDetailComponent() {
   )
 
   const workflowNodes =
-    (
-      product.workflow as {
-        nodes?: { type: string; data?: { fields?: unknown[] } }[]
-      }
-    )?.nodes ?? []
-  const inputNodes = workflowNodes.filter((n) => n.type === "input")
-  const inputFields: {
-    variableName: string
-    description: string
-    type: string
-    isOptional?: boolean
-    options?: { label: string; value: string }[]
-  }[] = inputNodes.flatMap(
-    (n) =>
-      (n.data?.fields as {
-        variableName: string
-        description: string
-        type: string
-        isOptional?: boolean
-        options?: { label: string; value: string }[]
-      }[]) ?? [],
-  )
+    (product.workflow as { nodes?: WorkflowNode[] } | undefined)?.nodes ?? []
+  const inputFields: WorkflowField[] = workflowNodes
+    .filter((n) => n.type === "input")
+    .flatMap((n) => (n.data?.fields as WorkflowField[] | undefined) ?? [])
 
-  const defaultValues: Record<string, string> = {}
-  for (const f of inputFields) {
-    defaultValues[f.variableName] = ""
-  }
+  const defaultValues = Object.fromEntries(
+    inputFields.map((f) => [f.variableName, ""]),
+  )
 
   const form = useForm({
     defaultValues,
@@ -150,24 +146,13 @@ function ProductDetailComponent() {
     },
   })
 
-  const handleRunLoginRedirect = async () => {
-    const currentPath = `/products/${product.slug}`
-    const res = await loginFn({ data: { returnTo: currentPath } })
-    if (res.redirectTo) {
-      window.location.href = res.redirectTo
-    }
-  }
+  const handleRunLoginRedirect = () =>
+    loginAndRedirect(`/products/${product.slug}`)
 
   const fileReaderRef = useRef<FileReader | null>(null)
 
   const cost = Number(product.creditsPerRun ?? 0)
-  const formattedDate = product.createdAt
-    ? new Date(product.createdAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "N/A"
+  const formattedDate = formatDateOnly(product.createdAt) || "N/A"
 
   return (
     <SiteLayout>
@@ -308,14 +293,10 @@ function ProductDetailComponent() {
                                 <ProductInputField
                                   field={field}
                                   value={fieldState.state.value}
-                                  error={undefined}
                                   fileReaderRef={fileReaderRef}
                                   onChange={(_, val) =>
                                     fieldState.handleChange(val)
                                   }
-                                  onClearError={(_varName) => {
-                                    // noop
-                                  }}
                                 />
                               </div>
                             )}

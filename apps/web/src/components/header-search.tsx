@@ -2,7 +2,7 @@
 
 import { useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 
 import { Input } from "ui/input"
 
@@ -10,7 +10,7 @@ export function HeaderSearch() {
   const navigate = useNavigate()
   const [query, setQuery] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = query.trim()
     void navigate({

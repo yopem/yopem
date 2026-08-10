@@ -1,21 +1,8 @@
 "use client"
 
-import { Link, useRouteContext } from "@tanstack/react-router"
-
-import { Button } from "ui/button"
-
-import { loginFn } from "@/lib/auth"
+import { MarketplaceCta } from "@/features/landing/marketplace-cta"
 
 export function CTA() {
-  const { session } = useRouteContext({ from: "__root__" })
-
-  const handleLogin = async () => {
-    const res = await loginFn({ data: { returnTo: "/products" } })
-    if (res.redirectTo) {
-      window.location.href = res.redirectTo
-    }
-  }
-
   return (
     <section className="relative overflow-hidden py-32">
       <div className="bg-background absolute inset-0" />
@@ -30,21 +17,10 @@ export function CTA() {
             Start building with unified access to all major AI products.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            {session ? (
-              <Button
-                size="lg"
-                className="rounded-2xl"
-                render={<Link to="/products">Browse marketplace</Link>}
-              />
-            ) : (
-              <Button
-                size="lg"
-                className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-full px-8 font-medium shadow-2xs sm:w-auto"
-                onClick={() => void handleLogin()}
-              >
-                Get Started
-              </Button>
-            )}
+            <MarketplaceCta
+              loggedInClassName="rounded-2xl"
+              loggedOutClassName="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-full px-8 font-medium shadow-2xs sm:w-auto"
+            />
           </div>
         </div>
       </div>

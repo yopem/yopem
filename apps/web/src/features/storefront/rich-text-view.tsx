@@ -5,56 +5,49 @@ export interface RichTextViewProps {
   fallbackDescription?: string | null
 }
 
+const htmlClass =
+  "text-muted-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_blockquote]:border-border [&_h2]:font-heading [&_h3]:font-heading space-y-3 text-sm leading-relaxed [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mt-4 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_li]:text-sm [&_p]:my-1.5 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-1"
+
+const plainClass = "text-muted-foreground text-sm leading-relaxed"
+
+function isHtml(value: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(value)
+}
+
+function HtmlText({ html }: { html: string }) {
+  return (
+    <div className={htmlClass} dangerouslySetInnerHTML={{ __html: html }} />
+  )
+}
+
+function PlainText({ text }: { text: string }) {
+  return <p className={plainClass}>{text}</p>
+}
+
+function StringContent({ value }: { value: string }) {
+  return isHtml(value) ? <HtmlText html={value} /> : <PlainText text={value} />
+}
+
 export function RichTextView({
   content,
   fallbackDescription,
 }: RichTextViewProps) {
   if (!content) {
     if (!fallbackDescription) return null
-    // If fallback is HTML content (contains tags like <h2 or <p)
-    if (/<[a-z][\s\S]*>/i.test(fallbackDescription)) {
-      return (
-        <div
-          className="text-muted-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_blockquote]:border-border [&_h2]:font-heading [&_h3]:font-heading space-y-3 text-sm leading-relaxed [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mt-4 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_li]:text-sm [&_p]:my-1.5 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-1"
-          dangerouslySetInnerHTML={{ __html: fallbackDescription }}
-        />
-      )
-    }
-    return (
-      <p className="text-muted-foreground text-sm leading-relaxed">
-        {fallbackDescription}
-      </p>
-    )
+    return <StringContent value={fallbackDescription} />
   }
 
-  // If content is stringified JSON, parse it
   let nodes: unknown = content
   if (typeof content === "string") {
     try {
       nodes = JSON.parse(content)
     } catch {
-      if (/<[a-z][\s\S]*>/i.test(content)) {
-        return (
-          <div
-            className="text-muted-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_blockquote]:border-border [&_h2]:font-heading [&_h3]:font-heading space-y-3 text-sm leading-relaxed [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mt-4 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_li]:text-sm [&_p]:my-1.5 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-1"
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-        )
-      }
-      return (
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {content}
-        </p>
-      )
+      return <StringContent value={content} />
     }
   }
 
   if (!Array.isArray(nodes)) {
-    return (
-      <p className="text-muted-foreground text-sm leading-relaxed">
-        {String(nodes)}
-      </p>
-    )
+    return <PlainText text={String(nodes)} />
   }
 
   return (

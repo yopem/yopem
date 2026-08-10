@@ -5,22 +5,20 @@ import {
   useLoaderData,
   notFound,
 } from "@tanstack/react-router"
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  SearchIcon,
-  XIcon,
-} from "lucide-react"
-import { useState } from "react"
+import { SearchIcon, XIcon } from "lucide-react"
+import { useState, type FormEvent } from "react"
 
-import { siteTitle, siteUrl } from "env"
+import { siteTitle } from "env"
 import { queryApi } from "rpc/query"
 import { Badge } from "ui/badge"
 import { Button } from "ui/button"
 import { Input } from "ui/input"
 
 import { SiteLayout } from "@/components/site-layout"
+import { Pagination } from "@/features/storefront/pagination"
 import { ProductCard } from "@/features/storefront/product-card"
+import { getSiteUrl } from "@/lib/site-url"
+import { toggleId } from "@/lib/utils/toggle-id"
 
 const PAGE_SIZE = 12
 
@@ -86,7 +84,7 @@ export const Route = createFileRoute("/c/$categorySlug")({
       (searchState.page ?? 1) > 1,
     )
 
-    const categoryUrl = `${siteUrl ?? "http://localhost:3000"}/c/${category.slug}`
+    const categoryUrl = `${getSiteUrl()}/c/${category.slug}`
     const meta = [
       { title: `${category.name} AI Tools - ${siteTitle ?? "Yopem"}` },
       {
@@ -162,14 +160,13 @@ function CategoryComponent() {
   }
 
   const handleTagToggle = (id: string) => {
-    const current = searchState.tagIds ?? []
-    const updated = current.includes(id)
-      ? current.filter((t: string) => t !== id)
-      : [...current, id]
-    updateSearch({ tagIds: updated, page: 1 })
+    updateSearch({
+      tagIds: toggleId(searchState.tagIds ?? [], id),
+      page: 1,
+    })
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = searchInput.trim()
     updateSearch({ search: trimmed !== "" ? trimmed : undefined, page: 1 })
@@ -336,35 +333,12 @@ function CategoryComponent() {
         )}
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="border-border flex items-center justify-between border-t pt-6">
-            <span className="text-muted-foreground text-xs">
-              Page {page} of {totalPages} ({listData.total} tools)
-            </span>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => updateSearch({ page: page - 1 })}
-                className="gap-1 text-xs"
-              >
-                <ChevronLeftIcon className="size-3.5" />
-                <span>Previous</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => updateSearch({ page: page + 1 })}
-                className="gap-1 text-xs"
-              >
-                <span>Next</span>
-                <ChevronRightIcon className="size-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={listData.total}
+          onPageChange={(nextPage) => updateSearch({ page: nextPage })}
+        />
       </div>
     </SiteLayout>
   )

@@ -21,10 +21,10 @@ export interface ProductInputVariable {
 export interface ProductInputFieldProps {
   field: ProductInputVariable
   value: string
-  error: string | undefined
+  error?: string | undefined
   fileReaderRef: React.RefObject<FileReader | null>
   onChange: (variableName: string, newValue: string) => void
-  onClearError: (variableName: string) => void
+  onClearError?: (variableName: string) => void
 }
 
 export function ProductInputField({
@@ -37,7 +37,7 @@ export function ProductInputField({
 }: ProductInputFieldProps) {
   const handleChange = (newValue: string) => {
     onChange(field.variableName, newValue)
-    if (error) {
+    if (error && onClearError) {
       onClearError(field.variableName)
     }
   }
@@ -73,15 +73,18 @@ export function ProductInputField({
     </div>
   )
 
+  const renderTextInput = (type?: string) => (
+    <Input
+      type={type}
+      value={value}
+      onChange={(e) => handleChange(e.target.value)}
+      placeholder={field.description}
+    />
+  )
+
   switch (field.type) {
     case "text":
-      return (
-        <Input
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder={field.description}
-        />
-      )
+      return renderTextInput()
 
     case "long_text":
       return (
@@ -94,14 +97,7 @@ export function ProductInputField({
       )
 
     case "number":
-      return (
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder={field.description}
-        />
-      )
+      return renderTextInput("number")
 
     case "boolean":
       return (
@@ -159,12 +155,6 @@ export function ProductInputField({
       return renderFileField("video/*", "Video")
 
     default:
-      return (
-        <Input
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder={field.description}
-        />
-      )
+      return renderTextInput()
   }
 }

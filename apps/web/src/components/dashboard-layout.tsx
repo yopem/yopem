@@ -19,7 +19,6 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import { Logo } from "ui/logo"
 import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "ui/menu"
 import {
@@ -31,6 +30,7 @@ import {
 } from "ui/sidebar"
 import { ThemeSwitcher } from "ui/theme-switcher"
 
+import { SessionAvatar } from "@/components/session-avatar"
 import { logoutFn } from "@/lib/auth"
 
 const navItems = [
@@ -48,7 +48,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { session } = useRouteContext({ from: "__root__" })
   const location = useLocation()
   const navigate = useNavigate()
-  const [imageError, setImageError] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
@@ -63,15 +62,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setIsLoggingOut(false)
     }
   }
-
-  const initials = session
-    ? (session.name ?? session.email)
-        .split(" ")
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?"
 
   return (
     <SidebarProvider>
@@ -140,18 +130,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     type="button"
                     className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors outline-none focus-visible:ring-2"
                   >
-                    <Avatar className="size-8 shrink-0">
-                      {session.image && !imageError && (
-                        <AvatarImage
-                          src={session.image}
-                          alt={session.name ?? session.email}
-                          onError={() => setImageError(true)}
-                        />
-                      )}
-                      <AvatarFallback className="text-xs font-bold">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <SessionAvatar
+                      name={session.name}
+                      email={session.email}
+                      image={session.image}
+                      className="size-8 shrink-0"
+                      fallbackClassName="text-xs font-bold"
+                    />
                     <div className="flex min-w-0 flex-1 flex-col items-start">
                       <p className="text-sidebar-foreground truncate text-sm font-medium">
                         {session.name ?? session.email}

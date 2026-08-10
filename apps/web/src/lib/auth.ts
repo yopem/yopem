@@ -10,8 +10,20 @@ import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
 import { authCallbackUrl, cookieDomain, isProd, webOrigin } from "env"
 
-const isSecure = () => {
-  return !!cookieDomain || isProd
+const isSecure = () => !!cookieDomain || isProd
+
+function setSessionCookies(access: string, refresh: string) {
+  const sameSite: "none" | "lax" = isProd ? "none" : "lax"
+  const options = {
+    httpOnly: true,
+    sameSite,
+    path: "/",
+    maxAge: 86400,
+    secure: isSecure(),
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  }
+  setCookie("access_token", access, options)
+  setCookie("refresh_token", refresh, { ...options, maxAge: 604800 })
 }
 
 export const getSession = createServerFn({ method: "GET" }).handler(
@@ -33,20 +45,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     }
 
     if (verified.tokens) {
-      const sameSite: "none" | "lax" = isProd ? "none" : "lax"
-      const options = {
-        httpOnly: true,
-        sameSite,
-        path: "/",
-        maxAge: 86400,
-        secure: isSecure(),
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-      }
-      setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, {
-        ...options,
-        maxAge: 604800,
-      })
+      setSessionCookies(verified.tokens.access, verified.tokens.refresh)
     }
 
     return verified.subject.properties
@@ -64,20 +63,7 @@ export const loginFn = createServerFn({ method: "POST" })
         refresh: refreshToken,
       })
       if (!verified.err && verified.tokens) {
-        const sameSite: "none" | "lax" = isProd ? "none" : "lax"
-        const options = {
-          httpOnly: true,
-          sameSite,
-          path: "/",
-          maxAge: 86400,
-          secure: isSecure(),
-          ...(cookieDomain ? { domain: cookieDomain } : {}),
-        }
-        setCookie("access_token", verified.tokens.access, options)
-        setCookie("refresh_token", verified.tokens.refresh, {
-          ...options,
-          maxAge: 604800,
-        })
+        setSessionCookies(verified.tokens.access, verified.tokens.refresh)
         return { redirectTo: data?.returnTo ?? "/" }
       }
     }

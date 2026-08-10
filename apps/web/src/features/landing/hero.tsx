@@ -1,22 +1,13 @@
 "use client"
 
-import { Link, useRouteContext } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { BarChart3Icon, BotIcon, ImageIcon, PlayCircleIcon } from "lucide-react"
 
 import { Button } from "ui/button"
 
-import { loginFn } from "@/lib/auth"
+import { MarketplaceCta } from "@/features/landing/marketplace-cta"
 
 export function Hero() {
-  const { session } = useRouteContext({ from: "__root__" })
-
-  const handleLogin = async () => {
-    const res = await loginFn({ data: { returnTo: "/products" } })
-    if (res.redirectTo) {
-      window.location.href = res.redirectTo
-    }
-  }
-
   return (
     <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden pt-16 pb-24">
       <div className="pointer-events-none absolute inset-0 size-full bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] mask-[linear-gradient(to_bottom,transparent,10%,black,90%,transparent)] bg-size-[40px_40px] opacity-20" />
@@ -30,21 +21,10 @@ export function Hero() {
           Start free, upgrade when you need more. Simple, transparent pricing.
         </p>
         <div className="flex w-full flex-wrap items-center justify-center gap-4">
-          {session ? (
-            <Button
-              className="rounded-2xl"
-              size="lg"
-              render={<Link to="/products">Browse marketplace</Link>}
-            />
-          ) : (
-            <Button
-              className="h-11 rounded-full px-8 text-sm font-medium shadow-2xs"
-              size="lg"
-              onClick={() => void handleLogin()}
-            >
-              Get Started
-            </Button>
-          )}
+          <MarketplaceCta
+            loggedInClassName="rounded-2xl"
+            loggedOutClassName="h-11 rounded-full px-8 text-sm font-medium shadow-2xs"
+          />
           <Button
             size="lg"
             variant="outline"

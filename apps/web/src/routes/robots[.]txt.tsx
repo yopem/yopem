@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 
-import { siteUrl } from "env"
+import { getSiteUrl } from "@/lib/site-url"
 
 export const getRobotsTxt = createServerFn({ method: "GET" }).handler(() => {
-  const baseUrl = siteUrl || "http://localhost:3000"
+  const baseUrl = getSiteUrl()
 
   return `User-agent: *
 Allow: /

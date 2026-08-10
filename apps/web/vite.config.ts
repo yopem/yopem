@@ -25,6 +25,7 @@ export default defineConfig({
   test: {
     name: "web",
     environment: "jsdom",
+    setupFiles: ["test/setup.ts"],
   },
 
   plugins: lazyPlugins(() => [

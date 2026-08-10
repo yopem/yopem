@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 
-import { siteUrl } from "env"
 import { serverApi } from "rpc/server"
+
+import { getSiteUrl } from "@/lib/site-url"
 
 const PRODUCT_PAGE_SIZE = 100
 
@@ -21,7 +22,7 @@ const fetchAllProductSlugs = async (): Promise<string[]> => {
 
 export const getSitemapXml = createServerFn({ method: "GET" }).handler(
   async () => {
-    const baseUrl = siteUrl || "http://localhost:3000"
+    const baseUrl = getSiteUrl()
 
     const [categories, productSlugs] = await Promise.all([
       serverApi.categories.list(),

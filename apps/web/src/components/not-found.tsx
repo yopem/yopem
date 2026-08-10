@@ -15,14 +15,12 @@ export function NotFound() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link to="/">
-            <Button size="lg">
-              <HomeIcon className="size-4" />
-              Go home
-            </Button>
-          </Link>
-        </div>
+        <Link to="/">
+          <Button size="lg">
+            <HomeIcon className="size-4" />
+            Go home
+          </Button>
+        </Link>
       </div>
     </div>
   )

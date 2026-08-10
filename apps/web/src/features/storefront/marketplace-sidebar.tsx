@@ -5,6 +5,8 @@ import { CheckIcon } from "lucide-react"
 
 import { Separator } from "ui/separator"
 
+import { toggleId } from "@/lib/utils/toggle-id"
+
 interface FilterItem {
   id: string
   name: string
@@ -47,23 +49,11 @@ export function MarketplaceSidebar({
   }
 
   const toggleCategory = (categoryId: string) => {
-    if (selectedCategories.includes(categoryId)) {
-      updateSearch({
-        categoryIds: selectedCategories.filter((id) => id !== categoryId),
-      })
-    } else {
-      updateSearch({ categoryIds: [...selectedCategories, categoryId] })
-    }
+    updateSearch({ categoryIds: toggleId(selectedCategories, categoryId) })
   }
 
   const toggleTag = (tagId: string) => {
-    if (selectedTags.includes(tagId)) {
-      updateSearch({
-        tagIds: selectedTags.filter((id) => id !== tagId),
-      })
-    } else {
-      updateSearch({ tagIds: [...selectedTags, tagId] })
-    }
+    updateSearch({ tagIds: toggleId(selectedTags, tagId) })
   }
 
   const clearAll = () => {

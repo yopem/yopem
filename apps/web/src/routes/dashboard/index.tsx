@@ -5,6 +5,7 @@ import { CoinsIcon, CreditCardIcon, PlayIcon, ZapIcon } from "lucide-react"
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Card, CardHeader, CardPanel, CardTitle } from "ui/card"
+import { formatDateOnly } from "utils/format-date"
 
 export const Route = createFileRoute("/dashboard/")({
   loader: async ({ context: { queryClient } }) => {
@@ -45,6 +46,28 @@ function StatCard({
         ) : null}
       </CardPanel>
     </Card>
+  )
+}
+
+function StatusPill({ status }: { status: string | null }) {
+  let className =
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300"
+  switch (status) {
+    case "completed":
+      className =
+        "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+      break
+    case "failed":
+      className = "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+      break
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
+    >
+      {status ?? "pending"}
+    </span>
   )
 }
 
@@ -125,30 +148,11 @@ function DashboardOverviewComponent() {
                         {run.productName ?? "Unknown Product"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {run.createdAt
-                          ? new Date(run.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )
-                          : "-"}
+                        {formatDateOnly(run.createdAt) || "-"}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          run.status === "completed"
-                            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
-                            : run.status === "failed"
-                              ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300"
-                        }`}
-                      >
-                        {run.status ?? "pending"}
-                      </span>
+                      <StatusPill status={run.status} />
                       {run.cost ? (
                         <span className="text-muted-foreground text-xs">
                           {run.cost} credits

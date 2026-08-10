@@ -6,6 +6,9 @@ const root = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   test: {
+    env: {
+      NODE_ENV: "test",
+    },
     projects: [
       "packages/utils",
       "packages/env",
@@ -14,6 +17,7 @@ export default defineConfig({
       "packages/rpc",
       "packages/db",
       "apps/admin",
+      "apps/web",
       "packages/editor",
       "packages/ui",
     ],
