@@ -25,13 +25,31 @@ const isValidRedirectPath = (path: string): boolean => {
 const resolveRedirectPath = (query: string | undefined): string =>
   query !== undefined && isValidRedirectPath(query) ? query : "/"
 
+export const resolveLoginOrigin = (
+  loginOrigin: string | undefined,
+  allowedOrigins: string[],
+  defaultOrigin: string,
+  queryRedirect: string,
+): { origin: string; redirectPath: string } => {
+  if (!loginOrigin) {
+    return { origin: defaultOrigin, redirectPath: queryRedirect }
+  }
+  const matched = allowedOrigins.find(
+    (o) => loginOrigin === o || loginOrigin.startsWith(`${o}/`),
+  )
+  if (!matched) {
+    return { origin: defaultOrigin, redirectPath: queryRedirect }
+  }
+  const path = loginOrigin.slice(matched.length)
+  return { origin: matched, redirectPath: path || queryRedirect }
+}
+
 export const authCallbackRoute = new Hono()
 
 authCallbackRoute.get("/callback", async (c) => {
   const code = c.req.query("code")
   const error = c.req.query("error")
   const errorDescription = c.req.query("error_description")
-  const redirectPath = resolveRedirectPath(c.req.query("redirect"))
 
   console.info(`Auth callback received: URL=${c.req.url}`)
 
@@ -63,11 +81,12 @@ authCallbackRoute.get("/callback", async (c) => {
     `Auth callback: Token exchange successful, redirecting to token exchange`,
   )
 
-  const loginOrigin = getCookie(c, "login_origin")
-  const origin =
-    loginOrigin && allowedOrigins.includes(loginOrigin)
-      ? loginOrigin
-      : defaultOrigin
+  const { origin, redirectPath } = resolveLoginOrigin(
+    getCookie(c, "login_origin"),
+    allowedOrigins,
+    defaultOrigin,
+    resolveRedirectPath(c.req.query("redirect")),
+  )
 
   clearLoginOriginCookie(c)
 
