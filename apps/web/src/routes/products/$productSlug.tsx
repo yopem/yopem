@@ -164,7 +164,7 @@ function ProductDetailComponent() {
             className="text-muted-foreground hover:text-foreground inline-flex items-center text-sm font-medium transition-colors"
           >
             <ArrowLeftIcon className="mr-2 size-4" />
-            Back to apps
+            Back to Marketplace
           </Link>
         </div>
 
