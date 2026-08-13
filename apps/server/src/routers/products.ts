@@ -73,7 +73,7 @@ function validateWorkflowInputs(
 const getApiKeys = () =>
   getOrCompute<ApiKeyConfig[]>(
     redisCache,
-    API_KEYS_SETTING_KEY,
+    `settings:${API_KEYS_SETTING_KEY}`,
     async () => {
       const settings = await getSetting(API_KEYS_SETTING_KEY)
       if (!settings?.settingValue) {
