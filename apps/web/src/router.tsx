@@ -4,6 +4,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { getQueryClient } from "rpc/query-client"
 
 import { getSession } from "@/lib/auth"
+import { parseSearch, stringifySearch } from "@/lib/search-serializer"
 
 import { routeTree } from "./routeTree.gen"
 
@@ -18,6 +19,8 @@ export async function getRouter() {
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     defaultViewTransition: true,
+    stringifySearch,
+    parseSearch,
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient })

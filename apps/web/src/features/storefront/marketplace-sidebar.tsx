@@ -27,22 +27,22 @@ export function MarketplaceSidebar({
   const navigate = useNavigate({ from: "/products/" })
   const search = useSearch({ from: "/products/" })
 
-  const selectedCategories = search.categoryIds ?? []
-  const selectedTags = search.tagIds ?? []
+  const selectedCategories = search.categorySlugs ?? []
+  const selectedTags = search.tagSlugs ?? []
   const hasActiveFilters =
     selectedCategories.length > 0 || selectedTags.length > 0
 
   const updateSearch = (patch: {
-    categoryIds?: string[]
-    tagIds?: string[]
+    categorySlugs?: string[]
+    tagSlugs?: string[]
   }) => {
     void navigate({
       search: (prev) => {
         const next: Record<string, unknown> = { ...prev, ...patch, page: 1 }
-        if (!next.categoryIds || !(next.categoryIds as string[]).length)
-          delete next.categoryIds
-        if (!next.tagIds || !(next.tagIds as string[]).length)
-          delete next.tagIds
+        if (!next.categorySlugs || !(next.categorySlugs as string[]).length)
+          delete next.categorySlugs
+        if (!next.tagSlugs || !(next.tagSlugs as string[]).length)
+          delete next.tagSlugs
         if (next.page === 1) delete next.page
         return next
       },
@@ -50,20 +50,22 @@ export function MarketplaceSidebar({
     })
   }
 
-  const toggleCategory = (categoryId: string) => {
-    updateSearch({ categoryIds: toggleId(selectedCategories, categoryId) })
+  const toggleCategory = (categorySlug: string) => {
+    updateSearch({
+      categorySlugs: toggleId(selectedCategories, categorySlug),
+    })
   }
 
-  const toggleTag = (tagId: string) => {
-    updateSearch({ tagIds: toggleId(selectedTags, tagId) })
+  const toggleTag = (tagSlug: string) => {
+    updateSearch({ tagSlugs: toggleId(selectedTags, tagSlug) })
   }
 
   const clearAll = () => {
     void navigate({
       search: (prev) => {
         const next: Record<string, unknown> = { ...prev }
-        delete next.categoryIds
-        delete next.tagIds
+        delete next.categorySlugs
+        delete next.tagSlugs
         delete next.page
         return next
       },
@@ -81,12 +83,12 @@ export function MarketplaceSidebar({
           <ScrollArea className="h-48">
             <div className="space-y-0.5" id="category-filter-section">
               {categories.map((category) => {
-                const isSelected = selectedCategories.includes(category.id)
+                const isSelected = selectedCategories.includes(category.slug)
                 return (
                   <button
                     type="button"
                     key={category.id}
-                    onClick={() => toggleCategory(category.id)}
+                    onClick={() => toggleCategory(category.slug)}
                     className={`flex w-full items-center justify-between py-1.5 pl-3 text-sm transition-colors ${
                       isSelected
                         ? "border-primary text-primary border-l-2 font-medium"
@@ -118,8 +120,8 @@ export function MarketplaceSidebar({
                 <TagButton
                   key={tag.id}
                   tag={tag}
-                  isSelected={selectedTags.includes(tag.id)}
-                  onToggle={() => toggleTag(tag.id)}
+                  isSelected={selectedTags.includes(tag.slug)}
+                  onToggle={() => toggleTag(tag.slug)}
                 />
               ))}
             </div>

@@ -210,7 +210,7 @@ function ProductDetailComponent() {
                       <Link
                         key={category.id}
                         to="/products"
-                        search={{ categoryIds: [category.id] }}
+                        search={{ categorySlugs: [category.slug] }}
                       >
                         <Badge
                           variant="outline"
@@ -433,7 +433,7 @@ function ProductDetailComponent() {
                           <Link
                             key={category.id}
                             to="/products"
-                            search={{ categoryIds: [category.id] }}
+                            search={{ categorySlugs: [category.slug] }}
                             className="text-foreground hover:text-primary font-medium transition-colors"
                           >
                             {category.name}
@@ -455,7 +455,7 @@ function ProductDetailComponent() {
                         <Link
                           key={tag.id}
                           to="/products"
-                          search={{ tagIds: [tag.id] }}
+                          search={{ tagSlugs: [tag.slug] }}
                         >
                           <Badge
                             variant="secondary"

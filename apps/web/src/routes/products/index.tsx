@@ -21,8 +21,8 @@ const PAGE_SIZE = 12
 
 export interface CatalogSearch {
   search?: string
-  categoryIds?: string[]
-  tagIds?: string[]
+  categorySlugs?: string[]
+  tagSlugs?: string[]
   page?: number
 }
 
@@ -30,17 +30,19 @@ export const Route = createFileRoute("/products/")({
   validateSearch: (search: Record<string, unknown>): CatalogSearch => {
     return {
       search: typeof search.search === "string" ? search.search : undefined,
-      categoryIds: Array.isArray(search.categoryIds)
-        ? search.categoryIds.filter(
-            (id): id is string => typeof id === "string",
+      categorySlugs: Array.isArray(search.categorySlugs)
+        ? search.categorySlugs.filter(
+            (slug): slug is string => typeof slug === "string",
           )
-        : typeof search.categoryIds === "string"
-          ? [search.categoryIds]
+        : typeof search.categorySlugs === "string"
+          ? [search.categorySlugs]
           : undefined,
-      tagIds: Array.isArray(search.tagIds)
-        ? search.tagIds.filter((id): id is string => typeof id === "string")
-        : typeof search.tagIds === "string"
-          ? [search.tagIds]
+      tagSlugs: Array.isArray(search.tagSlugs)
+        ? search.tagSlugs.filter(
+            (slug): slug is string => typeof slug === "string",
+          )
+        : typeof search.tagSlugs === "string"
+          ? [search.tagSlugs]
           : undefined,
       page:
         typeof search.page === "number" && search.page > 0
@@ -55,29 +57,39 @@ export const Route = createFileRoute("/products/")({
     const page = deps.page ?? 1
     const offset = (page - 1) * PAGE_SIZE
 
-    const [listData, categories, tags] = await Promise.all([
-      queryClient.ensureQueryData(
-        queryApi.products.list.queryOptions({
-          input: {
-            limit: PAGE_SIZE,
-            offset,
-            search: deps.search,
-            categoryIds: deps.categoryIds,
-            tagIds: deps.tagIds,
-          },
-        }),
-      ),
+    const [categories, tags] = await Promise.all([
       queryClient.ensureQueryData(queryApi.products.categories.queryOptions()),
       queryClient.ensureQueryData(queryApi.products.tags.queryOptions()),
     ])
+
+    const categoryIds = deps.categorySlugs?.length
+      ? categories
+          .filter((c) => deps.categorySlugs?.includes(c.slug))
+          .map((c) => c.id)
+      : undefined
+    const tagIds = deps.tagSlugs?.length
+      ? tags.filter((t) => deps.tagSlugs?.includes(t.slug)).map((t) => t.id)
+      : undefined
+
+    const listData = await queryClient.ensureQueryData(
+      queryApi.products.list.queryOptions({
+        input: {
+          limit: PAGE_SIZE,
+          offset,
+          search: deps.search,
+          categoryIds,
+          tagIds,
+        },
+      }),
+    )
 
     return { listData, categories, tags, searchState: deps }
   },
   head: ({ loaderData }) => {
     const isFilteredOrPaginated =
       Boolean(loaderData?.searchState.search) ||
-      (loaderData?.searchState.categoryIds?.length ?? 0) > 0 ||
-      (loaderData?.searchState.tagIds?.length ?? 0) > 0 ||
+      (loaderData?.searchState.categorySlugs?.length ?? 0) > 0 ||
+      (loaderData?.searchState.tagSlugs?.length ?? 0) > 0 ||
       (loaderData?.searchState.page ?? 1) > 1
 
     const meta = [
@@ -142,10 +154,10 @@ function CatalogComponent() {
           page: newParams.page ?? 1,
         }
         if (!next.search) delete next.search
-        if (!next.categoryIds || (next.categoryIds as string[]).length === 0)
-          delete next.categoryIds
-        if (!next.tagIds || (next.tagIds as string[]).length === 0)
-          delete next.tagIds
+        if (!next.categorySlugs || (next.categorySlugs as string[]).length === 0)
+          delete next.categorySlugs
+        if (!next.tagSlugs || (next.tagSlugs as string[]).length === 0)
+          delete next.tagSlugs
         if (next.page === 1) delete next.page
         return next
       },
@@ -168,8 +180,8 @@ function CatalogComponent() {
   const totalPages = Math.ceil(listData.total / PAGE_SIZE)
   const hasActiveFilters =
     Boolean(searchState.search) ||
-    (searchState.categoryIds?.length ?? 0) > 0 ||
-    (searchState.tagIds?.length ?? 0) > 0
+    (searchState.categorySlugs?.length ?? 0) > 0 ||
+    (searchState.tagSlugs?.length ?? 0) > 0
 
   return (
     <SiteLayout>

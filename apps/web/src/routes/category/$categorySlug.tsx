@@ -24,7 +24,7 @@ const PAGE_SIZE = 12
 
 export interface CategorySearch {
   search?: string
-  tagIds?: string[]
+  tagSlugs?: string[]
   page?: number
 }
 
@@ -32,10 +32,12 @@ export const Route = createFileRoute("/category/$categorySlug")({
   validateSearch: (search: Record<string, unknown>): CategorySearch => {
     return {
       search: typeof search.search === "string" ? search.search : undefined,
-      tagIds: Array.isArray(search.tagIds)
-        ? search.tagIds.filter((id): id is string => typeof id === "string")
-        : typeof search.tagIds === "string"
-          ? [search.tagIds]
+      tagSlugs: Array.isArray(search.tagSlugs)
+        ? search.tagSlugs.filter(
+            (slug): slug is string => typeof slug === "string",
+          )
+        : typeof search.tagSlugs === "string"
+          ? [search.tagSlugs]
           : undefined,
       page:
         typeof search.page === "number" && search.page > 0
@@ -60,6 +62,10 @@ export const Route = createFileRoute("/category/$categorySlug")({
       throw notFound()
     }
 
+    const tagIds = deps.tagSlugs?.length
+      ? tags.filter((t) => deps.tagSlugs?.includes(t.slug)).map((t) => t.id)
+      : undefined
+
     const listData = await queryClient.ensureQueryData(
       queryApi.products.list.queryOptions({
         input: {
@@ -67,7 +73,7 @@ export const Route = createFileRoute("/category/$categorySlug")({
           offset,
           search: deps.search,
           categoryIds: [category.id],
-          tagIds: deps.tagIds,
+          tagIds,
         },
       }),
     )
@@ -80,7 +86,7 @@ export const Route = createFileRoute("/category/$categorySlug")({
     const { category, searchState } = loaderData
     const isFilteredOrPaginated = Boolean(
       (searchState.search ?? "") !== "" ||
-      (searchState.tagIds?.length ?? 0) > 0 ||
+      (searchState.tagSlugs?.length ?? 0) > 0 ||
       (searchState.page ?? 1) > 1,
     )
 
@@ -150,8 +156,8 @@ function CategoryComponent() {
           page: newParams.page ?? 1,
         }
         if (!next.search) delete next.search
-        if (!next.tagIds || (next.tagIds as string[]).length === 0)
-          delete next.tagIds
+        if (!next.tagSlugs || (next.tagSlugs as string[]).length === 0)
+          delete next.tagSlugs
         if (next.page === 1) delete next.page
         return next
       },
@@ -159,9 +165,9 @@ function CategoryComponent() {
     })
   }
 
-  const handleTagToggle = (id: string) => {
+  const handleTagToggle = (slug: string) => {
     updateSearch({
-      tagIds: toggleId(searchState.tagIds ?? [], id),
+      tagSlugs: toggleId(searchState.tagSlugs ?? [], slug),
       page: 1,
     })
   }
@@ -180,7 +186,7 @@ function CategoryComponent() {
   const page = searchState.page ?? 1
   const totalPages = Math.ceil(listData.total / PAGE_SIZE)
   const hasActiveFilters =
-    Boolean(searchState.search) || (searchState.tagIds?.length ?? 0) > 0
+    Boolean(searchState.search) || (searchState.tagSlugs?.length ?? 0) > 0
 
   return (
     <SiteLayout>
@@ -271,14 +277,16 @@ function CategoryComponent() {
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => {
-                  const isSelected = (searchState.tagIds ?? []).includes(tag.id)
+                  const isSelected = (searchState.tagSlugs ?? []).includes(
+                    tag.slug,
+                  )
                   return (
                     <Badge
                       key={tag.id}
                       variant={isSelected ? "default" : "outline"}
                       size="sm"
                       className="cursor-pointer text-xs transition-colors"
-                      onClick={() => handleTagToggle(tag.id)}
+                      onClick={() => handleTagToggle(tag.slug)}
                     >
                       #{tag.name}
                     </Badge>

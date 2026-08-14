@@ -17,7 +17,7 @@ const navigateMock = vi.fn()
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigateMock,
-  useSearch: () => ({ categoryIds: ["cat-1"], tagIds: [] }),
+  useSearch: () => ({ categorySlugs: ["images"], tagSlugs: [] }),
 }))
 
 let container: HTMLDivElement | null = null
