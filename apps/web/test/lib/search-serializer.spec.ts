@@ -3,14 +3,14 @@ import { describe, expect, test } from "vite-plus/test"
 import { parseSearch, stringifySearch } from "@/lib/search-serializer"
 
 describe("search-serializer", () => {
-  test("stringifies arrays as repeated keys without brackets", () => {
+  test("stringifies arrays as comma-separated values", () => {
     expect(
       stringifySearch({
         categorySlugs: ["images", "video"],
         tagSlugs: ["gpt"],
         page: 2,
       }),
-    ).toBe("?categorySlugs=images&categorySlugs=video&tagSlugs=gpt&page=2")
+    ).toBe("?categorySlugs=images,video&tagSlugs=gpt&page=2")
   })
 
   test("omits empty search", () => {
@@ -21,10 +21,11 @@ describe("search-serializer", () => {
     expect(stringifySearch({ search: undefined, page: 1 })).toBe("?page=1")
   })
 
-  test("parses repeated keys into arrays", () => {
-    expect(
-      parseSearch("?categorySlugs=images&categorySlugs=video&tagSlugs=gpt"),
-    ).toEqual({ categorySlugs: ["images", "video"], tagSlugs: "gpt" })
+  test("parses comma-separated values into arrays", () => {
+    expect(parseSearch("?categorySlugs=images,video&tagSlugs=gpt")).toEqual({
+      categorySlugs: ["images", "video"],
+      tagSlugs: "gpt",
+    })
   })
 
   test("round-trips single and multiple values", () => {

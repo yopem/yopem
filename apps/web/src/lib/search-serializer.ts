@@ -1,15 +1,19 @@
 export const stringifySearch = (search: Record<string, unknown>): string => {
-  const params = new URLSearchParams()
+  const parts: string[] = []
   for (const [key, value] of Object.entries(search)) {
     if (value === undefined) continue
+    const encodedKey = encodeURIComponent(key)
     if (Array.isArray(value)) {
-      for (const item of value) params.append(key, String(item))
-    } else {
-      params.append(key, String(value))
+      parts.push(`${encodedKey}=${value.map(encodeURIComponent).join(",")}`)
+    } else if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      parts.push(`${encodedKey}=${encodeURIComponent(String(value))}`)
     }
   }
-  const str = params.toString()
-  return str ? `?${str}` : ""
+  return parts.length ? `?${parts.join("&")}` : ""
 }
 
 export const parseSearch = (searchStr: string): Record<string, unknown> => {
@@ -17,14 +21,7 @@ export const parseSearch = (searchStr: string): Record<string, unknown> => {
   const params = new URLSearchParams(searchStr)
   const result: Record<string, unknown> = {}
   for (const [key, value] of params.entries()) {
-    const prev = result[key]
-    if (prev === undefined) {
-      result[key] = value
-    } else if (Array.isArray(prev)) {
-      prev.push(value)
-    } else {
-      result[key] = [prev, value]
-    }
+    result[key] = value.includes(",") ? value.split(",") : value
   }
   return result
 }
