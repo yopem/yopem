@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, count, desc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
 import { categoriesTable } from "db/schema/categories"
@@ -16,6 +16,7 @@ export const listCategories = (): Promise<
     parentId: string | null
     sortOrder: number | null
     status: "draft" | "active" | "archived"
+    productCount: number
   }[]
 > => {
   return db
@@ -27,9 +28,19 @@ export const listCategories = (): Promise<
       parentId: categoriesTable.parentId,
       sortOrder: categoriesTable.sortOrder,
       status: categoriesTable.status,
+      productCount: count(productCategoriesTable.productId),
     })
     .from(categoriesTable)
-    .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
+    .leftJoin(
+      productCategoriesTable,
+      eq(productCategoriesTable.categoryId, categoriesTable.id),
+    )
+    .groupBy(categoriesTable.id)
+    .orderBy(
+      desc(count(productCategoriesTable.productId)),
+      asc(categoriesTable.sortOrder),
+      asc(categoriesTable.name),
+    )
 }
 
 export const getCategory = async (

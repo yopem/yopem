@@ -1,8 +1,7 @@
 "use client"
 
 import { useNavigate, useSearch } from "@tanstack/react-router"
-import { CheckIcon, ChevronDownIcon } from "lucide-react"
-import { useState } from "react"
+import { CheckIcon } from "lucide-react"
 
 import { ScrollArea } from "ui/scroll-area"
 import { Separator } from "ui/separator"
@@ -15,8 +14,6 @@ interface FilterItem {
   slug: string
   productCount?: number
 }
-
-const VISIBLE_TAGS = 10
 
 interface MarketplaceSidebarProps {
   categories: FilterItem[]
@@ -53,8 +50,6 @@ export function MarketplaceSidebar({
     })
   }
 
-  const [showAllTags, setShowAllTags] = useState(false)
-
   const toggleCategory = (categoryId: string) => {
     updateSearch({ categoryIds: toggleId(selectedCategories, categoryId) })
   }
@@ -83,26 +78,28 @@ export function MarketplaceSidebar({
           <p className="text-foreground text-xs font-semibold tracking-tight uppercase">
             Categories
           </p>
-          <div className="space-y-0.5" id="category-filter-section">
-            {categories.map((category) => {
-              const isSelected = selectedCategories.includes(category.id)
-              return (
-                <button
-                  type="button"
-                  key={category.id}
-                  onClick={() => toggleCategory(category.id)}
-                  className={`flex w-full items-center justify-between py-1.5 pl-3 text-sm transition-colors ${
-                    isSelected
-                      ? "border-primary text-primary border-l-2 font-medium"
-                      : "text-muted-foreground hover:text-foreground border-l-2 border-transparent"
-                  }`}
-                >
-                  <span>{category.name}</span>
-                  {isSelected && <CheckIcon className="size-3.5" />}
-                </button>
-              )
-            })}
-          </div>
+          <ScrollArea className="h-48">
+            <div className="space-y-0.5" id="category-filter-section">
+              {categories.map((category) => {
+                const isSelected = selectedCategories.includes(category.id)
+                return (
+                  <button
+                    type="button"
+                    key={category.id}
+                    onClick={() => toggleCategory(category.id)}
+                    className={`flex w-full items-center justify-between py-1.5 pl-3 text-sm transition-colors ${
+                      isSelected
+                        ? "border-primary text-primary border-l-2 font-medium"
+                        : "text-muted-foreground hover:text-foreground border-l-2 border-transparent"
+                    }`}
+                  >
+                    <span>{category.name}</span>
+                    {isSelected && <CheckIcon className="size-3.5" />}
+                  </button>
+                )
+              })}
+            </div>
+          </ScrollArea>
         </div>
       )}
 
@@ -117,30 +114,16 @@ export function MarketplaceSidebar({
           </p>
           <ScrollArea className="h-48">
             <div className="space-y-0.5" id="tags-section">
-              {tags
-                .slice(0, showAllTags ? tags.length : VISIBLE_TAGS)
-                .map((tag) => (
-                  <TagButton
-                    key={tag.id}
-                    tag={tag}
-                    isSelected={selectedTags.includes(tag.id)}
-                    onToggle={() => toggleTag(tag.id)}
-                  />
-                ))}
+              {tags.map((tag) => (
+                <TagButton
+                  key={tag.id}
+                  tag={tag}
+                  isSelected={selectedTags.includes(tag.id)}
+                  onToggle={() => toggleTag(tag.id)}
+                />
+              ))}
             </div>
           </ScrollArea>
-          {tags.length > VISIBLE_TAGS && (
-            <button
-              type="button"
-              onClick={() => setShowAllTags((v) => !v)}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1 py-1 pl-3 text-xs transition-colors"
-            >
-              {showAllTags ? "Show less" : `Show all (${tags.length})`}
-              <ChevronDownIcon
-                className={`size-3 transition-transform ${showAllTags ? "rotate-180" : ""}`}
-              />
-            </button>
-          )}
         </div>
       )}
 
