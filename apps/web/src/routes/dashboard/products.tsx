@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
-import { SearchIcon } from "lucide-react"
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { PackageIcon, SearchIcon, XIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 import { queryApi } from "rpc/query"
 import { Button } from "ui/button"
 import { Input } from "ui/input"
 
 import { ProductRunPanel } from "@/features/dashboard/product-run-panel"
+import { ProductSelectCard } from "@/features/dashboard/product-select-card"
 
 const PAGE_SIZE = 20
 
@@ -66,7 +67,7 @@ function WorkspaceComponent() {
 
   useEffect(() => {
     if (selectedProduct && runPanelRef.current) {
-      if (window.matchMedia("(max-width: 1023px)").matches) {
+      if (window.matchMedia("(max-width: 1279px)").matches) {
         runPanelRef.current.scrollIntoView({
           behavior: "smooth",
           block: "start",
@@ -87,11 +88,15 @@ function WorkspaceComponent() {
     })
   }
 
-  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  useEffect(() => {
     const trimmed = searchInput.trim()
-    updateSearch({ search: trimmed !== "" ? trimmed : undefined })
-  }
+    const handler = setTimeout(() => {
+      if (trimmed !== (search.search ?? "")) {
+        updateSearch({ search: trimmed !== "" ? trimmed : undefined })
+      }
+    }, 300)
+    return () => clearTimeout(handler)
+  }, [searchInput])
 
   const products = listQuery.data?.products ?? []
 
@@ -104,87 +109,84 @@ function WorkspaceComponent() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="w-full lg:w-80 lg:shrink-0">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                type="search"
-                placeholder="Search products..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-9"
-              />
-            </div>
-            <Button
-              type="submit"
-              size="default"
-              className="gap-1.5 font-medium"
-            >
-              <SearchIcon className="size-4" />
-              <span>Search</span>
-            </Button>
-          </form>
+      <div className="flex flex-col gap-8 xl:flex-row">
+        <div className="min-w-0 flex-1">
+          <div className="relative">
+            <SearchIcon className="text-muted-foreground/60 absolute top-1/2 left-3.5 size-4 -translate-y-1/2" />
+            <Input
+              type="search"
+              placeholder="Search products..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-10"
+            />
+          </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-6">
             {listQuery.isPending ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
             ) : products.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                No products found
-              </p>
+              <div className="bg-card flex flex-col items-center justify-center rounded-3xl border border-dashed py-24 text-center">
+                <div className="bg-muted/50 mb-6 rounded-full p-6">
+                  <PackageIcon className="text-muted-foreground size-12" />
+                </div>
+                <h3 className="mb-2 text-xl font-semibold tracking-tight">
+                  No products found
+                </h3>
+                <p className="text-muted-foreground max-w-sm text-base">
+                  Try adjusting your search terms.
+                </p>
+              </div>
             ) : (
-              products.map((product) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => updateSearch({ product: product.slug })}
-                  className={`flex w-full items-center gap-3 rounded-md border p-3 text-left transition-colors ${
-                    search.product === product.slug
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-card hover:bg-muted"
-                  }`}
-                >
-                  {product.thumbnail?.url ? (
-                    <img
-                      src={product.thumbnail.url}
-                      alt={product.name}
-                      className="size-10 shrink-0 rounded-md object-cover"
-                    />
-                  ) : (
-                    <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">
-                      <span className="text-foreground text-sm font-semibold">
-                        {product.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {product.name}
-                    </p>
-                    {product.excerpt && (
-                      <p className="text-muted-foreground truncate text-xs">
-                        {product.excerpt}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <ProductSelectCard
+                    key={product.id}
+                    product={product}
+                    selected={search.product === product.slug}
+                    onSelect={() => updateSearch({ product: product.slug })}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
 
-        <div ref={runPanelRef} className="min-w-0 flex-1">
+        <div ref={runPanelRef} className="w-full xl:w-[400px] xl:shrink-0">
           {selectedProduct ? (
-            <ProductRunPanel product={selectedProduct} />
+            <div className="space-y-4 xl:sticky xl:top-8">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold">
+                    {selectedProduct.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-foreground truncate text-base font-semibold">
+                      {selectedProduct.name}
+                    </h2>
+                    <p className="text-muted-foreground text-xs">
+                      Configure and run
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => updateSearch({ product: undefined })}
+                  aria-label="Clear selection"
+                >
+                  <XIcon className="size-4" />
+                </Button>
+              </div>
+              <ProductRunPanel product={selectedProduct} />
+            </div>
           ) : (
-            <div className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-lg border p-12 text-center">
+            <div className="border-border bg-card flex flex-col items-center justify-center gap-2 rounded-xl border p-12 text-center xl:sticky xl:top-8">
               <p className="text-foreground text-sm font-medium">
                 Select a product to run
               </p>
               <p className="text-muted-foreground text-xs">
-                Choose a product from the list to configure and run it.
+                Choose a product from the grid to configure and run it.
               </p>
             </div>
           )}
