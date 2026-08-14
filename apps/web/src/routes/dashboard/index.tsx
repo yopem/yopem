@@ -175,6 +175,11 @@ function DashboardOverviewComponent() {
           <CardPanel className="space-y-3 p-5">
             <Button
               className="w-full justify-center"
+              render={<Link to="/dashboard/products">Run a Tool</Link>}
+            />
+            <Button
+              variant="outline"
+              className="w-full justify-center"
               render={<Link to="/products">Browse Marketplace</Link>}
             />
             <Button

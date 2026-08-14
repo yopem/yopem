@@ -154,7 +154,10 @@ function CatalogComponent() {
           page: newParams.page ?? 1,
         }
         if (!next.search) delete next.search
-        if (!next.categorySlugs || (next.categorySlugs as string[]).length === 0)
+        if (
+          !next.categorySlugs ||
+          (next.categorySlugs as string[]).length === 0
+        )
           delete next.categorySlugs
         if (!next.tagSlugs || (next.tagSlugs as string[]).length === 0)
           delete next.tagSlugs

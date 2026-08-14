@@ -12,6 +12,7 @@ import {
   ChevronUpIcon,
   HomeIcon,
   LayoutDashboardIcon,
+  LayoutGridIcon,
   LogOutIcon,
   UserIcon,
   WalletIcon,
@@ -35,6 +36,7 @@ import { logoutFn } from "@/lib/auth"
 
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboardIcon },
+  { label: "Products", href: "/dashboard/products", icon: LayoutGridIcon },
   { label: "My Runs", href: "/dashboard/runs", icon: ZapIcon },
   { label: "Subscription", href: "/dashboard/subscription", icon: WalletIcon },
   { label: "Profile", href: "/dashboard/profile", icon: UserIcon },
