@@ -207,13 +207,18 @@ function ProductDetailComponent() {
                 {product.categories && product.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {product.categories.map((category) => (
-                      <Badge
+                      <Link
                         key={category.id}
-                        variant="outline"
-                        className="bg-background rounded-md font-normal"
+                        to="/products"
+                        search={{ categoryIds: [category.id] }}
                       >
-                        {category.name}
-                      </Badge>
+                        <Badge
+                          variant="outline"
+                          className="bg-background hover:bg-muted rounded-md font-normal transition-colors"
+                        >
+                          {category.name}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -425,12 +430,14 @@ function ProductDetailComponent() {
                       </div>
                       <div className="flex flex-wrap justify-end gap-1.5">
                         {product.categories.slice(0, 1).map((category) => (
-                          <span
+                          <Link
                             key={category.id}
-                            className="text-foreground font-medium"
+                            to="/products"
+                            search={{ categoryIds: [category.id] }}
+                            className="text-foreground hover:text-primary font-medium transition-colors"
                           >
                             {category.name}
-                          </span>
+                          </Link>
                         ))}
                       </div>
                     </div>
@@ -445,13 +452,18 @@ function ProductDetailComponent() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag) => (
-                        <Badge
+                        <Link
                           key={tag.id}
-                          variant="secondary"
-                          className="bg-muted text-muted-foreground hover:bg-muted/80 rounded-md font-normal"
+                          to="/products"
+                          search={{ tagIds: [tag.id] }}
                         >
-                          {tag.name}
-                        </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="bg-muted text-muted-foreground hover:bg-muted/80 rounded-md font-normal transition-colors"
+                          >
+                            {tag.name}
+                          </Badge>
+                        </Link>
                       ))}
                     </div>
                   </div>
