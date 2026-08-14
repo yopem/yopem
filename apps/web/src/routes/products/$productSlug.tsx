@@ -152,7 +152,7 @@ function ProductDetailComponent() {
   const fileReaderRef = useRef<FileReader | null>(null)
 
   const cost = Number(product.creditsPerRun ?? 0)
-  const formattedDate = formatDateOnly(product.createdAt) || "N/A"
+  const formattedDate = formatDateOnly(product.updatedAt) || "N/A"
 
   return (
     <SiteLayout>
@@ -410,7 +410,7 @@ function ProductDetailComponent() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="text-muted-foreground flex items-center gap-2">
                       <CalendarIcon className="size-4" />
-                      <span>Added</span>
+                      <span>Last updated</span>
                     </div>
                     <span className="text-foreground font-medium">
                       {formattedDate}
