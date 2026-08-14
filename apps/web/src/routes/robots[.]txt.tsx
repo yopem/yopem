@@ -9,7 +9,7 @@ export const getRobotsTxt = createServerFn({ method: "GET" }).handler(() => {
   return `User-agent: *
 Allow: /
 Allow: /products
-Allow: /c/
+Allow: /category/
 Disallow: /api/
 Disallow: /login
 

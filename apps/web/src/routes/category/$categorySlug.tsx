@@ -28,7 +28,7 @@ export interface CategorySearch {
   page?: number
 }
 
-export const Route = createFileRoute("/c/$categorySlug")({
+export const Route = createFileRoute("/category/$categorySlug")({
   validateSearch: (search: Record<string, unknown>): CategorySearch => {
     return {
       search: typeof search.search === "string" ? search.search : undefined,
@@ -84,7 +84,7 @@ export const Route = createFileRoute("/c/$categorySlug")({
       (searchState.page ?? 1) > 1,
     )
 
-    const categoryUrl = `${getSiteUrl()}/c/${category.slug}`
+    const categoryUrl = `${getSiteUrl()}/category/${category.slug}`
     const meta = [
       { title: `${category.name} AI Tools - ${siteTitle ?? "Yopem"}` },
       {
@@ -129,9 +129,9 @@ export const Route = createFileRoute("/c/$categorySlug")({
 
 function CategoryComponent() {
   const { category, categories, tags, listData, searchState } = useLoaderData({
-    from: "/c/$categorySlug",
+    from: "/category/$categorySlug",
   })
-  const navigate = useNavigate({ from: "/c/$categorySlug" })
+  const navigate = useNavigate({ from: "/category/$categorySlug" })
 
   const [searchInput, setSearchInput] = useState(searchState.search ?? "")
   const [prevSearch, setPrevSearch] = useState(searchState.search)
@@ -249,7 +249,7 @@ function CategoryComponent() {
                           void navigate({ to: "/products", search: {} })
                         } else {
                           void navigate({
-                            to: "/c/$categorySlug",
+                            to: "/category/$categorySlug",
                             params: { categorySlug: cat.slug },
                           })
                         }

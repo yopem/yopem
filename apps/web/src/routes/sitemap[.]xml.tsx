@@ -33,7 +33,7 @@ export const getSitemapXml = createServerFn({ method: "GET" }).handler(
       { path: "/", priority: "1.0" },
       { path: "/products", priority: "0.8" },
       ...categories.map((category) => ({
-        path: `/c/${category.slug}`,
+        path: `/category/${category.slug}`,
         priority: "0.8",
       })),
       ...productSlugs.map((slug) => ({
