@@ -1,8 +1,10 @@
 "use client"
 
 import { useNavigate, useSearch } from "@tanstack/react-router"
-import { CheckIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon } from "lucide-react"
+import { useState } from "react"
 
+import { ScrollArea } from "ui/scroll-area"
 import { Separator } from "ui/separator"
 
 import { toggleId } from "@/lib/utils/toggle-id"
@@ -11,7 +13,10 @@ interface FilterItem {
   id: string
   name: string
   slug: string
+  productCount?: number
 }
+
+const VISIBLE_TAGS = 10
 
 interface MarketplaceSidebarProps {
   categories: FilterItem[]
@@ -47,6 +52,8 @@ export function MarketplaceSidebar({
       replace: true,
     })
   }
+
+  const [showAllTags, setShowAllTags] = useState(false)
 
   const toggleCategory = (categoryId: string) => {
     updateSearch({ categoryIds: toggleId(selectedCategories, categoryId) })
@@ -108,26 +115,32 @@ export function MarketplaceSidebar({
           <p className="text-foreground text-xs font-semibold tracking-tight uppercase">
             Tags
           </p>
-          <div className="space-y-0.5" id="tags-section">
-            {tags.map((tag) => {
-              const isSelected = selectedTags.includes(tag.id)
-              return (
-                <button
-                  type="button"
-                  key={tag.id}
-                  onClick={() => toggleTag(tag.id)}
-                  className={`flex w-full items-center justify-between py-1.5 pl-3 text-sm transition-colors ${
-                    isSelected
-                      ? "border-primary text-primary border-l-2 font-medium"
-                      : "text-muted-foreground hover:text-foreground border-l-2 border-transparent"
-                  }`}
-                >
-                  <span>{tag.name}</span>
-                  {isSelected && <CheckIcon className="size-3.5" />}
-                </button>
-              )
-            })}
-          </div>
+          <ScrollArea className="h-48">
+            <div className="space-y-0.5" id="tags-section">
+              {tags
+                .slice(0, showAllTags ? tags.length : VISIBLE_TAGS)
+                .map((tag) => (
+                  <TagButton
+                    key={tag.id}
+                    tag={tag}
+                    isSelected={selectedTags.includes(tag.id)}
+                    onToggle={() => toggleTag(tag.id)}
+                  />
+                ))}
+            </div>
+          </ScrollArea>
+          {tags.length > VISIBLE_TAGS && (
+            <button
+              type="button"
+              onClick={() => setShowAllTags((v) => !v)}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 py-1 pl-3 text-xs transition-colors"
+            >
+              {showAllTags ? "Show less" : `Show all (${tags.length})`}
+              <ChevronDownIcon
+                className={`size-3 transition-transform ${showAllTags ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
         </div>
       )}
 
@@ -143,5 +156,30 @@ export function MarketplaceSidebar({
         </div>
       )}
     </nav>
+  )
+}
+
+function TagButton({
+  tag,
+  isSelected,
+  onToggle,
+}: {
+  tag: FilterItem
+  isSelected: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`flex w-full items-center justify-between py-1.5 pl-3 text-sm transition-colors ${
+        isSelected
+          ? "border-primary text-primary border-l-2 font-medium"
+          : "text-muted-foreground hover:text-foreground border-l-2 border-transparent"
+      }`}
+    >
+      <span>{tag.name}</span>
+      {isSelected && <CheckIcon className="size-3.5" />}
+    </button>
   )
 }

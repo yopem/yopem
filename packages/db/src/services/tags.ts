@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, count, desc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
 import { productTagsTable } from "db/schema/product-tags"
@@ -13,6 +13,7 @@ export const listTags = (): Promise<
     name: string
     slug: string
     status: "draft" | "active" | "archived"
+    productCount: number
   }[]
 > => {
   return db
@@ -21,9 +22,12 @@ export const listTags = (): Promise<
       name: tagsTable.name,
       slug: tagsTable.slug,
       status: tagsTable.status,
+      productCount: count(productTagsTable.productId),
     })
     .from(tagsTable)
-    .orderBy(asc(tagsTable.name))
+    .leftJoin(productTagsTable, eq(productTagsTable.tagId, tagsTable.id))
+    .groupBy(tagsTable.id)
+    .orderBy(desc(count(productTagsTable.productId)), asc(tagsTable.name))
 }
 
 export const getTag = async (id: string): Promise<SelectTag | null> => {
