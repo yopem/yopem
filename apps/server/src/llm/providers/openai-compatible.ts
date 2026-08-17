@@ -3,14 +3,12 @@ import { generateText } from "ai"
 
 import {
   AIProviderError,
-  ContextLengthError,
-  InvalidKeyError,
-  RateLimitError,
   type AIProvider,
   type ApiKeyProvider,
   type ExecutionRequest,
   type ExecutionResponse,
-} from "./base.ts"
+} from "./base"
+import { classifyProviderError } from "./errors"
 
 interface OpenAICompatibleConfig {
   name: string
@@ -53,41 +51,10 @@ export class OpenAICompatibleProvider implements AIProvider {
       }
     } catch (e) {
       if (e instanceof Error) {
-        const msg = e.message.toLowerCase()
-        if (
-          msg.includes("401") ||
-          msg.includes("unauthorized") ||
-          msg.includes("missing authentication")
-        ) {
-          throw new InvalidKeyError(
-            this.providerName,
-            "Invalid or missing API key. Please check your credentials.",
-            e,
-          )
-        }
-        if (msg.includes("429") || msg.includes("rate limit")) {
-          throw new RateLimitError(
-            this.providerName,
-            "Rate limit exceeded. Please try again later.",
-            e,
-          )
-        }
-        if (
-          msg.includes("context_length_exceeded") ||
-          msg.includes("context window") ||
-          msg.includes("maximum context length") ||
-          msg.includes("too many tokens")
-        ) {
-          throw new ContextLengthError(
-            this.providerName,
-            "Your input exceeds the context window of this model. Please adjust your input and try again.",
-            e,
-          )
-        }
-        throw new AIProviderError(
+        throw classifyProviderError(
           this.providerName,
-          e.message ?? `${this.providerName} API error`,
           e,
+          e.message ?? `${this.providerName} API error`,
         )
       }
       throw new AIProviderError(

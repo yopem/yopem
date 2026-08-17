@@ -1,5 +1,6 @@
 "use client"
 
+import { CaptionPlugin } from "@platejs/caption/react"
 import {
   AudioPlugin,
   FilePlugin,
@@ -7,7 +8,12 @@ import {
   MediaEmbedPlugin,
   VideoPlugin,
 } from "@platejs/media/react"
+import { KEYS } from "platejs"
+import { createPlatePlugin } from "platejs/react"
 
+import { FloatingEmbedInsertToolbar } from "editor/floating-embed-toolbar"
+import { isRemoteImageSrc } from "editor/lib/is-remote-image-src"
+import { parseImageHtmlElement } from "editor/lib/parse-image-html"
 import { AudioElement } from "editor/media-audio-node"
 import { MediaEmbedElement } from "editor/media-embed-node"
 import { FileElement } from "editor/media-file-node"
@@ -21,6 +27,25 @@ export const MediaKit = [
     },
     node: {
       component: ImageElement,
+    },
+    parsers: {
+      html: {
+        deserializer: {
+          query: ({ element }) => {
+            const img =
+              element.nodeName === "FIGURE"
+                ? element.querySelector("img")
+                : element
+            const src = img?.getAttribute("src")
+            return src ? isRemoteImageSrc(src) : false
+          },
+          rules: [{ validNodeName: "IMG" }, { validNodeName: "FIGURE" }],
+          parse: ({ element, type }) => {
+            const parsed = parseImageHtmlElement(element, type)
+            return parsed ? { ...parsed, children: [{ text: "" }] } : undefined
+          },
+        },
+      },
     },
   }),
   FilePlugin.configure({
@@ -41,6 +66,19 @@ export const MediaKit = [
   MediaEmbedPlugin.configure({
     node: {
       component: MediaEmbedElement,
+    },
+  }),
+  CaptionPlugin.configure({
+    options: {
+      query: {
+        allow: [KEYS.img, KEYS.video, KEYS.audio, KEYS.file, KEYS.mediaEmbed],
+      },
+    },
+  }),
+  createPlatePlugin({
+    key: "floating-embed-toolbar",
+    render: {
+      afterEditable: () => <FloatingEmbedInsertToolbar />,
     },
   }),
 ]

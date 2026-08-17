@@ -1,5 +1,6 @@
 @import "ui/style.css";
 @plugin "tailwind-scrollbar-hide";
+@source "./components";
 
 :root {
   --highlight: oklch(0.852 0.199 91.936);
@@ -12,8 +13,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-adwaita-sans);
-  --font-mono: var(--font-adwaita-mono);
   --color-highlight: var(--highlight);
 }
 

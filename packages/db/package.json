@@ -8,10 +8,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./schema": {
-      "types": "./src/schema/index.ts",
-      "default": "./src/schema/index.ts"
-    },
     "./schema/*": {
       "types": "./src/schema/*.ts",
       "default": "./src/schema/*.ts"
@@ -22,28 +18,26 @@
     }
   },
   "scripts": {
-    "db:generate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs generate",
-    "db:migrate": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs migrate",
-    "db:seed": "tsx --env-file=../../.env src/seed.ts",
-    "db:studio": "node --env-file=../../.env node_modules/drizzle-kit/bin.cjs studio",
+    "db:generate": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "bun --env-file=../../.env node_modules/drizzle-kit/bin.cjs studio",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
+    "drizzle-valibot": "catalog:",
     "env": "workspace:*",
-    "pg": "catalog:",
     "transliteration": "catalog:",
     "utils": "workspace:*",
-    "zod": "catalog:"
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/pg": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "drizzle-kit": "catalog:",
+    "pg": "^8.22.0",
     "typescript": "catalog:"
   }
 }

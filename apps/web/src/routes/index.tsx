@@ -1,43 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import CTA from "@/components/landing/cta"
-import Features from "@/components/landing/features"
-import Hero from "@/components/landing/hero"
-import Pricing from "@/components/landing/pricing"
-import Footer from "@/components/navigation/footer"
-import Header from "@/components/navigation/header"
-import { getSession } from "@/lib/auth"
+import { siteDescription, siteTitle } from "env"
+
+import { SiteLayout } from "@/components/site-layout"
+import { CTA } from "@/features/landing/cta"
+import { Features } from "@/features/landing/features"
+import { Hero } from "@/features/landing/hero"
+import { getSiteUrl } from "@/lib/site-url"
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Home" },
+      { title: `${siteTitle || "Yopem"} - AI Tools & Automated Workflows` },
       {
         name: "description",
-        content: "AI-powered tools to automate your workflows",
+        content:
+          siteDescription ||
+          "Discover and run powerful AI tools for content generation, media processing, and automated workflows.",
       },
+      { property: "og:title", content: siteTitle || "Yopem AI Tools" },
+      {
+        property: "og:description",
+        content: siteDescription || "Discover and run powerful AI tools.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: getSiteUrl() },
     ],
+    links: [{ rel: "canonical", href: getSiteUrl() }],
   }),
-  beforeLoad: async () => {
-    const session = await getSession()
-    return { session }
-  },
-  component: HomePage,
+  component: LandingComponent,
 })
 
-function HomePage() {
-  const { session } = Route.useRouteContext()
-
+function LandingComponent() {
   return (
-    <>
-      <Header session={session} />
-      <main className="flex min-h-screen flex-col">
-        <Hero session={session} />
-        <Features />
-        <Pricing />
-        <CTA session={session} />
-      </main>
-      <Footer />
-    </>
+    <SiteLayout>
+      <Hero />
+      <Features />
+      <CTA />
+    </SiteLayout>
   )
 }

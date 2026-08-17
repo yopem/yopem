@@ -1,18 +1,20 @@
 "use client"
 
+import type * as React from "react"
+
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
-function Label({
+export function Label({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"label">) {
+}: useRender.ComponentProps<"label">): React.ReactElement {
   const defaultProps = {
     className: cn(
-      `text-foreground inline-flex items-center gap-2 text-base/4.5 font-medium sm:text-sm/4`,
+      "text-foreground inline-flex items-center gap-2 text-base/4.5 font-medium sm:text-sm/4",
       className,
     ),
     "data-slot": "label",
@@ -24,5 +26,3 @@ function Label({
     render,
   })
 }
-
-export { Label }

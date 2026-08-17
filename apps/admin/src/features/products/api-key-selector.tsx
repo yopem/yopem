@@ -1,0 +1,79 @@
+"use client"
+
+import { Label } from "ui/label"
+import {
+  Select,
+  SelectItem,
+  SelectPopup,
+  SelectTrigger,
+  SelectValue,
+} from "ui/select"
+import type { ApiKeyConfig } from "utils/api-input"
+
+import { providerNames } from "@/lib/utils/provider"
+
+interface ApiKeySelectorProps {
+  value?: string
+  onChange: (value: string) => void
+  availableKeys: ApiKeyConfig[]
+  selectedProvider?: string
+  error?: string
+}
+
+export function ApiKeySelector({
+  value,
+  onChange,
+  availableKeys,
+  selectedProvider,
+  error,
+}: ApiKeySelectorProps) {
+  const filteredKeys = selectedProvider
+    ? availableKeys.filter(
+        (key) => key.provider === selectedProvider && key.status === "active",
+      )
+    : availableKeys.filter((key) => key.status === "active")
+
+  const selectedKey = filteredKeys.find((k) => k.id === value)
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="api-key-selector">
+        API Provider Credentials
+        <span className="text-red-500">*</span>
+      </Label>
+      <Select
+        value={value ?? ""}
+        onValueChange={(newValue) => {
+          if (newValue) onChange(newValue)
+        }}
+      >
+        <SelectTrigger
+          id="api-key-selector"
+          className={error ? `border-red-500 focus:ring-red-500` : ""}
+        >
+          <SelectValue placeholder="Select an API key">
+            {selectedKey
+              ? `${selectedKey.name} (${providerNames[selectedKey.provider]})`
+              : "Select an API key"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectPopup>
+          {filteredKeys.map((key) => (
+            <SelectItem key={key.id} value={key.id}>
+              {key.name} ({providerNames[key.provider]})
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      {filteredKeys.length === 0 && (
+        <p className="text-sm text-gray-500">
+          No active API keys available
+          {selectedProvider &&
+            ` for ${providerNames[selectedProvider] ?? selectedProvider}`}
+          . Please add one in Settings.
+        </p>
+      )}
+    </div>
+  )
+}

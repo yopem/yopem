@@ -1,15 +1,21 @@
 import {
   boolean,
-  decimal,
+  integer,
   jsonb,
   pgTable,
   text,
   timestamp,
 } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
-import { z } from "zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-valibot"
+import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
+
+import { productWorkflowSchema, type ProductWorkflow } from "./product-workflow"
 
 export const productStatusEnum = ["draft", "active", "archived"] as const
 export type ProductStatus = (typeof productStatusEnum)[number]
@@ -29,26 +35,17 @@ export const productsTable = pgTable("products", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
+  descriptionContent: jsonb("description_content").$type<unknown[]>(),
   excerpt: text("excerpt"),
   status: text("status", { enum: productStatusEnum })
     .default("draft")
     .notNull(),
   config: jsonb("config"),
-  systemRole: text("system_role"),
-  userInstructionTemplate: text("user_instruction_template"),
-  inputVariable: jsonb("input_variable").$type<
-    {
-      variableName: string
-      description: string
-      type: string
-      options?: { label: string; value: string }[]
-    }[]
-  >(),
+  workflow: jsonb("workflow").$type<ProductWorkflow>(),
   outputFormat: text("output_format", {
     enum: productOutputFormatEnum,
   }).default("plain"),
-  costPerRun: decimal("cost_per_run", { precision: 10, scale: 4 }).default("0"),
-  markup: decimal("markup", { precision: 5, scale: 4 }).default("0.2000"),
+  creditsPerRun: integer("credits_per_run").default(0).notNull(),
   isPublic: boolean("is_public").default(true),
   apiKeyId: text("api_key_id"),
   thumbnailId: text("thumbnail_id"),
@@ -57,23 +54,39 @@ export const productsTable = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 })
 
-export const insertProductSchema = createInsertSchema(productsTable).extend({
-  slug: z.string().optional(),
-  tagIds: z.array(z.string()).optional(),
-  categoryIds: z.array(z.string()).optional(),
-  thumbnailId: z.string().optional(),
+const workflowJsonSchema = v.custom<ProductWorkflow>((value) => {
+  if (value === null || value === undefined) return true
+  return v.is(productWorkflowSchema, value)
 })
-export const updateProductSchema = createUpdateSchema(productsTable).extend({
-  tagIds: z.array(z.string()).optional(),
-  categoryIds: z.array(z.string()).optional(),
-  thumbnailId: z.string().optional(),
+
+const productOverrides = {
+  slug: v.optional(v.string()),
+  tagIds: v.optional(v.array(v.string())),
+  categoryIds: v.optional(v.array(v.string())),
+  thumbnailId: v.optional(v.string()),
+  workflow: v.optional(workflowJsonSchema),
+}
+
+export const insertProductSchema = v.object({
+  ...v.omit(createInsertSchema(productsTable), ["workflow"]).entries,
+  ...productOverrides,
 })
+export const updateProductSchema = v.object({
+  ...v.omit(createUpdateSchema(productsTable), ["workflow"]).entries,
+  ...productOverrides,
+  id: v.optional(v.string()),
+})
+export const productSchema = createSelectSchema(productsTable)
+export const publicProductSchema = v.omit(productSchema, [
+  "apiKeyId",
+  "config",
+  "thumbnailId",
+  "createdBy",
+])
 
 export type SelectProduct = typeof productsTable.$inferSelect & {
   categories: { id: string; name: string; slug: string }[]
   tags: { id: string; name: string; slug: string }[]
   thumbnail?: { id: string; url: string; originalName: string } | null
-  averageRating?: number | null
-  reviewCount?: number
 }
 export type InsertProduct = typeof productsTable.$inferInsert

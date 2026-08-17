@@ -5,8 +5,7 @@ import type { ComponentProps, RefObject } from "react"
 
 import { PlateContainer, PlateContent, PlateView } from "platejs/react"
 
-import type { VariantProps } from "ui"
-import { cn, cva } from "ui"
+import { cn, cva, type VariantProps } from "ui/utils"
 
 const editorContainerVariants = cva(
   "caret-primary selection:bg-primary/25 [&_.slate-selection-area]:border-primary/25 [&_.slate-selection-area]:bg-primary/15 relative w-full cursor-text overflow-y-auto select-text focus-visible:outline-none [&_.slate-selection-area]:z-50 [&_.slate-selection-area]:border",
@@ -18,16 +17,16 @@ const editorContainerVariants = cva(
       variant: {
         comment: cn(
           "flex flex-wrap justify-between gap-1 px-1 py-0.5 text-sm",
-          "rounded-md border [border-width:1.5px] border-transparent bg-transparent",
+          "rounded-md [border-width:1.5px] border-transparent bg-transparent",
           "has-[[data-slate-editor]:focus]:border-primary/50 has-[[data-slate-editor]:focus]:ring-primary/30 has-[[data-slate-editor]:focus]:ring-2",
           "has-aria-disabled:border-input has-aria-disabled:bg-muted",
         ),
         compact: cn(
-          "h-auto min-h-[140px] rounded-md border px-3 py-2",
+          "h-auto min-h-35 rounded-md border px-3 py-2",
           "has-data-readonly:border-transparent",
         ),
         default: "h-full",
-        demo: "h-[650px]",
+        demo: "h-162.5",
         select: cn(
           "group border-input ring-offset-background focus-within:ring-ring rounded-md border focus-within:ring-2 focus-within:ring-offset-2",
           "has-data-readonly:w-fit has-data-readonly:cursor-default has-data-readonly:border-transparent has-data-readonly:focus-within:[box-shadow:none]",
@@ -55,7 +54,7 @@ const editorVariants = cva(
     "group/editor",
     "relative w-full cursor-text overflow-x-hidden wrap-break-word whitespace-break-spaces select-text",
     "ring-offset-background rounded-md focus-visible:outline-none",
-    "placeholder:text-muted-foreground/80 **:data-slate-placeholder:text-muted-foreground/80 **:data-slate-placeholder:top-1/2! **:data-slate-placeholder:-translate-y-1/2 **:data-slate-placeholder:opacity-100!",
+    "placeholder:text-muted-foreground/72 **:data-slate-placeholder:text-muted-foreground/72 **:data-slate-placeholder:opacity-100!",
     "[&_strong]:font-bold",
   ),
   {
@@ -70,17 +69,17 @@ const editorVariants = cva(
         true: "ring-ring ring-2 ring-offset-2",
       },
       variant: {
-        ai: "w-full px-0 text-base md:text-sm",
+        ai: "w-full px-0 text-base sm:text-sm",
         aiChat:
-          "max-h-[min(70vh,320px)] w-full overflow-y-auto px-3 py-2 text-base md:text-sm",
+          "max-h-[min(70vh,320px)] w-full overflow-y-auto px-3 py-2 text-base sm:text-sm",
         comment: cn("rounded-none border-none bg-transparent text-sm"),
-        compact: cn("size-full px-3 py-2 text-base", "pl-8"),
+        compact: cn("size-full px-3 py-2 text-base sm:text-sm", "pl-8"),
         default:
-          "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))]",
-        demo: "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))]",
-        fullWidth: "size-full px-16 pt-4 pb-72 text-base sm:px-24",
+          "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))] sm:text-sm",
+        demo: "size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))] sm:text-sm",
+        fullWidth: "size-full px-16 pt-4 pb-72 text-base sm:px-24 sm:text-sm",
         none: "",
-        select: "px-3 py-2 text-base data-readonly:w-fit",
+        select: "px-3 py-2 text-base data-readonly:w-fit sm:text-sm",
       },
     },
   },
@@ -89,29 +88,33 @@ const editorVariants = cva(
 export type EditorProps = PlateContentProps &
   VariantProps<typeof editorVariants>
 
-export const Editor = ({
+export function Editor({
   className,
   disabled,
   focused,
+  placeholder = "Type something...",
   variant,
   ref,
   ...props
-}: EditorProps & { ref?: RefObject<HTMLDivElement | null> }) => (
-  <PlateContent
-    ref={ref}
-    className={cn(
-      editorVariants({
-        disabled,
-        focused,
-        variant,
-      }),
-      className,
-    )}
-    disabled={disabled}
-    disableDefaultStyles
-    {...props}
-  />
-)
+}: EditorProps & { ref?: RefObject<HTMLDivElement | null> }) {
+  return (
+    <PlateContent
+      ref={ref}
+      className={cn(
+        editorVariants({
+          disabled,
+          focused,
+          variant,
+        }),
+        className,
+      )}
+      disabled={disabled}
+      disableDefaultStyles
+      placeholder={placeholder}
+      {...props}
+    />
+  )
+}
 
 Editor.displayName = "Editor"
 

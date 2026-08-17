@@ -1,29 +1,28 @@
-import { serve } from "@hono/node-server"
+import { ORPCError } from "@orpc/server"
+import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
 
-import { serverPort } from "env"
+import { adminOrigin, isDev, serverPort, webOrigin } from "env"
 
-import { authMiddleware } from "./auth"
+import type { AppContext } from "./lib/context"
+
 import { authCallbackRoute } from "./handlers/auth-callback"
-import { checkoutRoute } from "./handlers/checkout"
-import { portalRoute } from "./handlers/portal"
-import { rpcRoute } from "./handlers/rpc"
-import { webhooksRoute } from "./handlers/webhooks"
+import { ApiError, orpcCodeForStatus } from "./lib/errors"
+import { authMiddleware } from "./middleware/auth"
+import { router } from "./routers"
 
-const app = new Hono()
+const app = new Hono<AppContext>()
 
 const port = serverPort
 
-const allowedOrigins = import.meta.env.DEV
+const allowedOrigins = isDev
   ? [
-      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      webOrigin ?? "http://localhost:3000",
+      adminOrigin ?? "http://localhost:3001",
     ]
-  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
-      Boolean,
-    )
+  : [webOrigin ?? "", adminOrigin ?? ""].filter(Boolean)
 
 app.use(
   "*",
@@ -50,10 +49,109 @@ app.get("/health", (c) => {
 })
 
 app.route("/auth", authCallbackRoute)
-app.route("/rpc", rpcRoute)
-app.route("/checkout", checkoutRoute)
-app.route("/portal", portalRoute)
-app.route("/webhooks", webhooksRoute)
+
+const orpcHandler = new RPCHandler(router, {
+  interceptors: [
+    async (context) => {
+      try {
+        return await context.next()
+      } catch (error) {
+        if (error instanceof ApiError) {
+          throw new ORPCError(orpcCodeForStatus(error.status), {
+            status: error.status,
+            message: error.message,
+          })
+        }
+        console.error(
+          `oRPC error: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+        )
+        throw error
+      }
+    },
+  ],
+})
+
+const proxyRequestBody = (original: Request): Request => {
+  let cachedBody: ArrayBuffer | FormData | null = null
+  let bodyType: "arraybuffer" | "formdata" | null = null
+
+  const cloneBody = async () => {
+    if (cachedBody === null) {
+      const contentType = original.headers.get("content-type") ?? ""
+      if (contentType.includes("multipart/form-data")) {
+        cachedBody = await original.formData()
+        bodyType = "formdata"
+      } else {
+        cachedBody = await original.arrayBuffer()
+        bodyType = "arraybuffer"
+      }
+    }
+    return cachedBody
+  }
+
+  return new Proxy(original, {
+    get(target, prop) {
+      if (prop === "json") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as JSON")
+          }
+          const text = new TextDecoder().decode(body as ArrayBuffer)
+          return JSON.parse(text)
+        }
+      }
+      if (prop === "text") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot parse FormData as text")
+          }
+          return new TextDecoder().decode(body as ArrayBuffer)
+        }
+      }
+      if (prop === "arrayBuffer") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            throw new Error("Cannot convert FormData to ArrayBuffer")
+          }
+          return (body as ArrayBuffer).slice(0)
+        }
+      }
+      if (prop === "formData") {
+        return async () => {
+          const body = await cloneBody()
+          if (bodyType === "formdata") {
+            return body as FormData
+          }
+          throw new Error("Body is not FormData")
+        }
+      }
+      if (prop === "body") {
+        return target.body
+      }
+      if (prop === "bodyUsed") {
+        return false
+      }
+      return Reflect.get(target, prop, target)
+    },
+  })
+}
+
+app.use("/rpc/*", async (c, next) => {
+  const request = proxyRequestBody(c.req.raw)
+
+  const { matched, response } = await orpcHandler.handle(request, {
+    prefix: "/rpc",
+    context: { session: c.get("session") },
+  })
+
+  if (matched) {
+    return c.newResponse(response.body, response)
+  }
+  await next()
+})
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
@@ -67,16 +165,12 @@ app.onError((err, c) => {
   return c.json({ error: "Internal Server Error" }, 500)
 })
 
-export default app
+export { app }
 
-if (!import.meta.env.DEV) {
-  serve(
-    {
-      fetch: app.fetch,
-      port,
-    },
-    () => {
-      console.info(`Hono server listening on port ${port}`)
-    },
-  )
+if (import.meta.main) {
+  Bun.serve({
+    port,
+    fetch: app.fetch,
+  })
+  console.info(`Hono server listening on port ${port}`)
 }

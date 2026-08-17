@@ -1,64 +1,54 @@
-import tailwindCSS from "@tailwindcss/vite"
+import babel from "@rolldown/plugin-babel"
+import tailwindcss from "@tailwindcss/vite"
+import { devtools } from "@tanstack/devtools-vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
-import react from "@vitejs/plugin-react"
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react"
+import { nitro } from "nitro/vite"
 import { resolve } from "node:path"
-import { defineConfig, loadEnv } from "vite-plus"
+import { loadEnv, defineConfig, lazyPlugins } from "vite-plus"
 
-export default defineConfig(({ mode }) => {
-  Object.assign(process.env, loadEnv(mode, resolve(__dirname, "../.."), ""))
+import { isDev } from "env"
 
-  const adminPort = Number(process.env["ADMIN_PORT"]) || 3001
+const env = loadEnv(isDev ? "DEV" : "PROD", resolve(__dirname, "../.."), "")
 
-  return {
-    envPrefix: ["VITE_", "PUBLIC_"],
-    envDir: "../..",
-    lint: {
-      plugins: [
-        "eslint",
-        "import",
-        "jsx-a11y",
-        "oxc",
-        "promise",
-        "react",
-        "react-perf",
-        "typescript",
-        "unicorn",
-      ],
-      jsPlugins: ["oxlint-tailwindcss"],
-      rules: {
-        "tailwindcss/no-unknown-classes": "error",
-        "tailwindcss/no-conflicting-classes": "error",
-        "tailwindcss/enforce-sort-order": "warn",
-        "tailwindcss/no-deprecated-classes": "error",
-        "tailwindcss/no-unnecessary-whitespace": "error",
-        "react/rules-of-hooks": "error",
-      },
-      settings: {
-        tailwindcss: {
-          entryPoint: "./src/globals.css",
-        },
-      },
-      options: {
-        typeAware: true,
-        typeCheck: true,
-      },
-    },
+Object.assign(process.env, env)
+
+export default defineConfig({
+  envDir: "../..",
+  envPrefix: ["VITE_", "PUBLIC_"],
+
+  resolve: {
+    tsconfigPaths: true,
+    dedupe: ["react", "react-dom"],
+  },
+
+  ssr: {
+    noExternal: [/editor/, /platejs/, /@platejs\//, /react-tweet/],
+  },
+
+  test: {
+    name: "admin",
+    environment: "jsdom",
     server: {
-      port: adminPort,
-      host: "0.0.0.0",
-      proxy: {
-        "/rpc": {
-          target: "http://localhost:4000",
-          changeOrigin: true,
-        },
+      deps: {
+        inline: [/editor/, /platejs/, /@platejs\//, /react-tweet/],
       },
     },
-    ssr: {
-      noExternal: ["react-tweet"],
-    },
-    resolve: {
-      tsconfigPaths: true,
-    },
-    plugins: [tanstackStart(), react(), tailwindCSS()],
-  }
+  },
+
+  plugins: lazyPlugins(() => [
+    devtools(),
+    nitro({
+      rollupConfig: {
+        external: [/^@sentry\//, "react", "react-dom"],
+      },
+      experimental: {
+        asyncContext: true,
+      },
+    }),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact(),
+    babel({ presets: [reactCompilerPreset()] }),
+  ]),
 })

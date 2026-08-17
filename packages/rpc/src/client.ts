@@ -1,3 +1,3 @@
-import { createORPCClientFromLink, createORPCLink } from "./shared.ts"
+import { createORPCClientFromLink, createORPCLink } from "./shared"
 
 export const clientApi = createORPCClientFromLink(createORPCLink())

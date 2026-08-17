@@ -1,11 +1,11 @@
-import { getR2Storage } from "server/storage"
+import { getR2Storage } from "server/storage/r2"
 
-import type { AIProvider, ExecutionResponse } from "./providers/base.ts"
-import type { ApiKeyProvider } from "./providers/base.ts"
-import type { AIProviderErrors } from "./providers/base.ts"
+import type { AIProvider, ExecutionResponse } from "./providers/base"
+import type { ApiKeyProvider } from "./providers/base"
+import type { AIProviderErrors } from "./providers/base"
 
-import { FalProvider } from "./providers/fal.ts"
-import { OpenAICompatibleProvider } from "./providers/openai-compatible.ts"
+import { FalProvider } from "./providers/fal"
+import { OpenAICompatibleProvider } from "./providers/openai-compatible"
 
 export class UploadError extends Error {
   format: "image" | "video"
@@ -21,28 +21,18 @@ export class UploadError extends Error {
 
 export type AIExecutionError = AIProviderErrors | UploadError
 
+type MediaFormat = "image" | "video"
+type OutputFormat = "plain" | "json" | MediaFormat
+
 interface ExecuteAIProductParams {
   systemRole: string
   userInstructionTemplate: string
-  inputs: Record<string, unknown>
   config: {
     modelEngine: string
   }
-  outputFormat: "plain" | "json" | "image" | "video"
+  outputFormat: OutputFormat
   apiKey: string
   provider: ApiKeyProvider
-}
-
-function replaceVariables(
-  template: string,
-  inputs: Record<string, unknown>,
-): string {
-  let result = template
-  for (const [key, value] of Object.entries(inputs)) {
-    const placeholder = `{{${key}}}`
-    result = result.replaceAll(placeholder, String(value))
-  }
-  return result
 }
 
 function getProviderInstance(
@@ -70,45 +60,34 @@ function getProviderInstance(
   }
 }
 
-function wrapStorageError(format: "image" | "video", e: unknown): UploadError {
-  return new UploadError(
-    format,
-    `Failed to upload ${format}: ${e instanceof Error ? e.message : "Unknown error"}`,
-    e,
-  )
-}
-
-async function doUpload(
-  r2: ReturnType<typeof getR2Storage>,
-  outputFormat: "image" | "video",
-  buffer: Buffer,
-  contentType: string,
-): Promise<string> {
-  try {
-    const url =
-      outputFormat === "image"
-        ? await r2.uploadImage(buffer, contentType)
-        : await r2.uploadVideo(buffer, contentType)
-    return url
-  } catch (e) {
-    throw wrapStorageError(outputFormat, e)
-  }
-}
-
 async function uploadMediaOutput(
   output: string,
-  outputFormat: "image" | "video",
+  outputFormat: MediaFormat,
   usage: ExecutionResponse["usage"],
 ): Promise<ExecutionResponse> {
-  const base64Regex = /^data:([^;]+);base64,(.+)$/
-  const base64Match = base64Regex.exec(output)
+  const r2 = getR2Storage()
 
+  const upload = async (
+    uploadFn: (buffer: Buffer, contentType: string) => Promise<string>,
+    buffer: Buffer,
+    contentType: string,
+  ): Promise<string> => {
+    try {
+      return await uploadFn(buffer, contentType)
+    } catch (e) {
+      throw new UploadError(
+        outputFormat,
+        `Failed to upload ${outputFormat}: ${e instanceof Error ? e.message : "Unknown error"}`,
+        e,
+      )
+    }
+  }
+
+  const base64Match = /^data:([^;]+);base64,(.+)$/.exec(output)
   if (base64Match) {
     const contentType = base64Match[1]
-    const base64Data = base64Match[2]
-    const buffer = Buffer.from(base64Data, "base64")
-    const r2 = getR2Storage()
-    const url = await doUpload(r2, outputFormat, buffer, contentType)
+    const buffer = Buffer.from(base64Match[2], "base64")
+    const url = await upload(r2.uploadImage.bind(r2), buffer, contentType)
     return { output: url, usage }
   }
 
@@ -117,20 +96,18 @@ async function uploadMediaOutput(
   }
 
   const buffer = Buffer.from(output, "utf8")
-  const r2 = getR2Storage()
   const contentType = outputFormat === "image" ? "image/png" : "video/mp4"
-  const url = await doUpload(r2, outputFormat, buffer, contentType)
+  const uploadFn =
+    outputFormat === "image" ? r2.uploadImage.bind(r2) : r2.uploadVideo.bind(r2)
+  const url = await upload(uploadFn, buffer, contentType)
   return { output: url, usage }
 }
 
 export async function executeAIProduct(
   params: ExecuteAIProductParams,
 ): Promise<ExecutionResponse> {
-  const systemRole = replaceVariables(params.systemRole, params.inputs)
-  const userInstruction = replaceVariables(
-    params.userInstructionTemplate,
-    params.inputs,
-  )
+  const systemRole = params.systemRole
+  const userInstruction = params.userInstructionTemplate
 
   const maxOutputTokens = Math.min(
     4096,

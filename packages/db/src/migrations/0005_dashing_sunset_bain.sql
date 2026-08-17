@@ -1,1 +1,0 @@
-ALTER TABLE "tools" ADD COLUMN "api_key_id" text;

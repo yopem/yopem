@@ -1,0 +1,33 @@
+import { Link } from "@tanstack/react-router"
+
+import { Logo } from "ui/logo"
+
+interface GlobalSidebarHeaderProps {
+  title: string
+  subtitle: string
+}
+
+export function GlobalSidebarHeader({
+  title,
+  subtitle,
+}: GlobalSidebarHeaderProps) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white text-black">
+        <Link to="/">
+          <Logo className="size-5" />
+        </Link>
+      </div>
+      <div className="flex flex-col">
+        <Link to="/">
+          <h1 className="text-sidebar-foreground text-lg leading-none font-bold tracking-tight">
+            {title}
+          </h1>
+        </Link>
+        <p className="text-muted-foreground mt-1 text-[10px] font-medium tracking-wider uppercase">
+          {subtitle}
+        </p>
+      </div>
+    </div>
+  )
+}

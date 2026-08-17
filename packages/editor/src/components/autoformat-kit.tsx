@@ -2,14 +2,15 @@
 
 import { createSlatePlugin, createTextSubstitutionInputRule } from "platejs"
 
-const createAutoformatTextSubstitutionRule = ({
+function createAutoformatTextSubstitutionRule({
   patterns,
 }: {
   patterns: Parameters<typeof createTextSubstitutionInputRule>[0]["patterns"]
-}) =>
-  createTextSubstitutionInputRule({
+}) {
+  return createTextSubstitutionInputRule({
     patterns,
   })
+}
 
 const arrowsRule = createAutoformatTextSubstitutionRule({
   patterns: [

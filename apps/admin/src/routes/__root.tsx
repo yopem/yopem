@@ -1,37 +1,40 @@
 import type { QueryClient } from "@tanstack/react-query"
 
+import { TanStackDevtools } from "@tanstack/react-devtools"
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools"
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
-import { Link } from "@tanstack/react-router"
-
-import "ui/style.css"
-import "editor/style.css"
-
-import "@/globals.css"
-import { AlertCircleIcon, HomeIcon, RefreshCwIcon } from "lucide-react"
-import { useEffect } from "react"
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 
 import { siteTitle } from "env"
-const formatError = (error: unknown): string =>
-  error instanceof Error ? (error.stack ?? error.message) : String(error)
-import { Button } from "ui/button"
 
-import Providers from "@/components/providers"
+import type { getSession } from "@/lib/auth"
+
+import { GlobalError } from "@/components/global-error"
+import { NotFound } from "@/components/not-found"
+import { Providers } from "@/components/providers"
+import appCss from "@/styles.css?url"
+
+const SPECULATION_RULES =
+  '{"prefetch":[{"source":"document","where":{"href_matches":"/*","relative_to":"document"},"eagerness":"moderate"}]}'
+
+type Session = Exclude<Awaited<ReturnType<typeof getSession>>, false>
 
 export interface RouterContext {
   queryClient: QueryClient
+  session: Session | null
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
-      { title: `Admin - ${siteTitle}` },
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: `Admin - ${siteTitle}` },
       { name: "description", content: `${siteTitle} Admin Console` },
       { name: "robots", content: "noindex, nofollow" },
       {
@@ -46,11 +49,29 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       { name: "color-scheme", content: "light dark" },
     ],
-    links: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
+    links: [
+      { rel: "icon", type: "image/svg+xml", href: "/images/favicon.svg" },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "96x96",
+        href: "/images/favicon-96x96.png",
+      },
+      {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/images/apple-touch-icon.png",
+      },
+      { rel: "manifest", href: "/site.webmanifest" },
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
   }),
-  component: RootComponent,
-  errorComponent: ErrorComponent,
-  notFoundComponent: NotFoundComponent,
+  shellComponent: RootComponent,
+  errorComponent: GlobalError,
+  notFoundComponent: NotFound,
 })
 
 function RootComponent() {
@@ -66,92 +87,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          type="speculationrules"
+          dangerouslySetInnerHTML={{ __html: SPECULATION_RULES }}
+        />
       </head>
       <body>
         <Providers>{children}</Providers>
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            {
+              name: "Tanstack Query",
+              render: <ReactQueryDevtoolsPanel />,
+            },
+          ]}
+        />
         <Scripts />
       </body>
     </html>
-  )
-}
-
-function ErrorComponent({
-  error,
-  reset,
-}: {
-  error: Error
-  reset?: () => void
-}) {
-  useEffect(() => {
-    console.error(`Route error: ${formatError(error)}`)
-  }, [error])
-
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-8">
-          <div className="bg-destructive/10 text-destructive mx-auto mb-6 flex size-16 items-center justify-center rounded-full">
-            <AlertCircleIcon className="size-8" />
-          </div>
-          <h1 className="mb-4 text-3xl font-bold tracking-tight">
-            Oops! Something went wrong
-          </h1>
-          <p className="text-muted-foreground mb-2 text-sm">
-            We encountered an error while loading this page. Please try again or
-            return to the homepage.
-          </p>
-          {import.meta.env.DEV && (
-            <details className="mt-4 rounded-lg border p-4 text-left">
-              <summary className="text-muted-foreground cursor-pointer text-xs font-medium">
-                Error Details (Development)
-              </summary>
-              <pre className="text-destructive mt-2 overflow-x-auto text-xs">
-                {error.message}
-              </pre>
-            </details>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          {reset && (
-            <Button onClick={() => reset()} size="lg">
-              <RefreshCwIcon className="size-4" />
-              Try again
-            </Button>
-          )}
-          <Link to="/">
-            <Button variant="outline" size="lg">
-              <HomeIcon className="size-4" />
-              Go home
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-8">
-          <h1 className="text-6xl font-bold tracking-tight">404</h1>
-          <p className="text-muted-foreground mt-4 text-lg">Page not found</p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link to="/">
-            <Button size="lg">
-              <HomeIcon className="size-4" />
-              Go home
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
   )
 }

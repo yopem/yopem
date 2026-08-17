@@ -14,13 +14,11 @@
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "zod": "catalog:"
-  },
   "devDependencies": {
     "@types/node": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-plus": "catalog:"
   }
 }

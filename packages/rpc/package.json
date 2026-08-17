@@ -4,17 +4,29 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./shared": {
-      "types": "./src/shared.ts",
-      "default": "./src/shared.ts"
-    },
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
+    "./prefetch": {
+      "types": "./src/prefetch.ts",
+      "default": "./src/prefetch.ts"
+    },
+    "./provider": {
+      "types": "./src/provider.tsx",
+      "default": "./src/provider.tsx"
+    },
+    "./query-client": {
+      "types": "./src/query-client.tsx",
+      "default": "./src/query-client.tsx"
+    },
     "./query": {
       "types": "./src/query.ts",
       "default": "./src/query.ts"
+    },
+    "./serializer": {
+      "types": "./src/serializer.tsx",
+      "default": "./src/serializer.tsx"
     },
     "./server": {
       "types": "./src/server.ts",
@@ -24,25 +36,9 @@
       "types": "./src/server-query.ts",
       "default": "./src/server-query.ts"
     },
-    "./prefetch": {
-      "types": "./src/prefetch.ts",
-      "default": "./src/prefetch.ts"
-    },
-    "./serializer": {
-      "types": "./src/serializer.tsx",
-      "default": "./src/serializer.tsx"
-    },
-    "./query-client": {
-      "types": "./src/query-client.tsx",
-      "default": "./src/query-client.tsx"
-    },
-    "./provider": {
-      "types": "./src/provider.tsx",
-      "default": "./src/provider.tsx"
-    },
-    "./hydration": {
-      "types": "./src/hydration.tsx",
-      "default": "./src/hydration.tsx"
+    "./shared": {
+      "types": "./src/shared.ts",
+      "default": "./src/shared.ts"
     }
   },
   "scripts": {
@@ -51,21 +47,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/server": "catalog:",
-    "@orpc/tanstack-query": "catalog:",
+    "@orpc/client": "^1.14.10",
+    "@orpc/tanstack-query": "^1.14.10",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-start": "catalog:",
     "env": "workspace:*",
-    "react": "catalog:",
-    "zod": "catalog:"
+    "server": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
+    "@orpc/server": "^1.14.10",
     "@types/react": "catalog:",
     "@yopem/typescript-config": "catalog:",
-    "server": "workspace:*",
-    "typescript": "catalog:",
-    "vite-plus": "catalog:"
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
   }
 }

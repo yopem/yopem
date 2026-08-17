@@ -6,7 +6,13 @@ import { useSyncExternalStore } from "react"
 
 import { Button } from "./button"
 
-const ThemeSwitcher = () => {
+const themes = [
+  { name: "light", icon: SunIcon, label: "Light" },
+  { name: "dark", icon: MoonIcon, label: "Dark" },
+  { name: "system", icon: MonitorIcon, label: "System" },
+]
+
+export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
   const mounted = useSyncExternalStore(
     () => () => undefined,
@@ -16,7 +22,7 @@ const ThemeSwitcher = () => {
 
   if (!mounted) {
     return (
-      <div className="bg-muted/50 inline-flex items-center gap-0.5 rounded-md border p-0.5">
+      <div className="bg-muted/70 inline-flex items-center gap-0.5 rounded-md border p-0.5">
         <div className="size-7" />
         <div className="size-7" />
         <div className="size-7" />
@@ -24,14 +30,8 @@ const ThemeSwitcher = () => {
     )
   }
 
-  const themes = [
-    { name: "light", icon: SunIcon, label: "Light" },
-    { name: "dark", icon: MoonIcon, label: "Dark" },
-    { name: "system", icon: MonitorIcon, label: "System" },
-  ]
-
   return (
-    <div className="bg-muted/50 inline-flex items-center gap-0.5 rounded-md border p-0.5">
+    <div className="bg-muted/70 inline-flex items-center gap-0.5 rounded-md border p-0.5">
       {themes.map(({ name, icon: Icon, label }) => (
         <Button
           key={name}
@@ -40,7 +40,7 @@ const ThemeSwitcher = () => {
           className={`size-7 p-0 ${
             theme === name
               ? "bg-background shadow-sm"
-              : "hover:bg-background/50"
+              : "hover:bg-background/70"
           }`}
           onClick={() => setTheme(name)}
           aria-label={`${label} theme`}
@@ -51,5 +51,3 @@ const ThemeSwitcher = () => {
     </div>
   )
 }
-
-export default ThemeSwitcher

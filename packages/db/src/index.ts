@@ -1,46 +1,51 @@
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+import { SQL } from "bun"
+import { drizzle } from "drizzle-orm/bun-sql"
 
-import { databaseUrl } from "env"
+import { databaseUrl, isDev } from "env"
 
-import * as schema from "./schema/index.ts"
+import { adminSettingsTable } from "./schema/admin-settings"
+import { aiModelsTable } from "./schema/ai-models"
+import { assetsTable } from "./schema/assets"
+import { categoriesTable } from "./schema/categories"
+import { productCategoriesTable } from "./schema/product-categories"
+import { productRunsTable } from "./schema/product-runs"
+import { productTagsTable } from "./schema/product-tags"
+import { productVersionsTable } from "./schema/product-versions"
+import { productsTable } from "./schema/products"
+import { tagsTable } from "./schema/tags"
+import { userSettingsTable } from "./schema/user-settings"
 
-const pool = new Pool({
-  connectionString: databaseUrl,
+const schema = {
+  adminSettingsTable,
+  aiModelsTable,
+  assetsTable,
+  categoriesTable,
+  productCategoriesTable,
+  productRunsTable,
+  productTagsTable,
+  productVersionsTable,
+  productsTable,
+  tagsTable,
+  userSettingsTable,
+}
+
+const sql = new SQL({
+  url: databaseUrl,
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  idleTimeout: 30,
+  connectionTimeout: 5,
+  onconnect: () => {
+    if (isDev) {
+      console.info("New database connection established")
+    }
+  },
+  onclose: (error) => {
+    if (!error) return
+    const message = error instanceof Error ? error.message : String(error)
+    if (!message.includes("Idle timeout")) {
+      console.error(`Database connection closed: ${message}`)
+    }
+  },
 })
 
-pool.on("error", (error: Error) => {
-  console.error(
-    `Unexpected error on idle database connection: ${error.message}`,
-  )
-  logPoolMetrics()
-})
-
-pool.on("connect", () => {
-  if (import.meta.env.DEV) {
-    console.info("New database connection established")
-  }
-})
-
-export const db = drizzle(pool, {
-  schema,
-})
-
-function getPoolMetrics() {
-  return {
-    total: pool.totalCount,
-    idle: pool.idleCount,
-    waiting: pool.waitingCount,
-    active: pool.totalCount - pool.idleCount,
-  }
-}
-
-function logPoolMetrics() {
-  const metrics = getPoolMetrics()
-  console.info(
-    `[DB Pool] Total: ${metrics.total} | Active: ${metrics.active} | Idle: ${metrics.idle} | Waiting: ${metrics.waiting}`,
-  )
-}
+export const db = drizzle(sql, { schema })

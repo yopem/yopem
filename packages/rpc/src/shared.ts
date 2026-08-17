@@ -1,17 +1,12 @@
 import type { RouterClient } from "@orpc/server"
-import type { appRouter } from "server/router"
+import type { router as appRouter } from "server/routers"
 
 import { createORPCClient, onError } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 
 import { apiUrl } from "env"
 
-// Browser: use absolute same-origin URL to avoid CORS preflight and keep URL construction valid
-// Server (SSR): use validated env URL for correct resolution
 const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/rpc`
-  }
   const base = apiUrl?.replace(/\/$/, "")
   if (!base) {
     throw new Error(
@@ -53,9 +48,7 @@ export const createORPCLink = (
           error instanceof Error &&
           (error.name === "AbortError" ||
             error.message === "signal is aborted without reason")
-        if (isAbortError) {
-          console.info("Fetch aborted as expected")
-        } else {
+        if (!isAbortError) {
           const errorMessage =
             error instanceof Error ? error.message : String(error)
           console.error(errorMessage)

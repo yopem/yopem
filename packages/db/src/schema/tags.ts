@@ -1,7 +1,15 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-valibot"
+import * as v from "valibot"
 
 import { createCustomId } from "utils/custom-id"
+
+export const tagStatusEnum = ["draft", "active", "archived"] as const
+export type TagStatus = (typeof tagStatusEnum)[number]
 
 export const tagsTable = pgTable("tags", {
   id: text()
@@ -9,11 +17,14 @@ export const tagsTable = pgTable("tags", {
     .$defaultFn(() => createCustomId()),
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
+  status: text("status", { enum: tagStatusEnum }).notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow(),
 })
 
 export const insertTagSchema = createInsertSchema(tagsTable)
 export const updateTagSchema = createUpdateSchema(tagsTable)
+export const tagSchema = createSelectSchema(tagsTable)
+export const listTagSchema = v.pick(tagSchema, ["id", "name", "slug", "status"])
 
 export type SelectTag = typeof tagsTable.$inferSelect
 export type InsertTag = typeof tagsTable.$inferInsert

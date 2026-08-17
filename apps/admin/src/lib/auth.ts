@@ -1,23 +1,44 @@
 import { createServerFn } from "@tanstack/react-start"
+import {
+  getCookie,
+  setCookie,
+  deleteCookie,
+} from "@tanstack/react-start/server"
 
 import { authClient } from "auth/client"
 import { subjects } from "auth/subjects"
-const getServerUtils = async () => {
-  const { getCookie, setCookie, deleteCookie } =
-    await import("@tanstack/react-start/server")
-  return { getCookie, setCookie, deleteCookie }
+import { adminOrigin, authCallbackUrl, cookieDomain, isProd } from "env"
+
+const isSecure = () => {
+  return !!cookieDomain || isProd
 }
 
-const isProduction = () => !import.meta.env.DEV
-const isSecure = () => {
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
-  return !!cookieDomain || isProduction()
+const sessionCookieOptions = (): {
+  httpOnly: boolean
+  sameSite: "none" | "lax"
+  path: string
+  maxAge: number
+  secure: boolean
+  domain?: string
+} => ({
+  httpOnly: true,
+  sameSite: isProd ? "none" : "lax",
+  path: "/",
+  maxAge: 86400,
+  secure: isSecure(),
+  ...(cookieDomain ? { domain: cookieDomain } : {}),
+})
+
+const persistSessionCookies = (tokens: { access: string; refresh: string }) => {
+  setCookie("access_token", tokens.access, sessionCookieOptions())
+  setCookie("refresh_token", tokens.refresh, {
+    ...sessionCookieOptions(),
+    maxAge: 604800,
+  })
 }
 
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { getCookie, setCookie } = await getServerUtils()
-
     const accessToken = getCookie("access_token")
     const refreshToken = getCookie("refresh_token")
 
@@ -35,22 +56,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(
     }
 
     if (verified.tokens) {
-      const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const prod = isProduction()
-      const sameSite: "none" | "lax" = prod ? "none" : "lax"
-      const options = {
-        httpOnly: true,
-        sameSite,
-        path: "/",
-        maxAge: 86400,
-        secure: isSecure(),
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-      }
-      setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, {
-        ...options,
-        maxAge: 604800,
-      })
+      persistSessionCookies(verified.tokens)
     }
 
     return verified.subject.properties
@@ -58,8 +64,6 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 )
 
 export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { getCookie, setCookie } = await getServerUtils()
-
   const accessToken = getCookie("access_token")
   const refreshToken = getCookie("refresh_token")
 
@@ -68,29 +72,13 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
       refresh: refreshToken,
     })
     if (!verified.err && verified.tokens) {
-      const cookieDomain = process.env["COOKIE_DOMAIN"]
-      const prod = isProduction()
-      const sameSite: "none" | "lax" = prod ? "none" : "lax"
-      const options = {
-        httpOnly: true,
-        sameSite,
-        path: "/",
-        maxAge: 86400,
-        secure: isSecure(),
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-      }
-      setCookie("access_token", verified.tokens.access, options)
-      setCookie("refresh_token", verified.tokens.refresh, {
-        ...options,
-        maxAge: 604800,
-      })
+      persistSessionCookies(verified.tokens)
       return { redirectTo: "/" }
     }
   }
 
-  const origin = process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001"
+  const origin = adminOrigin ?? "http://localhost:3001"
 
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
   setCookie("login_origin", origin, {
     httpOnly: true,
     sameSite: "lax",
@@ -99,16 +87,12 @@ export const loginFn = createServerFn({ method: "POST" }).handler(async () => {
     ...(cookieDomain ? { domain: cookieDomain } : {}),
   })
 
-  const callbackUrl =
-    process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
+  const callbackUrl = authCallbackUrl ?? "http://localhost:4000/auth/callback"
   const { url } = await authClient.authorize(callbackUrl, "code")
   return { redirectTo: url }
 })
 
-export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { deleteCookie } = await getServerUtils()
-
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
+export const logoutFn = createServerFn({ method: "POST" }).handler(() => {
   const cookieOpts = cookieDomain
     ? { path: "/", domain: cookieDomain }
     : { path: "/" }

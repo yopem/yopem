@@ -2,10 +2,11 @@
 
 import type { PlateEditor } from "platejs/react"
 
-import { triggerFloatingLink } from "@platejs/link/react"
+import { LinkPlugin } from "@platejs/link/react"
 import {
   insertAudioPlaceholder,
   insertFilePlaceholder,
+  insertImage,
   insertMedia,
   insertVideoPlaceholder,
 } from "@platejs/media"
@@ -13,11 +14,16 @@ import {
   type NodeEntry,
   type Path,
   type TElement,
+  getEditorPlugin,
   KEYS,
   PathApi,
 } from "platejs"
 
-const insertList = (editor: PlateEditor, type: string) => {
+import { EmbedInsertStore } from "editor/floating-embed-toolbar"
+import { ImagePickerPlugin } from "editor/image-picker-kit"
+import { isRemoteImageSrc } from "editor/lib/is-remote-image-src"
+
+function insertList(editor: PlateEditor, type: string) {
   editor.tf.insertNodes(
     editor.api.create.block({
       indent: 1,
@@ -27,12 +33,14 @@ const insertList = (editor: PlateEditor, type: string) => {
   )
 }
 
-const createBlockquote = (editor: PlateEditor) => ({
-  children: [editor.api.create.block({ type: KEYS.p })],
-  type: KEYS.blockquote,
-})
+function createBlockquote(editor: PlateEditor) {
+  return {
+    children: [editor.api.create.block({ type: KEYS.p })],
+    type: KEYS.blockquote,
+  }
+}
 
-const selectBlockquoteStart = (editor: PlateEditor, path: Path) => {
+function selectBlockquoteStart(editor: PlateEditor, path: Path) {
   const start = editor.api.start(path.concat([0]))
 
   if (start) {
@@ -65,18 +73,53 @@ const insertInlineMap: Record<
   string,
   (editor: PlateEditor, type: string) => void
 > = {
-  [KEYS.link]: (editor) => triggerFloatingLink(editor, { focused: true }),
+  [KEYS.link]: (editor) => {
+    const { api, setOption } = getEditorPlugin(editor, LinkPlugin)
+
+    setOption("mode", "insert")
+    setOption("text", editor.api.string(editor.selection))
+    api.floatingLink.show("insert", editor.id)
+  },
+  [KEYS.mediaEmbed]: () => {
+    EmbedInsertStore.set(true)
+  },
+}
+
+export function getImagePicker(editor: PlateEditor) {
+  const plugin = (
+    editor.plugins as unknown as Record<
+      string,
+      { options?: { imagePicker?: () => Promise<string | undefined> } }
+    >
+  )[ImagePickerPlugin.key]
+
+  return plugin?.options?.imagePicker
+}
+
+export async function insertImageAsset(editor: PlateEditor) {
+  const picker = getImagePicker(editor)
+
+  if (!picker) return
+
+  const url = await picker()
+
+  if (!url || !isRemoteImageSrc(url)) {
+    console.warn("Image picker returned an invalid remote URL")
+    return
+  }
+
+  insertImage(editor, url, { nextBlock: false, select: true })
 }
 
 interface InsertBlockOptions {
   upsert?: boolean
 }
 
-export const insertBlock = (
+export function insertBlock(
   editor: PlateEditor,
   type: string,
   options: InsertBlockOptions = {},
-) => {
+) {
   const { upsert = false } = options
 
   editor.tf.withoutNormalizing(() => {
@@ -125,17 +168,17 @@ export const insertBlock = (
   })
 }
 
-export const insertInlineElement = (editor: PlateEditor, type: string) => {
+export function insertInlineElement(editor: PlateEditor, type: string) {
   if (insertInlineMap[type]) {
     insertInlineMap[type](editor, type)
   }
 }
 
-const setList = (
+function setList(
   editor: PlateEditor,
   type: string,
   entry: NodeEntry<TElement>,
-) => {
+) {
   editor.tf.setNodes(
     editor.api.create.block({
       indent: 1,
@@ -155,11 +198,11 @@ const setBlockMap: Record<
   [KEYS.ul]: setList,
 }
 
-export const setBlockType = (
+export function setBlockType(
   editor: PlateEditor,
   type: string,
   { at }: { at?: Path } = {},
-) => {
+) {
   editor.tf.withoutNormalizing(() => {
     if (type === KEYS.blockquote) {
       const target = at ?? editor.selection
@@ -176,7 +219,7 @@ export const setBlockType = (
       return
     }
 
-    const setEntry = (entry: NodeEntry<TElement>) => {
+    function setEntry(entry: NodeEntry<TElement>) {
       const [node, path] = entry
 
       if (node[KEYS.listType]) {
@@ -208,7 +251,7 @@ export const setBlockType = (
   })
 }
 
-export const getBlockType = (block: TElement) => {
+export function getBlockType(block: TElement) {
   if (block[KEYS.listType]) {
     if (block[KEYS.listType] === KEYS.ol) {
       return KEYS.ol

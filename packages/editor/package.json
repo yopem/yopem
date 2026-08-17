@@ -4,230 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
     "./style.css": "./src/style.css",
-    "./autoformat-kit": {
-      "types": "./src/components/autoformat-kit.tsx",
-      "default": "./src/components/autoformat-kit.tsx"
+    "./lib/*": {
+      "types": "./src/lib/*.ts",
+      "default": "./src/lib/*.ts"
     },
-    "./basic-blocks-kit": {
-      "types": "./src/components/basic-blocks-kit.tsx",
-      "default": "./src/components/basic-blocks-kit.tsx"
-    },
-    "./basic-marks-kit": {
-      "types": "./src/components/basic-marks-kit.tsx",
-      "default": "./src/components/basic-marks-kit.tsx"
-    },
-    "./basic-menu-kit": {
-      "types": "./src/components/basic-menu-kit.tsx",
-      "default": "./src/components/basic-menu-kit.tsx"
-    },
-    "./basic-placeholder-kit": {
-      "types": "./src/components/basic-placeholder-kit.tsx",
-      "default": "./src/components/basic-placeholder-kit.tsx"
-    },
-    "./basic-selection-kit": {
-      "types": "./src/components/basic-selection-kit.tsx",
-      "default": "./src/components/basic-selection-kit.tsx"
-    },
-    "./block-context-menu": {
-      "types": "./src/components/block-context-menu.tsx",
-      "default": "./src/components/block-context-menu.tsx"
-    },
-    "./block-draggable": {
-      "types": "./src/components/block-draggable.tsx",
-      "default": "./src/components/block-draggable.tsx"
-    },
-    "./block-list-elements": {
-      "types": "./src/components/block-list-elements.tsx",
-      "default": "./src/components/block-list-elements.tsx"
-    },
-    "./block-list": {
-      "types": "./src/components/block-list.tsx",
-      "default": "./src/components/block-list.tsx"
-    },
-    "./block-menu-kit": {
-      "types": "./src/components/block-menu-kit.tsx",
-      "default": "./src/components/block-menu-kit.tsx"
-    },
-    "./block-placeholder-kit": {
-      "types": "./src/components/block-placeholder-kit.tsx",
-      "default": "./src/components/block-placeholder-kit.tsx"
-    },
-    "./block-selection": {
-      "types": "./src/components/block-selection.tsx",
-      "default": "./src/components/block-selection.tsx"
-    },
-    "./block-selection-kit": {
-      "types": "./src/components/block-selection-kit.tsx",
-      "default": "./src/components/block-selection-kit.tsx"
-    },
-    "./blockquote-node": {
-      "types": "./src/components/blockquote-node.tsx",
-      "default": "./src/components/blockquote-node.tsx"
-    },
-    "./caption": {
-      "types": "./src/components/caption.tsx",
-      "default": "./src/components/caption.tsx"
-    },
-    "./code-node": {
-      "types": "./src/components/code-node.tsx",
-      "default": "./src/components/code-node.tsx"
-    },
-    "./dnd-kit": {
-      "types": "./src/components/dnd-kit.tsx",
-      "default": "./src/components/dnd-kit.tsx"
-    },
-    "./drag-handle": {
-      "types": "./src/components/drag-handle.tsx",
-      "default": "./src/components/drag-handle.tsx"
-    },
-    "./draggable-gutter": {
-      "types": "./src/components/draggable-gutter.tsx",
-      "default": "./src/components/draggable-gutter.tsx"
-    },
-    "./drop-line": {
-      "types": "./src/components/drop-line.tsx",
-      "default": "./src/components/drop-line.tsx"
-    },
-    "./editor-kit": {
-      "types": "./src/components/editor-kit.tsx",
-      "default": "./src/components/editor-kit.tsx"
-    },
-    "./editor": {
-      "types": "./src/components/editor.tsx",
-      "default": "./src/components/editor.tsx"
-    },
-    "./exit-break-kit": {
-      "types": "./src/components/exit-break-kit.tsx",
-      "default": "./src/components/exit-break-kit.tsx"
-    },
-    "./floating-toolbar-buttons": {
-      "types": "./src/components/floating-toolbar-buttons.tsx",
-      "default": "./src/components/floating-toolbar-buttons.tsx"
-    },
-    "./floating-toolbar-kit": {
-      "types": "./src/components/floating-toolbar-kit.tsx",
-      "default": "./src/components/floating-toolbar-kit.tsx"
-    },
-    "./floating-toolbar": {
-      "types": "./src/components/floating-toolbar.tsx",
-      "default": "./src/components/floating-toolbar.tsx"
-    },
-    "./heading-node": {
-      "types": "./src/components/heading-node.tsx",
-      "default": "./src/components/heading-node.tsx"
-    },
-    "./highlight-node": {
-      "types": "./src/components/highlight-node.tsx",
-      "default": "./src/components/highlight-node.tsx"
-    },
-    "./hr-node": {
-      "types": "./src/components/hr-node.tsx",
-      "default": "./src/components/hr-node.tsx"
-    },
-    "./indent-kit": {
-      "types": "./src/components/indent-kit.tsx",
-      "default": "./src/components/indent-kit.tsx"
-    },
-    "./inline-combobox": {
-      "types": "./src/components/inline-combobox.tsx",
-      "default": "./src/components/inline-combobox.tsx"
-    },
-    "./kbd-node": {
-      "types": "./src/components/kbd-node.tsx",
-      "default": "./src/components/kbd-node.tsx"
-    },
-    "./link-kit": {
-      "types": "./src/components/link-kit.tsx",
-      "default": "./src/components/link-kit.tsx"
-    },
-    "./link-node": {
-      "types": "./src/components/link-node.tsx",
-      "default": "./src/components/link-node.tsx"
-    },
-    "./link-toolbar-button": {
-      "types": "./src/components/link-toolbar-button.tsx",
-      "default": "./src/components/link-toolbar-button.tsx"
-    },
-    "./link-toolbar": {
-      "types": "./src/components/link-toolbar.tsx",
-      "default": "./src/components/link-toolbar.tsx"
-    },
-    "./list-kit": {
-      "types": "./src/components/list-kit.tsx",
-      "default": "./src/components/list-kit.tsx"
-    },
-    "./mark-toolbar-button": {
-      "types": "./src/components/mark-toolbar-button.tsx",
-      "default": "./src/components/mark-toolbar-button.tsx"
-    },
-    "./media-audio-node": {
-      "types": "./src/components/media-audio-node.tsx",
-      "default": "./src/components/media-audio-node.tsx"
-    },
-    "./media-embed-node": {
-      "types": "./src/components/media-embed-node.tsx",
-      "default": "./src/components/media-embed-node.tsx"
-    },
-    "./media-file-node": {
-      "types": "./src/components/media-file-node.tsx",
-      "default": "./src/components/media-file-node.tsx"
-    },
-    "./media-image-node": {
-      "types": "./src/components/media-image-node.tsx",
-      "default": "./src/components/media-image-node.tsx"
-    },
-    "./media-preview-node": {
-      "types": "./src/components/media-image-node.tsx",
-      "default": "./src/components/media-image-node.tsx"
-    },
-    "./media-toolbar": {
-      "types": "./src/components/media-toolbar.tsx",
-      "default": "./src/components/media-toolbar.tsx"
-    },
-    "./media-upload-toast": {
-      "types": "./src/components/media-upload-toast.tsx",
-      "default": "./src/components/media-upload-toast.tsx"
-    },
-    "./media-video-node": {
-      "types": "./src/components/media-video-node.tsx",
-      "default": "./src/components/media-video-node.tsx"
-    },
-    "./media-kit": {
-      "types": "./src/components/media-kit.tsx",
-      "default": "./src/components/media-kit.tsx"
-    },
-    "./paragraph-node": {
-      "types": "./src/components/paragraph-node.tsx",
-      "default": "./src/components/paragraph-node.tsx"
-    },
-    "./resize-handle": {
-      "types": "./src/components/resize-handle.tsx",
-      "default": "./src/components/resize-handle.tsx"
+    "./*": {
+      "types": "./src/components/*.tsx",
+      "default": "./src/components/*.tsx"
     },
     "./serialize": {
       "types": "./src/lib/serialize.ts",
       "default": "./src/lib/serialize.ts"
-    },
-    "./slash-kit": {
-      "types": "./src/components/slash-kit.tsx",
-      "default": "./src/components/slash-kit.tsx"
-    },
-    "./slash-node": {
-      "types": "./src/components/slash-node.tsx",
-      "default": "./src/components/slash-node.tsx"
-    },
-    "./transform": {
-      "types": "./src/components/transform.tsx",
-      "default": "./src/components/transform.tsx"
-    },
-    "./turn-into-toolbar-button": {
-      "types": "./src/components/turn-into-toolbar-button.tsx",
-      "default": "./src/components/turn-into-toolbar-button.tsx"
     }
   },
   "scripts": {
@@ -261,7 +49,6 @@
     "react-lite-youtube-embed": "^3.6.0",
     "react-player": "^3.4.0",
     "react-tweet": "^3.3.1",
-    "slate": "catalog:",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "catalog:",
     "ui": "workspace:*"
@@ -271,7 +58,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@yopem/typescript-config": "catalog:",
-    "oxlint-tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },

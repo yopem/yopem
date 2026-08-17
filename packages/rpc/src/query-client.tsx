@@ -1,4 +1,5 @@
 import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query"
+import { cache } from "react"
 
 import { serializer } from "./serializer"
 
@@ -29,3 +30,5 @@ export function createQueryClient() {
     },
   })
 }
+
+export const getQueryClient = cache(createQueryClient)

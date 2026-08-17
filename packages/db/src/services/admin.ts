@@ -1,15 +1,17 @@
-import { and, asc, desc, eq, gte, lt, lte, sql } from "drizzle-orm"
+import { and, asc, eq, gte, sql } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  activityLogsTable,
-  adminSettingsTable,
-  aiModelsTable,
-  polarPaymentsTable,
-  productRunsTable,
-  uptimeEventsTable,
-} from "db/schema"
+import { adminSettingsTable } from "db/schema/admin-settings"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
+import { aiModelsTable } from "db/schema/ai-models"
+import { assetsTable } from "db/schema/assets"
+import { categoriesTable } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
+import { productRunsTable } from "db/schema/product-runs"
+import { productTagsTable } from "db/schema/product-tags"
+import { productVersionsTable } from "db/schema/product-versions"
+import { productsTable } from "db/schema/products"
+import { tagsTable } from "db/schema/tags"
 
 export const getSetting = async (
   key: string,
@@ -47,206 +49,26 @@ export const upsertSetting = async (
   return created
 }
 
-export const getActivityFeed = (
-  limit: number,
-): Promise<
-  {
-    userId: string
-    userName: string | null
-    amount: string
-    currency: string
-    creditsGranted: number
-    createdAt: Date | null
-  }[]
-> => {
-  return db
-    .select({
-      userId: polarPaymentsTable.userId,
-      userName: polarPaymentsTable.userName,
-      amount: polarPaymentsTable.amount,
-      currency: polarPaymentsTable.currency,
-      creditsGranted: polarPaymentsTable.creditsGranted,
-      createdAt: polarPaymentsTable.createdAt,
-    })
-    .from(polarPaymentsTable)
-    .where(eq(polarPaymentsTable.status, "succeeded"))
-    .orderBy(sql`${polarPaymentsTable.createdAt} DESC`)
-    .limit(limit)
+export const clearAllData = async (): Promise<void> => {
+  await db.execute(sql`
+    TRUNCATE TABLE
+      ${productRunsTable},
+      ${productVersionsTable},
+      ${productTagsTable},
+      ${productCategoriesTable},
+      ${productsTable},
+      ${tagsTable},
+      ${categoriesTable},
+      ${aiModelsTable},
+      ${assetsTable}
+    CASCADE
+  `)
 }
 
-export const getActivityLogs = async (input: {
-  limit: number
-  cursor?: string
-  eventType?: "auth" | "system" | "payment" | "tool" | "api" | "webhook"
-  severity?: "critical" | "error" | "warning" | "info" | "debug"
-  startDate?: Date
-  endDate?: Date
-}): Promise<{
-  logs: (typeof activityLogsTable.$inferSelect)[]
-  nextCursor?: string
-  totalCount: number
-}> => {
-  const logs = await db
-    .select()
-    .from(activityLogsTable)
-    .where(
-      and(
-        input.eventType
-          ? eq(activityLogsTable.eventType, input.eventType)
-          : sql`true`,
-        input.severity
-          ? eq(activityLogsTable.severity, input.severity)
-          : sql`true`,
-        input.startDate
-          ? gte(activityLogsTable.timestamp, input.startDate)
-          : sql`true`,
-        input.endDate
-          ? lte(activityLogsTable.timestamp, input.endDate)
-          : sql`true`,
-        input.cursor ? lt(activityLogsTable.id, input.cursor) : sql`true`,
-      ),
-    )
-    .orderBy(desc(activityLogsTable.timestamp))
-    .limit(input.limit + 1)
-
-  let nextCursor: string | undefined
-  if (logs.length > input.limit) {
-    const nextItem = logs.pop()
-    nextCursor = nextItem?.id
-  }
-
-  const [totalCountResult] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(activityLogsTable)
-
-  return {
-    logs,
-    nextCursor,
-    totalCount: Number(totalCountResult?.count ?? 0),
-  }
-}
-
-export const getSystemMetrics = async (): Promise<{
-  revenue: { current: number; previous: number }
-  activeUsers: { current: number; previous: number }
-  aiRequests: { current: number; previous: number }
-  downtimeSeconds: number
-}> => {
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-
-  const [revenueResult] = await db
-    .select({
-      current: sql<number>`COALESCE(SUM(CASE WHEN ${polarPaymentsTable.createdAt} >= ${thirtyDaysAgo} THEN CAST(${polarPaymentsTable.amount} AS DECIMAL) ELSE 0 END), 0)`,
-      previous: sql<number>`COALESCE(SUM(CASE WHEN ${polarPaymentsTable.createdAt} >= ${sixtyDaysAgo} AND ${polarPaymentsTable.createdAt} < ${thirtyDaysAgo} THEN CAST(${polarPaymentsTable.amount} AS DECIMAL) ELSE 0 END), 0)`,
-    })
-    .from(polarPaymentsTable)
-    .where(eq(polarPaymentsTable.status, "succeeded"))
-
-  const [activeUsersResult] = await db
-    .select({
-      current: sql<number>`COUNT(DISTINCT CASE WHEN ${productRunsTable.createdAt} >= ${thirtyDaysAgo} THEN ${productRunsTable.userId} END)`,
-      previous: sql<number>`COUNT(DISTINCT CASE WHEN ${productRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${productRunsTable.createdAt} < ${thirtyDaysAgo} THEN ${productRunsTable.userId} END)`,
-    })
-    .from(productRunsTable)
-
-  const [aiRequestsResult] = await db
-    .select({
-      current: sql<number>`COUNT(CASE WHEN ${productRunsTable.createdAt} >= ${thirtyDaysAgo} AND ${productRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
-      previous: sql<number>`COUNT(CASE WHEN ${productRunsTable.createdAt} >= ${sixtyDaysAgo} AND ${productRunsTable.createdAt} < ${thirtyDaysAgo} AND ${productRunsTable.status} IN ('completed', 'failed') THEN 1 END)`,
-    })
-    .from(productRunsTable)
-
-  const [uptimeStats] = await db
-    .select({
-      totalDowntime: sql<number>`COALESCE(SUM(${uptimeEventsTable.durationSeconds}), 0)`,
-    })
-    .from(uptimeEventsTable)
-    .where(
-      and(
-        gte(uptimeEventsTable.startedAt, thirtyDaysAgo),
-        sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-      ),
-    )
-
-  return {
-    revenue: {
-      current: Number(revenueResult?.current ?? 0),
-      previous: Number(revenueResult?.previous ?? 0),
-    },
-    activeUsers: {
-      current: Number(activeUsersResult?.current ?? 0),
-      previous: Number(activeUsersResult?.previous ?? 0),
-    },
-    aiRequests: {
-      current: Number(aiRequestsResult?.current ?? 0),
-      previous: Number(aiRequestsResult?.previous ?? 0),
-    },
-    downtimeSeconds: Number(uptimeStats?.totalDowntime ?? 0),
-  }
-}
-
-export const getUptimeMetrics = async (): Promise<{
-  totalDowntime: number
-  downtimeCount: number
-  lastDowntime: Date | null
-}> => {
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-
-  const [downtimeStats] = await db
-    .select({
-      totalDowntime: sql<number>`COALESCE(SUM(${uptimeEventsTable.durationSeconds}), 0)`,
-      count: sql<number>`COUNT(*)`,
-    })
-    .from(uptimeEventsTable)
-    .where(
-      and(
-        gte(uptimeEventsTable.startedAt, thirtyDaysAgo),
-        sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-      ),
-    )
-
-  const [lastDowntime] = await db
-    .select({ startedAt: uptimeEventsTable.startedAt })
-    .from(uptimeEventsTable)
-    .where(sql`${uptimeEventsTable.endedAt} IS NOT NULL`)
-    .orderBy(desc(uptimeEventsTable.startedAt))
-    .limit(1)
-
-  return {
-    totalDowntime: Number(downtimeStats?.totalDowntime ?? 0),
-    downtimeCount: Number(downtimeStats?.count ?? 0),
-    lastDowntime: lastDowntime?.startedAt ?? null,
-  }
-}
-
-export const getUptimeHistory = (input: {
-  days: number
-  startDate: Date
-  now: Date
-}): Promise<
-  {
-    startedAt: Date
-    endedAt: Date | null
-    durationSeconds: number | null
-  }[]
-> => {
-  return db
-    .select({
-      startedAt: uptimeEventsTable.startedAt,
-      endedAt: uptimeEventsTable.endedAt,
-      durationSeconds: uptimeEventsTable.durationSeconds,
-    })
-    .from(uptimeEventsTable)
-    .where(
-      and(
-        gte(uptimeEventsTable.startedAt, input.startDate),
-        lte(uptimeEventsTable.startedAt, input.now),
-        sql`${uptimeEventsTable.endedAt} IS NOT NULL`,
-      ),
-    )
+export const deleteSettingByKey = async (key: string): Promise<void> => {
+  await db
+    .delete(adminSettingsTable)
+    .where(eq(adminSettingsTable.settingKey, key))
 }
 
 export const getAiRequestsHistory = (input: {
@@ -274,7 +96,7 @@ export const findAIModelByProviderAndModelId = async (
   modelId: string,
 ) => {
   const [existing] = await db
-    .select({ id: aiModelsTable.id })
+    .select({ id: aiModelsTable.id, isEnabled: aiModelsTable.isEnabled })
     .from(aiModelsTable)
     .where(
       and(
@@ -344,6 +166,10 @@ export const updateAIModelById = async (
 
 export const deleteAIModelById = async (id: string) => {
   await db.delete(aiModelsTable).where(eq(aiModelsTable.id, id))
+}
+
+export const deleteAIModelsByProvider = async (provider: string) => {
+  await db.delete(aiModelsTable).where(eq(aiModelsTable.provider, provider))
 }
 
 export const getApiKeyStats = async (): Promise<{

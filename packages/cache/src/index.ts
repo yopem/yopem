@@ -1,3 +1,3 @@
-import { createRedisCache } from "./client.ts"
+import { createRedisCache } from "./client"
 
 export const redisCache = createRedisCache()

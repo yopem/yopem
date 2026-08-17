@@ -1,9 +1,31 @@
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "vite-plus"
 
+const root = dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig({
+  test: {
+    env: {
+      NODE_ENV: "test",
+    },
+    projects: [
+      "packages/utils",
+      "packages/env",
+      "packages/auth",
+      "packages/cache",
+      "packages/rpc",
+      "packages/db",
+      "apps/admin",
+      "apps/web",
+      "packages/editor",
+      "packages/ui",
+    ],
+  },
   staged: {
     "*": "vp check --fix",
-    "*.{js,ts,tsx,json,md,yaml,yml,css}": "vp fmt --write",
+    "*.{js,ts,tsx,json,md,yaml,yml,css}, !**/migrations/**, !pnpm-lock.yaml":
+      "vp fmt --write",
   },
   fmt: {
     bracketSpacing: true,
@@ -101,6 +123,25 @@ export default defineConfig({
     },
     env: {
       builtin: true,
+    },
+    settings: {
+      tailwindcss: {
+        entryPoint: [
+          {
+            files: "apps/admin/**",
+            use: resolve(root, "apps/admin/src/styles.css"),
+          },
+          {
+            files: "packages/editor/**",
+            use: resolve(root, "packages/editor/src/style.css"),
+          },
+          {
+            files: "packages/ui/**",
+            use: resolve(root, "packages/ui/src/style.css"),
+          },
+          { files: "**", use: resolve(root, "packages/ui/src/style.css") },
+        ],
+      },
     },
     rules: {
       "import/no-relative-parent-imports": "error",
@@ -213,5 +254,118 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
+    overrides: [
+      {
+        files: ["apps/web/**", "apps/admin/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "drizzle-orm",
+                  message:
+                    "drizzle-orm is packages/db-only; go through db services (db/services/*)",
+                },
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: ["packages/{auth,cache,editor,env,rpc,ui,utils}/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "drizzle-orm",
+                  message:
+                    "drizzle-orm is packages/db-only; go through db services (db/services/*)",
+                },
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: ["packages/db/**"],
+        rules: {
+          "eslint/no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "@orpc/server",
+                  allowTypeImports: true,
+                  message:
+                    "@orpc/server is apps/server-only; the typed client lives in packages/rpc",
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: [
+          "apps/admin/**",
+          "apps/web/**",
+          "packages/editor/**",
+          "packages/ui/**",
+        ],
+        plugins: [
+          "eslint",
+          "import",
+          "jsx-a11y",
+          "oxc",
+          "promise",
+          "react",
+          "react-perf",
+          "typescript",
+          "unicorn",
+        ],
+        jsPlugins: ["oxlint-tailwindcss"],
+        rules: {
+          "react/react-compiler": "error",
+          "react/rules-of-hooks": "error",
+          "tailwindcss/enforce-canonical": "error",
+          "tailwindcss/enforce-consistent-important-position": "error",
+          "tailwindcss/enforce-negative-arbitrary-values": "error",
+          "tailwindcss/enforce-shorthand": "error",
+          "tailwindcss/enforce-sort-order": "off",
+          "tailwindcss/no-conflicting-classes": "error",
+          "tailwindcss/no-deprecated-classes": "error",
+          "tailwindcss/no-unknown-classes": [
+            "error",
+            {
+              allowlist: [
+                "group/container",
+                "group/editor",
+                "group/media",
+                "group/menu-item",
+                "group/menu-sub-item",
+                "group/sidebar-wrapper",
+                "peer/menu-button",
+              ],
+            },
+          ],
+          "tailwindcss/no-unnecessary-arbitrary-value": "error",
+          "tailwindcss/no-unnecessary-whitespace": "error",
+        },
+      },
+    ],
   },
 })

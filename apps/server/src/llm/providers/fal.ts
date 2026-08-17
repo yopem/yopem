@@ -3,15 +3,12 @@ import { generateText } from "ai"
 
 import {
   AIProviderError,
-  ContextLengthError,
-  InvalidKeyError,
-  RateLimitError,
   type AIProvider,
-  type ApiKeyProvider,
   type ExecutionRequest,
   type ExecutionResponse,
   type ProviderConfig,
-} from "./base.ts"
+} from "./base"
+import { classifyProviderError } from "./errors"
 
 const FAL_OPENAI_COMPATIBLE_URL = "https://fal.run/openai-compatible/v1"
 const FAL_API_BASE = "https://fal.run"
@@ -249,36 +246,7 @@ export class FalProvider implements AIProvider {
   }
 
   private wrapError(e: Error): AIProviderError {
-    const msg = e.message.toLowerCase()
-    const provider: ApiKeyProvider = "fal"
-
-    if (msg.includes("401") || msg.includes("unauthorized")) {
-      return new InvalidKeyError(
-        provider,
-        "Invalid API key. Please check your credentials.",
-        e,
-      )
-    }
-    if (msg.includes("429") || msg.includes("rate limit")) {
-      return new RateLimitError(
-        provider,
-        "Rate limit exceeded. Please try again later.",
-        e,
-      )
-    }
-    if (
-      msg.includes("context_length_exceeded") ||
-      msg.includes("context window") ||
-      msg.includes("maximum context length") ||
-      msg.includes("too many tokens")
-    ) {
-      return new ContextLengthError(
-        provider,
-        "Your input exceeds the context window of this model. Please adjust your input and try again.",
-        e,
-      )
-    }
-    return new AIProviderError(provider, e.message ?? "FAL API error", e)
+    return classifyProviderError("fal", e, e.message ?? "FAL API error")
   }
 }
 

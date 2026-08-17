@@ -4,9 +4,11 @@ import type { PlateEditor, PlateElementProps } from "platejs/react"
 import type { ReactNode } from "react"
 
 import {
+  CodeIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  ImageIcon,
   LinkIcon,
   ListIcon,
   ListOrderedIcon,
@@ -16,9 +18,13 @@ import {
 import { type TComboboxInputElement, KEYS } from "platejs"
 import { PlateElement } from "platejs/react"
 
-import { insertBlock, insertInlineElement } from "editor/transform"
+import { ImagePickerPlugin } from "editor/image-picker-kit"
+import {
+  insertBlock,
+  insertImageAsset,
+  insertInlineElement,
+} from "editor/transform"
 
-// import { InlineImageMenuItem } from "./image-menu-item"
 import {
   InlineCombobox,
   InlineComboboxContent,
@@ -42,82 +48,128 @@ interface Group {
   }[]
 }
 
-const groups: Group[] = [
-  {
-    group: "Basic blocks",
-    items: [
-      {
-        icon: <PilcrowIcon />,
-        keywords: ["paragraph"],
-        label: "Paragraph",
-        value: KEYS.p,
+const basicBlocksGroup: Group = {
+  group: "Basic blocks",
+  items: [
+    {
+      icon: <PilcrowIcon />,
+      keywords: ["paragraph"],
+      label: "Paragraph",
+      value: KEYS.p,
+    },
+    {
+      icon: <Heading1Icon />,
+      keywords: ["title", "h1"],
+      label: "Heading 1",
+      value: KEYS.h1,
+    },
+    {
+      icon: <Heading2Icon />,
+      keywords: ["subtitle", "h2"],
+      label: "Heading 2",
+      value: KEYS.h2,
+    },
+    {
+      icon: <Heading3Icon />,
+      keywords: ["subtitle", "h3"],
+      label: "Heading 3",
+      value: KEYS.h3,
+    },
+    {
+      icon: <ListIcon />,
+      keywords: ["unordered", "ul", "-"],
+      label: "Bulleted list",
+      value: KEYS.ul,
+    },
+    {
+      icon: <ListOrderedIcon />,
+      keywords: ["ordered", "ol", "1"],
+      label: "Numbered list",
+      value: KEYS.ol,
+    },
+    {
+      icon: <QuoteIcon />,
+      keywords: ["citation", "blockquote", "quote", ">"],
+      label: "Blockquote",
+      value: KEYS.blockquote,
+    },
+  ].map((item) => ({
+    ...item,
+    onSelect: (editor, value) => {
+      insertBlock(editor, value, { upsert: true })
+    },
+  })),
+}
+
+function inlineGroup(includeImage: boolean): Group {
+  const items: Group["items"] = [
+    {
+      focusEditor: true,
+      icon: <LinkIcon />,
+      keywords: ["url", "href", "link"],
+      label: "Link",
+      value: KEYS.link,
+      onSelect: (editor: PlateEditor, _value: string) => {
+        insertInlineElement(editor, KEYS.link)
       },
-      {
-        icon: <Heading1Icon />,
-        keywords: ["title", "h1"],
-        label: "Heading 1",
-        value: KEYS.h1,
+    },
+    {
+      focusEditor: true,
+      icon: <CodeIcon />,
+      keywords: [
+        "youtube",
+        "twitter",
+        "tweet",
+        "x",
+        "facebook",
+        "post",
+        "video",
+        "embed",
+      ],
+      label: "Embed",
+      value: KEYS.mediaEmbed,
+      onSelect: (editor: PlateEditor, _value: string) => {
+        insertInlineElement(editor, KEYS.mediaEmbed)
       },
-      {
-        icon: <Heading2Icon />,
-        keywords: ["subtitle", "h2"],
-        label: "Heading 2",
-        value: KEYS.h2,
+    },
+  ]
+
+  if (includeImage) {
+    items.push({
+      focusEditor: false,
+      icon: <ImageIcon />,
+      keywords: ["image", "img", "picture"],
+      label: "Image",
+      value: "imageAsset",
+      onSelect: (editor: PlateEditor, _value: string) => {
+        void insertImageAsset(editor)
       },
-      {
-        icon: <Heading3Icon />,
-        keywords: ["subtitle", "h3"],
-        label: "Heading 3",
-        value: KEYS.h3,
-      },
-      {
-        icon: <ListIcon />,
-        keywords: ["unordered", "ul", "-"],
-        label: "Bulleted list",
-        value: KEYS.ul,
-      },
-      {
-        icon: <ListOrderedIcon />,
-        keywords: ["ordered", "ol", "1"],
-        label: "Numbered list",
-        value: KEYS.ol,
-      },
-      {
-        icon: <QuoteIcon />,
-        keywords: ["citation", "blockquote", "quote", ">"],
-        label: "Blockquote",
-        value: KEYS.blockquote,
-      },
-    ].map((item) => ({
-      ...item,
-      onSelect: (editor, value) => {
-        insertBlock(editor, value, { upsert: true })
-      },
-    })),
-  },
-  {
+    })
+  }
+
+  return {
     group: "Inline",
-    items: [
-      {
-        focusEditor: true,
-        icon: <LinkIcon />,
-        keywords: ["url", "href", "link"],
-        label: "Link",
-        value: KEYS.link,
-      },
-    ].map((item) => ({
-      ...item,
-      onSelect: (editor, value) => {
-        insertInlineElement(editor, value)
-      },
-    })),
-  },
-]
+    items,
+  }
+}
+
+export function createSlashGroups(includeImage: boolean): Group[] {
+  return [basicBlocksGroup, inlineGroup(includeImage)]
+}
 
 export function SlashInputElement(
   props: PlateElementProps<TComboboxInputElement>,
 ) {
   const { editor, element } = props
+  const plugin = (
+    editor.plugins as unknown as Record<
+      string,
+      { options?: { imagePicker?: () => Promise<string | undefined> } }
+    >
+  )[ImagePickerPlugin.key]
+  const includeImage = typeof plugin?.options?.imagePicker === "function"
+
+  const groups = createSlashGroups(includeImage)
 
   return (
     <PlateElement {...props} as="span">
@@ -144,19 +196,13 @@ export function SlashInputElement(
                     group={group}
                     keywords={keywords}
                   >
-                    <div className="text-muted-foreground mr-2">{icon}</div>
+                    {icon}
                     {label ?? value}
                   </InlineComboboxItem>
                 ),
               )}
             </InlineComboboxGroup>
           ))}
-          {/*
-              <InlineComboboxGroup>
-            <InlineComboboxGroupLabel>Media</InlineComboboxGroupLabel>
-            <InlineImageMenuItem />
-          </InlineComboboxGroup>
-          */}
         </InlineComboboxContent>
       </InlineCombobox>
 

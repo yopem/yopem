@@ -13,9 +13,19 @@ import { ToolbarButton } from "ui/toolbar"
 export function LinkToolbarButton(props: ComponentProps<typeof ToolbarButton>) {
   const state = useLinkToolbarButtonState()
   const { props: buttonProps } = useLinkToolbarButton(state)
+  const { pressed, ...restButtonProps } = buttonProps
 
   return (
-    <ToolbarButton {...props} {...buttonProps} data-plate-focus>
+    <ToolbarButton
+      {...props}
+      {...restButtonProps}
+      aria-label="Link"
+      aria-pressed={pressed}
+      data-pressed={pressed ? "" : undefined}
+      data-active={pressed ? "" : undefined}
+      size="icon"
+      data-plate-focus
+    >
       <LinkIcon />
     </ToolbarButton>
   )

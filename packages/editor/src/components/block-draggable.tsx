@@ -11,7 +11,7 @@ import {
 } from "platejs/react"
 import { useEffect, useState } from "react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 import { DragHandle } from "./drag-handle"
 import { DraggableGutter } from "./draggable-gutter"
@@ -19,7 +19,9 @@ import { DropLine } from "./drop-line"
 
 const UNDRAGGABLE_KEYS: string[] = []
 
-export const BlockDraggable: RenderNodeWrapper = (props) => {
+export function BlockDraggable(
+  props: Parameters<RenderNodeWrapper>[0],
+): ReturnType<RenderNodeWrapper> {
   const { editor, element, path } = props
 
   if (editor.dom.readOnly) return
@@ -48,7 +50,7 @@ function Draggable(props: PlateElementProps) {
 
   const [previewTop, setPreviewTop] = useState(0)
 
-  const resetPreview = () => {
+  function resetPreview() {
     if (previewRef.current) {
       previewRef.current.replaceChildren()
       previewRef.current?.classList.add("hidden")
@@ -132,7 +134,7 @@ function Draggable(props: PlateElementProps) {
   )
 }
 
-const calcDragButtonTop = (editor: PlateEditor, element: TElement): number => {
+function calcDragButtonTop(editor: PlateEditor, element: TElement): number {
   const child = editor.api.toDOMNode(element)!
 
   const currentMarginTopString = window.getComputedStyle(child).marginTop

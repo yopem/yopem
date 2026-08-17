@@ -4,19 +4,19 @@ import type { PlateElementProps } from "platejs/react"
 
 import { PlateElement } from "platejs/react"
 
-import { type VariantProps, cva } from "ui"
+import { type VariantProps, cva } from "ui/utils"
 
 const headingVariants = cva(
-  "relative mb-1 data-[nav-target=true]:rounded-md data-[nav-target=true]:bg-(--color-highlight)",
+  "data-[nav-target=true]:bg-highlight relative mb-2 data-[nav-target=true]:rounded-md",
   {
     variants: {
       variant: {
-        h1: "mt-[1.6em] pb-1 font-sans text-4xl font-bold",
-        h2: "mt-[1.4em] pb-px font-sans text-2xl font-semibold tracking-tight",
-        h3: "mt-[1em] pb-px font-sans text-xl font-semibold tracking-tight",
-        h4: "mt-[0.75em] font-sans text-lg font-semibold tracking-tight",
-        h5: "mt-[0.75em] text-lg font-semibold tracking-tight",
-        h6: "mt-[0.75em] text-base font-semibold tracking-tight",
+        h1: "pb-1 font-sans text-4xl font-bold",
+        h2: "pb-px font-sans text-2xl font-semibold tracking-tight",
+        h3: "pb-px font-sans text-xl font-semibold tracking-tight",
+        h4: "font-sans text-lg font-semibold tracking-tight",
+        h5: "text-lg font-semibold tracking-tight",
+        h6: "text-base font-semibold tracking-tight",
       },
     },
   },

@@ -1,19 +1,19 @@
 import { Hono } from "hono"
-import { getCookie, deleteCookie, setCookie } from "hono/cookie"
+import { getCookie } from "hono/cookie"
+import { clearLoginOriginCookie, setSessionCookies } from "server/lib/cookies"
 
 import { authClient } from "auth/client"
+import { adminOrigin, authCallbackUrl, isDev, webOrigin } from "env"
 
-const allowedOrigins = import.meta.env.DEV
+const allowedOrigins = isDev
   ? [
-      process.env["WEB_ORIGIN"] ?? "http://localhost:3000",
-      process.env["ADMIN_ORIGIN"] ?? "http://localhost:3001",
+      webOrigin ?? "http://localhost:3000",
+      adminOrigin ?? "http://localhost:3001",
     ]
-  : [process.env["WEB_ORIGIN"] ?? "", process.env["ADMIN_ORIGIN"] ?? ""].filter(
-      Boolean,
-    )
+  : [webOrigin, adminOrigin].filter(Boolean)
+
 const defaultOrigin = allowedOrigins[0] ?? "http://localhost:3000"
-const callbackUrl =
-  process.env["AUTH_CALLBACK_URL"] ?? "http://localhost:4000/auth/callback"
+const callbackUrl = authCallbackUrl ?? "http://localhost:4000/auth/callback"
 
 const isValidRedirectPath = (path: string): boolean => {
   if (!path.startsWith("/")) return false
@@ -22,18 +22,36 @@ const isValidRedirectPath = (path: string): boolean => {
   return true
 }
 
+const resolveRedirectPath = (query: string | undefined): string =>
+  query !== undefined && isValidRedirectPath(query) ? query : "/"
+
+export const resolveLoginOrigin = (
+  loginOrigin: string | undefined,
+  allowedOrigins: string[],
+  defaultOrigin: string,
+  queryRedirect: string,
+): { origin: string; redirectPath: string } => {
+  if (!loginOrigin) {
+    return { origin: defaultOrigin, redirectPath: queryRedirect }
+  }
+  const matched = allowedOrigins.find(
+    (o) => loginOrigin === o || loginOrigin.startsWith(`${o}/`),
+  )
+  if (!matched) {
+    return { origin: defaultOrigin, redirectPath: queryRedirect }
+  }
+  const path = loginOrigin.slice(matched.length)
+  return { origin: matched, redirectPath: path || queryRedirect }
+}
+
 export const authCallbackRoute = new Hono()
 
 authCallbackRoute.get("/callback", async (c) => {
   const code = c.req.query("code")
   const error = c.req.query("error")
   const errorDescription = c.req.query("error_description")
-  const redirectPath = isValidRedirectPath(c.req.query("redirect") ?? "/")
-    ? (c.req.query("redirect") ?? "/")
-    : "/"
 
-  const fullUrl = c.req.url
-  console.info(`Auth callback received: URL=${fullUrl}`)
+  console.info(`Auth callback received: URL=${c.req.url}`)
 
   if (error) {
     console.error(`OAuth error: ${error} - ${errorDescription}`)
@@ -63,36 +81,16 @@ authCallbackRoute.get("/callback", async (c) => {
     `Auth callback: Token exchange successful, redirecting to token exchange`,
   )
 
-  const loginOrigin = getCookie(c, "login_origin")
-  const origin =
-    loginOrigin && allowedOrigins.includes(loginOrigin)
-      ? loginOrigin
-      : defaultOrigin
+  const { origin, redirectPath } = resolveLoginOrigin(
+    getCookie(c, "login_origin"),
+    allowedOrigins,
+    defaultOrigin,
+    resolveRedirectPath(c.req.query("redirect")),
+  )
 
-  const cookieDomain = process.env["COOKIE_DOMAIN"]
-  const isSecure = !!cookieDomain || !import.meta.env.DEV
-  deleteCookie(c, "login_origin", {
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  })
+  clearLoginOriginCookie(c)
 
-  const sameSite: "none" | "lax" = import.meta.env.DEV ? "lax" : "none"
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite,
-    secure: isSecure,
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  }
-
-  setCookie(c, "access_token", exchanged.tokens.access, {
-    ...cookieOptions,
-    maxAge: 86400,
-  })
-  setCookie(c, "refresh_token", exchanged.tokens.refresh, {
-    ...cookieOptions,
-    maxAge: 604800,
-  })
+  setSessionCookies(c, exchanged.tokens.access, exchanged.tokens.refresh)
 
   return c.redirect(`${origin}${redirectPath}`, 302)
 })

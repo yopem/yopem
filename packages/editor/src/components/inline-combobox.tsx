@@ -21,15 +21,18 @@ import { useEditorRef } from "platejs/react"
 import {
   createContext,
   startTransition,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react"
 import { createPortal } from "react-dom"
 
-import { cn, cva } from "ui"
+import { cn, cva } from "ui/utils"
 
 type FilterFn = (
   item: { value: string; group?: string; keywords?: string[]; label?: string },
@@ -41,11 +44,51 @@ interface ItemRegistration {
   visible: boolean
 }
 
+function createVisibleStore() {
+  const items = new Map<string, ItemRegistration>()
+  const listeners = new Set<() => void>()
+  let cachedSnapshot: string[] = []
+  let snapshotDirty = true
+
+  function emit() {
+    snapshotDirty = true
+    for (const listener of listeners) listener()
+  }
+
+  return {
+    getItem: (itemValue: string) => items.get(itemValue),
+    getSnapshot: () => {
+      if (snapshotDirty) {
+        const next: string[] = []
+        for (const [key, item] of items.entries()) {
+          if (item.visible) next.push(key)
+        }
+        cachedSnapshot = next
+        snapshotDirty = false
+      }
+      return cachedSnapshot
+    },
+    register: (itemValue: string, visible: boolean, onSelect: () => void) => {
+      items.set(itemValue, { onSelect, visible })
+      emit()
+      return () => {
+        items.delete(itemValue)
+        emit()
+      }
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+  }
+}
+
 interface InlineComboboxContextValue {
   activeValue: string | null
   filter: FilterFn | false
   inputProps: UseComboboxInputResult["props"]
   inputRef: RefObject<HTMLInputElement | null>
+  listboxRef: RefObject<HTMLDivElement | null>
   open: boolean
   removeInput: UseComboboxInputResult["removeInput"]
   setActiveValue: (value: string | null) => void
@@ -66,8 +109,6 @@ const InlineComboboxContext = createContext<InlineComboboxContextValue | null>(
   null,
 )
 
-const listboxRef: RefObject<HTMLDivElement | null> = { current: null }
-
 function scrollActiveIntoView(
   listbox: HTMLDivElement | null,
   value: string | null,
@@ -79,10 +120,20 @@ function scrollActiveIntoView(
   }
 }
 
-const defaultFilter: FilterFn = (
-  { group, keywords = [], label, value },
-  search,
-) => {
+function defaultFilter(
+  {
+    group,
+    keywords = [],
+    label,
+    value,
+  }: {
+    value: string
+    group?: string
+    keywords?: string[]
+    label?: string
+  },
+  search: string,
+): boolean {
   const uniqueTerms = new Set(
     [value, ...keywords, group, label].filter(Boolean),
   )
@@ -115,6 +166,7 @@ export function InlineCombobox({
 }: InlineComboboxProps) {
   const editor = useEditorRef()
   const inputRef = useRef<HTMLInputElement>(null)
+  const listboxRef = useRef<HTMLDivElement>(null)
   const cursorState = useHTMLInputCursorState(inputRef)
 
   const [valueState, setValueState] = useState("")
@@ -125,13 +177,16 @@ export function InlineCombobox({
   const currentUserId = editor.meta?.userId
   const isCreator = !elementUserId || elementUserId === currentUserId
 
-  const setValue = (newValue: string) => {
-    setValueProp?.(newValue)
+  const setValue = useCallback(
+    (newValue: string) => {
+      setValueProp?.(newValue)
 
-    if (!hasValueProp) {
-      setValueState(newValue)
-    }
-  }
+      if (!hasValueProp) {
+        setValueState(newValue)
+      }
+    },
+    [setValueProp, hasValueProp],
+  )
 
   const insertPointRef = useRef<PointRef | null>(null)
 
@@ -180,123 +235,109 @@ export function InlineCombobox({
   })
 
   const [hasEmpty, setHasEmpty] = useState(false)
-  const itemsRef = useRef<Map<string, ItemRegistration>>(new Map())
-  const [visibleValues, setVisibleValues] = useState<string[]>([])
-  const pendingVisibleRef = useRef<string[] | null>(null)
+  const [store] = useState(createVisibleStore)
+  const visibleValues = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    () => [],
+  )
   const [activeIndex, setActiveIndex] = useState(0)
 
   const open =
     (visibleValues.length > 0 || hasEmpty) &&
     (!hideWhenNoValue || value.length > 0)
 
-  useEffect(() => {
-    if (activeIndex >= visibleValues.length) {
-      setActiveIndex(0)
-    }
-  }, [activeIndex, visibleValues.length])
+  const activeIndexBounded = Math.min(activeIndex, visibleValues.length - 1)
+  const register = store.register
 
-  const visibleValuesRef = useRef<string[]>(visibleValues)
-  visibleValuesRef.current = visibleValues
+  const activeValue = visibleValues[activeIndexBounded] ?? null
 
-  const flushVisibleValues = () => {
-    if (pendingVisibleRef.current) {
-      setVisibleValues(pendingVisibleRef.current)
-      pendingVisibleRef.current = null
-    }
-  }
-
-  const updateVisibleValues = () => {
-    const next: string[] = []
-    for (const [key, item] of itemsRef.current.entries()) {
-      if (item.visible) next.push(key)
-    }
-    if (next.join(",") !== visibleValuesRef.current.join(",")) {
-      pendingVisibleRef.current = next
-    }
-  }
-
-  const register = (
-    itemValue: string,
-    visible: boolean,
-    onSelect: () => void,
-  ) => {
-    itemsRef.current.set(itemValue, { onSelect, visible })
-    updateVisibleValues()
-
-    return () => {
-      itemsRef.current.delete(itemValue)
-      updateVisibleValues()
-    }
-  }
-
-  const activeValue = visibleValues[activeIndex] ?? null
-
-  const setActiveValue = (nextValue: string | null) => {
-    const index = nextValue ? visibleValues.indexOf(nextValue) : -1
-    if (index >= 0) {
-      setActiveIndex(index)
-    }
-  }
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    inputProps.onKeyDown?.(event)
-
-    if (!open) return
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (visibleValues.length === 0) return
-      const next = visibleValues[(activeIndex + 1) % visibleValues.length]
-      startTransition(() => {
-        setActiveIndex((activeIndex + 1) % visibleValues.length)
-        scrollActiveIntoView(listboxRef.current, next)
-      })
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      event.stopPropagation()
-      if (visibleValues.length === 0) return
-      const next =
-        visibleValues[
-          (activeIndex - 1 + visibleValues.length) % visibleValues.length
-        ]
-      startTransition(() => {
-        setActiveIndex(
-          (activeIndex - 1 + visibleValues.length) % visibleValues.length,
-        )
-        scrollActiveIntoView(listboxRef.current, next)
-      })
-    } else if (event.key === "Enter" && activeValue) {
-      event.preventDefault()
-      event.stopPropagation()
-      const item = itemsRef.current.get(activeValue)
-      if (item) {
-        startTransition(() => item.onSelect())
+  const setActiveValue = useCallback(
+    (nextValue: string | null) => {
+      const index = nextValue ? visibleValues.indexOf(nextValue) : -1
+      if (index >= 0) {
+        setActiveIndex(index)
       }
-    }
-  }
+    },
+    [visibleValues],
+  )
 
-  const contextValue = {
-    activeValue,
-    filter,
-    inputProps: { ...inputProps, onKeyDown: handleKeyDown },
-    inputRef,
-    open,
-    register,
-    removeInput,
-    setActiveValue,
-    setHasEmpty,
-    setValue,
-    showTrigger,
-    trigger,
-    value,
-    visibleValues,
-  }
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      inputProps.onKeyDown?.(event)
 
-  useLayoutEffect(() => {
-    flushVisibleValues()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsRef.current.size, value])
+      if (!open) return
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault()
+        event.stopPropagation()
+        if (visibleValues.length === 0) return
+        const nextIndex = (activeIndexBounded + 1) % visibleValues.length
+        const next = visibleValues[nextIndex]
+        startTransition(() => {
+          setActiveIndex(nextIndex)
+          scrollActiveIntoView(listboxRef.current, next)
+        })
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault()
+        event.stopPropagation()
+        if (visibleValues.length === 0) return
+        const nextIndex =
+          (activeIndexBounded - 1 + visibleValues.length) % visibleValues.length
+        const next = visibleValues[nextIndex]
+        startTransition(() => {
+          setActiveIndex(nextIndex)
+          scrollActiveIntoView(listboxRef.current, next)
+        })
+      } else if (event.key === "Enter" && activeValue) {
+        event.preventDefault()
+        event.stopPropagation()
+        const item = store.getItem(activeValue)
+        if (item) {
+          startTransition(() => item.onSelect())
+        }
+      }
+    },
+    [inputProps, open, visibleValues, activeIndexBounded, activeValue, store],
+  )
+
+  const contextValue = useMemo(
+    () => ({
+      activeValue,
+      filter,
+      inputProps: { ...inputProps, onKeyDown: handleKeyDown },
+      inputRef,
+      listboxRef,
+      open,
+      register,
+      removeInput,
+      setActiveValue,
+      setHasEmpty,
+      setValue,
+      showTrigger,
+      trigger,
+      value,
+      visibleValues,
+    }),
+    [
+      activeValue,
+      filter,
+      handleKeyDown,
+      inputProps,
+      inputRef,
+      listboxRef,
+      open,
+      register,
+      removeInput,
+      setActiveValue,
+      setHasEmpty,
+      setValue,
+      showTrigger,
+      trigger,
+      value,
+      visibleValues,
+    ],
+  )
 
   return (
     <span contentEditable={false}>
@@ -364,21 +405,76 @@ export function InlineComboboxContent({
   if (!context)
     throw new Error("InlineComboboxContent must be inside InlineCombobox")
 
-  const { inputRef, open } = context
+  const { inputRef, listboxRef, open, visibleValues } = context
   const [style, setStyle] = useState<React.CSSProperties>({})
 
-  useLayoutEffect(() => {
+  const updatePosition = useCallback(() => {
     const input = inputRef.current
     if (!input || !open) return
 
     const rect = input.getBoundingClientRect()
+    if (rect.width === 0 && rect.height === 0) return
+
+    const viewportHeight = window.innerHeight
+    const viewportWidth = window.innerWidth
+
+    const listbox = listboxRef.current
+    const listboxHeight = listbox?.offsetHeight ?? 320
+    const listboxWidth = listbox?.offsetWidth ?? 320
+
+    const margin = 8
+    const spaceBelow = viewportHeight - rect.bottom - margin
+    const spaceAbove = rect.top - margin
+
+    const showAbove =
+      spaceBelow < Math.min(listboxHeight, 200) && spaceAbove > spaceBelow
+
+    let top: number | undefined
+    let bottom: number | undefined
+    let maxHeight: number
+
+    if (showAbove) {
+      bottom = viewportHeight - rect.top + 4
+      maxHeight = Math.max(80, Math.min(320, spaceAbove - 4))
+    } else {
+      top = rect.bottom + 4
+      maxHeight = Math.max(80, Math.min(320, spaceBelow - 4))
+    }
+
+    let left = rect.left
+    if (left + listboxWidth > viewportWidth - margin) {
+      left = Math.max(margin, viewportWidth - listboxWidth - margin)
+    }
+    left = Math.max(margin, left)
+
     setStyle({
       position: "fixed",
-      top: rect.bottom,
-      left: rect.left,
+      top: top ?? "auto",
+      bottom: bottom ?? "auto",
+      left,
+      maxHeight,
       zIndex: 500,
     })
-  }, [inputRef, open])
+  }, [inputRef, listboxRef, open])
+
+  useLayoutEffect(() => {
+    if (!open) return
+
+    updatePosition()
+
+    window.addEventListener("scroll", updatePosition, true)
+    window.addEventListener("resize", updatePosition)
+
+    const rafId = requestAnimationFrame(() => {
+      updatePosition()
+    })
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true)
+      window.removeEventListener("resize", updatePosition)
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, updatePosition, visibleValues])
 
   if (typeof document === "undefined") return null
 
@@ -388,7 +484,7 @@ export function InlineComboboxContent({
       role="listbox"
       aria-label="Suggestions"
       className={cn(
-        "bg-popover max-h-72 w-75 overflow-y-auto rounded-lg shadow-lg/5",
+        "bg-popover text-popover-foreground w-80 overflow-y-auto rounded-xl border p-1 shadow-lg/5",
         !open && "hidden",
         className,
       )}
@@ -403,14 +499,14 @@ export function InlineComboboxContent({
 }
 
 const comboboxItemVariants = cva(
-  "text-foreground relative mx-1 flex h-7 items-center rounded-sm px-2 text-sm outline-none select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "text-foreground relative flex min-h-8 items-center gap-3 rounded-md px-2 py-1 text-sm outline-none select-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     defaultVariants: {
       interactive: true,
     },
     variants: {
       interactive: {
-        false: "",
+        false: "text-muted-foreground",
         true: "hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground cursor-pointer transition-colors",
       },
     },
@@ -531,15 +627,7 @@ export function InlineComboboxGroup({
   className,
   ...props
 }: ComponentProps<"div">) {
-  return (
-    <div
-      className={cn(
-        "hidden py-1.5 not-last:border-b has-[[role=option]]:block",
-        className,
-      )}
-      {...props}
-    />
-  )
+  return <div className={cn("py-1 not-last:border-b", className)} {...props} />
 }
 
 export function InlineComboboxGroupLabel({
@@ -549,7 +637,7 @@ export function InlineComboboxGroupLabel({
   return (
     <div
       className={cn(
-        "text-muted-foreground mt-1.5 mb-2 px-3 text-xs font-medium",
+        "text-muted-foreground px-2 py-1.5 text-xs font-medium",
         className,
       )}
       {...props}

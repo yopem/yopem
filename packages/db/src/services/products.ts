@@ -1,26 +1,23 @@
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 
 import { db } from "db"
-import {
-  assetsTable,
-  categoriesTable,
-  tagsTable,
-  productCategoriesTable,
-  productReviewsTable,
-  productRunsTable,
-  productTagsTable,
-  productVersionsTable,
-  productsTable,
-} from "db/schema"
+import { assetsTable } from "db/schema/assets"
+import { categoriesTable } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
+import { productRunsTable } from "db/schema/product-runs"
+import { productTagsTable } from "db/schema/product-tags"
+import { productVersionsTable } from "db/schema/product-versions"
 import type { InsertProductVersion } from "db/schema/product-versions"
+import { productsTable } from "db/schema/products"
 import type { InsertProduct, SelectProduct } from "db/schema/products"
+import { tagsTable } from "db/schema/tags"
 import { createCustomId } from "utils/custom-id"
 
-import { generateUniqueProductSlug } from "./slug.ts"
+import { assertSlugAvailable, generateUniqueSlug } from "./slug"
 
 export const listProducts = async (input?: {
   limit?: number
-  cursor?: string
+  offset?: number
   search?: string
   categoryIds?: string[]
   status?: "draft" | "active" | "archived" | "all"
@@ -34,15 +31,14 @@ export const listProducts = async (input?: {
     excerpt: string | null
     description: string | null
     status: "draft" | "active" | "archived"
-    costPerRun: string | null
+    creditsPerRun: number | null
     createdAt: Date | null
     thumbnailId: string | null
-    averageRating: number | null
-    reviewCount: number
     categories: { id: string; name: string; slug: string }[]
     thumbnail: { id: string; url: string } | null
   }[]
-  nextCursor?: string
+  total: number
+  hasMore: boolean
 }> => {
   const limit = input?.limit ?? 20
   const conditions = []
@@ -76,14 +72,17 @@ export const listProducts = async (input?: {
 
   if (input?.search) {
     conditions.push(
-      sql`(${ilike(productsTable.name, `%${input.search}%`).getSQL()} OR ${ilike(productsTable.description, `%${input.search}%`).getSQL()})`,
+      or(
+        ilike(productsTable.name, `%${input.search}%`),
+        ilike(productsTable.description, `%${input.search}%`),
+      ),
     )
   }
 
   if (input?.priceFilter === "free") {
-    conditions.push(eq(productsTable.costPerRun, "0"))
+    conditions.push(eq(productsTable.creditsPerRun, 0))
   } else if (input?.priceFilter === "paid") {
-    conditions.push(sql`${productsTable.costPerRun} > 0`)
+    conditions.push(sql`${productsTable.creditsPerRun} > 0`)
   }
 
   if (input?.tagIds && input.tagIds.length > 0) {
@@ -105,6 +104,11 @@ export const listProducts = async (input?: {
     }
   }
 
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(productsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+
   const products = await db
     .select({
       id: productsTable.id,
@@ -113,7 +117,7 @@ export const listProducts = async (input?: {
       excerpt: productsTable.excerpt,
       description: productsTable.description,
       status: productsTable.status,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       createdAt: productsTable.createdAt,
       thumbnailId: productsTable.thumbnailId,
       thumbnailUrl: assetsTable.url,
@@ -122,19 +126,100 @@ export const listProducts = async (input?: {
     .from(productsTable)
     .leftJoin(assetsTable, eq(productsTable.thumbnailId, assetsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(productsTable.createdAt))
+    .orderBy(desc(productsTable.createdAt), desc(productsTable.id))
+    .offset(input?.offset ?? 0)
     .limit(limit + 1)
 
   const productIds = products.map((t) => t.id)
 
-  const categoriesMap = new Map<
-    string,
-    { id: string; name: string; slug: string }[]
-  >()
-  if (productIds.length > 0) {
-    const productCategories = await db
+  const categoriesMap = await getProductsCategoriesMap(productIds)
+
+  const productsWithCategories = products.map((product) => {
+    return {
+      ...withThumbnail(product),
+      categories: categoriesMap.get(product.id) ?? [],
+    }
+  })
+
+  const hasMore = productsWithCategories.length > limit
+  if (hasMore) {
+    productsWithCategories.pop()
+  }
+
+  return {
+    products: productsWithCategories,
+    total: Number(countResult?.count ?? 0),
+    hasMore,
+  }
+}
+
+interface ProductCategory {
+  id: string
+  name: string
+  slug: string
+}
+interface ProductTag {
+  id: string
+  name: string
+  slug: string
+}
+type ProductThumbnail = { id: string; url: string } | null
+
+const getProductsCategoriesMap = async (
+  productIds: string[],
+): Promise<Map<string, ProductCategory[]>> => {
+  const categoriesMap = new Map<string, ProductCategory[]>()
+  if (productIds.length === 0) return categoriesMap
+
+  const productCategories = await db
+    .select({
+      productId: productCategoriesTable.productId,
+      id: categoriesTable.id,
+      name: categoriesTable.name,
+      slug: categoriesTable.slug,
+    })
+    .from(productCategoriesTable)
+    .innerJoin(
+      categoriesTable,
+      eq(productCategoriesTable.categoryId, categoriesTable.id),
+    )
+    .where(inArray(productCategoriesTable.productId, productIds))
+
+  for (const row of productCategories) {
+    const list = categoriesMap.get(row.productId) ?? []
+    list.push({ id: row.id, name: row.name, slug: row.slug })
+    categoriesMap.set(row.productId, list)
+  }
+
+  return categoriesMap
+}
+
+const withThumbnail = <
+  T extends { thumbnailUrl: string | null; thumbnailAssetId: string | null },
+>(
+  row: T,
+): Omit<T, "thumbnailUrl" | "thumbnailAssetId"> & {
+  thumbnail: ProductThumbnail
+} => {
+  const { thumbnailUrl, thumbnailAssetId, ...data } = row
+  const thumbnail =
+    thumbnailAssetId && thumbnailUrl
+      ? { id: thumbnailAssetId, url: thumbnailUrl }
+      : null
+  return { ...data, thumbnail }
+}
+
+const getProductRelations = async (
+  productId: string,
+  thumbnailId?: string | null,
+): Promise<{
+  categories: ProductCategory[]
+  tags: ProductTag[]
+  thumbnail: { id: string; url: string; originalName: string } | null
+}> => {
+  const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
+    db
       .select({
-        productId: productCategoriesTable.productId,
         id: categoriesTable.id,
         name: categoriesTable.name,
         slug: categoriesTable.slug,
@@ -144,69 +229,29 @@ export const listProducts = async (input?: {
         categoriesTable,
         eq(productCategoriesTable.categoryId, categoriesTable.id),
       )
-      .where(inArray(productCategoriesTable.productId, productIds))
+      .where(eq(productCategoriesTable.productId, productId)),
+    db
+      .select({ id: tagsTable.id, name: tagsTable.name, slug: tagsTable.slug })
+      .from(productTagsTable)
+      .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
+      .where(eq(productTagsTable.productId, productId)),
+    thumbnailId
+      ? db
+          .select({
+            id: assetsTable.id,
+            url: assetsTable.url,
+            originalName: assetsTable.originalName,
+          })
+          .from(assetsTable)
+          .where(eq(assetsTable.id, thumbnailId))
+      : Promise.resolve([]),
+  ])
 
-    for (const row of productCategories) {
-      if (!categoriesMap.has(row.productId)) {
-        categoriesMap.set(row.productId, [])
-      }
-      categoriesMap
-        .get(row.productId)!
-        .push({ id: row.id, name: row.name, slug: row.slug })
-    }
+  return {
+    categories: categoriesResult,
+    tags: tagsResult,
+    thumbnail: thumbnailResult[0] ?? null,
   }
-
-  const ratingsMap = new Map<
-    string,
-    { averageRating: number | null; reviewCount: number }
-  >()
-  if (productIds.length > 0) {
-    const ratings = await db
-      .select({
-        productId: productReviewsTable.productId,
-        avgRating: sql`AVG(${productReviewsTable.rating})`,
-        count: sql`COUNT(*)`,
-      })
-      .from(productReviewsTable)
-      .where(inArray(productReviewsTable.productId, productIds))
-      .groupBy(productReviewsTable.productId)
-
-    for (const row of ratings) {
-      const avg = row.avgRating ? Number(row.avgRating) : null
-      ratingsMap.set(row.productId, {
-        averageRating: avg ? Math.round(avg * 10) / 10 : null,
-        reviewCount: Number(row.count),
-      })
-    }
-  }
-
-  const productsWithCategories = products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
-
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
-    const rating = ratingsMap.get(product.id) ?? {
-      averageRating: null,
-      reviewCount: 0,
-    }
-
-    return {
-      ...productData,
-      ...rating,
-      categories: categoriesMap.get(product.id) ?? [],
-      thumbnail,
-    }
-  })
-
-  let nextCursor: string | undefined = undefined
-  if (productsWithCategories.length > limit) {
-    const nextItem = productsWithCategories.pop()
-    nextCursor = nextItem?.id
-  }
-
-  return { products: productsWithCategories, nextCursor }
 }
 
 export const getProductById = async (
@@ -221,42 +266,9 @@ export const getProductById = async (
     return null
   }
 
-  const [categoriesResult, tagsResult, thumbnailResult] = await Promise.all([
-    db
-      .select({
-        id: categoriesTable.id,
-        name: categoriesTable.name,
-        slug: categoriesTable.slug,
-      })
-      .from(productCategoriesTable)
-      .innerJoin(
-        categoriesTable,
-        eq(productCategoriesTable.categoryId, categoriesTable.id),
-      )
-      .where(eq(productCategoriesTable.productId, id)),
-    db
-      .select({ id: tagsTable.id, name: tagsTable.name, slug: tagsTable.slug })
-      .from(productTagsTable)
-      .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
-      .where(eq(productTagsTable.productId, id)),
-    product.thumbnailId
-      ? db
-          .select({
-            id: assetsTable.id,
-            url: assetsTable.url,
-            originalName: assetsTable.originalName,
-          })
-          .from(assetsTable)
-          .where(eq(assetsTable.id, product.thumbnailId))
-      : Promise.resolve([]),
-  ])
+  const relations = await getProductRelations(id, product.thumbnailId)
 
-  return {
-    ...product,
-    categories: categoriesResult,
-    tags: tagsResult,
-    thumbnail: thumbnailResult[0] ?? null,
-  }
+  return { ...product, ...relations }
 }
 
 export const getProductBySlug = async (
@@ -270,61 +282,75 @@ export const getProductBySlug = async (
     return null
   }
 
-  const [categoriesResult, tagsResult, thumbnailResult, ratingResult] =
-    await Promise.all([
-      db
-        .select({
-          id: categoriesTable.id,
-          name: categoriesTable.name,
-          slug: categoriesTable.slug,
-        })
-        .from(productCategoriesTable)
-        .innerJoin(
-          categoriesTable,
-          eq(productCategoriesTable.categoryId, categoriesTable.id),
-        )
-        .where(eq(productCategoriesTable.productId, product.id)),
-      db
-        .select({
-          id: tagsTable.id,
-          name: tagsTable.name,
-          slug: tagsTable.slug,
-        })
-        .from(productTagsTable)
-        .innerJoin(tagsTable, eq(productTagsTable.tagId, tagsTable.id))
-        .where(eq(productTagsTable.productId, product.id)),
-      product.thumbnailId
-        ? db
-            .select({
-              id: assetsTable.id,
-              url: assetsTable.url,
-              originalName: assetsTable.originalName,
-            })
-            .from(assetsTable)
-            .where(eq(assetsTable.id, product.thumbnailId))
-        : Promise.resolve([]),
-      db
-        .select({
-          avgRating: sql`AVG(${productReviewsTable.rating})`,
-          count: sql`COUNT(*)`,
-        })
-        .from(productReviewsTable)
-        .where(eq(productReviewsTable.productId, product.id)),
-    ])
+  const relations = await getProductRelations(product.id, product.thumbnailId)
 
-  const avgRating = ratingResult[0]?.avgRating
-    ? Number(ratingResult[0].avgRating)
-    : null
-  const reviewCount = Number(ratingResult[0]?.count ?? 0)
+  return { ...product, ...relations }
+}
+
+export type PublicProduct = Omit<
+  typeof productsTable.$inferSelect,
+  "apiKeyId" | "config" | "thumbnailId" | "createdBy"
+> & {
+  categories: { id: string; name: string; slug: string }[]
+  tags: { id: string; name: string; slug: string }[]
+  thumbnail: { id: string; url: string } | null
+}
+
+const buildPublicProduct = async (
+  product: typeof productsTable.$inferSelect,
+): Promise<PublicProduct> => {
+  const relations = await getProductRelations(product.id, product.thumbnailId)
 
   return {
-    ...product,
-    categories: categoriesResult,
-    tags: tagsResult,
-    thumbnail: thumbnailResult[0] ?? null,
-    averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
-    reviewCount,
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    descriptionContent: product.descriptionContent,
+    excerpt: product.excerpt,
+    isPublic: product.isPublic,
+    creditsPerRun: product.creditsPerRun,
+    status: product.status,
+    categories: relations.categories,
+    tags: relations.tags,
+    thumbnail: relations.thumbnail,
+    outputFormat: product.outputFormat,
+    workflow: product.workflow,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
   }
+}
+
+export const getPublicProductById = async (
+  id: string,
+): Promise<PublicProduct | null> => {
+  const [product] = await db
+    .select()
+    .from(productsTable)
+    .where(and(eq(productsTable.id, id), eq(productsTable.status, "active")))
+
+  if (!product) {
+    return null
+  }
+
+  return buildPublicProduct(product)
+}
+
+export const getPublicProductBySlug = async (
+  slug: string,
+): Promise<PublicProduct | null> => {
+  const product = await db.query.productsTable.findFirst({
+    where: and(
+      eq(productsTable.slug, slug),
+      eq(productsTable.status, "active"),
+    ),
+  })
+
+  if (!product) {
+    return null
+  }
+
+  return buildPublicProduct(product)
 }
 
 export const createProduct = async (
@@ -335,7 +361,7 @@ export const createProduct = async (
 ): Promise<{ id: string; slug: string } | null> => {
   const { categoryIds, tagIds, ...productData } = data
   const id = createCustomId()
-  const slug = await generateUniqueProductSlug(productData.name)
+  const slug = await generateUniqueSlug("product", productData.name)
 
   const [result] = await db
     .insert(productsTable)
@@ -368,10 +394,12 @@ export const updateProduct = async (
     tagIds?: string[]
   },
 ): Promise<{ success: boolean } | null> => {
-  const { categoryIds, tagIds, ...productData } = data
+  const { categoryIds, tagIds, slug: explicitSlug, ...productData } = data
 
   let slug: string | undefined
-  if (productData.name) {
+  if (explicitSlug) {
+    slug = await assertSlugAvailable("product", explicitSlug, id)
+  } else if (productData.name) {
     const [existingProduct] = await db
       .select({ name: productsTable.name })
       .from(productsTable)
@@ -382,7 +410,7 @@ export const updateProduct = async (
     }
 
     if (existingProduct.name !== productData.name) {
-      slug = await generateUniqueProductSlug(productData.name)
+      slug = await generateUniqueSlug("product", productData.name)
     }
   }
 
@@ -431,12 +459,46 @@ export const updateProduct = async (
 }
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
+  await Promise.all([
+    db
+      .delete(productCategoriesTable)
+      .where(eq(productCategoriesTable.productId, id)),
+    db.delete(productTagsTable).where(eq(productTagsTable.productId, id)),
+    db.delete(productRunsTable).where(eq(productRunsTable.productId, id)),
+    db
+      .delete(productVersionsTable)
+      .where(eq(productVersionsTable.productId, id)),
+  ])
   const [result] = await db
     .delete(productsTable)
     .where(eq(productsTable.id, id))
     .returning()
 
   return !!result
+}
+
+export const deleteProducts = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  await Promise.all([
+    db
+      .delete(productCategoriesTable)
+      .where(inArray(productCategoriesTable.productId, ids)),
+    db.delete(productTagsTable).where(inArray(productTagsTable.productId, ids)),
+    db.delete(productRunsTable).where(inArray(productRunsTable.productId, ids)),
+    db
+      .delete(productVersionsTable)
+      .where(inArray(productVersionsTable.productId, ids)),
+  ])
+  const deleted = await db
+    .delete(productsTable)
+    .where(inArray(productsTable.id, ids))
+    .returning()
+
+  return { success: true, count: deleted.length }
 }
 
 export const duplicateProduct = async (
@@ -454,7 +516,7 @@ export const duplicateProduct = async (
 
   const newId = createCustomId()
   const duplicateName = `${product.name} (Copy)`
-  const slug = await generateUniqueProductSlug(duplicateName)
+  const slug = await generateUniqueSlug("product", duplicateName)
 
   const {
     id: _id,
@@ -539,7 +601,7 @@ export const getPopularProducts = async (
     slug: string
     name: string
     description: string | null
-    costPerRun: string | null
+    creditsPerRun: number | null
     thumbnailId: string | null
     thumbnail: { id: string; url: string } | null
   }[]
@@ -550,7 +612,7 @@ export const getPopularProducts = async (
       slug: productsTable.slug,
       name: productsTable.name,
       description: productsTable.description,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       thumbnailId: productsTable.thumbnailId,
       thumbnailUrl: assetsTable.url,
       thumbnailAssetId: assetsTable.id,
@@ -560,16 +622,7 @@ export const getPopularProducts = async (
     .where(eq(productsTable.status, "active"))
     .limit(limit)
 
-  return products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
-
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
-
-    return { ...productData, thumbnail }
-  })
+  return products.map(withThumbnail)
 }
 
 export const getProductBySlugId = async (
@@ -581,141 +634,6 @@ export const getProductBySlugId = async (
     .where(eq(productsTable.slug, slug))
 
   return product ?? null
-}
-
-export const getProductReviews = async (
-  productId: string,
-): Promise<{
-  reviews: {
-    id: string
-    rating: number
-    reviewText: string | null
-    createdAt: Date | null
-    userId: string
-    userName: string | null
-  }[]
-  averageRating: number | null
-  reviewCount: number
-}> => {
-  const reviews = await db
-    .select({
-      id: productReviewsTable.id,
-      rating: productReviewsTable.rating,
-      reviewText: productReviewsTable.reviewText,
-      createdAt: productReviewsTable.createdAt,
-      userId: productReviewsTable.userId,
-      userName: productReviewsTable.userName,
-    })
-    .from(productReviewsTable)
-    .where(eq(productReviewsTable.productId, productId))
-    .orderBy(desc(productReviewsTable.createdAt))
-
-  const [avgRatingResult] = await db
-    .select({
-      avgRating: sql`AVG(${productReviewsTable.rating})`,
-      count: sql`COUNT(*)`,
-    })
-    .from(productReviewsTable)
-    .where(eq(productReviewsTable.productId, productId))
-
-  const avgRating = avgRatingResult?.avgRating
-    ? Number(avgRatingResult.avgRating)
-    : null
-  const reviewCount = Number(avgRatingResult?.count ?? 0)
-
-  return {
-    reviews,
-    averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
-    reviewCount,
-  }
-}
-
-export const getUserReview = async (
-  productId: string,
-  userId: string,
-): Promise<typeof productReviewsTable.$inferSelect | null> => {
-  const [review] = await db
-    .select()
-    .from(productReviewsTable)
-    .where(
-      and(
-        eq(productReviewsTable.productId, productId),
-        eq(productReviewsTable.userId, userId),
-      ),
-    )
-
-  return review ?? null
-}
-
-export const upsertProductReview = async (
-  productId: string,
-  userId: string,
-  userName: string | null,
-  rating: number,
-  reviewText: string | null,
-): Promise<{ existing: boolean } | null> => {
-  const existingResult = await getUserReview(productId, userId)
-
-  if (existingResult) {
-    const [result] = await db
-      .update(productReviewsTable)
-      .set({ rating, reviewText, updatedAt: new Date() })
-      .where(eq(productReviewsTable.id, existingResult.id))
-      .returning()
-
-    return result ? { existing: true } : null
-  }
-
-  const id = createCustomId()
-  const [result] = await db
-    .insert(productReviewsTable)
-    .values({ id, productId, userId, userName, rating, reviewText })
-    .returning()
-
-  return result ? { existing: false } : null
-}
-
-export const updateProductReview = async (
-  reviewId: string,
-  rating: number,
-  reviewText: string | null,
-): Promise<boolean> => {
-  const [result] = await db
-    .update(productReviewsTable)
-    .set({ rating, reviewText, updatedAt: new Date() })
-    .where(eq(productReviewsTable.id, reviewId))
-    .returning()
-
-  return !!result
-}
-
-export const getProductReviewById = async (
-  reviewId: string,
-): Promise<typeof productReviewsTable.$inferSelect | null> => {
-  const [review] = await db
-    .select()
-    .from(productReviewsTable)
-    .where(eq(productReviewsTable.id, reviewId))
-
-  return review ?? null
-}
-
-export const hasUserUsedProduct = async (
-  productId: string,
-  userId: string,
-): Promise<boolean> => {
-  const [result] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(productRunsTable)
-    .where(
-      and(
-        eq(productRunsTable.productId, productId),
-        eq(productRunsTable.userId, userId),
-        eq(productRunsTable.status, "completed"),
-      ),
-    )
-
-  return Number(result?.count) > 0
 }
 
 export const insertProductRun = async (data: {
@@ -757,7 +675,7 @@ export const searchProducts = async (
     slug: string
     name: string
     excerpt: string | null
-    costPerRun: string | null
+    creditsPerRun: number | null
     thumbnail: { id: string; url: string } | null
   }[]
 > => {
@@ -767,7 +685,7 @@ export const searchProducts = async (
       slug: productsTable.slug,
       name: productsTable.name,
       excerpt: productsTable.excerpt,
-      costPerRun: productsTable.costPerRun,
+      creditsPerRun: productsTable.creditsPerRun,
       thumbnailUrl: assetsTable.url,
       thumbnailAssetId: assetsTable.id,
     })
@@ -776,20 +694,135 @@ export const searchProducts = async (
     .where(
       and(
         eq(productsTable.status, "active"),
-        sql`(${ilike(productsTable.name, `%${query}%`).getSQL()} OR ${ilike(productsTable.description, `%${query}%`).getSQL()})`,
+        or(
+          ilike(productsTable.name, `%${query}%`),
+          ilike(productsTable.description, `%${query}%`),
+        ),
       ),
     )
     .orderBy(desc(productsTable.createdAt))
     .limit(limit)
 
-  return products.map((product) => {
-    const thumbnail =
-      product.thumbnailAssetId && product.thumbnailUrl
-        ? { id: product.thumbnailAssetId, url: product.thumbnailUrl }
-        : null
+  return products.map(withThumbnail)
+}
 
-    const { thumbnailUrl: _, thumbnailAssetId: __, ...productData } = product
+export const getRelatedProducts = async (
+  productId: string,
+  limit = 8,
+): Promise<
+  {
+    id: string
+    slug: string
+    name: string
+    excerpt: string | null
+    creditsPerRun: number | null
+    thumbnail: { id: string; url: string } | null
+    categories: { id: string; name: string; slug: string }[]
+  }[]
+> => {
+  const [productCats, productTags] = await Promise.all([
+    db
+      .select({ categoryId: productCategoriesTable.categoryId })
+      .from(productCategoriesTable)
+      .where(eq(productCategoriesTable.productId, productId)),
+    db
+      .select({ tagId: productTagsTable.tagId })
+      .from(productTagsTable)
+      .where(eq(productTagsTable.productId, productId)),
+  ])
 
-    return { ...productData, thumbnail }
+  const catIds = productCats.map((c) => c.categoryId)
+  const tagIds = productTags.map((t) => t.tagId)
+
+  const activeProducts = await db
+    .select({
+      id: productsTable.id,
+      slug: productsTable.slug,
+      name: productsTable.name,
+      excerpt: productsTable.excerpt,
+      creditsPerRun: productsTable.creditsPerRun,
+      createdAt: productsTable.createdAt,
+      thumbnailUrl: assetsTable.url,
+      thumbnailAssetId: assetsTable.id,
+    })
+    .from(productsTable)
+    .leftJoin(assetsTable, eq(productsTable.thumbnailId, assetsTable.id))
+    .where(
+      and(
+        eq(productsTable.status, "active"),
+        sql`${productsTable.id} != ${productId}`,
+      ),
+    )
+
+  if (activeProducts.length === 0) {
+    return []
+  }
+
+  const activeIds = activeProducts.map((p) => p.id)
+
+  const [allCatRows, allTagRows] = await Promise.all([
+    catIds.length > 0
+      ? db
+          .select({
+            productId: productCategoriesTable.productId,
+            categoryId: productCategoriesTable.categoryId,
+          })
+          .from(productCategoriesTable)
+          .where(inArray(productCategoriesTable.productId, activeIds))
+      : Promise.resolve([]),
+    tagIds.length > 0
+      ? db
+          .select({
+            productId: productTagsTable.productId,
+            tagId: productTagsTable.tagId,
+          })
+          .from(productTagsTable)
+          .where(inArray(productTagsTable.productId, activeIds))
+      : Promise.resolve([]),
+  ])
+
+  const catSet = new Set(catIds)
+  const tagSet = new Set(tagIds)
+
+  const catScores = new Map<string, number>()
+  for (const row of allCatRows) {
+    if (catSet.has(row.categoryId)) {
+      catScores.set(row.productId, (catScores.get(row.productId) ?? 0) + 1)
+    }
+  }
+
+  const tagScores = new Map<string, number>()
+  for (const row of allTagRows) {
+    if (tagSet.has(row.tagId)) {
+      tagScores.set(row.productId, (tagScores.get(row.productId) ?? 0) + 1)
+    }
+  }
+
+  const scoredProducts = activeProducts.map((p) => {
+    const sharedCategories = catScores.get(p.id) ?? 0
+    const sharedTags = tagScores.get(p.id) ?? 0
+    const score = sharedCategories * 2 + sharedTags
+    return { ...p, score }
+  })
+
+  scoredProducts.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score
+    }
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+    return bTime - aTime
+  })
+
+  const topProducts = scoredProducts.slice(0, limit)
+  const topIds = topProducts.map((p) => p.id)
+
+  const categoriesMap = await getProductsCategoriesMap(topIds)
+
+  return topProducts.map((p) => {
+    return {
+      ...withThumbnail(p),
+      categories: categoriesMap.get(p.id) ?? [],
+    }
   })
 }

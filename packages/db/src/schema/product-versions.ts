@@ -1,7 +1,9 @@
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import { createInsertSchema, createUpdateSchema } from "drizzle-valibot"
 
 import { createCustomId } from "utils/custom-id"
+
+import type { ProductWorkflow } from "./product-workflow"
 
 export const productVersionsTable = pgTable("product_versions", {
   id: text()
@@ -10,16 +12,7 @@ export const productVersionsTable = pgTable("product_versions", {
   productId: text("product_id").notNull(),
   version: integer("version").notNull(),
   config: jsonb("config"),
-  systemRole: text("system_role"),
-  userInstructionTemplate: text("user_instruction_template"),
-  inputVariable: jsonb("input_variable").$type<
-    {
-      variableName: string
-      description: string
-      type: string
-      options?: { label: string; value: string }[]
-    }[]
-  >(),
+  workflow: jsonb("workflow").$type<ProductWorkflow>(),
   outputFormat: text("output_format"),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: text("created_by"),

@@ -2,20 +2,15 @@
 
 import type { ReactNode } from "react"
 
-import { QueryProvider } from "rpc/provider"
-import ThemeProvider from "ui/theme-provider"
+import { ThemeProvider } from "ui/theme-provider"
 import { AnchoredToastProvider, ToastProvider } from "ui/toast"
 
-const Providers = ({ children }: { children: ReactNode }) => {
+export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <QueryProvider>
-        <ToastProvider>
-          <AnchoredToastProvider>{children}</AnchoredToastProvider>
-        </ToastProvider>
-      </QueryProvider>
+      <ToastProvider>
+        <AnchoredToastProvider>{children}</AnchoredToastProvider>
+      </ToastProvider>
     </ThemeProvider>
   )
 }
-
-export default Providers

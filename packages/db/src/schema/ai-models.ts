@@ -6,7 +6,11 @@ import {
   timestamp,
   unique,
 } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-valibot"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -32,6 +36,7 @@ export const aiModelsTable = pgTable(
 
 export const insertAIModelSchema = createInsertSchema(aiModelsTable)
 export const updateAIModelSchema = createUpdateSchema(aiModelsTable)
+export const aiModelSchema = createSelectSchema(aiModelsTable)
 
 export type SelectAIModel = typeof aiModelsTable.$inferSelect
 export type InsertAIModel = typeof aiModelsTable.$inferInsert

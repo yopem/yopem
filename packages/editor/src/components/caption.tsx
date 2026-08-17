@@ -10,9 +10,9 @@ import {
 } from "@platejs/caption/react"
 import { createPrimitiveComponent } from "@udecode/cn"
 
-import type { VariantProps } from "ui"
-import { cn, cva } from "ui"
 import { Button } from "ui/button"
+import type { VariantProps } from "ui/utils"
+import { cn, cva } from "ui/utils"
 
 const captionVariants = cva("max-w-full", {
   defaultVariants: {

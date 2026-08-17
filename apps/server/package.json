@@ -12,27 +12,21 @@
       "types": "./src/*.ts",
       "default": "./src/*.ts"
     },
-    "./storage": {
-      "types": "./src/storage/index.ts",
-      "default": "./src/storage/index.ts"
+    "./routers": {
+      "types": "./src/routers/index.ts",
+      "default": "./src/routers/index.ts"
     },
-    "./router": {
-      "types": "./src/root.ts",
-      "default": "./src/root.ts"
-    },
-    "./orpc": {
-      "types": "./src/orpc.ts",
-      "default": "./src/orpc.ts"
-    },
-    "./rate-limit": {
-      "types": "./src/rate-limit.ts",
-      "default": "./src/rate-limit.ts"
+    "./storage/r2": {
+      "types": "./src/storage/r2.ts",
+      "default": "./src/storage/r2.ts"
     }
   },
   "scripts": {
-    "dev": "vp dev",
-    "build": "vp build",
-    "start": "node --env-file=../../.env dist/index.js",
+    "seed": "bun --env-file=../../.env src/scripts/seed.ts",
+    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun --env-file=../../.env dist/index.js",
+    "test": "bun test",
     "lint": "vp lint .",
     "lint:fix": "vp lint --fix .",
     "typecheck": "tsc --noEmit"
@@ -40,32 +34,22 @@
   "dependencies": {
     "@ai-sdk/openai": "catalog:",
     "@ai-sdk/openai-compatible": "catalog:",
-    "@aws-sdk/client-s3": "catalog:",
-    "@hono/node-server": "^1.19.12",
-    "@orpc/server": "catalog:",
-    "@polar-sh/hono": "^0.5.5",
-    "@polar-sh/sdk": "catalog:",
+    "@orpc/server": "^1.14.10",
     "ai": "catalog:",
     "auth": "workspace:*",
     "cache": "workspace:*",
     "db": "workspace:*",
     "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
+    "drizzle-valibot": "catalog:",
     "env": "workspace:*",
     "hono": "^4.12.9",
-    "ioredis": "catalog:",
     "nanoid": "catalog:",
-    "pg": "catalog:",
-    "sharp": "^0.34.5",
     "transliteration": "catalog:",
     "utils": "workspace:*",
-    "zod": "catalog:"
+    "valibot": "catalog:"
   },
   "devDependencies": {
-    "@hono/vite-build": "^1.5.0",
-    "@hono/vite-dev-server": "^0.26.1",
     "@types/node": "catalog:",
-    "@types/pg": "catalog:",
     "@yopem/typescript-config": "catalog:",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:",

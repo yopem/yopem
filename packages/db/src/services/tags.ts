@@ -1,16 +1,19 @@
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, count, desc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { tagsTable } from "db/schema"
+import { productTagsTable } from "db/schema/product-tags"
+import { tagsTable } from "db/schema/tags"
 import type { SelectTag } from "db/schema/tags"
 
-import { generateUniqueTagSlug } from "./slug.ts"
+import { assertSlugAvailable, generateUniqueSlug } from "./slug"
 
 export const listTags = (): Promise<
   {
     id: string
     name: string
     slug: string
+    status: "draft" | "active" | "archived"
+    productCount: number
   }[]
 > => {
   return db
@@ -18,15 +21,31 @@ export const listTags = (): Promise<
       id: tagsTable.id,
       name: tagsTable.name,
       slug: tagsTable.slug,
+      status: tagsTable.status,
+      productCount: count(productTagsTable.productId),
     })
     .from(tagsTable)
-    .orderBy(asc(tagsTable.name))
+    .leftJoin(productTagsTable, eq(productTagsTable.tagId, tagsTable.id))
+    .groupBy(tagsTable.id)
+    .orderBy(desc(count(productTagsTable.productId)), asc(tagsTable.name))
+}
+
+export const getTag = async (id: string): Promise<SelectTag | null> => {
+  const [tag] = await db
+    .select()
+    .from(tagsTable)
+    .where(eq(tagsTable.id, id))
+    .limit(1)
+  return tag ?? null
 }
 
 export const createTag = async (input: {
   name: string
+  slug?: string
 }): Promise<SelectTag> => {
-  const slug = await generateUniqueTagSlug(input.name)
+  const slug = input.slug
+    ? await assertSlugAvailable("tag", input.slug)
+    : await generateUniqueSlug("tag", input.name)
 
   const [tag] = await db
     .insert(tagsTable)
@@ -43,8 +62,11 @@ export const createTag = async (input: {
 export const updateTag = async (input: {
   id: string
   name: string
+  slug?: string
 }): Promise<SelectTag> => {
-  const slug = await generateUniqueTagSlug(input.name, input.id)
+  const slug = input.slug
+    ? await assertSlugAvailable("tag", input.slug, input.id)
+    : await generateUniqueSlug("tag", input.name, input.id)
 
   const [tag] = await db
     .update(tagsTable)
@@ -60,7 +82,39 @@ export const updateTag = async (input: {
 }
 
 export const deleteTag = async (id: string): Promise<void> => {
+  await db.delete(productTagsTable).where(eq(productTagsTable.tagId, id))
   await db.delete(tagsTable).where(eq(tagsTable.id, id))
+}
+
+export const deleteTags = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  await db.delete(productTagsTable).where(inArray(productTagsTable.tagId, ids))
+  const deleted = await db
+    .delete(tagsTable)
+    .where(inArray(tagsTable.id, ids))
+    .returning()
+  return { success: true, count: deleted.length }
+}
+
+export const updateTagStatus = async (
+  ids: string[],
+  status: "draft" | "active" | "archived",
+): Promise<{ success: boolean; count: number } | null> => {
+  const result = await db
+    .update(tagsTable)
+    .set({ status })
+    .where(inArray(tagsTable.id, ids))
+    .returning()
+
+  if (!result || result.length === 0) {
+    return null
+  }
+
+  return { success: true, count: result.length }
 }
 
 export const validateTagIds = async (ids: string[]): Promise<boolean> => {

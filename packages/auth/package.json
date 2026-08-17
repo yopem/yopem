@@ -8,6 +8,10 @@
       "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
+    "./roles": {
+      "types": "./src/roles.ts",
+      "default": "./src/roles.ts"
+    },
     "./subjects": {
       "types": "./src/subjects.ts",
       "default": "./src/subjects.ts"
@@ -24,7 +28,8 @@
   },
   "dependencies": {
     "@openauthjs/openauth": "catalog:",
-    "zod": "catalog:"
+    "env": "workspace:*",
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

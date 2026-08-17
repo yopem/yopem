@@ -1,9 +1,11 @@
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 
 import { db } from "db"
-import { adminSettingsTable, assetsTable } from "db/schema"
+import { adminSettingsTable } from "db/schema/admin-settings"
 import type { SelectAdminSettings } from "db/schema/admin-settings"
+import { assetsTable } from "db/schema/assets"
 import type { SelectAsset } from "db/schema/assets"
+import { productsTable } from "db/schema/products"
 
 export const listAssets = async (input: {
   limit: number
@@ -58,7 +60,34 @@ export const insertAsset = async (data: {
 }
 
 export const deleteAsset = async (id: string): Promise<void> => {
+  await db
+    .update(productsTable)
+    .set({ thumbnailId: null })
+    .where(eq(productsTable.thumbnailId, id))
   await db.delete(assetsTable).where(eq(assetsTable.id, id))
+}
+
+export const getAssetsByIds = async (ids: string[]): Promise<SelectAsset[]> => {
+  if (ids.length === 0) return []
+  return await db.select().from(assetsTable).where(inArray(assetsTable.id, ids))
+}
+
+export const deleteAssets = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  await db
+    .update(productsTable)
+    .set({ thumbnailId: null })
+    .where(inArray(productsTable.thumbnailId, ids))
+  const deleted = await db
+    .delete(assetsTable)
+    .where(inArray(assetsTable.id, ids))
+    .returning()
+
+  return { success: true, count: deleted.length }
 }
 
 export const getAdminUploadSizeSetting = async (

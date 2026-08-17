@@ -34,7 +34,7 @@ export function BlockContextMenu({ children }: { children: ReactNode }) {
   const openId = usePluginOption(BlockMenuPlugin, "openId")
   const isOpen = openId === BLOCK_CONTEXT_MENU_ID
 
-  const handleTurnInto = (type: string) => {
+  function handleTurnInto(type: string) {
     editor
       .getApi(BlockSelectionPlugin)
       .blockSelection.getNodes()
@@ -43,7 +43,7 @@ export function BlockContextMenu({ children }: { children: ReactNode }) {
       })
   }
 
-  const handleAlign = (align: "center" | "left" | "right") => {
+  function handleAlign(align: "center" | "left" | "right") {
     editor
       .getTransforms(BlockSelectionPlugin)
       .blockSelection.setNodes({ align })

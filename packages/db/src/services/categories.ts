@@ -1,10 +1,11 @@
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, count, desc, eq, inArray } from "drizzle-orm"
 
 import { db } from "db"
-import { categoriesTable } from "db/schema"
+import { categoriesTable } from "db/schema/categories"
 import type { SelectCategory } from "db/schema/categories"
+import { productCategoriesTable } from "db/schema/product-categories"
 
-import { generateUniqueCategorySlug } from "./slug.ts"
+import { assertSlugAvailable, generateUniqueSlug } from "./slug"
 
 export const listCategories = (): Promise<
   {
@@ -12,6 +13,10 @@ export const listCategories = (): Promise<
     name: string
     slug: string
     description: string | null
+    parentId: string | null
+    sortOrder: number | null
+    status: "draft" | "active" | "archived"
+    productCount: number
   }[]
 > => {
   return db
@@ -20,20 +25,114 @@ export const listCategories = (): Promise<
       name: categoriesTable.name,
       slug: categoriesTable.slug,
       description: categoriesTable.description,
+      parentId: categoriesTable.parentId,
+      sortOrder: categoriesTable.sortOrder,
+      status: categoriesTable.status,
+      productCount: count(productCategoriesTable.productId),
     })
     .from(categoriesTable)
-    .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
+    .leftJoin(
+      productCategoriesTable,
+      eq(productCategoriesTable.categoryId, categoriesTable.id),
+    )
+    .groupBy(categoriesTable.id)
+    .orderBy(
+      desc(count(productCategoriesTable.productId)),
+      asc(categoriesTable.sortOrder),
+      asc(categoriesTable.name),
+    )
+}
+
+export const getCategory = async (
+  id: string,
+): Promise<SelectCategory | null> => {
+  const [category] = await db
+    .select()
+    .from(categoriesTable)
+    .where(eq(categoriesTable.id, id))
+    .limit(1)
+  return category ?? null
+}
+
+const getParentChain = async (
+  startParentId: string,
+  excludeId?: string,
+): Promise<string[]> => {
+  const chain: string[] = []
+  let currentId: string | null = startParentId
+
+  while (currentId) {
+    if (excludeId && currentId === excludeId) {
+      return chain.concat(currentId)
+    }
+
+    if (chain.includes(currentId)) {
+      return chain
+    }
+
+    chain.push(currentId)
+
+    const [row] = await db
+      .select({ parentId: categoriesTable.parentId })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.id, currentId))
+      .limit(1)
+
+    currentId = row?.parentId ?? null
+  }
+
+  return chain
+}
+
+const validateParent = async (
+  categoryId: string | undefined,
+  parentId: string | null,
+): Promise<void> => {
+  if (!parentId) return
+
+  const parent = await getCategory(parentId)
+  if (!parent) {
+    throw new Error("Parent category not found")
+  }
+
+  if (categoryId && parentId === categoryId) {
+    throw new Error("A category cannot be its own parent")
+  }
+
+  if (categoryId) {
+    const chain = await getParentChain(parentId, categoryId)
+    if (chain.includes(categoryId)) {
+      throw new Error("Cannot assign a descendant as parent")
+    }
+  }
 }
 
 export const createCategory = async (input: {
   name: string
+  slug?: string
   description?: string
+  parentId?: string | null
+  icon?: string
+  sortOrder?: number
 }): Promise<SelectCategory> => {
-  const slug = await generateUniqueCategorySlug(input.name)
+  const slug = input.slug
+    ? await assertSlugAvailable("category", input.slug)
+    : await generateUniqueSlug("category", input.name)
+
+  const parentId =
+    input.parentId && input.parentId !== "" ? input.parentId : null
+  await validateParent(undefined, parentId)
 
   const [category] = await db
     .insert(categoriesTable)
-    .values({ name: input.name, slug, description: input.description })
+    .values({
+      name: input.name,
+      slug,
+      description: input.description,
+      parentId,
+      icon: input.icon,
+      sortOrder: input.sortOrder,
+    })
     .returning()
 
   if (!category) {
@@ -46,13 +145,40 @@ export const createCategory = async (input: {
 export const updateCategory = async (input: {
   id: string
   name: string
+  slug?: string
   description?: string
+  parentId?: string | null
 }): Promise<SelectCategory> => {
-  const slug = await generateUniqueCategorySlug(input.name, input.id)
+  const slug = input.slug
+    ? await assertSlugAvailable("category", input.slug, input.id)
+    : await generateUniqueSlug("category", input.name, input.id)
+
+  const parentId =
+    input.parentId === undefined
+      ? undefined
+      : input.parentId && input.parentId !== ""
+        ? input.parentId
+        : null
+  await validateParent(input.id, parentId ?? null)
+
+  const updateData: {
+    name: string
+    slug: string
+    description?: string
+    parentId?: string | null
+  } = {
+    name: input.name,
+    slug,
+    description: input.description,
+  }
+
+  if (parentId !== undefined) {
+    updateData.parentId = parentId
+  }
 
   const [category] = await db
     .update(categoriesTable)
-    .set({ name: input.name, slug, description: input.description })
+    .set(updateData)
     .where(eq(categoriesTable.id, input.id))
     .returning()
 
@@ -64,7 +190,43 @@ export const updateCategory = async (input: {
 }
 
 export const deleteCategory = async (id: string): Promise<void> => {
+  await db
+    .delete(productCategoriesTable)
+    .where(eq(productCategoriesTable.categoryId, id))
   await db.delete(categoriesTable).where(eq(categoriesTable.id, id))
+}
+
+export const deleteCategories = async (
+  ids: string[],
+): Promise<{ success: boolean; count: number }> => {
+  if (ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+  await db
+    .delete(productCategoriesTable)
+    .where(inArray(productCategoriesTable.categoryId, ids))
+  const deleted = await db
+    .delete(categoriesTable)
+    .where(inArray(categoriesTable.id, ids))
+    .returning()
+  return { success: true, count: deleted.length }
+}
+
+export const updateCategoryStatus = async (
+  ids: string[],
+  status: "draft" | "active" | "archived",
+): Promise<{ success: boolean; count: number } | null> => {
+  const result = await db
+    .update(categoriesTable)
+    .set({ status })
+    .where(inArray(categoriesTable.id, ids))
+    .returning()
+
+  if (!result || result.length === 0) {
+    return null
+  }
+
+  return { success: true, count: result.length }
 }
 
 export const validateCategoryIds = async (ids: string[]): Promise<boolean> => {

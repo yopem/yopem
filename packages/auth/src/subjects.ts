@@ -1,13 +1,15 @@
 import { createSubjects } from "@openauthjs/openauth/subject"
-import z from "zod"
+import * as v from "valibot"
+
+import { roleSchema } from "./roles"
 
 export const subjects = createSubjects({
-  user: z.object({
-    id: z.string(),
-    email: z.string(),
-    name: z.string().nullable(),
-    username: z.string(),
-    image: z.string().nullable(),
-    role: z.enum(["user", "member", "admin"]).default("user"),
+  user: v.object({
+    id: v.string(),
+    email: v.string(),
+    name: v.nullable(v.string()),
+    username: v.string(),
+    image: v.nullable(v.string()),
+    role: v.optional(roleSchema, "user"),
   }),
 })

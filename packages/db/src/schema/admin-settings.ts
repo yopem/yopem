@@ -1,5 +1,9 @@
 import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-valibot"
 
 import { createCustomId } from "utils/custom-id"
 
@@ -15,6 +19,7 @@ export const adminSettingsTable = pgTable("admin_settings", {
 
 export const insertAdminSettingsSchema = createInsertSchema(adminSettingsTable)
 export const updateAdminSettingsSchema = createUpdateSchema(adminSettingsTable)
+export const adminSettingSchema = createSelectSchema(adminSettingsTable)
 
 export type SelectAdminSettings = typeof adminSettingsTable.$inferSelect
 export type InsertAdminSettings = typeof adminSettingsTable.$inferInsert

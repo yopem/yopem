@@ -4,7 +4,7 @@ import { DndPlugin } from "@platejs/dnd"
 import { useBlockSelected } from "@platejs/selection/react"
 import { type PlateElementProps, usePluginOption } from "platejs/react"
 
-import { cva } from "ui"
+import { cva } from "ui/utils"
 
 export const blockSelectionVariants = cva(
   "bg-primary/13 pointer-events-none absolute inset-0 z-1 transition-opacity",

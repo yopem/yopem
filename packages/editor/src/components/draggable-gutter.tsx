@@ -11,7 +11,7 @@ import {
   useSelected,
 } from "platejs/react"
 
-import { cn } from "ui"
+import { cn } from "ui/utils"
 
 export function DraggableGutter({
   children,
