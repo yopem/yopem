@@ -24,7 +24,7 @@ export default defineConfig({
   },
   staged: {
     "*": "vp check --fix",
-    "*.{js,ts,tsx,json,md,yaml,yml,css}, !**/migrations/**, !pnpm-lock.yaml":
+    "*.{js,ts,tsx,json,md,yaml,yml,css}, !**/migrations/**, !bun.lock":
       "vp fmt --write",
   },
   fmt: {
@@ -40,7 +40,7 @@ export default defineConfig({
       functions: ["cn", "cva", "clsx"],
     },
     experimentalSortPackageJson: true,
-    ignorePatterns: ["**/pnpm-lock.yaml", "**/migrations/", "**/AGENTS.md"],
+    ignorePatterns: ["**/bun.lock", "**/migrations/", "**/AGENTS.md"],
     sortImports: {
       newlinesBetween: true,
       customGroups: [
@@ -249,7 +249,7 @@ export default defineConfig({
       "typescript/restrict-plus-operands": "error",
       "typescript/triple-slash-reference": "error",
     },
-    ignorePatterns: ["**/pnpm-lock.yaml", "**/migrations/", "**/AGENTS.md"],
+    ignorePatterns: ["**/bun.lock", "**/migrations/", "**/AGENTS.md"],
     options: {
       typeAware: true,
       typeCheck: true,
